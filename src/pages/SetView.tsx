@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { FlashcardSet, Flashcard, CanvasElement } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
-import { Play, Edit, Plus, MoreVertical, Trash2 } from 'lucide-react';
+import { Play, Edit, Plus, MoreVertical, Trash2, Brain } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Navigation } from '@/components/Navigation';
@@ -20,6 +19,7 @@ const SetView = () => {
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCardCreator, setShowCardCreator] = useState(false);
+  const [showQuizGenerator, setShowQuizGenerator] = useState(false);
 
   useEffect(() => {
     if (!user || !setId) return;
@@ -195,6 +195,10 @@ const SetView = () => {
                   <Edit className="mr-2 h-4 w-4" />
                   Edit Set
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowQuizGenerator(true)}>
+                  <Brain className="mr-2 h-4 w-4" />
+                  Generate Quiz
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDeleteSet} className="text-red-600">
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete Set
@@ -213,6 +217,34 @@ const SetView = () => {
                 onCardCreated={handleCardCreated}
                 onClose={() => setShowCardCreator(false)}
               />
+            </div>
+          </div>
+        )}
+
+        {/* Quiz Generator Modal */}
+        {showQuizGenerator && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="w-full max-w-2xl max-h-[90vh] overflow-auto bg-white rounded-lg">
+              <div className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold">Generate Quiz Cards</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowQuizGenerator(false)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+                <AIFlashcardGenerator 
+                  setId={setId!} 
+                  onGenerated={() => {
+                    fetchCards();
+                    setShowQuizGenerator(false);
+                  }}
+                  mode="generate-quiz"
+                />
+              </div>
             </div>
           </div>
         )}

@@ -30,7 +30,11 @@ export interface Flashcard {
   last_reviewed_at: string | null;
   card_type?: 'standard' | 'informational' | 'no-back' | 'password-protected';
   interactive_type?: 'multiple-choice' | 'true-false' | 'fill-blank' | null;
-  interactive_data?: any;
+  interactive_data?: {
+    options?: string[];
+    correctAnswer?: number;
+    explanation?: string;
+  };
   password?: string;
   countdown_timer?: number;
   is_unskippable?: boolean;
