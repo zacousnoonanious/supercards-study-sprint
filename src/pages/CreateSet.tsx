@@ -10,6 +10,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
+import { UserDropdown } from '@/components/UserDropdown';
 
 const CreateSet = () => {
   const { user } = useAuth();
@@ -65,16 +66,20 @@ const CreateSet = () => {
     <div className="min-h-screen bg-background">
       <header className="shadow-sm border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/dashboard')}
-              className="mr-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            <h1 className="text-2xl font-bold text-indigo-600">Create New Set</h1>
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/dashboard')}
+                className="mr-4"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Back to Dashboard</span>
+                <span className="sm:hidden">Back</span>
+              </Button>
+              <h1 className="text-xl sm:text-2xl font-bold text-indigo-600">Create New Set</h1>
+            </div>
+            <UserDropdown />
           </div>
         </div>
       </header>
@@ -105,7 +110,7 @@ const CreateSet = () => {
                   placeholder="Brief description of this set..."
                 />
               </div>
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                 <Button
                   type="button"
                   variant="outline"

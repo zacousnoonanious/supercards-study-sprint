@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Plus, BookOpen, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { UserDropdown } from '@/components/UserDropdown';
 
 interface FlashcardSet {
   id: string;
@@ -18,7 +19,7 @@ interface FlashcardSet {
 }
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { t } = useI18n();
   const [sets, setSets] = useState<FlashcardSet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,11 +78,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -97,23 +93,19 @@ const Dashboard = () => {
           <div className="flex justify-between items-center h-16">
             <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground">{t('welcome')}, {user?.email}</span>
-              <ThemeToggle />
-              <Button variant="outline" onClick={() => navigate('/profile')}>
-                {t('nav.profile')}
-              </Button>
-              <Button variant="outline" onClick={handleSignOut}>
-                {t('nav.signOut')}
-              </Button>
+              <span className="text-sm text-muted-foreground hidden sm:block">
+                {t('welcome')}, {user?.email}
+              </span>
+              <UserDropdown />
             </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h2 className="text-xl font-semibold text-foreground">{t('dashboard.title')}</h2>
-          <Button onClick={() => navigate('/create-set')} className="flex items-center gap-2">
+          <Button onClick={() => navigate('/create-set')} className="flex items-center gap-2 w-full sm:w-auto">
             <Plus className="w-4 h-4" />
             {t('nav.createSet')}
           </Button>
@@ -149,11 +141,11 @@ const Dashboard = () => {
                   <CardDescription>{set.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex justify-between items-center">
-                    <Button variant="outline" onClick={() => navigate(`/set/${set.id}`)} className="flex-1 mr-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button variant="outline" onClick={() => navigate(`/set/${set.id}`)} className="flex-1">
                       {t('dashboard.viewCards')}
                     </Button>
-                    <Button onClick={() => navigate(`/study/${set.id}`)} className="flex-1 ml-2">
+                    <Button onClick={() => navigate(`/study/${set.id}`)} className="flex-1">
                       {t('dashboard.study')}
                     </Button>
                   </div>
