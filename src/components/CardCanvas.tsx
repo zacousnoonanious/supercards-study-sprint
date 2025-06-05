@@ -33,6 +33,21 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const [showPopupFor, setShowPopupFor] = useState<string | null>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 
+  // Handle delete key press
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Delete' && selectedElement) {
+        onDeleteElement(selectedElement);
+        setShowPopupFor(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedElement, onDeleteElement]);
+
   useEffect(() => {
     const handleDeleteElement = (event: CustomEvent) => {
       const elementId = event.detail;
@@ -46,6 +61,41 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     };
   }, [onDeleteElement]);
 
+  // Calculate optimal popup position to keep it visible
+  const calculatePopupPosition = (element: CanvasElement) => {
+    if (!canvasRef.current) return { x: element.x + element.width, y: element.y };
+
+    const canvas = canvasRef.current;
+    const canvasRect = canvas.getBoundingClientRect();
+    const popupWidth = 250; // Approximate popup width
+    const popupHeight = 200; // Approximate popup height
+
+    let x = element.x + element.width + 10;
+    let y = element.y;
+
+    // If popup would go off the right edge, position it to the left
+    if (x + popupWidth > canvasRect.width) {
+      x = element.x - popupWidth - 10;
+    }
+
+    // If popup would go off the bottom edge, adjust y position
+    if (y + popupHeight > canvasRect.height) {
+      y = Math.max(0, canvasRect.height - popupHeight - 10);
+    }
+
+    // If popup would go off the top edge, position it at the top
+    if (y < 0) {
+      y = 10;
+    }
+
+    // If popup would go off the left edge, position it inside the canvas
+    if (x < 0) {
+      x = 10;
+    }
+
+    return { x, y };
+  };
+
   const handleMouseDown = (e: React.MouseEvent, elementId: string, action: 'drag' | 'resize', resizeHandle?: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -55,13 +105,10 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
     onSelectElement(elementId);
     
-    // Show popup for interactive elements
-    if (['multiple-choice', 'true-false', 'youtube', 'deck-embed'].includes(element.type)) {
-      setShowPopupFor(elementId);
-      setPopupPosition({ x: element.x + element.width, y: element.y });
-    } else {
-      setShowPopupFor(null);
-    }
+    // Show popup for all element types when selected
+    setShowPopupFor(elementId);
+    const position = calculatePopupPosition(element);
+    setPopupPosition(position);
     
     setDragState({
       isDragging: action === 'drag',
@@ -93,7 +140,9 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       if (showPopupFor === selectedElement) {
         const element = elements.find(el => el.id === selectedElement);
         if (element) {
-          setPopupPosition({ x: newX + element.width, y: newY });
+          const updatedElement = { ...element, x: newX, y: newY };
+          const position = calculatePopupPosition(updatedElement);
+          setPopupPosition(position);
         }
       }
     } else if (dragState.isResizing && dragState.resizeHandle) {
@@ -123,6 +172,16 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       }
       
       onUpdateElement(selectedElement, updates);
+      
+      // Update popup position if showing and resizing
+      if (showPopupFor === selectedElement) {
+        const element = elements.find(el => el.id === selectedElement);
+        if (element) {
+          const updatedElement = { ...element, ...updates };
+          const position = calculatePopupPosition(updatedElement);
+          setPopupPosition(position);
+        }
+      }
     }
   };
 
@@ -252,6 +311,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onClick={handleCanvasClick}
+        tabIndex={0}
+        style={{ outline: 'none' }}
       >
         {/* Canvas background */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-300 rounded-lg">

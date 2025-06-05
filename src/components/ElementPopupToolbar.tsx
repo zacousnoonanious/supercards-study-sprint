@@ -6,7 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Trash2, Plus } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Trash2, Plus, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
 
 interface ElementPopupToolbarProps {
@@ -51,6 +53,140 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
       }
     }
   };
+
+  const renderTextSettings = () => (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-xs font-medium">Text Content</Label>
+        <Textarea
+          value={element.content || ''}
+          onChange={(e) => onUpdate({ content: e.target.value })}
+          placeholder="Enter text content"
+          className="h-16 text-xs"
+        />
+      </div>
+      
+      <div>
+        <Label className="text-xs font-medium">Font Size</Label>
+        <Input
+          type="number"
+          value={element.fontSize || 16}
+          onChange={(e) => onUpdate({ fontSize: parseInt(e.target.value) })}
+          className="h-8 text-xs"
+          min="8"
+          max="72"
+        />
+      </div>
+      
+      <div>
+        <Label className="text-xs font-medium">Color</Label>
+        <Input
+          type="color"
+          value={element.color || '#000000'}
+          onChange={(e) => onUpdate({ color: e.target.value })}
+          className="h-8"
+        />
+      </div>
+
+      <div>
+        <Label className="text-xs font-medium">Text Formatting</Label>
+        <div className="flex gap-1 mt-1">
+          <Button
+            variant={element.fontWeight === 'bold' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onUpdate({ 
+              fontWeight: element.fontWeight === 'bold' ? 'normal' : 'bold' 
+            })}
+            className="h-7 w-7 p-0"
+          >
+            <Bold className="w-3 h-3" />
+          </Button>
+          <Button
+            variant={element.fontStyle === 'italic' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onUpdate({ 
+              fontStyle: element.fontStyle === 'italic' ? 'normal' : 'italic' 
+            })}
+            className="h-7 w-7 p-0"
+          >
+            <Italic className="w-3 h-3" />
+          </Button>
+          <Button
+            variant={element.textDecoration === 'underline' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onUpdate({ 
+              textDecoration: element.textDecoration === 'underline' ? 'none' : 'underline' 
+            })}
+            className="h-7 w-7 p-0"
+          >
+            <Underline className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+
+      <div>
+        <Label className="text-xs font-medium">Text Alignment</Label>
+        <div className="flex gap-1 mt-1">
+          <Button
+            variant={element.textAlign === 'left' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onUpdate({ textAlign: 'left' })}
+            className="h-7 w-7 p-0"
+          >
+            <AlignLeft className="w-3 h-3" />
+          </Button>
+          <Button
+            variant={element.textAlign === 'center' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onUpdate({ textAlign: 'center' })}
+            className="h-7 w-7 p-0"
+          >
+            <AlignCenter className="w-3 h-3" />
+          </Button>
+          <Button
+            variant={element.textAlign === 'right' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onUpdate({ textAlign: 'right' })}
+            className="h-7 w-7 p-0"
+          >
+            <AlignRight className="w-3 h-3" />
+          </Button>
+          <Button
+            variant={element.textAlign === 'justify' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onUpdate({ textAlign: 'justify' })}
+            className="h-7 w-7 p-0"
+          >
+            <AlignJustify className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderImageSettings = () => (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-xs font-medium">Image URL</Label>
+        <Input
+          value={element.imageUrl || ''}
+          onChange={(e) => onUpdate({ imageUrl: e.target.value })}
+          placeholder="Enter image URL"
+          className="h-8 text-xs"
+        />
+      </div>
+      
+      <div>
+        <Label className="text-xs font-medium">Alt Text</Label>
+        <Input
+          value={element.content || ''}
+          onChange={(e) => onUpdate({ content: e.target.value })}
+          placeholder="Enter alt text"
+          className="h-8 text-xs"
+        />
+      </div>
+    </div>
+  );
 
   const renderMultipleChoiceSettings = () => (
     <div className="space-y-3">
@@ -194,6 +330,10 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
 
   const renderSettings = () => {
     switch (element.type) {
+      case 'text':
+        return renderTextSettings();
+      case 'image':
+        return renderImageSettings();
       case 'multiple-choice':
         return renderMultipleChoiceSettings();
       case 'true-false':
@@ -211,7 +351,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
     <Card
       className="absolute z-50 w-64 shadow-lg border bg-white"
       style={{
-        left: position.x + 10,
+        left: position.x,
         top: position.y,
         maxWidth: '250px',
       }}
