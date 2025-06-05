@@ -397,7 +397,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
               fontWeight: element.fontWeight,
               fontStyle: element.fontStyle,
               textDecoration: element.textDecoration,
-              textAlign: element.textAlign as any,
+              textAlign: element.textAlign as React.CSSProperties['textAlign'],
             }}
             onClick={(e) => {
               e.stopPropagation();
@@ -425,7 +425,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
                   fontWeight: element.fontWeight,
                   fontStyle: element.fontStyle,
                   textDecoration: element.textDecoration,
-                  textAlign: element.textAlign as any,
+                  textAlign: element.textAlign as React.CSSProperties['textAlign'],
                   whiteSpace: 'pre-wrap',
                 }}
                 autoFocus

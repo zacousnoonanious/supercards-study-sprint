@@ -15,13 +15,14 @@ export interface CanvasElement {
   fontWeight?: string;
   fontStyle?: string;
   textDecoration?: string;
-  textAlign?: string;
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
   
   // Image properties
   imageUrl?: string;
   
   // Audio properties
   audioUrl?: string;
+  autoplay?: boolean;
   
   // Drawing properties
   drawingData?: string;
@@ -38,6 +39,7 @@ export interface CanvasElement {
   
   // Deck embed properties
   deckId?: string;
+  deckTitle?: string;
 }
 
 export interface Flashcard {
