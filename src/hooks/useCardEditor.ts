@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +11,7 @@ export const useCardEditor = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   
   const [set, setSet] = useState<FlashcardSet | null>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
@@ -23,6 +24,17 @@ export const useCardEditor = () => {
     if (!user || !setId) return;
     fetchSetAndCards();
   }, [user, setId]);
+
+  useEffect(() => {
+    // Set initial card index from URL parameter if provided
+    const cardParam = searchParams.get('card');
+    if (cardParam) {
+      const cardIndex = parseInt(cardParam, 10);
+      if (!isNaN(cardIndex) && cardIndex >= 0) {
+        setCurrentCardIndex(cardIndex);
+      }
+    }
+  }, [searchParams, cards.length]);
 
   const fetchSetAndCards = async () => {
     try {

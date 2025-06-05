@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -77,7 +76,8 @@ const SetView = () => {
     }
   };
 
-  const deleteCard = async (cardId: string) => {
+  const deleteCard = async (cardId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card click when deleting
     try {
       const { error } = await supabase
         .from('flashcards')
@@ -99,6 +99,10 @@ const SetView = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleCardClick = (cardIndex: number) => {
+    navigate(`/edit-cards/${setId}?card=${cardIndex}`);
   };
 
   if (loading) {
@@ -184,8 +188,12 @@ const SetView = () => {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {cards.map((card) => (
-              <Card key={card.id} className="hover:shadow-lg transition-shadow">
+            {cards.map((card, index) => (
+              <Card 
+                key={card.id} 
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleCardClick(index)}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Question</span>
@@ -193,7 +201,7 @@ const SetView = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => deleteCard(card.id)}
+                        onClick={(e) => deleteCard(card.id, e)}
                       >
                         <Trash2 className="w-3 h-3" />
                       </Button>

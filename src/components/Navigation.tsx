@@ -11,7 +11,7 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
-import { Home, BookOpen, ShoppingCart, User } from 'lucide-react';
+import { Home, BookOpen, ShoppingCart } from 'lucide-react';
 
 export const Navigation = () => {
   const navigate = useNavigate();
@@ -67,18 +67,6 @@ export const Navigation = () => {
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
             Marketplace
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink
-            className={cn(
-              navigationMenuTriggerStyle(),
-              isActive('/profile') && 'bg-accent text-accent-foreground'
-            )}
-            onClick={() => navigate('/profile')}
-          >
-            <User className="w-4 h-4 mr-2" />
-            Profile
           </NavigationMenuLink>
         </NavigationMenuItem>
       </NavigationMenuList>
