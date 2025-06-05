@@ -144,6 +144,13 @@ const SetView = () => {
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Set
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/edit-cards/${setId}`)}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Cards
+              </Button>
               {cards.length > 0 && (
                 <Button onClick={() => navigate(`/study/${setId}`)}>
                   <Play className="w-4 h-4 mr-2" />

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,6 +16,7 @@ import StudyMode from "./pages/StudyMode";
 import AddCard from "./pages/AddCard";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import CardEditorPage from "./pages/CardEditorPage";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +40,7 @@ const App = () => (
                 <Route path="/add-card/:setId" element={<AddCard />} />
                 <Route path="/edit-set/:setId" element={<Navigate to="/create-set" replace />} />
                 <Route path="/edit-card/:cardId" element={<Navigate to="/add-card/:setId" replace />} />
+                <Route path="/edit-cards/:setId" element={<CardEditorPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
