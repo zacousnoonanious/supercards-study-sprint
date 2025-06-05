@@ -1,11 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ElementToolbar } from './ElementToolbar';
 import { CardCanvas } from './CardCanvas';
-import { CardNavigation } from './CardNavigation';
 import { EditorHeader } from './EditorHeader';
-import { KeyboardShortcutsTooltip } from './KeyboardShortcutsTooltip';
-import { CardTypeSelector } from './CardTypeSelector';
+import { CanvasOverlayToolbar } from './CanvasOverlayToolbar';
+import { ElementPopupToolbar } from './ElementPopupToolbar';
 import { useCardEditor } from '@/hooks/useCardEditor';
 
 export const CardEditor: React.FC = () => {
@@ -53,23 +52,28 @@ export const CardEditor: React.FC = () => {
       <div className="min-h-screen bg-background">
         <EditorHeader set={set} onSave={saveCard} />
         <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="lg:col-span-1 order-2 lg:order-1">
-              <ElementToolbar
-                onAddElement={addElement}
-                selectedElement={null}
-                onUpdateElement={() => {}}
-                onDeleteElement={() => {}}
-                onCreateNewCard={createNewCard}
-                onCreateNewCardWithLayout={createNewCardWithLayout}
-              />
-            </div>
-            <div className="lg:col-span-3 order-1 lg:order-2 flex items-center justify-center min-h-[300px]">
+          <div className="relative">
+            <div className="flex items-center justify-center min-h-[600px]">
               <div className="text-center">
                 <h2 className="text-lg sm:text-xl font-semibold mb-4">No cards in this set</h2>
                 <p className="text-gray-600 text-sm sm:text-base">Create your first card to get started!</p>
               </div>
             </div>
+            <CanvasOverlayToolbar
+              set={set}
+              currentCard={{} as any}
+              currentCardIndex={0}
+              totalCards={0}
+              currentSide={currentSide}
+              onAddElement={addElement}
+              onUpdateCard={updateCard}
+              onNavigateCard={navigateCard}
+              onSideChange={setCurrentSide}
+              onCreateNewCard={createNewCard}
+              onCreateNewCardWithLayout={createNewCardWithLayout}
+              onDeleteCard={() => {}}
+              onSave={saveCard}
+            />
           </div>
         </main>
       </div>
@@ -98,61 +102,53 @@ export const CardEditor: React.FC = () => {
       <EditorHeader set={set} onSave={saveCard} />
 
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
-          {/* Toolbar */}
-          <div className="lg:col-span-1 order-2 lg:order-1">
-            <div className="sticky top-4 space-y-4">
-              {/* Card Type Selector */}
-              <Card>
-                <CardContent className="p-4">
-                  <CardTypeSelector
-                    card={currentCard}
-                    onUpdateCard={(updates) => updateCard(currentCard.id, updates)}
-                  />
-                </CardContent>
-              </Card>
-
-              <ElementToolbar
-                onAddElement={addElement}
-                selectedElement={selectedElementData}
-                onUpdateElement={(updates) => selectedElement && updateElement(selectedElement, updates)}
-                onDeleteElement={() => selectedElement && deleteElement(selectedElement)}
-                onCreateNewCard={createNewCard}
-                onCreateNewCardWithLayout={createNewCardWithLayout}
-              />
-            </div>
-          </div>
-
-          {/* Canvas Area */}
-          <div className="lg:col-span-3 order-1 lg:order-2">
-            <Card className="mb-4">
-              <CardContent className="p-3 sm:p-4">
-                <CardNavigation
-                  currentIndex={currentCardIndex}
-                  totalCards={cards.length}
-                  onNavigate={navigateCard}
-                  currentSide={currentSide}
-                  onSideChange={setCurrentSide}
-                  onCreateNewCard={createNewCard}
-                  onCreateNewCardWithLayout={createNewCardWithLayout}
-                  onDeleteCard={() => deleteCard(currentCard.id)}
+        <div className="relative">
+          <Card className="mb-4">
+            <CardContent className="p-3 sm:p-4">
+              <div className="overflow-auto">
+                <CardCanvas
+                  elements={currentElements}
+                  selectedElement={selectedElement}
+                  onSelectElement={setSelectedElement}
+                  onUpdateElement={updateElement}
+                  onDeleteElement={deleteElement}
+                  cardSide={currentSide}
+                  style={getCanvasStyle()}
                   cardType={currentCard?.card_type}
+                  onAddElement={addElement}
+                  quizTitle={currentCard?.quiz_title || ''}
+                  onQuizTitleChange={(title) => updateCard(currentCard.id, { quiz_title: title })}
                 />
+              </div>
+            </CardContent>
+          </Card>
 
-                <div className="overflow-auto">
-                  <CardCanvas
-                    elements={currentElements}
-                    selectedElement={selectedElement}
-                    onSelectElement={setSelectedElement}
-                    onUpdateElement={updateElement}
-                    onDeleteElement={deleteElement}
-                    cardSide={currentSide}
-                    style={getCanvasStyle()}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Overlay Toolbar */}
+          <CanvasOverlayToolbar
+            set={set}
+            currentCard={currentCard}
+            currentCardIndex={currentCardIndex}
+            totalCards={cards.length}
+            currentSide={currentSide}
+            onAddElement={addElement}
+            onUpdateCard={updateCard}
+            onNavigateCard={navigateCard}
+            onSideChange={setCurrentSide}
+            onCreateNewCard={createNewCard}
+            onCreateNewCardWithLayout={createNewCardWithLayout}
+            onDeleteCard={() => deleteCard(currentCard.id)}
+            onSave={saveCard}
+          />
+
+          {/* Element Popup Toolbar */}
+          {selectedElementData && (
+            <ElementPopupToolbar
+              element={selectedElementData}
+              onUpdate={(updates) => selectedElement && updateElement(selectedElement, updates)}
+              onDelete={() => selectedElement && deleteElement(selectedElement)}
+              position={{ x: 100, y: 100 }} // This will be positioned dynamically based on element
+            />
+          )}
         </div>
       </main>
     </div>

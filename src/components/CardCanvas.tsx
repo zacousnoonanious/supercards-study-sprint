@@ -45,12 +45,23 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 }) => {
   const { theme } = useTheme();
   const [editingElement, setEditingElement] = useState<string | null>(null);
-  const [popupToolbar, setPopupToolbar] = useState<{ element: CanvasElement; position: { x: number; y: number } } | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [gridSize] = useState(20);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
+
+  const getElementPopupPosition = (element: CanvasElement) => {
+    if (!canvasRef.current) return { x: 0, y: 0 };
+    
+    const canvasRect = canvasRef.current.getBoundingClientRect();
+    return {
+      x: element.x + element.width + 10,
+      y: element.y,
+    };
+  };
 
   const handleQuizAddElement = (type: string, position: number) => {
     if (onAddElement) {
@@ -292,16 +303,13 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         />
       )}
 
-      {/* Popup Toolbar */}
-      {popupToolbar && (
+      {/* Popup Toolbar for selected element */}
+      {selectedElementData && (
         <ElementPopupToolbar
-          element={popupToolbar.element}
-          onUpdate={(updates) => onUpdateElement(popupToolbar.element.id, updates)}
-          onDelete={() => {
-            onDeleteElement(popupToolbar.element.id);
-            setPopupToolbar(null);
-          }}
-          position={popupToolbar.position}
+          element={selectedElementData}
+          onUpdate={(updates) => onUpdateElement(selectedElementData.id, updates)}
+          onDelete={() => onDeleteElement(selectedElementData.id)}
+          position={getElementPopupPosition(selectedElementData)}
         />
       )}
 
