@@ -22,6 +22,7 @@ export const CardEditor = () => {
     updateElement,
     deleteElement,
     navigateCard,
+    createNewCard,
   } = useCardEditor();
 
   if (loading) {
@@ -32,10 +33,38 @@ export const CardEditor = () => {
     );
   }
 
-  if (!set || cards.length === 0) {
+  if (!set) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">No cards found</div>
+        <div className="text-lg">Set not found</div>
+      </div>
+    );
+  }
+
+  // Show empty state if no cards exist
+  if (cards.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <EditorHeader set={set} onSave={saveCard} />
+        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-1">
+              <ElementToolbar
+                onAddElement={addElement}
+                selectedElement={null}
+                onUpdateElement={() => {}}
+                onDeleteElement={() => {}}
+                onCreateNewCard={createNewCard}
+              />
+            </div>
+            <div className="lg:col-span-3 flex items-center justify-center">
+              <div className="text-center">
+                <h2 className="text-xl font-semibold mb-4">No cards in this set</h2>
+                <p className="text-gray-600">Create your first card to get started!</p>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -57,6 +86,7 @@ export const CardEditor = () => {
               selectedElement={selectedElementData}
               onUpdateElement={(updates) => selectedElement && updateElement(selectedElement, updates)}
               onDeleteElement={() => selectedElement && deleteElement(selectedElement)}
+              onCreateNewCard={createNewCard}
             />
           </div>
 

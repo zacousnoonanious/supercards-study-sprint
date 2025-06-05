@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Plus, Edit, Trash2, Play, Palette } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Play, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Flashcard {
@@ -145,7 +145,6 @@ const SetView = () => {
                 Edit Set
               </Button>
               <Button
-                variant="outline"
                 onClick={() => navigate(`/edit-cards/${setId}`)}
               >
                 <Palette className="w-4 h-4 mr-2" />
@@ -167,19 +166,16 @@ const SetView = () => {
           <h2 className="text-xl font-semibold text-gray-900">
             Flashcards ({cards.length})
           </h2>
-          <Button onClick={() => navigate(`/add-card/${setId}`)} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Add Card
-          </Button>
         </div>
 
         {cards.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No flashcards yet</h3>
-              <p className="text-gray-600 mb-4">Add your first flashcard to get started!</p>
-              <Button onClick={() => navigate(`/add-card/${setId}`)}>
-                Add Your First Card
+              <p className="text-gray-600 mb-4">Use the Visual Editor to create your first flashcard!</p>
+              <Button onClick={() => navigate(`/edit-cards/${setId}`)}>
+                <Palette className="w-4 h-4 mr-2" />
+                Open Visual Editor
               </Button>
             </CardContent>
           </Card>
@@ -191,13 +187,6 @@ const SetView = () => {
                   <CardTitle className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Question</span>
                     <div className="flex space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/edit-card/${card.id}`)}
-                      >
-                        <Edit className="w-3 h-3" />
-                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"

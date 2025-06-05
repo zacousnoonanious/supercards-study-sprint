@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -77,6 +78,81 @@ export const useCardEditor = () => {
     }
   };
 
+  const createNewCard = async () => {
+    if (!setId) return;
+
+    const defaultFrontElement: CanvasElement = {
+      id: `front-text-${Date.now()}`,
+      type: 'text',
+      x: 50,
+      y: 100,
+      width: 300,
+      height: 60,
+      rotation: 0,
+      content: 'Front side text',
+      fontSize: 24,
+      color: '#000000',
+      fontWeight: 'normal',
+      fontStyle: 'normal',
+      textDecoration: 'none',
+      textAlign: 'left'
+    };
+
+    const defaultBackElement: CanvasElement = {
+      id: `back-text-${Date.now()}`,
+      type: 'text',
+      x: 50,
+      y: 100,
+      width: 300,
+      height: 60,
+      rotation: 0,
+      content: 'Back side text',
+      fontSize: 24,
+      color: '#000000',
+      fontWeight: 'normal',
+      fontStyle: 'normal',
+      textDecoration: 'none',
+      textAlign: 'left'
+    };
+
+    try {
+      const { data: newCard, error } = await supabase
+        .from('flashcards')
+        .insert({
+          set_id: setId,
+          question: 'New Card',
+          answer: 'Answer',
+          front_elements: [defaultFrontElement] as any,
+          back_elements: [defaultBackElement] as any
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const formattedCard: Flashcard = {
+        ...newCard,
+        front_elements: [defaultFrontElement],
+        back_elements: [defaultBackElement]
+      };
+
+      setCards([...cards, formattedCard]);
+      setCurrentCardIndex(cards.length);
+      
+      toast({
+        title: "Success",
+        description: "New card created successfully.",
+      });
+    } catch (error) {
+      console.error('Error creating card:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create new card.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const saveCard = async () => {
     if (!cards[currentCardIndex]) return;
     
@@ -118,6 +194,10 @@ export const useCardEditor = () => {
       content: type === 'text' ? 'Edit this text' : '',
       fontSize: type === 'text' ? 16 : undefined,
       color: type === 'text' ? '#000000' : undefined,
+      fontWeight: type === 'text' ? 'normal' : undefined,
+      fontStyle: type === 'text' ? 'normal' : undefined,
+      textDecoration: type === 'text' ? 'none' : undefined,
+      textAlign: type === 'text' ? 'left' : undefined,
       imageUrl: type === 'image' ? '/placeholder.svg' : undefined
     };
 
@@ -180,5 +260,6 @@ export const useCardEditor = () => {
     updateElement,
     deleteElement,
     navigateCard,
+    createNewCard,
   };
 };

@@ -10,6 +10,10 @@ export interface CanvasElement {
   content?: string;
   fontSize?: number;
   color?: string;
+  fontWeight?: 'normal' | 'bold';
+  fontStyle?: 'normal' | 'italic';
+  textDecoration?: 'none' | 'underline';
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
   imageUrl?: string;
 }
 

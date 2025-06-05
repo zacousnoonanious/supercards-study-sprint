@@ -26,6 +26,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     elementStart: { x: number; y: number; width: number; height: number };
     resizeHandle?: string;
   } | null>(null);
+  const [editingElement, setEditingElement] = useState<string | null>(null);
 
   const handleMouseDown = (e: React.MouseEvent, elementId: string, action: 'drag' | 'resize', resizeHandle?: string) => {
     e.preventDefault();
@@ -98,8 +99,32 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === canvasRef.current) {
       onSelectElement(null);
+      setEditingElement(null);
     }
   };
+
+  const handleTextDoubleClick = (elementId: string) => {
+    setEditingElement(elementId);
+  };
+
+  const handleTextKeyDown = (e: React.KeyboardEvent, elementId: string) => {
+    if (e.key === 'Enter') {
+      setEditingElement(null);
+    }
+  };
+
+  const handleTextChange = (elementId: string, newContent: string) => {
+    onUpdateElement(elementId, { content: newContent });
+  };
+
+  const getTextStyle = (element: CanvasElement) => ({
+    fontSize: element.fontSize,
+    color: element.color,
+    fontWeight: element.fontWeight,
+    fontStyle: element.fontStyle,
+    textDecoration: element.textDecoration,
+    textAlign: element.textAlign as any,
+  });
 
   return (
     <Card className="relative overflow-hidden bg-white" style={{ aspectRatio: '3/2', minHeight: '400px' }}>
@@ -138,13 +163,24 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             {/* Element content */}
             {element.type === 'text' ? (
               <div
-                className="w-full h-full flex items-center justify-center p-2 bg-white border border-gray-300 rounded overflow-hidden"
-                style={{
-                  fontSize: element.fontSize,
-                  color: element.color,
-                }}
+                className="w-full h-full flex items-center justify-center p-2 bg-white border border-gray-300 rounded overflow-hidden cursor-text"
+                style={getTextStyle(element)}
+                onDoubleClick={() => handleTextDoubleClick(element.id)}
               >
-                {element.content}
+                {editingElement === element.id ? (
+                  <input
+                    type="text"
+                    value={element.content || ''}
+                    onChange={(e) => handleTextChange(element.id, e.target.value)}
+                    onKeyDown={(e) => handleTextKeyDown(e, element.id)}
+                    onBlur={() => setEditingElement(null)}
+                    className="w-full h-full bg-transparent border-none outline-none"
+                    style={getTextStyle(element)}
+                    autoFocus
+                  />
+                ) : (
+                  <span className="w-full h-full flex items-center">{element.content}</span>
+                )}
               </div>
             ) : (
               <img

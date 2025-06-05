@@ -7,19 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Flashcard {
-  id: string;
-  question: string;
-  answer: string;
-  hint: string;
-}
-
-interface FlashcardSet {
-  id: string;
-  title: string;
-  description: string;
-}
+import { StudyCardRenderer } from '@/components/StudyCardRenderer';
+import { Flashcard, FlashcardSet, CanvasElement } from '@/types/flashcard';
 
 const StudyMode = () => {
   const { setId } = useParams();
@@ -63,7 +52,15 @@ const StudyMode = () => {
         .order('created_at', { ascending: true });
 
       if (cardsError) throw cardsError;
-      setCards(cardsData || []);
+      
+      // Transform the data to match our Flashcard type
+      const transformedCards: Flashcard[] = cardsData?.map(card => ({
+        ...card,
+        front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
+        back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : []
+      })) || [];
+      
+      setCards(transformedCards);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -142,9 +139,9 @@ const StudyMode = () => {
         </header>
         <main className="max-w-2xl mx-auto py-12 px-4 text-center">
           <h2 className="text-xl font-semibold mb-4">No cards to study</h2>
-          <p className="text-gray-600 mb-6">Add some flashcards to this set first!</p>
-          <Button onClick={() => navigate(`/add-card/${setId}`)}>
-            Add Cards
+          <p className="text-gray-600 mb-6">Create some flashcards in the visual editor first!</p>
+          <Button onClick={() => navigate(`/edit-cards/${setId}`)}>
+            Open Visual Editor
           </Button>
         </main>
       </div>
@@ -243,65 +240,65 @@ const StudyMode = () => {
         />
       </div>
 
-      <main className="max-w-2xl mx-auto py-8 px-4">
-        <Card className="min-h-[400px]">
-          <CardHeader>
-            <CardTitle className="text-center text-lg text-gray-600">Question</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+      <main className="max-w-4xl mx-auto py-8 px-4">
+        <div className="space-y-6">
+          {/* Front Side */}
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">Question</h3>
+            <StudyCardRenderer elements={currentCard.front_elements} className="mx-auto max-w-2xl" />
+          </div>
+          
+          {currentCard.hint && (
             <div className="text-center">
-              <p className="text-xl font-medium mb-6">{currentCard.question}</p>
-              
-              {currentCard.hint && (
-                <div className="mb-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowHint(!showHint)}
-                    className="text-indigo-600"
-                  >
-                    {showHint ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                    {showHint ? 'Hide Hint' : 'Show Hint'}
-                  </Button>
-                  {showHint && (
-                    <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm">
-                      <strong>Hint:</strong> {currentCard.hint}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {!showAnswer ? (
-                <Button onClick={() => setShowAnswer(true)} className="mb-6">
-                  Reveal Answer
-                </Button>
-              ) : (
-                <div className="mb-6">
-                  <div className="p-4 bg-blue-50 border-l-4 border-blue-400 mb-4">
-                    <p className="font-medium">{currentCard.answer}</p>
-                  </div>
-                  <div className="flex space-x-4 justify-center">
-                    <Button
-                      onClick={() => handleAnswer(false)}
-                      variant="outline"
-                      className="flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      Incorrect
-                    </Button>
-                    <Button
-                      onClick={() => handleAnswer(true)}
-                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      Correct
-                    </Button>
-                  </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowHint(!showHint)}
+                className="text-indigo-600"
+              >
+                {showHint ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                {showHint ? 'Hide Hint' : 'Show Hint'}
+              </Button>
+              {showHint && (
+                <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm max-w-2xl mx-auto">
+                  <strong>Hint:</strong> {currentCard.hint}
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          )}
+
+          <div className="text-center">
+            {!showAnswer ? (
+              <Button onClick={() => setShowAnswer(true)} size="lg">
+                Reveal Answer
+              </Button>
+            ) : (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">Answer</h3>
+                  <StudyCardRenderer elements={currentCard.back_elements} className="mx-auto max-w-2xl" />
+                </div>
+                <div className="flex space-x-4 justify-center">
+                  <Button
+                    onClick={() => handleAnswer(false)}
+                    variant="outline"
+                    className="flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Incorrect
+                  </Button>
+                  <Button
+                    onClick={() => handleAnswer(true)}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Correct
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );
