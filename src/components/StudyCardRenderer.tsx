@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
+import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
 
 interface StudyCardRendererProps {
   elements: CanvasElement[];
@@ -16,6 +17,45 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
     textDecoration: element.textDecoration,
     textAlign: element.textAlign as any,
   });
+
+  const renderElement = (element: CanvasElement) => {
+    switch (element.type) {
+      case 'multiple-choice':
+        return <MultipleChoiceRenderer element={element} isEditing={false} />;
+      case 'true-false':
+        return <TrueFalseRenderer element={element} isEditing={false} />;
+      case 'youtube':
+        return <YouTubeRenderer element={element} />;
+      case 'deck-embed':
+        return <DeckEmbedRenderer element={element} />;
+      case 'text':
+        return (
+          <div
+            className="w-full h-full flex items-center justify-center p-1 sm:p-2"
+            style={{
+              ...getTextStyle(element),
+              wordWrap: 'break-word',
+              overflow: 'visible',
+              whiteSpace: 'normal',
+              fontSize: `clamp(12px, ${element.fontSize || 16}px, ${(element.fontSize || 16) * 1.5}px)`,
+            }}
+          >
+            <span className="w-full text-center leading-normal break-words">{element.content}</span>
+          </div>
+        );
+      case 'image':
+        return (
+          <img
+            src={element.imageUrl}
+            alt="Element"
+            className="w-full h-full object-cover rounded"
+            draggable={false}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div 
@@ -37,33 +77,13 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
               left: `${(element.x / 800) * 100}%`,
               top: `${(element.y / 533) * 100}%`,
               width: `${(element.width / 800) * 100}%`,
-              height: 'auto',
+              height: `${(element.height / 533) * 100}%`,
               minHeight: `${(element.height / 533) * 100}%`,
               transform: `rotate(${element.rotation}deg)`,
               transformOrigin: 'center',
             }}
           >
-            {element.type === 'text' ? (
-              <div
-                className="w-full h-full flex items-center justify-center p-1 sm:p-2"
-                style={{
-                  ...getTextStyle(element),
-                  wordWrap: 'break-word',
-                  overflow: 'visible',
-                  whiteSpace: 'normal',
-                  fontSize: `clamp(12px, ${element.fontSize || 16}px, ${(element.fontSize || 16) * 1.5}px)`,
-                }}
-              >
-                <span className="w-full text-center leading-normal break-words">{element.content}</span>
-              </div>
-            ) : (
-              <img
-                src={element.imageUrl}
-                alt="Element"
-                className="w-full h-full object-cover rounded"
-                draggable={false}
-              />
-            )}
+            {renderElement(element)}
           </div>
         ))
       ) : (

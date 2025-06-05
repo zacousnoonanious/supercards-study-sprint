@@ -61,36 +61,44 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     };
   }, [onDeleteElement]);
 
-  // Calculate optimal popup position to keep it visible
+  // Calculate optimal popup position to keep it visible within canvas bounds
   const calculatePopupPosition = (element: CanvasElement) => {
     if (!canvasRef.current) return { x: element.x + element.width, y: element.y };
 
     const canvas = canvasRef.current;
     const canvasRect = canvas.getBoundingClientRect();
-    const popupWidth = 250; // Approximate popup width
-    const popupHeight = 200; // Approximate popup height
+    const canvasWidth = canvas.offsetWidth;
+    const canvasHeight = canvas.offsetHeight;
+    const popupWidth = 250;
+    const popupHeight = 300; // Increased to account for larger popup content
 
     let x = element.x + element.width + 10;
     let y = element.y;
 
-    // If popup would go off the right edge, position it to the left
-    if (x + popupWidth > canvasRect.width) {
-      x = element.x - popupWidth - 10;
+    // Constrain to canvas boundaries
+    // If popup would go off the right edge, position it to the left of the element
+    if (x + popupWidth > canvasWidth) {
+      x = Math.max(10, element.x - popupWidth - 10);
     }
 
     // If popup would go off the bottom edge, adjust y position
-    if (y + popupHeight > canvasRect.height) {
-      y = Math.max(0, canvasRect.height - popupHeight - 10);
+    if (y + popupHeight > canvasHeight) {
+      y = Math.max(10, canvasHeight - popupHeight - 10);
     }
 
     // If popup would go off the top edge, position it at the top
-    if (y < 0) {
+    if (y < 10) {
       y = 10;
     }
 
-    // If popup would go off the left edge, position it inside the canvas
-    if (x < 0) {
+    // Final check: if popup would still go off the left edge, position it inside
+    if (x < 10) {
       x = 10;
+    }
+
+    // Final check: if popup would still go off the right edge, position it inside
+    if (x + popupWidth > canvasWidth) {
+      x = Math.max(10, canvasWidth - popupWidth - 10);
     }
 
     return { x, y };
