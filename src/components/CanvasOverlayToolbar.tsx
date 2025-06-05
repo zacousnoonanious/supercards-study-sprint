@@ -1,33 +1,25 @@
-
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
-  Type, 
-  Image, 
-  Volume2, 
-  Pencil, 
-  CheckSquare, 
-  ToggleLeft,
-  Youtube,
-  Layers,
-  Plus,
-  Copy,
-  FileText,
-  ChevronLeft,
-  ChevronRight,
-  Trash2
-} from 'lucide-react';
-import { Flashcard } from '@/types/flashcard';
+import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles } from 'lucide-react';
+import { CardSideToggle } from './CardSideToggle';
+import { FlashcardSet, Flashcard } from '@/types/flashcard';
+import { AIFlashcardGenerator } from './AIFlashcardGenerator';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface CanvasOverlayToolbarProps {
-  set: any;
+  set: FlashcardSet;
   currentCard: Flashcard;
   currentCardIndex: number;
   totalCards: number;
   currentSide: 'front' | 'back';
   onAddElement: (type: string) => void;
-  onUpdateCard: (id: string, updates: Partial<Flashcard>) => void;
+  onUpdateCard: (cardId: string, updates: Partial<Flashcard>) => void;
   onNavigateCard: (direction: 'prev' | 'next') => void;
   onSideChange: (side: 'front' | 'back') => void;
   onCreateNewCard: () => void;
@@ -51,127 +43,151 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
   onDeleteCard,
   onSave,
 }) => {
-  const elementTypes = [
-    { type: 'text', icon: Type, label: 'Text' },
-    { type: 'image', icon: Image, label: 'Image' },
-    { type: 'audio', icon: Volume2, label: 'Audio' },
-    { type: 'drawing', icon: Pencil, label: 'Drawing' },
-    { type: 'multiple-choice', icon: CheckSquare, label: 'MC' },
-    { type: 'true-false', icon: ToggleLeft, label: 'T/F' },
-    { type: 'fill-in-blank', icon: FileText, label: 'Fill' },
-    { type: 'youtube', icon: Youtube, label: 'Video' },
-    { type: 'deck-embed', icon: Layers, label: 'Embed' },
-  ];
+  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
+
+  const deleteCard = async () => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this card?');
+    if (confirmDelete) {
+      return await onDeleteCard();
+    }
+    return false;
+  };
 
   return (
-    <div className="absolute top-1 left-1 right-1 z-40 pointer-events-none">
-      <Card className="bg-white/90 backdrop-blur-sm border shadow-sm pointer-events-auto">
-        <CardContent className="p-1">
-          <div className="flex items-center justify-between gap-2">
-            {/* Left section - Navigation */}
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onNavigateCard('prev')}
-                disabled={currentCardIndex === 0}
-                className="h-6 w-6 p-0"
-              >
-                <ChevronLeft className="w-3 h-3" />
-              </Button>
-              
-              <span className="text-xs font-medium px-1 py-0.5 bg-gray-100 rounded text-center min-w-[40px]">
-                {currentCardIndex + 1}/{totalCards}
-              </span>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onNavigateCard('next')}
-                disabled={currentCardIndex === totalCards - 1}
-                className="h-6 w-6 p-0"
-              >
-                <ChevronRight className="w-3 h-3" />
-              </Button>
-
-              <div className="w-px h-4 bg-gray-300 mx-1" />
-
-              {/* Side toggle */}
-              <div className="flex bg-gray-100 rounded p-0.5">
+    <div className="absolute top-2 left-2 right-2 z-20">
+      <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2">
+        <div className="flex items-center justify-between gap-2">
+          {/* Left section - Add elements */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddElement('text')}
+              className="h-8 px-2"
+            >
+              <span className="text-xs">Text</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddElement('image')}
+              className="h-8 px-2"
+            >
+              <span className="text-xs">Image</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddElement('multiple-choice')}
+              className="h-8 px-2"
+            >
+              <span className="text-xs">Quiz</span>
+            </Button>
+            
+            <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
+              <DialogTrigger asChild>
                 <Button
-                  variant={currentSide === 'front' ? 'default' : 'ghost'}
+                  variant="ghost"
                   size="sm"
-                  onClick={() => onSideChange('front')}
-                  className="h-5 px-2 text-xs"
+                  className="h-8 px-2 text-indigo-600"
                 >
-                  F
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  <span className="text-xs">AI</span>
                 </Button>
-                <Button
-                  variant={currentSide === 'back' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => onSideChange('back')}
-                  className="h-5 px-2 text-xs"
-                >
-                  B
-                </Button>
-              </div>
-            </div>
-
-            {/* Center section - Add elements */}
-            <div className="flex items-center gap-0.5">
-              {elementTypes.map(({ type, icon: Icon, label }) => (
-                <Button
-                  key={type}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onAddElement(type)}
-                  className="h-6 w-6 p-0"
-                  title={`Add ${label}`}
-                >
-                  <Icon className="w-3 h-3" />
-                </Button>
-              ))}
-            </div>
-
-            {/* Right section - Card actions */}
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onCreateNewCard}
-                className="h-6 w-6 p-0"
-                title="New Card"
-              >
-                <Plus className="w-3 h-3" />
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onCreateNewCardWithLayout}
-                className="h-6 w-6 p-0"
-                title="Duplicate Layout"
-              >
-                <Copy className="w-3 h-3" />
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onDeleteCard}
-                className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
-                title="Delete Card"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-              
-              <Button onClick={onSave} size="sm" className="h-6 px-2 text-xs">
-                Save
-              </Button>
-            </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add AI-Generated Cards</DialogTitle>
+                </DialogHeader>
+                <AIFlashcardGenerator
+                  setId={set.id}
+                  mode="add-to-set"
+                  onGenerated={() => {
+                    setIsAIDialogOpen(false);
+                    window.location.reload(); // Refresh to show new cards
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Center section - Navigation */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onNavigateCard('prev')}
+              disabled={currentCardIndex === 0}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            
+            <span className="text-xs text-muted-foreground px-2">
+              {currentCardIndex + 1} of {totalCards}
+            </span>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onNavigateCard('next')}
+              disabled={currentCardIndex === totalCards - 1}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+
+            <CardSideToggle
+              currentSide={currentSide}
+              onSideChange={onSideChange}
+              size="sm"
+            />
+          </div>
+
+          {/* Right section - Actions */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCreateNewCard}
+              className="h-8 px-2"
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              <span className="text-xs">New</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCreateNewCardWithLayout}
+              className="h-8 px-2"
+            >
+              <Copy className="w-3 h-3 mr-1" />
+              <span className="text-xs">Copy</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={deleteCard}
+              className="h-8 px-2 text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="w-3 h-3 mr-1" />
+              <span className="text-xs">Delete</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSave}
+              className="h-8 px-2"
+            >
+              <Save className="w-3 h-3 mr-1" />
+              <span className="text-xs">Save</span>
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

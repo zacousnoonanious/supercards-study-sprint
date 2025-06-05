@@ -98,8 +98,17 @@ const CreateSet = () => {
 
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+          {/* AI Generation - Now first and enhanced */}
+          <div className="order-1">
+            <AIFlashcardGenerator
+              mode="create-new-deck"
+              onGenerated={() => {}}
+              onDeckCreated={handleAIDeckCreated}
+            />
+          </div>
+
           {/* Manual Creation */}
-          <div className="order-2 xl:order-1">
+          <div className="order-2">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg sm:text-xl">Create Manually</CardTitle>
@@ -144,21 +153,12 @@ const CreateSet = () => {
               </CardContent>
             </Card>
           </div>
-
-          {/* AI Generation */}
-          <div className="order-1 xl:order-2">
-            <AIFlashcardGenerator
-              mode="create-new-deck"
-              onGenerated={() => {}}
-              onDeckCreated={handleAIDeckCreated}
-            />
-          </div>
         </div>
 
         <div className="mt-6 sm:mt-8 text-center">
           <Separator className="mb-4" />
           <p className="text-xs sm:text-sm text-muted-foreground px-4">
-            Choose to create an empty deck and add cards manually, or let AI generate a complete deck for you.
+            Use AI to generate a complete deck with quiz questions, or create an empty deck and add cards manually.
           </p>
         </div>
       </main>
