@@ -96,8 +96,8 @@ export const useCardEditor = () => {
     const defaultFrontElement: CanvasElement = {
       id: `front-text-${Date.now()}`,
       type: 'text',
-      x: 50,
-      y: 100,
+      x: 150,
+      y: 180,
       width: 300,
       height: 60,
       rotation: 0,
@@ -107,14 +107,14 @@ export const useCardEditor = () => {
       fontWeight: 'normal',
       fontStyle: 'normal',
       textDecoration: 'none',
-      textAlign: 'left'
+      textAlign: 'center'
     };
 
     const defaultBackElement: CanvasElement = {
       id: `back-text-${Date.now()}`,
       type: 'text',
-      x: 50,
-      y: 100,
+      x: 150,
+      y: 180,
       width: 300,
       height: 60,
       rotation: 0,
@@ -124,7 +124,7 @@ export const useCardEditor = () => {
       fontWeight: 'normal',
       fontStyle: 'normal',
       textDecoration: 'none',
-      textAlign: 'left'
+      textAlign: 'center'
     };
 
     try {
@@ -198,18 +198,18 @@ export const useCardEditor = () => {
     const newElement: CanvasElement = {
       id: `element-${Date.now()}`,
       type,
-      x: 50,
-      y: 50,
-      width: type === 'text' ? 200 : 150,
-      height: type === 'text' ? 40 : 150,
+      x: type === 'text' ? 150 : 50,
+      y: type === 'text' ? 180 : 50,
+      width: type === 'text' ? 300 : 150,
+      height: type === 'text' ? 60 : 150,
       rotation: 0,
       content: type === 'text' ? 'Edit this text' : '',
-      fontSize: type === 'text' ? 16 : undefined,
+      fontSize: type === 'text' ? 20 : undefined,
       color: type === 'text' ? '#000000' : undefined,
       fontWeight: type === 'text' ? 'normal' : undefined,
       fontStyle: type === 'text' ? 'normal' : undefined,
       textDecoration: type === 'text' ? 'none' : undefined,
-      textAlign: type === 'text' ? 'left' : undefined,
+      textAlign: type === 'text' ? 'center' : undefined,
       imageUrl: type === 'image' ? '/placeholder.svg' : undefined
     };
 

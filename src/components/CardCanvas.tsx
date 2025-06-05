@@ -107,6 +107,40 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     setEditingElement(elementId);
   };
 
+  const handleTextClick = (e: React.MouseEvent, elementId: string) => {
+    e.stopPropagation();
+    
+    // Handle double and triple clicks for text selection
+    if (e.detail === 2) {
+      // Double click - select all text
+      const target = e.currentTarget.querySelector('input, span') as HTMLInputElement | HTMLElement;
+      if (target && 'select' in target) {
+        target.select();
+      } else if (target) {
+        // For span elements, select all text
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(target);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      }
+      setEditingElement(elementId);
+    } else if (e.detail === 3) {
+      // Triple click - also select all text (same as double click for our use case)
+      const target = e.currentTarget.querySelector('input, span') as HTMLInputElement | HTMLElement;
+      if (target && 'select' in target) {
+        target.select();
+      } else if (target) {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(target);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      }
+      setEditingElement(elementId);
+    }
+  };
+
   const handleTextKeyDown = (e: React.KeyboardEvent, elementId: string) => {
     if (e.key === 'Enter') {
       setEditingElement(null);
@@ -165,7 +199,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
               <div
                 className="w-full h-full flex items-center justify-center p-2 bg-white border border-gray-300 rounded overflow-hidden cursor-text"
                 style={getTextStyle(element)}
-                onDoubleClick={() => handleTextDoubleClick(element.id)}
+                onClick={(e) => handleTextClick(e, element.id)}
               >
                 {editingElement === element.id ? (
                   <input
@@ -174,12 +208,17 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
                     onChange={(e) => handleTextChange(element.id, e.target.value)}
                     onKeyDown={(e) => handleTextKeyDown(e, element.id)}
                     onBlur={() => setEditingElement(null)}
-                    className="w-full h-full bg-transparent border-none outline-none"
+                    className="w-full h-full bg-transparent border-none outline-none text-center"
                     style={getTextStyle(element)}
                     autoFocus
                   />
                 ) : (
-                  <span className="w-full h-full flex items-center">{element.content}</span>
+                  <span 
+                    className="w-full h-full flex items-center justify-center"
+                    style={{ textAlign: element.textAlign || 'center' }}
+                  >
+                    {element.content}
+                  </span>
                 )}
               </div>
             ) : (
