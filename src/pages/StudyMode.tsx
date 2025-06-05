@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -116,16 +117,16 @@ const StudyMode = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-lg text-foreground">Loading...</div>
       </div>
     );
   }
 
   if (!set || cards.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
+      <div className="min-h-screen bg-background">
+        <header className="bg-card shadow-sm border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center h-16">
               <Button
@@ -137,13 +138,13 @@ const StudyMode = () => {
                 <ArrowLeft className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Back to Set</span>
               </Button>
-              <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">Study Mode</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-primary">Study Mode</h1>
             </div>
           </div>
         </header>
         <main className="max-w-2xl mx-auto py-8 sm:py-12 px-4 text-center">
-          <h2 className="text-lg sm:text-xl font-semibold mb-4">No cards to study</h2>
-          <p className="text-gray-600 mb-6 text-sm sm:text-base">Create some flashcards in the visual editor first!</p>
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-foreground">No cards to study</h2>
+          <p className="text-muted-foreground mb-6 text-sm sm:text-base">Create some flashcards in the visual editor first!</p>
           <Button onClick={() => navigate(`/edit-cards/${setId}`)} className="w-full sm:w-auto">
             Open Visual Editor
           </Button>
@@ -157,8 +158,8 @@ const StudyMode = () => {
     const accuracy = totalCards > 0 ? Math.round((sessionStats.correct / totalCards) * 100) : 0;
 
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
+      <div className="min-h-screen bg-background">
+        <header className="bg-card shadow-sm border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center h-16">
               <Button
@@ -170,7 +171,7 @@ const StudyMode = () => {
                 <ArrowLeft className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Back to Set</span>
               </Button>
-              <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">Study Complete!</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-green-600">Study Complete!</h1>
             </div>
           </div>
         </header>
@@ -180,15 +181,15 @@ const StudyMode = () => {
               <CardTitle className="text-xl sm:text-2xl text-green-600">Great job!</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 sm:space-y-6">
-              <div className="text-3xl sm:text-4xl font-bold text-indigo-600">{accuracy}%</div>
+              <div className="text-3xl sm:text-4xl font-bold text-primary">{accuracy}%</div>
               <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
                 <div className="text-center">
                   <div className="text-xl sm:text-2xl font-bold text-green-600">{sessionStats.correct}</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Correct</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Correct</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xl sm:text-2xl font-bold text-red-600">{sessionStats.incorrect}</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Incorrect</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Incorrect</div>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
@@ -211,7 +212,7 @@ const StudyMode = () => {
   const progress = ((currentIndex + 1) / cards.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <style dangerouslySetInnerHTML={{
         __html: `
           .preserve-3d {
@@ -226,7 +227,7 @@ const StudyMode = () => {
         `
       }} />
       
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center min-w-0 flex-1">
@@ -240,8 +241,8 @@ const StudyMode = () => {
                 <span className="hidden sm:inline">Back to Set</span>
               </Button>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl font-bold text-indigo-600 truncate">Study: {set.title}</h1>
-                <p className="text-xs sm:text-sm text-gray-600">
+                <h1 className="text-lg sm:text-2xl font-bold text-primary truncate">Study: {set.title}</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Card {currentIndex + 1} of {cards.length}
                 </p>
               </div>
@@ -255,7 +256,7 @@ const StudyMode = () => {
               >
                 <Settings className="w-4 h-4" />
               </Button>
-              <div className="text-xs sm:text-sm text-gray-600 text-right flex-shrink-0">
+              <div className="text-xs sm:text-sm text-muted-foreground text-right flex-shrink-0">
                 <div className="hidden sm:block">
                   Correct: {sessionStats.correct} | Incorrect: {sessionStats.incorrect}
                 </div>
@@ -268,15 +269,15 @@ const StudyMode = () => {
         </div>
       </header>
 
-      <div className="w-full bg-gray-200 h-1">
+      <div className="w-full bg-muted h-1">
         <div 
-          className="bg-indigo-600 h-1 transition-all duration-300"
+          className="bg-primary h-1 transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
 
       {showSettings && (
-        <div className="bg-white border-b px-4 py-3">
+        <div className="bg-card border-b border-border px-4 py-3">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center space-x-2">
               <Switch
@@ -298,7 +299,7 @@ const StudyMode = () => {
             // Panel View (Original behavior)
             <>
               <div>
-                <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-4 text-center">Question</h3>
+                <h3 className="text-base sm:text-lg font-medium text-foreground mb-4 text-center">Question</h3>
                 <StudyCardRenderer elements={currentCard.front_elements} className="mx-auto max-w-full sm:max-w-2xl" />
               </div>
               
@@ -308,7 +309,7 @@ const StudyMode = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowHint(!showHint)}
-                    className="text-indigo-600"
+                    className="text-primary"
                   >
                     {showHint ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
                     {showHint ? 'Hide Hint' : 'Show Hint'}
@@ -329,7 +330,7 @@ const StudyMode = () => {
                 ) : (
                   <div className="space-y-4 sm:space-y-6">
                     <div>
-                      <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-4 text-center">Answer</h3>
+                      <h3 className="text-base sm:text-lg font-medium text-foreground mb-4 text-center">Answer</h3>
                       <StudyCardRenderer elements={currentCard.back_elements} className="mx-auto max-w-full sm:max-w-2xl" />
                     </div>
                     <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 justify-center">
@@ -379,7 +380,7 @@ const StudyMode = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowHint(!showHint)}
-                    className="text-indigo-600"
+                    className="text-primary"
                   >
                     {showHint ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
                     {showHint ? 'Hide Hint' : 'Show Hint'}
