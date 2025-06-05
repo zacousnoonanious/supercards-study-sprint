@@ -67,7 +67,7 @@ export const CardEditor = () => {
       
       setSet(setData);
 
-      // Fetch cards
+      // Fetch cards with front_elements and back_elements
       const { data: cardsData, error: cardsError } = await supabase
         .from('flashcards')
         .select('*')

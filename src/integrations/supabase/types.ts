@@ -39,7 +39,9 @@ export type Database = {
       flashcards: {
         Row: {
           answer: string
+          back_elements: Json | null
           created_at: string
+          front_elements: Json | null
           hint: string | null
           id: string
           last_reviewed_at: string | null
@@ -49,7 +51,9 @@ export type Database = {
         }
         Insert: {
           answer: string
+          back_elements?: Json | null
           created_at?: string
+          front_elements?: Json | null
           hint?: string | null
           id?: string
           last_reviewed_at?: string | null
@@ -59,7 +63,9 @@ export type Database = {
         }
         Update: {
           answer?: string
+          back_elements?: Json | null
           created_at?: string
+          front_elements?: Json | null
           hint?: string | null
           id?: string
           last_reviewed_at?: string | null
