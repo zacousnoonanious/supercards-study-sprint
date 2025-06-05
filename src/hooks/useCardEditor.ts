@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -214,30 +213,11 @@ export const useCardEditor = () => {
 
     console.log('Creating new card for setId:', setId);
 
-    // Create a default text element for new cards
-    const defaultTextElement: CanvasElement = {
-      id: `${Date.now()}-default-text`,
-      type: 'text',
-      x: 200,
-      y: 150,
-      width: 200,
-      height: 100,
-      rotation: 0,
-      zIndex: 0,
-      content: 'Double-click to edit',
-      fontSize: 16,
-      color: '#000000',
-      fontWeight: 'normal',
-      fontStyle: 'normal',
-      textDecoration: 'none',
-      textAlign: 'center',
-    };
-
     const newCard = {
       question: 'New Card',
       answer: 'Answer',
       hint: '',
-      front_elements: [defaultTextElement] as any,
+      front_elements: [] as any,
       back_elements: [] as any,
       set_id: setId,
       card_type: 'standard' as const,
@@ -270,16 +250,12 @@ export const useCardEditor = () => {
       const newCardIndex = cards.length;
 
       // Add the card to state and navigate to it
-      setCards(prevCards => {
-        const newCards = [...prevCards, createdCard];
-        console.log('Updated cards array:', newCards);
-        return newCards;
-      });
+      setCards(prevCards => [...prevCards, createdCard]);
       
       // Navigate to the new card using the pre-calculated index
       setCurrentCardIndex(newCardIndex);
       setSelectedElement(null);
-      setCurrentSide('front'); // Always start on front side for new cards
+      setCurrentSide('front');
       
       console.log('Set current card index to:', newCardIndex);
     } catch (error) {
