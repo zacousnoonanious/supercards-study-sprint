@@ -28,9 +28,10 @@ const sizes = [
 
 interface ThemeToggleProps {
   limitedThemes?: boolean;
+  showSizeControls?: boolean;
 }
 
-export const ThemeToggle = ({ limitedThemes = false }: ThemeToggleProps) => {
+export const ThemeToggle = ({ limitedThemes = false, showSizeControls = true }: ThemeToggleProps) => {
   const { theme, size, setTheme, setSize } = useTheme();
   const [open, setOpen] = useState(false);
 
@@ -66,24 +67,26 @@ export const ThemeToggle = ({ limitedThemes = false }: ThemeToggleProps) => {
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="size-select" className="text-sm font-medium flex items-center gap-2">
-              <Type className="w-4 h-4" />
-              Interface Size
-            </Label>
-            <Select value={size} onValueChange={setSize}>
-              <SelectTrigger id="size-select">
-                <SelectValue placeholder="Select size" />
-              </SelectTrigger>
-              <SelectContent>
-                {sizes.map((sizeOption) => (
-                  <SelectItem key={sizeOption.value} value={sizeOption.value}>
-                    {sizeOption.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {showSizeControls && (
+            <div>
+              <Label htmlFor="size-select" className="text-sm font-medium flex items-center gap-2">
+                <Type className="w-4 h-4" />
+                Interface Size
+              </Label>
+              <Select value={size} onValueChange={setSize}>
+                <SelectTrigger id="size-select">
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sizes.map((sizeOption) => (
+                    <SelectItem key={sizeOption.value} value={sizeOption.value}>
+                      {sizeOption.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>

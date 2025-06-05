@@ -43,15 +43,15 @@ const Index = () => {
   const selectedCards = flashcardPool.slice(0, 8);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-gray-900 overflow-hidden">
       <GlobalStyles />
 
-      <header className="bg-white shadow-sm border-b relative z-10">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
+            <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">SuperCards</h1>
             <div className="flex items-center space-x-4">
-              <ThemeToggle limitedThemes={true} />
+              <ThemeToggle limitedThemes={true} showSizeControls={false} />
               <Link to="/auth">
                 <Button variant="outline">Sign In</Button>
               </Link>
