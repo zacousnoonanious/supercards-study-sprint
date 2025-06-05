@@ -165,6 +165,10 @@ const SetView = () => {
           <h2 className="text-xl font-semibold text-gray-900">
             Flashcards ({cards.length})
           </h2>
+          <Button onClick={() => navigate(`/edit-cards/${setId}`)}>
+            <Palette className="w-4 h-4 mr-2" />
+            Open Visual Editor
+          </Button>
         </div>
 
         {cards.length === 0 ? (
