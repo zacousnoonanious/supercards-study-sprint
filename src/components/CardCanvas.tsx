@@ -162,6 +162,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       let newX = dragState.elementStart.x;
       let newY = dragState.elementStart.y;
 
+      // Handle corner resizing
       if (handle.includes('e')) {
         newWidth = dragState.elementStart.width + deltaX;
       }
@@ -173,6 +174,19 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         newHeight = dragState.elementStart.height + deltaY;
       }
       if (handle.includes('n')) {
+        newHeight = dragState.elementStart.height - deltaY;
+        newY = dragState.elementStart.y + deltaY;
+      }
+
+      // Handle edge-only resizing
+      if (handle === 'e') {
+        newWidth = dragState.elementStart.width + deltaX;
+      } else if (handle === 'w') {
+        newWidth = dragState.elementStart.width - deltaX;
+        newX = dragState.elementStart.x + deltaX;
+      } else if (handle === 's') {
+        newHeight = dragState.elementStart.height + deltaY;
+      } else if (handle === 'n') {
         newHeight = dragState.elementStart.height - deltaY;
         newY = dragState.elementStart.y + deltaY;
       }
@@ -306,6 +320,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         <>
           <CanvasInteractionHandler
             selectedElement={selectedElement}
+            selectedElementData={selectedElementData}
             dragState={dragState}
             onMouseDown={handleMouseDown}
             isDrawingMode={false}

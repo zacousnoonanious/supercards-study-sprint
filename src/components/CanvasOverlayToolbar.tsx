@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil } from 'lucide-react';
 import { CardSideToggle } from './CardSideToggle';
 import { FlashcardSet, Flashcard } from '@/types/flashcard';
 import { AIFlashcardGenerator } from './AIFlashcardGenerator';
@@ -81,7 +82,62 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
               onClick={() => onAddElement('multiple-choice')}
               className="h-8 px-2"
             >
+              <CheckSquare className="w-3 h-3 mr-1" />
               <span className="text-xs">Quiz</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddElement('true-false')}
+              className="h-8 px-2"
+            >
+              <ToggleLeft className="w-3 h-3 mr-1" />
+              <span className="text-xs">T/F</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddElement('fill-in-blank')}
+              className="h-8 px-2"
+            >
+              <FileText className="w-3 h-3 mr-1" />
+              <span className="text-xs">Fill</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddElement('youtube')}
+              className="h-8 px-2"
+            >
+              <Youtube className="w-3 h-3 mr-1" />
+              <span className="text-xs">Video</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddElement('deck-embed')}
+              className="h-8 px-2"
+            >
+              <Layers className="w-3 h-3 mr-1" />
+              <span className="text-xs">Deck</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddElement('audio')}
+              className="h-8 px-2"
+            >
+              <Volume2 className="w-3 h-3 mr-1" />
+              <span className="text-xs">Audio</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddElement('drawing')}
+              className="h-8 px-2"
+            >
+              <Pencil className="w-3 h-3 mr-1" />
+              <span className="text-xs">Draw</span>
             </Button>
             
             <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
