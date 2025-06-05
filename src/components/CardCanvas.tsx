@@ -1,8 +1,10 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { CanvasElement } from '@/types/flashcard';
 import { ElementPopupToolbar } from './ElementPopupToolbar';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
+import { DrawingCanvas } from './DrawingCanvas';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CardCanvasProps {
@@ -39,7 +41,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const [showPopupFor, setShowPopupFor] = useState<string | null>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [snapToGrid, setSnapToGrid] = useState(false);
-  const [textCursorPosition, setTextCursorPosition] = useState(0);
 
   const gridSize = 20;
 
@@ -312,6 +313,14 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         return <YouTubeRenderer element={element} />;
       case 'deck-embed':
         return <DeckEmbedRenderer element={element} />;
+      case 'drawing':
+        return (
+          <DrawingCanvas
+            element={element}
+            onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            isEditing={true}
+          />
+        );
       case 'audio':
         return (
           <div className={`w-full h-full flex items-center justify-center p-2 rounded border ${
@@ -329,20 +338,41 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             className={`w-full h-full flex items-center justify-center p-2 border rounded overflow-hidden cursor-text ${
               theme === 'dark' ? 'bg-gray-800 text-white border-gray-600' : 'bg-white border-gray-300'
             }`}
-            style={getTextStyle(element)}
-            onClick={(e) => handleTextClick(e, element.id)}
+            style={{
+              fontSize: element.fontSize,
+              color: element.color,
+              fontWeight: element.fontWeight,
+              fontStyle: element.fontStyle,
+              textDecoration: element.textDecoration,
+              textAlign: element.textAlign as any,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (e.detail === 2) {
+                setEditingElement(element.id);
+              }
+            }}
           >
             {editingElement === element.id ? (
               <textarea
                 value={element.content || ''}
-                onChange={(e) => handleTextChange(element.id, e.target.value)}
-                onKeyDown={(e) => handleTextKeyDown(e, element.id)}
+                onChange={(e) => onUpdateElement(element.id, { content: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setEditingElement(null);
+                  }
+                }}
                 onBlur={() => setEditingElement(null)}
                 className={`w-full h-full bg-transparent border-none outline-none resize-none ${
                   theme === 'dark' ? 'text-white' : 'text-black'
                 }`}
                 style={{
-                  ...getTextStyle(element),
+                  fontSize: element.fontSize,
+                  color: element.color,
+                  fontWeight: element.fontWeight,
+                  fontStyle: element.fontStyle,
+                  textDecoration: element.textDecoration,
+                  textAlign: element.textAlign as any,
                   whiteSpace: 'pre-wrap',
                 }}
                 autoFocus
@@ -375,15 +405,81 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
   const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
 
+  // Find the selected element for the popup
+  const popupElement = showPopupFor ? elements.find(el => el.id === showPopupFor) : null;
+
   return (
     <Card className={`relative overflow-hidden ${isDarkTheme ? 'bg-gray-900' : 'bg-white'}`} style={style || { aspectRatio: '3/2', minHeight: '400px' }}>
       <div
         ref={canvasRef}
         className="relative w-full h-full cursor-crosshair"
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onClick={handleCanvasClick}
+        onMouseMove={(e) => {
+          if (!dragState || !selectedElement) return;
+
+          const deltaX = e.clientX - dragState.dragStart.x;
+          const deltaY = e.clientY - dragState.dragStart.y;
+
+          if (dragState.isDragging) {
+            const newX = snapToGridIfEnabled(Math.max(0, dragState.elementStart.x + deltaX));
+            const newY = snapToGridIfEnabled(Math.max(0, dragState.elementStart.y + deltaY));
+            
+            onUpdateElement(selectedElement, { x: newX, y: newY });
+            
+            if (showPopupFor === selectedElement) {
+              const element = elements.find(el => el.id === selectedElement);
+              if (element) {
+                const updatedElement = { ...element, x: newX, y: newY };
+                const position = calculatePopupPosition(updatedElement);
+                setPopupPosition(position);
+              }
+            }
+          } else if (dragState.isResizing && dragState.resizeHandle) {
+            const updates: Partial<CanvasElement> = {};
+            
+            switch (dragState.resizeHandle) {
+              case 'se':
+                updates.width = snapToGridIfEnabled(Math.max(20, dragState.elementStart.width + deltaX));
+                updates.height = snapToGridIfEnabled(Math.max(20, dragState.elementStart.height + deltaY));
+                break;
+              case 'sw':
+                updates.width = snapToGridIfEnabled(Math.max(20, dragState.elementStart.width - deltaX));
+                updates.height = snapToGridIfEnabled(Math.max(20, dragState.elementStart.height + deltaY));
+                updates.x = snapToGridIfEnabled(dragState.elementStart.x + deltaX);
+                break;
+              case 'ne':
+                updates.width = snapToGridIfEnabled(Math.max(20, dragState.elementStart.width + deltaX));
+                updates.height = snapToGridIfEnabled(Math.max(20, dragState.elementStart.height - deltaY));
+                updates.y = snapToGridIfEnabled(dragState.elementStart.y + deltaY);
+                break;
+              case 'nw':
+                updates.width = snapToGridIfEnabled(Math.max(20, dragState.elementStart.width - deltaX));
+                updates.height = snapToGridIfEnabled(Math.max(20, dragState.elementStart.height - deltaY));
+                updates.x = snapToGridIfEnabled(dragState.elementStart.x + deltaX);
+                updates.y = snapToGridIfEnabled(dragState.elementStart.y + deltaY);
+                break;
+            }
+            
+            onUpdateElement(selectedElement, updates);
+            
+            if (showPopupFor === selectedElement) {
+              const element = elements.find(el => el.id === selectedElement);
+              if (element) {
+                const updatedElement = { ...element, ...updates };
+                const position = calculatePopupPosition(updatedElement);
+                setPopupPosition(position);
+              }
+            }
+          }
+        }}
+        onMouseUp={() => setDragState(null)}
+        onMouseLeave={() => setDragState(null)}
+        onClick={(e) => {
+          if (e.target === canvasRef.current) {
+            onSelectElement(null);
+            setEditingElement(null);
+            setShowPopupFor(null);
+          }
+        }}
         tabIndex={0}
         style={{ outline: 'none' }}
       >
@@ -422,7 +518,29 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
               Grid: {snapToGrid ? 'ON' : 'OFF'}
             </button>
             <button
-              onClick={autoArrangeElements}
+              onClick={() => {
+                if (!canvasRef.current) return;
+                
+                const canvas = canvasRef.current;
+                const canvasWidth = canvas.offsetWidth;
+                const canvasHeight = canvas.offsetHeight;
+                const padding = 20;
+                const cols = Math.ceil(Math.sqrt(elements.length));
+                const cellWidth = (canvasWidth - padding * 2) / cols;
+                const cellHeight = (canvasHeight - padding * 2) / Math.ceil(elements.length / cols);
+
+                elements.forEach((element, index) => {
+                  const col = index % cols;
+                  const row = Math.floor(index / cols);
+                  const x = padding + col * cellWidth + (cellWidth - element.width) / 2;
+                  const y = padding + row * cellHeight + (cellHeight - element.height) / 2;
+                  
+                  onUpdateElement(element.id, { 
+                    x: Math.max(0, Math.min(x, canvasWidth - element.width)),
+                    y: Math.max(0, Math.min(y, canvasHeight - element.height))
+                  });
+                });
+              }}
               className={`px-2 py-1 text-xs rounded ${
                 isDarkTheme 
                   ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
@@ -476,10 +594,10 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           </div>
         ))}
 
-        {/* Popup Toolbar */}
-        {showPopupFor && (
+        {/* Popup Toolbar - Only render if element exists */}
+        {showPopupFor && popupElement && (
           <ElementPopupToolbar
-            element={elements.find(el => el.id === showPopupFor)!}
+            element={popupElement}
             onUpdate={(updates) => onUpdateElement(showPopupFor, updates)}
             onDelete={() => {
               onDeleteElement(showPopupFor);

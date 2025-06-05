@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -161,8 +162,8 @@ const SetView = () => {
       <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Set Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 break-words">{set.title}</h1>
-          {set.description && (
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 break-words">{set?.title}</h1>
+          {set?.description && (
             <p className="text-gray-600 mb-4 text-sm sm:text-base">{set.description}</p>
           )}
           
@@ -329,7 +330,7 @@ const SetView = () => {
                           <div className="text-xs text-gray-400 mb-1">Front:</div>
                           <div className="text-xs sm:text-sm line-clamp-2 break-words">{card.question}</div>
                         </div>
-                        {card.card_type !== 'no-back' && (
+                        {card.card_type !== 'single-sided' && (
                           <div>
                             <div className="text-xs text-gray-400 mb-1">Back:</div>
                             <div className="text-xs sm:text-sm text-gray-600 line-clamp-2 break-words">{card.answer}</div>
