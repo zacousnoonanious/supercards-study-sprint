@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,7 @@ interface FlashcardSet {
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
+  const { t } = useI18n();
   const [sets, setSets] = useState<FlashcardSet[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -84,7 +86,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">{t('loading')}</div>
       </div>
     );
   }
@@ -96,9 +98,12 @@ const Dashboard = () => {
           <div className="flex justify-between items-center h-16">
             <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, {user?.email}</span>
+              <span className="text-sm text-gray-600">{t('welcome')}, {user?.email}</span>
+              <Button variant="outline" onClick={() => navigate('/profile')}>
+                {t('nav.profile')}
+              </Button>
               <Button variant="outline" onClick={handleSignOut}>
-                Sign Out
+                {t('nav.signOut')}
               </Button>
             </div>
           </div>
@@ -107,10 +112,10 @@ const Dashboard = () => {
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Your Flashcard Sets</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{t('dashboard.title')}</h2>
           <Button onClick={() => navigate('/create-set')} className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
-            Create New Set
+            {t('nav.createSet')}
           </Button>
         </div>
 
@@ -118,10 +123,10 @@ const Dashboard = () => {
           <Card className="text-center py-12">
             <CardContent>
               <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No flashcard sets yet</h3>
-              <p className="text-gray-600 mb-4">Create your first set to get started!</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t('dashboard.noSets')}</h3>
+              <p className="text-gray-600 mb-4">{t('dashboard.noSetsDesc')}</p>
               <Button onClick={() => navigate('/create-set')}>
-                Create Your First Set
+                {t('dashboard.createFirst')}
               </Button>
             </CardContent>
           </Card>
@@ -158,13 +163,13 @@ const Dashboard = () => {
                       onClick={() => navigate(`/set/${set.id}`)}
                       className="flex-1 mr-2"
                     >
-                      View Cards
+                      {t('dashboard.viewCards')}
                     </Button>
                     <Button
                       onClick={() => navigate(`/study/${set.id}`)}
                       className="flex-1 ml-2"
                     >
-                      Study
+                      {t('dashboard.study')}
                     </Button>
                   </div>
                 </CardContent>
