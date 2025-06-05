@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, EyeOff, Lock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { StudyCardRenderer } from '@/components/StudyCardRenderer';
 import { Flashcard } from '@/types/flashcard';
 
@@ -26,6 +27,116 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   onAnswer,
   onFlipCard,
 }) => {
+  const [passwordInput, setPasswordInput] = useState('');
+  const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+
+  const handlePasswordSubmit = () => {
+    if (passwordInput === currentCard.password) {
+      setIsPasswordCorrect(true);
+      setPasswordError('');
+    } else {
+      setPasswordError('Incorrect password. Please try again.');
+    }
+  };
+
+  // Show password protection for password-protected cards
+  if (currentCard.card_type === 'password-protected' && !isPasswordCorrect) {
+    return (
+      <div className="w-full max-w-md mx-auto text-center space-y-6 p-4">
+        <div className="flex flex-col items-center space-y-4">
+          <Lock className="w-12 h-12 text-primary" />
+          <h3 className="text-lg font-semibold">Password Protected Card</h3>
+          <p className="text-muted-foreground">Enter the password to view this card</p>
+        </div>
+        
+        <div className="space-y-4">
+          <Input
+            type="password"
+            placeholder="Enter password"
+            value={passwordInput}
+            onChange={(e) => setPasswordInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+            className="text-center"
+          />
+          {passwordError && (
+            <p className="text-red-500 text-sm">{passwordError}</p>
+          )}
+          <Button onClick={handlePasswordSubmit} className="w-full">
+            Unlock Card
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Full screen layout for informational cards
+  if (currentCard.card_type === 'informational') {
+    return (
+      <div className="w-full h-full flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <StudyCardRenderer 
+            elements={currentCard.front_elements} 
+            className="w-full h-full max-w-none max-h-none"
+            style={{ width: '100vw', height: '80vh', maxWidth: 'none', aspectRatio: 'unset' }}
+          />
+        </div>
+        
+        {currentCard.hint && (
+          <div className="text-center p-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleHint}
+              className="text-primary"
+            >
+              {showHint ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+              {showHint ? 'Hide Hint' : 'Show Hint'}
+            </Button>
+            {showHint && (
+              <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 text-xs sm:text-sm max-w-2xl mx-auto">
+                <strong>Hint:</strong> {currentCard.hint}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Single-sided cards only show front
+  if (currentCard.card_type === 'single-sided') {
+    return (
+      <div className="w-full max-w-5xl mx-auto space-y-8 p-4">
+        <div className="space-y-4">
+          <div className="flex justify-center">
+            <StudyCardRenderer elements={currentCard.front_elements} />
+          </div>
+        </div>
+        
+        {currentCard.hint && (
+          <div className="text-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleHint}
+              className="text-primary"
+            >
+              {showHint ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+              {showHint ? 'Hide Hint' : 'Show Hint'}
+            </Button>
+            {showHint && (
+              <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 text-xs sm:text-sm max-w-2xl mx-auto">
+                <strong>Hint:</strong> {currentCard.hint}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Standard card behavior (existing code)
   if (showPanelView) {
     return (
       <div className="w-full max-w-5xl mx-auto space-y-8 p-4">

@@ -3,17 +3,16 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Paintbrush, Eraser, RotateCcw, Play, Pause } from 'lucide-react';
+import { Paintbrush, Eraser, RotateCcw } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface DrawingCanvasProps {
   width: number;
   height: number;
-  onDrawingComplete: (drawingData: string, animated?: boolean) => void;
+  onDrawingComplete: (drawingData: string) => void;
   initialDrawing?: string;
   strokeColor?: string;
   strokeWidth?: number;
-  animated?: boolean;
 }
 
 export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
@@ -23,7 +22,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   initialDrawing,
   strokeColor = '#000000',
   strokeWidth = 2,
-  animated = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { theme } = useTheme();
@@ -37,19 +35,14 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     path: string;
     color: string;
     width: number;
-    timestamp: number;
   }>>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [animationEnabled, setAnimationEnabled] = useState(animated);
 
   useEffect(() => {
     if (initialDrawing) {
-      // Parse initial drawing data if provided
       const canvas = canvasRef.current;
       if (canvas) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
-          // Draw initial content
           const img = new Image();
           img.onload = () => ctx.drawImage(img, 0, 0);
           img.src = `data:image/svg+xml,${encodeURIComponent(initialDrawing)}`;
@@ -72,7 +65,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.lineWidth = currentStrokeWidth;
-      ctx.strokeStyle = tool === 'eraser' ? '#FFFFFF' : currentColor;
+      ctx.strokeStyle = tool === 'eraser' ? 'rgba(0,0,0,0)' : currentColor;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       
@@ -107,27 +100,22 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
     const canvas = canvasRef.current;
     if (canvas) {
-      // Save the current drawing state
-      const dataURL = canvas.toDataURL();
-      const timestamp = Date.now();
-      
       setPaths(prev => [...prev, {
-        path: dataURL,
+        path: canvas.toDataURL('image/png'),
         color: currentColor,
         width: currentStrokeWidth,
-        timestamp
       }]);
 
-      // Convert to SVG format for saving
-      const svgData = canvasToSVG(canvas);
-      onDrawingComplete(svgData, animationEnabled);
+      // Convert to transparent SVG format for saving
+      const svgData = canvasToTransparentSVG(canvas);
+      onDrawingComplete(svgData);
     }
   };
 
-  const canvasToSVG = (canvas: HTMLCanvasElement): string => {
-    const dataURL = canvas.toDataURL();
+  const canvasToTransparentSVG = (canvas: HTMLCanvasElement): string => {
+    const dataURL = canvas.toDataURL('image/png');
     return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <image href="${dataURL}" width="${width}" height="${height}"/>
+      <image href="${dataURL}" width="${width}" height="${height}" style="mix-blend-mode: multiply;"/>
     </svg>`;
   };
 
@@ -138,35 +126,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         setPaths([]);
-        onDrawingComplete('', animationEnabled);
+        onDrawingComplete('');
       }
     }
-  };
-
-  const animateDrawing = async () => {
-    if (paths.length === 0) return;
-    
-    setIsAnimating(true);
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (let i = 0; i < paths.length; i++) {
-      await new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => {
-          ctx.drawImage(img, 0, 0);
-          setTimeout(resolve, 200); // Delay between strokes
-        };
-        img.src = paths[i].path;
-      });
-    }
-    
-    setIsAnimating(false);
   };
 
   return (
@@ -216,41 +178,15 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           />
         </div>
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={clearCanvas}
-            className="flex items-center gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Clear
-          </Button>
-          
-          {paths.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={animateDrawing}
-              disabled={isAnimating}
-              className="flex items-center gap-2"
-            >
-              {isAnimating ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              {isAnimating ? 'Playing...' : 'Animate'}
-            </Button>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="animated"
-            checked={animationEnabled}
-            onChange={(e) => setAnimationEnabled(e.target.checked)}
-            className="rounded"
-          />
-          <Label htmlFor="animated" className="text-sm">Save as animated</Label>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={clearCanvas}
+          className="flex items-center gap-2"
+        >
+          <RotateCcw className="w-4 h-4" />
+          Clear
+        </Button>
       </div>
 
       <canvas
@@ -258,8 +194,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         width={width}
         height={height}
         className={`border rounded cursor-crosshair ${
-          isDarkTheme ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
+          isDarkTheme ? 'border-gray-600' : 'border-gray-300'
         }`}
+        style={{ backgroundColor: 'transparent' }}
         onMouseDown={startDrawing}
         onMouseMove={draw}
         onMouseUp={stopDrawing}

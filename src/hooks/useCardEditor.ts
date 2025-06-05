@@ -318,6 +318,40 @@ export const useCardEditor = () => {
     }
   };
 
+  const deleteCard = async (cardId: string) => {
+    if (cards.length <= 1) {
+      console.log('Cannot delete the last card');
+      return false;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('flashcards')
+        .delete()
+        .eq('id', cardId);
+
+      if (error) throw error;
+
+      // Remove card from local state
+      const cardIndex = cards.findIndex(card => card.id === cardId);
+      setCards(prevCards => prevCards.filter(card => card.id !== cardId));
+
+      // Adjust current card index if necessary
+      if (cardIndex <= currentCardIndex && currentCardIndex > 0) {
+        setCurrentCardIndex(currentCardIndex - 1);
+      } else if (cardIndex === currentCardIndex && currentCardIndex >= cards.length - 1) {
+        setCurrentCardIndex(Math.max(0, cards.length - 2));
+      }
+
+      setSelectedElement(null);
+      console.log('Card deleted successfully');
+      return true;
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      return false;
+    }
+  };
+
   return {
     set,
     cards,
@@ -335,5 +369,6 @@ export const useCardEditor = () => {
     navigateCard,
     createNewCard,
     createNewCardWithLayout,
+    deleteCard,
   };
 };

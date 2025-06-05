@@ -81,11 +81,15 @@ export type Database = {
         Row: {
           answer: string
           back_elements: Json | null
+          card_type: string | null
+          countdown_timer: number | null
           created_at: string
           front_elements: Json | null
           hint: string | null
           id: string
+          interactive_type: string | null
           last_reviewed_at: string | null
+          password: string | null
           question: string
           set_id: string
           updated_at: string
@@ -93,11 +97,15 @@ export type Database = {
         Insert: {
           answer: string
           back_elements?: Json | null
+          card_type?: string | null
+          countdown_timer?: number | null
           created_at?: string
           front_elements?: Json | null
           hint?: string | null
           id?: string
+          interactive_type?: string | null
           last_reviewed_at?: string | null
+          password?: string | null
           question: string
           set_id: string
           updated_at?: string
@@ -105,11 +113,15 @@ export type Database = {
         Update: {
           answer?: string
           back_elements?: Json | null
+          card_type?: string | null
+          countdown_timer?: number | null
           created_at?: string
           front_elements?: Json | null
           hint?: string | null
           id?: string
+          interactive_type?: string | null
           last_reviewed_at?: string | null
+          password?: string | null
           question?: string
           set_id?: string
           updated_at?: string

@@ -7,9 +7,14 @@ import { useTheme } from '@/contexts/ThemeContext';
 interface StudyCardRendererProps {
   elements: CanvasElement[];
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, className = '' }) => {
+export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ 
+  elements, 
+  className = '', 
+  style = {} 
+}) => {
   const { theme } = useTheme();
   const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
 
@@ -67,9 +72,24 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
             draggable={false}
           />
         );
+      case 'drawing':
+        return (
+          <div 
+            className="w-full h-full"
+            dangerouslySetInnerHTML={{ __html: element.drawingData || '' }}
+          />
+        );
       default:
         return null;
     }
+  };
+
+  const defaultStyle = {
+    width: '100%', 
+    height: '300px',
+    minHeight: '300px',
+    maxWidth: '500px',
+    aspectRatio: '4/3'
   };
 
   return (
@@ -79,13 +99,7 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
           ? 'bg-gray-900 border-gray-700' 
           : 'bg-card border-gray-200'
       } ${className}`} 
-      style={{ 
-        width: '100%', 
-        height: '300px',
-        minHeight: '300px',
-        maxWidth: '500px',
-        aspectRatio: '4/3'
-      }}
+      style={{ ...defaultStyle, ...style }}
     >
       {elements && elements.length > 0 ? (
         elements.map((element) => (

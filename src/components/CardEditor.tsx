@@ -27,6 +27,7 @@ export const CardEditor: React.FC = () => {
     navigateCard,
     createNewCard,
     createNewCardWithLayout,
+    deleteCard,
   } = useCardEditor();
 
   console.log('CardEditor render - loading:', loading, 'set:', set, 'cards:', cards.length);
@@ -136,6 +137,8 @@ export const CardEditor: React.FC = () => {
                   currentSide={currentSide}
                   onSideChange={setCurrentSide}
                   onCreateNewCard={createNewCard}
+                  onCreateNewCardWithLayout={createNewCardWithLayout}
+                  onDeleteCard={() => deleteCard(currentCard.id)}
                   cardType={currentCard?.card_type}
                 />
 
