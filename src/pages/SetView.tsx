@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Edit, Trash2, Play, Palette } from 'lucide-react';
+import { ArrowLeft, Trash2, Play, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Flashcard {
@@ -137,13 +136,6 @@ const SetView = () => {
               </div>
             </div>
             <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/edit-set/${setId}`)}
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Set
-              </Button>
               <Button
                 onClick={() => navigate(`/edit-cards/${setId}`)}
               >
