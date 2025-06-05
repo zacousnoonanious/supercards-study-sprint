@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CanvasElement } from '@/types/flashcard';
@@ -6,12 +7,20 @@ interface AIFlashcardGeneratorProps {
   onAddElement: (type: string) => void;
   selectedElement: CanvasElement | null;
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
+  setId?: string;
+  onGenerated?: () => void;
+  mode?: string;
+  onDeckCreated?: (deckId: string) => void;
 }
 
 export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
   onAddElement,
   selectedElement,
   onUpdateElement,
+  setId,
+  onGenerated,
+  mode,
+  onDeckCreated,
 }) => {
   const [question, setQuestion] = React.useState('');
   const [answer, setAnswer] = React.useState('');
@@ -29,6 +38,11 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
     // Clear the input fields after generating the card
     setQuestion('');
     setAnswer('');
+    
+    // Call onGenerated if provided
+    if (onGenerated) {
+      onGenerated();
+    }
   };
 
   const addTextElement = (text: string, isQuestion: boolean = false) => {
@@ -43,21 +57,28 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
     const words = text.split(' ');
     const estimatedLines = Math.ceil(words.length / wordsPerLine);
     
-    // Calculate dimensions
+    // Calculate dimensions to fit all text
     const textWidth = Math.min(text.length * estimatedCharWidth + padding, maxWidth);
     const textHeight = Math.max(estimatedLines * estimatedLineHeight + padding, 60);
+    
+    // Calculate font size to fit within dimensions if text is too long
+    const maxCharsPerLine = Math.floor((textWidth - padding) / estimatedCharWidth);
+    const actualLines = Math.ceil(text.length / maxCharsPerLine);
+    const availableHeight = textHeight - padding;
+    const maxFontSize = Math.floor(availableHeight / Math.max(actualLines, 1));
+    const fontSize = Math.max(Math.min(maxFontSize, 16), 12); // Between 12px and 16px
     
     const newElement: CanvasElement = {
       id: Date.now().toString() + Math.random(),
       type: 'text',
       x: isQuestion ? 50 : 400,
       y: isQuestion ? 50 : 200,
-      width: textWidth,
-      height: textHeight,
+      width: Math.max(textWidth, 200), // Ensure minimum width
+      height: Math.max(textHeight, 80), // Ensure minimum height
       rotation: 0,
       zIndex: 0,
       content: text,
-      fontSize: 16,
+      fontSize: fontSize,
       color: '#000000',
       fontWeight: 'normal',
       fontStyle: 'normal',
