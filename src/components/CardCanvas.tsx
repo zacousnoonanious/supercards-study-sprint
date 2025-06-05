@@ -1,26 +1,13 @@
 
 import React, { useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
-
-interface CanvasElement {
-  id: string;
-  type: 'text' | 'image';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-  content?: string;
-  fontSize?: number;
-  color?: string;
-  imageUrl?: string;
-}
+import { CanvasElement } from '@/types/flashcard';
 
 interface CardCanvasProps {
   elements: CanvasElement[];
   selectedElement: string | null;
   onSelectElement: (id: string | null) => void;
-  onUpdateElement: (id: string, updates: any) => void;
+  onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
   cardSide: 'front' | 'back';
 }
 
@@ -75,7 +62,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         y: Math.max(0, dragState.elementStart.y + deltaY)
       });
     } else if (dragState.isResizing && dragState.resizeHandle) {
-      const updates: any = {};
+      const updates: Partial<CanvasElement> = {};
       
       switch (dragState.resizeHandle) {
         case 'se': // Southeast corner

@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
-import { Type, Image, Trash2, RotateCw, Move, Square } from 'lucide-react';
+import { Type, Image, Trash2 } from 'lucide-react';
+import { CanvasElement } from '@/types/flashcard';
 
 interface ElementToolbarProps {
   onAddElement: (type: 'text' | 'image') => void;
-  selectedElement: any;
-  onUpdateElement: (updates: any) => void;
+  selectedElement: CanvasElement | null;
+  onUpdateElement: (updates: Partial<CanvasElement>) => void;
   onDeleteElement: () => void;
 }
 
@@ -133,7 +134,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
                   <Label htmlFor="content" className="text-xs">Text Content</Label>
                   <Textarea
                     id="content"
-                    value={selectedElement.content}
+                    value={selectedElement.content || ''}
                     onChange={(e) => onUpdateElement({ content: e.target.value })}
                     className="h-20 text-sm"
                   />
@@ -143,7 +144,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
                   <Input
                     id="fontSize"
                     type="number"
-                    value={selectedElement.fontSize}
+                    value={selectedElement.fontSize || 16}
                     onChange={(e) => onUpdateElement({ fontSize: parseInt(e.target.value) })}
                     className="h-8"
                   />
@@ -153,7 +154,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
                   <Input
                     id="color"
                     type="color"
-                    value={selectedElement.color}
+                    value={selectedElement.color || '#000000'}
                     onChange={(e) => onUpdateElement({ color: e.target.value })}
                     className="h-8"
                   />
@@ -167,7 +168,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
                 <Label htmlFor="imageUrl" className="text-xs">Image URL</Label>
                 <Input
                   id="imageUrl"
-                  value={selectedElement.imageUrl}
+                  value={selectedElement.imageUrl || ''}
                   onChange={(e) => onUpdateElement({ imageUrl: e.target.value })}
                   placeholder="Enter image URL"
                   className="h-8"
