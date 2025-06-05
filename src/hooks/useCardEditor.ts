@@ -266,6 +266,9 @@ export const useCardEditor = () => {
         last_reviewed_at: data.last_reviewed_at || null
       };
 
+      // Calculate the new index before updating state
+      const newCardIndex = cards.length;
+
       // Add the card to state and navigate to it
       setCards(prevCards => {
         const newCards = [...prevCards, createdCard];
@@ -273,8 +276,7 @@ export const useCardEditor = () => {
         return newCards;
       });
       
-      // Navigate to the new card (it will be at the end of the array)
-      const newCardIndex = cards.length;
+      // Navigate to the new card using the pre-calculated index
       setCurrentCardIndex(newCardIndex);
       setSelectedElement(null);
       setCurrentSide('front'); // Always start on front side for new cards
@@ -325,11 +327,13 @@ export const useCardEditor = () => {
         last_reviewed_at: data.last_reviewed_at || null
       };
 
+      // Calculate the new index before updating state
+      const newCardIndex = cards.length;
+
       // Add the card to state and navigate to it
       setCards(prevCards => [...prevCards, createdCard]);
       
-      // Navigate to the new card
-      const newCardIndex = cards.length;
+      // Navigate to the new card using the pre-calculated index
       setCurrentCardIndex(newCardIndex);
       setSelectedElement(null);
       setCurrentSide('front');
