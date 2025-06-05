@@ -1,12 +1,13 @@
 
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CanvasElement } from '@/types/flashcard';
 
 interface AIFlashcardGeneratorProps {
-  onAddElement: (type: string) => void;
-  selectedElement: CanvasElement | null;
-  onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
+  onAddElement?: (type: string) => void;
+  selectedElement?: CanvasElement | null;
+  onUpdateElement?: (id: string, updates: Partial<CanvasElement>) => void;
   setId?: string;
   onGenerated?: () => void;
   mode?: string;
@@ -32,8 +33,11 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
       return;
     }
 
-    addTextElement(question, true);
-    addTextElement(answer);
+    // Only add elements if we're in editor mode with the required functions
+    if (onAddElement && onUpdateElement) {
+      addTextElement(question, true);
+      addTextElement(answer);
+    }
 
     // Clear the input fields after generating the card
     setQuestion('');
@@ -46,6 +50,11 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
   };
 
   const addTextElement = (text: string, isQuestion: boolean = false) => {
+    // Only proceed if we have the required functions
+    if (!onAddElement || !onUpdateElement) {
+      return;
+    }
+
     // Calculate appropriate dimensions based on text length
     const estimatedCharWidth = 8; // Average character width in pixels
     const estimatedLineHeight = 20; // Line height in pixels
@@ -117,3 +126,4 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
     </div>
   );
 };
+
