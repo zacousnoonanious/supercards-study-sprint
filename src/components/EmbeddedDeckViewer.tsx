@@ -12,13 +12,15 @@ interface EmbeddedDeckViewerProps {
   width: number;
   height: number;
   className?: string;
+  textScale?: number;
 }
 
 export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
   deckId,
   width,
   height,
-  className = ''
+  className = '',
+  textScale = 1
 }) => {
   const { user } = useAuth();
   const [cards, setCards] = useState<Flashcard[]>([]);
@@ -26,6 +28,12 @@ export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
   const [showAnswer, setShowAnswer] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Calculate scaling factor to fit the standard card size (800x533) into the element dimensions
+  const scaleX = width / 800;
+  const scaleY = height / 533;
+  const scale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
+  const finalTextScale = textScale * scale;
 
   useEffect(() => {
     if (!user || !deckId) return;
@@ -91,7 +99,9 @@ export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
         className={`flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded ${className}`}
         style={{ width, height }}
       >
-        <div className="text-sm text-gray-600 dark:text-gray-400">Loading deck...</div>
+        <div className="text-sm text-gray-600 dark:text-gray-400" style={{ fontSize: `${12 * finalTextScale}px` }}>
+          Loading deck...
+        </div>
       </div>
     );
   }
@@ -102,7 +112,7 @@ export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
         className={`flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded ${className}`}
         style={{ width, height }}
       >
-        <div className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-sm text-gray-600 dark:text-gray-400" style={{ fontSize: `${12 * finalTextScale}px` }}>
           {error || 'No cards in this deck'}
         </div>
       </div>
@@ -112,52 +122,82 @@ export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
   const currentCard = cards[currentIndex];
   const currentElements = showAnswer ? currentCard.back_elements : currentCard.front_elements;
 
+  const headerHeight = Math.max(20, 24 * scale);
+  const controlsHeight = Math.max(20, 32 * scale);
+  const cardHeight = height - headerHeight - controlsHeight;
+
   return (
     <div 
       className={`flex flex-col bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}
       style={{ width, height }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="text-xs text-gray-600 dark:text-gray-400">
+      <div 
+        className="flex items-center justify-between px-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
+        style={{ height: headerHeight }}
+      >
+        <div className="text-gray-600 dark:text-gray-400" style={{ fontSize: `${10 * finalTextScale}px` }}>
           {currentIndex + 1} / {cards.length}
         </div>
-        <div className="text-xs text-gray-600 dark:text-gray-400">
+        <div className="text-gray-600 dark:text-gray-400" style={{ fontSize: `${10 * finalTextScale}px` }}>
           {showAnswer ? 'Answer' : 'Question'}
         </div>
       </div>
 
       {/* Card Content */}
-      <div className="flex-1 p-2 overflow-hidden">
-        <StudyCardRenderer
-          elements={currentElements}
+      <div className="flex-1 overflow-hidden" style={{ height: cardHeight }}>
+        <div 
           className="w-full h-full"
           style={{ 
-            width: '100%', 
-            height: '100%',
-            minHeight: 'unset',
-            aspectRatio: 'unset'
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            width: `${100 / scale}%`,
+            height: `${100 / scale}%`
           }}
-        />
+        >
+          <StudyCardRenderer
+            elements={currentElements}
+            className="w-full h-full border-0"
+            style={{ 
+              width: '800px', 
+              height: '533px',
+              minHeight: '533px',
+              maxWidth: 'none',
+              aspectRatio: 'unset'
+            }}
+            textScale={finalTextScale}
+          />
+        </div>
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+      <div 
+        className="flex items-center justify-between px-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700"
+        style={{ height: controlsHeight }}
+      >
         <Button
           variant="ghost"
           size="sm"
           onClick={handlePrevious}
           disabled={currentIndex === 0}
-          className="h-6 px-2"
+          style={{ 
+            height: `${Math.max(16, 24 * scale)}px`, 
+            padding: `0 ${Math.max(4, 8 * scale)}px`,
+            fontSize: `${10 * finalTextScale}px`
+          }}
         >
-          <ChevronLeft className="w-3 h-3" />
+          <ChevronLeft style={{ width: `${12 * scale}px`, height: `${12 * scale}px` }} />
         </Button>
 
         <Button
           variant="ghost"
           size="sm"
           onClick={handleFlip}
-          className="h-6 px-3 text-xs"
+          style={{ 
+            height: `${Math.max(16, 24 * scale)}px`, 
+            padding: `0 ${Math.max(8, 12 * scale)}px`,
+            fontSize: `${10 * finalTextScale}px`
+          }}
         >
           Flip
         </Button>
@@ -167,9 +207,13 @@ export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
           size="sm"
           onClick={handleNext}
           disabled={currentIndex === cards.length - 1}
-          className="h-6 px-2"
+          style={{ 
+            height: `${Math.max(16, 24 * scale)}px`, 
+            padding: `0 ${Math.max(4, 8 * scale)}px`,
+            fontSize: `${10 * finalTextScale}px`
+          }}
         >
-          <ChevronRight className="w-3 h-3" />
+          <ChevronRight style={{ width: `${12 * scale}px`, height: `${12 * scale}px` }} />
         </Button>
       </div>
     </div>

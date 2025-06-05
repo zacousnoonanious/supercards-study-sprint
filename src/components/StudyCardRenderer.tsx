@@ -14,6 +14,7 @@ interface StudyCardRendererProps {
   showQuizResults?: boolean;
   quizAnswers?: {[elementId: string]: number};
   requireAnswer?: boolean;
+  textScale?: number;
 }
 
 export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ 
@@ -23,13 +24,14 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
   onQuizAnswer,
   showQuizResults = false,
   quizAnswers = {},
-  requireAnswer = false
+  requireAnswer = false,
+  textScale = 1
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
 
   const getTextStyle = (element: CanvasElement) => ({
-    fontSize: element.fontSize,
+    fontSize: (element.fontSize || 16) * textScale,
     color: element.color,
     fontWeight: element.fontWeight,
     fontStyle: element.fontStyle,
@@ -49,22 +51,30 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
               showResults={showQuizResults}
               userAnswer={quizAnswers[element.id]}
               requireAnswer={requireAnswer}
+              textScale={textScale}
             />
           );
         }
         return element.type === 'multiple-choice' 
-          ? <MultipleChoiceRenderer element={element} isEditing={false} />
-          : <TrueFalseRenderer element={element} isEditing={false} />;
+          ? <MultipleChoiceRenderer element={element} isEditing={false} textScale={textScale} />
+          : <TrueFalseRenderer element={element} isEditing={false} textScale={textScale} />;
       case 'youtube':
-        return <YouTubeRenderer element={element} />;
+        return (
+          <div className="w-full h-full">
+            <YouTubeRenderer element={element} />
+          </div>
+        );
       case 'deck-embed':
         return element.deckId ? (
-          <EmbeddedDeckViewer
-            deckId={element.deckId}
-            width={element.width}
-            height={element.height}
-            className="w-full h-full"
-          />
+          <div className="w-full h-full">
+            <EmbeddedDeckViewer
+              deckId={element.deckId}
+              width={element.width}
+              height={element.height}
+              className="w-full h-full"
+              textScale={textScale}
+            />
+          </div>
         ) : (
           <div className={`w-full h-full flex items-center justify-center p-4 rounded ${
             isDarkTheme ? 'bg-gray-800' : 'bg-white'
@@ -79,7 +89,7 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
           <div className={`w-full h-full flex items-center justify-center p-1 sm:p-2 rounded ${
             isDarkTheme ? 'bg-gray-800' : 'bg-white'
           }`}>
-            <audio controls className="w-full max-w-full">
+            <audio controls className="w-full h-full max-w-full max-h-full">
               <source src={element.audioUrl} type="audio/mpeg" />
               Your browser does not support audio playback.
             </audio>
@@ -94,7 +104,6 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
               wordWrap: 'break-word',
               overflow: 'visible',
               whiteSpace: 'pre-wrap',
-              fontSize: `clamp(12px, ${element.fontSize || 16}px, ${(element.fontSize || 16) * 1.5}px)`,
             }}
           >
             <span className="w-full text-center leading-normal break-words">{element.content}</span>

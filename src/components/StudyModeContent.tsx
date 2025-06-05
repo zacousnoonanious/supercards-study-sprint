@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Eye, EyeOff, Lock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { StudyCardRenderer } from '@/components/StudyCardRenderer';
 import { InteractiveQuizRenderer } from '@/components/InteractiveQuizRenderer';
+import { TextScaleControl } from '@/components/TextScaleControl';
 import { Flashcard, CanvasElement } from '@/types/flashcard';
 
 interface StudyModeContentProps {
@@ -33,6 +33,7 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   const [passwordError, setPasswordError] = useState('');
   const [quizAnswers, setQuizAnswers] = useState<{[elementId: string]: number}>({});
   const [hasAnsweredAllQuiz, setHasAnsweredAllQuiz] = useState(false);
+  const [textScale, setTextScale] = useState(1.0);
 
   const handlePasswordSubmit = () => {
     if (passwordInput === currentCard.password) {
@@ -46,7 +47,6 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   const handleQuizAnswer = (elementId: string, correct: boolean, answerIndex: number) => {
     setQuizAnswers(prev => ({ ...prev, [elementId]: answerIndex }));
     
-    // Check if all quiz elements have been answered
     const quizElements = currentCard.front_elements.filter(el => 
       el.type === 'multiple-choice' || el.type === 'true-false'
     );
@@ -55,7 +55,6 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
     const allAnswered = quizElements.every(el => newAnswers[el.id] !== undefined);
     setHasAnsweredAllQuiz(allAnswered);
     
-    // For non-quiz cards, proceed immediately
     if (currentCard.card_type !== 'quiz-only') {
       onAnswer(correct);
     }
@@ -91,7 +90,6 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
     );
   }
 
-  // Check if card has interactive elements
   const hasInteractiveElements = currentCard.front_elements.some(el => 
     el.type === 'multiple-choice' || el.type === 'true-false'
   );
@@ -100,6 +98,10 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   if (currentCard.card_type === 'informational') {
     return (
       <div className="w-full h-full flex flex-col">
+        <div className="flex justify-center p-2">
+          <TextScaleControl textScale={textScale} onTextScaleChange={setTextScale} />
+        </div>
+        
         <div className="flex-1 flex items-center justify-center p-4">
           <StudyCardRenderer 
             elements={currentCard.front_elements} 
@@ -108,6 +110,7 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
             onQuizAnswer={handleQuizAnswer}
             showQuizResults={showAnswer}
             quizAnswers={quizAnswers}
+            textScale={textScale}
           />
         </div>
         
@@ -137,6 +140,10 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   if (currentCard.card_type === 'single-sided') {
     return (
       <div className="w-full max-w-5xl mx-auto space-y-8 p-4">
+        <div className="flex justify-center">
+          <TextScaleControl textScale={textScale} onTextScaleChange={setTextScale} />
+        </div>
+        
         <div className="space-y-4">
           <div className="flex justify-center">
             <StudyCardRenderer 
@@ -144,6 +151,7 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
               onQuizAnswer={handleQuizAnswer}
               showQuizResults={showAnswer}
               quizAnswers={quizAnswers}
+              textScale={textScale}
             />
           </div>
         </div>
@@ -174,14 +182,19 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   if (currentCard.card_type === 'quiz-only') {
     return (
       <div className="w-full max-w-5xl mx-auto space-y-8 p-4">
+        <div className="flex justify-center">
+          <TextScaleControl textScale={textScale} onTextScaleChange={setTextScale} />
+        </div>
+        
         <div className="space-y-4">
           <div className="flex justify-center">
             <StudyCardRenderer 
               elements={currentCard.front_elements}
               onQuizAnswer={handleQuizAnswer}
-              showQuizResults={false} // Don't show results until end
+              showQuizResults={false}
               quizAnswers={quizAnswers}
               requireAnswer={true}
+              textScale={textScale}
             />
           </div>
         </div>
@@ -189,7 +202,6 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
         {hasInteractiveElements && hasAnsweredAllQuiz && (
           <div className="text-center">
             <Button onClick={() => {
-              // Calculate score
               const quizElements = currentCard.front_elements.filter(el => 
                 el.type === 'multiple-choice' || el.type === 'true-false'
               );
@@ -231,6 +243,10 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   if (showPanelView) {
     return (
       <div className="w-full max-w-5xl mx-auto space-y-8 p-4">
+        <div className="flex justify-center">
+          <TextScaleControl textScale={textScale} onTextScaleChange={setTextScale} />
+        </div>
+        
         <div className="space-y-4">
           <h3 className="text-base sm:text-lg font-medium text-foreground mb-4 text-center">Question</h3>
           <div className="flex justify-center">
@@ -239,6 +255,7 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
               onQuizAnswer={handleQuizAnswer}
               showQuizResults={showAnswer}
               quizAnswers={quizAnswers}
+              textScale={textScale}
             />
           </div>
         </div>
@@ -306,6 +323,10 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
 
   return (
     <div className="w-full max-w-5xl mx-auto text-center space-y-8 p-4">
+      <div className="flex justify-center">
+        <TextScaleControl textScale={textScale} onTextScaleChange={setTextScale} />
+      </div>
+      
       <div className="flex justify-center" style={{ perspective: '1000px' }}>
         <div 
           className={`relative transition-transform duration-700 preserve-3d ${showAnswer ? 'rotate-y-180' : ''}`}
@@ -317,11 +338,15 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
               onQuizAnswer={handleQuizAnswer}
               showQuizResults={showAnswer}
               quizAnswers={quizAnswers}
+              textScale={textScale}
             />
           </div>
           
           <div className="absolute top-0 left-0 backface-hidden rotate-y-180">
-            <StudyCardRenderer elements={currentCard.back_elements} />
+            <StudyCardRenderer 
+              elements={currentCard.back_elements} 
+              textScale={textScale}
+            />
           </div>
         </div>
       </div>

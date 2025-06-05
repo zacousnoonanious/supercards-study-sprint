@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
@@ -10,6 +11,7 @@ interface CanvasElementRendererProps {
   editingElement: string | null;
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
   onEditingChange: (id: string | null) => void;
+  textScale?: number;
 }
 
 export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
@@ -17,39 +19,73 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   editingElement,
   onUpdateElement,
   onEditingChange,
+  textScale = 1,
 }) => {
   const { theme } = useTheme();
 
+  const handleMultipleChoiceUpdate = (updates: Partial<CanvasElement>) => {
+    // Auto-expand height when options are added
+    if (updates.multipleChoiceOptions && updates.multipleChoiceOptions.length > (element.multipleChoiceOptions?.length || 0)) {
+      const newHeight = Math.max(element.height, 60 + (updates.multipleChoiceOptions.length * 35));
+      onUpdateElement(element.id, { ...updates, height: newHeight });
+    } else {
+      onUpdateElement(element.id, updates);
+    }
+  };
+
   switch (element.type) {
     case 'multiple-choice':
-      return <MultipleChoiceRenderer element={element} isEditing={true} />;
+      return (
+        <div className="w-full h-full">
+          <MultipleChoiceRenderer 
+            element={element} 
+            isEditing={true} 
+            onUpdate={handleMultipleChoiceUpdate}
+            textScale={textScale}
+          />
+        </div>
+      );
     case 'true-false':
-      return <TrueFalseRenderer element={element} isEditing={true} />;
+      return (
+        <div className="w-full h-full">
+          <TrueFalseRenderer 
+            element={element} 
+            isEditing={true} 
+            textScale={textScale}
+          />
+        </div>
+      );
     case 'youtube':
-      return <YouTubeRenderer element={element} />;
+      return (
+        <div className="w-full h-full">
+          <YouTubeRenderer element={element} />
+        </div>
+      );
     case 'deck-embed':
       return (
         <div className={`w-full h-full flex items-center justify-center p-4 rounded border ${
           theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
         }`}>
           {element.deckId ? (
-            <div className="text-center w-full">
-              <h3 className="font-medium mb-2 text-sm">Embedded Deck</h3>
-              <p className="text-xs text-muted-foreground mb-3">{element.deckTitle}</p>
+            <div className="text-center w-full h-full">
+              <h3 className="font-medium mb-2 text-sm" style={{ fontSize: `${12 * textScale}px` }}>Embedded Deck</h3>
+              <p className="text-xs text-muted-foreground mb-3" style={{ fontSize: `${10 * textScale}px` }}>{element.deckTitle}</p>
               <button 
                 className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80"
+                style={{ fontSize: `${10 * textScale}px` }}
                 onClick={() => onUpdateElement(element.id, { deckId: undefined, deckTitle: undefined })}
               >
                 Change Deck
               </button>
             </div>
           ) : (
-            <div className="w-full">
+            <div className="w-full h-full">
               <DeckSelector
                 onDeckSelect={(deckId, deckTitle) => {
                   onUpdateElement(element.id, { deckId, deckTitle });
                 }}
                 currentDeckId={element.deckId}
+                textScale={textScale}
               />
             </div>
           )}
@@ -58,7 +94,6 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
     case 'drawing':
       return (
         <div className="w-full h-full relative group">
-          {/* Draggable header */}
           <div className="absolute top-0 left-0 right-0 h-6 bg-gray-200 dark:bg-gray-700 flex items-center justify-center cursor-move z-10 opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="text-gray-600 dark:text-gray-300">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -85,7 +120,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
         <div className={`w-full h-full flex items-center justify-center p-2 rounded border ${
           theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
         }`}>
-          <audio controls className="w-full">
+          <audio controls className="w-full h-full max-w-full max-h-full">
             <source src={element.audioUrl} type="audio/mpeg" />
             Your browser does not support audio playback.
           </audio>
@@ -98,7 +133,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
             theme === 'dark' ? 'bg-gray-800 text-white border-gray-600' : 'bg-white border-gray-300'
           }`}
           style={{
-            fontSize: element.fontSize,
+            fontSize: (element.fontSize || 16) * textScale,
             color: element.color,
             fontWeight: element.fontWeight,
             fontStyle: element.fontStyle,
@@ -123,8 +158,8 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
                 const lines = newContent.split('\n').length;
                 const longestLine = Math.max(...newContent.split('\n').map(line => line.length));
                 
-                const newWidth = Math.max(200, Math.min(600, longestLine * 8 + 40));
-                const newHeight = Math.max(60, lines * 24 + 40);
+                const newWidth = Math.max(200, Math.min(600, longestLine * 8 * textScale + 40));
+                const newHeight = Math.max(60, lines * 24 * textScale + 40);
                 
                 if (newWidth !== element.width || newHeight !== element.height) {
                   onUpdateElement(element.id, { 
@@ -137,14 +172,14 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
                 if (e.key === 'Escape') {
                   onEditingChange(null);
                 }
-                e.stopPropagation(); // Prevent canvas keyboard handlers
+                e.stopPropagation();
               }}
               onBlur={() => onEditingChange(null)}
               className={`w-full h-full bg-transparent border-none outline-none resize-none ${
                 theme === 'dark' ? 'text-white' : 'text-black'
               }`}
               style={{
-                fontSize: element.fontSize,
+                fontSize: (element.fontSize || 16) * textScale,
                 color: element.color,
                 fontWeight: element.fontWeight,
                 fontStyle: element.fontStyle,
@@ -159,7 +194,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
               className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words leading-tight"
               style={{ 
                 textAlign: element.textAlign || 'center',
-                fontSize: `${Math.min(element.fontSize || 16, element.height / 3)}px`, // Scale font to fit height
+                fontSize: `${Math.min((element.fontSize || 16) * textScale, element.height / 3)}px`,
                 lineHeight: '1.2'
               }}
             >
