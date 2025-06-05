@@ -141,7 +141,7 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
     clothingColor: '3c4f5c',
   });
 
-  const generateAvatarUrl = (opts: AvatarOptions) => {
+  const generateAvatarUrl = React.useCallback((opts: AvatarOptions) => {
     const params = new URLSearchParams({
       seed: opts.seed,
       backgroundColor: opts.backgroundColor,
@@ -161,11 +161,13 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
     }
     
     return `https://api.dicebear.com/7.x/avataaars/svg?${params.toString()}`;
-  };
+  }, []);
+
+  // Generate live preview URL whenever options change
+  const livePreviewUrl = React.useMemo(() => generateAvatarUrl(options), [options, generateAvatarUrl]);
 
   const updateOption = (key: keyof AvatarOptions, value: string) => {
-    const newOptions = { ...options, [key]: value };
-    setOptions(newOptions);
+    setOptions(prev => ({ ...prev, [key]: value }));
   };
 
   const randomizeAvatar = () => {
@@ -187,12 +189,10 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
   };
 
   const handleSave = () => {
-    const newAvatarUrl = generateAvatarUrl(options);
-    onAvatarChange(newAvatarUrl);
+    // Pass the generated URL to the parent component which will handle saving to DB
+    onAvatarChange(livePreviewUrl);
     onClose();
   };
-
-  const currentGeneratedUrl = generateAvatarUrl(options);
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -203,10 +203,10 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Preview */}
+        {/* Live Preview */}
         <div className="flex justify-center items-center gap-4">
           <Avatar className="w-32 h-32">
-            <AvatarImage src={currentGeneratedUrl} alt="Avatar Preview" />
+            <AvatarImage src={livePreviewUrl} alt="Avatar Preview" />
             <AvatarFallback>
               <User className="w-16 h-16" />
             </AvatarFallback>
@@ -389,6 +389,30 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Clothing Color */}
+          <div>
+            <Label className="text-sm font-medium mb-3 block">Clothing Color</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {clothingColors.map((color) => (
+                <button
+                  key={color.value}
+                  onClick={() => updateOption('clothingColor', color.value)}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    options.clothingColor === color.value
+                      ? 'border-indigo-500 bg-indigo-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div
+                    className="w-6 h-6 rounded-full mx-auto mb-1"
+                    style={{ backgroundColor: `#${color.value}` }}
+                  />
+                  <span className="text-xs">{color.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
