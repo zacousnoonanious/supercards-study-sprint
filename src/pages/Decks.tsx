@@ -72,20 +72,15 @@ const Decks = () => {
     try {
       console.log('Deleting set:', id);
       
-      // Use a more robust approach - delete AI generation records first if they exist
-      try {
-        const { error: aiGenError } = await supabase
-          .from('ai_flashcard_generations')
-          .delete()
-          .eq('set_id', id);
+      // First, delete AI generation records that reference this set
+      const { error: aiGenError } = await supabase
+        .from('ai_flashcard_generations')
+        .delete()
+        .eq('set_id', id);
 
-        if (aiGenError) {
-          console.log('Note: AI generation records deletion had an issue (this might be normal):', aiGenError);
-          // Don't throw here - continue with the deletion process
-        }
-      } catch (aiError) {
-        console.log('AI generation records deletion failed (continuing anyway):', aiError);
-        // Continue with deletion even if AI records can't be deleted
+      if (aiGenError) {
+        console.error('Error deleting AI generation records:', aiGenError);
+        throw aiGenError;
       }
 
       // Delete all flashcards in the set
