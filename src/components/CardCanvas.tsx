@@ -1,5 +1,4 @@
-
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { CanvasElement } from '@/types/flashcard';
 import { ElementPopupToolbar } from './ElementPopupToolbar';
@@ -10,6 +9,7 @@ interface CardCanvasProps {
   selectedElement: string | null;
   onSelectElement: (id: string | null) => void;
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
+  onDeleteElement: (id: string) => void;
   cardSide: 'front' | 'back';
 }
 
@@ -18,6 +18,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   selectedElement,
   onSelectElement,
   onUpdateElement,
+  onDeleteElement,
   cardSide,
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -31,6 +32,19 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const [editingElement, setEditingElement] = useState<string | null>(null);
   const [showPopupFor, setShowPopupFor] = useState<string | null>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleDeleteElement = (event: CustomEvent) => {
+      const elementId = event.detail;
+      onDeleteElement(elementId);
+      setShowPopupFor(null);
+    };
+
+    window.addEventListener('deleteElement', handleDeleteElement as EventListener);
+    return () => {
+      window.removeEventListener('deleteElement', handleDeleteElement as EventListener);
+    };
+  }, [onDeleteElement]);
 
   const handleMouseDown = (e: React.MouseEvent, elementId: string, action: 'drag' | 'resize', resizeHandle?: string) => {
     e.preventDefault();
@@ -294,10 +308,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             element={elements.find(el => el.id === showPopupFor)!}
             onUpdate={(updates) => onUpdateElement(showPopupFor, updates)}
             onDelete={() => {
+              onDeleteElement(showPopupFor);
               setShowPopupFor(null);
-              // Handle delete through parent component
-              const deleteEvent = new CustomEvent('deleteElement', { detail: showPopupFor });
-              window.dispatchEvent(deleteEvent);
             }}
             position={popupPosition}
           />

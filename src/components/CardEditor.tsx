@@ -112,6 +112,7 @@ export const CardEditor: React.FC = () => {
                     selectedElement={selectedElement}
                     onSelectElement={setSelectedElement}
                     onUpdateElement={updateElement}
+                    onDeleteElement={deleteElement}
                     cardSide={currentSide}
                   />
                 </div>

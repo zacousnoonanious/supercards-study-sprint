@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -210,7 +211,7 @@ export const useCardEditor = () => {
   const addElement = (type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed') => {
     console.log('Adding element of type:', type);
     
-    const getElementDefaults = (elementType: typeof type) => {
+    const getElementDefaults = (elementType: typeof type): CanvasElement => {
       const baseDefaults = {
         id: `element-${Date.now()}`,
         type: elementType,
@@ -221,6 +222,7 @@ export const useCardEditor = () => {
         case 'text':
           return {
             ...baseDefaults,
+            type: 'text' as const,
             x: 150,
             y: 180,
             width: 300,
@@ -236,6 +238,7 @@ export const useCardEditor = () => {
         case 'image':
           return {
             ...baseDefaults,
+            type: 'image' as const,
             x: 50,
             y: 50,
             width: 150,
@@ -245,6 +248,7 @@ export const useCardEditor = () => {
         case 'multiple-choice':
           return {
             ...baseDefaults,
+            type: 'multiple-choice' as const,
             x: 50,
             y: 50,
             width: 350,
@@ -256,6 +260,7 @@ export const useCardEditor = () => {
         case 'true-false':
           return {
             ...baseDefaults,
+            type: 'true-false' as const,
             x: 50,
             y: 50,
             width: 300,
@@ -266,6 +271,7 @@ export const useCardEditor = () => {
         case 'youtube':
           return {
             ...baseDefaults,
+            type: 'youtube' as const,
             x: 50,
             y: 50,
             width: 400,
@@ -276,6 +282,7 @@ export const useCardEditor = () => {
         case 'deck-embed':
           return {
             ...baseDefaults,
+            type: 'deck-embed' as const,
             x: 50,
             y: 50,
             width: 300,
@@ -284,11 +291,26 @@ export const useCardEditor = () => {
             deckTitle: '',
           };
         default:
-          return baseDefaults;
+          // This should never happen, but TypeScript requires it
+          return {
+            ...baseDefaults,
+            type: 'text' as const,
+            x: 150,
+            y: 180,
+            width: 300,
+            height: 60,
+            content: 'Edit this text',
+            fontSize: 20,
+            color: '#000000',
+            fontWeight: 'normal' as const,
+            fontStyle: 'normal' as const,
+            textDecoration: 'none' as const,
+            textAlign: 'center' as const,
+          };
       }
     };
 
-    const newElement: CanvasElement = getElementDefaults(type);
+    const newElement = getElementDefaults(type);
 
     const updatedCards = [...cards];
     if (currentSide === 'front') {
