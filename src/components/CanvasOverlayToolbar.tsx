@@ -31,7 +31,7 @@ interface CanvasOverlayToolbarProps {
   onSideChange: (side: 'front' | 'back') => void;
   onCreateNewCard: () => void;
   onCreateNewCardWithLayout: () => void;
-  onDeleteCard: () => void;
+  onDeleteCard: () => Promise<boolean>;
   onSave: () => void;
 }
 

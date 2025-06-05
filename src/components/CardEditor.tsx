@@ -71,7 +71,7 @@ export const CardEditor: React.FC = () => {
               onSideChange={setCurrentSide}
               onCreateNewCard={createNewCard}
               onCreateNewCardWithLayout={createNewCardWithLayout}
-              onDeleteCard={() => {}}
+              onDeleteCard={async () => false}
               onSave={saveCard}
             />
           </div>
@@ -97,6 +97,10 @@ export const CardEditor: React.FC = () => {
     }
   };
 
+  const handleDeleteCard = async (): Promise<boolean> => {
+    return await deleteCard(currentCard.id);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <EditorHeader set={set} onSave={saveCard} />
@@ -116,8 +120,6 @@ export const CardEditor: React.FC = () => {
                   style={getCanvasStyle()}
                   cardType={currentCard?.card_type}
                   onAddElement={addElement}
-                  quizTitle={currentCard?.quiz_title || ''}
-                  onQuizTitleChange={(title) => updateCard(currentCard.id, { quiz_title: title })}
                 />
               </div>
             </CardContent>
@@ -136,7 +138,7 @@ export const CardEditor: React.FC = () => {
             onSideChange={setCurrentSide}
             onCreateNewCard={createNewCard}
             onCreateNewCardWithLayout={createNewCardWithLayout}
-            onDeleteCard={() => deleteCard(currentCard.id)}
+            onDeleteCard={handleDeleteCard}
             onSave={saveCard}
           />
 
