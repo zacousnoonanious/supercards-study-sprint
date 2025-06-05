@@ -3,7 +3,7 @@ import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
 import { InteractiveQuizRenderer } from './InteractiveQuizRenderer';
-import { DeckSelector } from './DeckSelector';
+import { EmbeddedDeckViewer } from './EmbeddedDeckViewer';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface StudyCardRendererProps {
@@ -58,29 +58,20 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
       case 'youtube':
         return <YouTubeRenderer element={element} />;
       case 'deck-embed':
-        return (
+        return element.deckId ? (
+          <EmbeddedDeckViewer
+            deckId={element.deckId}
+            width={element.width}
+            height={element.height}
+            className="w-full h-full"
+          />
+        ) : (
           <div className={`w-full h-full flex items-center justify-center p-4 rounded ${
             isDarkTheme ? 'bg-gray-800' : 'bg-white'
           }`}>
-            {element.deckId ? (
-              <div className="text-center">
-                <h3 className="font-medium mb-2">Embedded Deck</h3>
-                <p className="text-sm text-muted-foreground">{element.deckTitle}</p>
-                <button 
-                  className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded text-sm"
-                  onClick={() => window.open(`/set/${element.deckId}`, '_blank')}
-                >
-                  Open Deck
-                </button>
-              </div>
-            ) : (
-              <DeckSelector
-                onDeckSelect={(deckId, deckTitle) => {
-                  // This would need to be handled by the parent component
-                  console.log('Deck selected:', deckId, deckTitle);
-                }}
-              />
-            )}
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">No deck selected for embedding</p>
+            </div>
           </div>
         );
       case 'audio':

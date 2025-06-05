@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,6 +14,7 @@ interface DeckSelectorProps {
 
 export const DeckSelector: React.FC<DeckSelectorProps> = ({ onDeckSelect, currentDeckId }) => {
   const { user } = useAuth();
+  const { setId } = useParams();
   const [decks, setDecks] = useState<FlashcardSet[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +30,10 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({ onDeckSelect, curren
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setDecks(data || []);
+        
+        // Filter out the current deck to prevent self-embedding
+        const filteredDecks = (data || []).filter(deck => deck.id !== setId);
+        setDecks(filteredDecks);
       } catch (error) {
         console.error('Error fetching decks:', error);
       } finally {
@@ -37,7 +42,7 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({ onDeckSelect, curren
     };
 
     fetchDecks();
-  }, [user]);
+  }, [user, setId]);
 
   if (loading) {
     return <div className="text-sm text-muted-foreground">Loading decks...</div>;
@@ -45,14 +50,14 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({ onDeckSelect, curren
 
   return (
     <div className="space-y-4">
-      <h3 className="font-medium">Select a deck to embed:</h3>
+      <h3 className="font-medium text-sm">Select a deck to embed:</h3>
       <Select value={currentDeckId} onValueChange={(value) => {
         const selectedDeck = decks.find(deck => deck.id === value);
         if (selectedDeck) {
           onDeckSelect(selectedDeck.id, selectedDeck.title);
         }
       }}>
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full h-8 text-xs">
           <SelectValue placeholder="Choose a deck..." />
         </SelectTrigger>
         <SelectContent>
@@ -64,7 +69,7 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({ onDeckSelect, curren
         </SelectContent>
       </Select>
       {decks.length === 0 && (
-        <p className="text-sm text-muted-foreground">No decks available to embed.</p>
+        <p className="text-xs text-muted-foreground">No other decks available to embed.</p>
       )}
     </div>
   );

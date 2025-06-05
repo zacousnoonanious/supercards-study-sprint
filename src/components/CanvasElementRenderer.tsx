@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
-import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
+import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
 import { DrawingCanvas } from './DrawingCanvas';
+import { DeckSelector } from './DeckSelector';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CanvasElementRendererProps {
@@ -28,21 +29,57 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
     case 'youtube':
       return <YouTubeRenderer element={element} />;
     case 'deck-embed':
-      return <DeckEmbedRenderer element={element} />;
+      return (
+        <div className={`w-full h-full flex items-center justify-center p-4 rounded border ${
+          theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+        }`}>
+          {element.deckId ? (
+            <div className="text-center w-full">
+              <h3 className="font-medium mb-2 text-sm">Embedded Deck</h3>
+              <p className="text-xs text-muted-foreground mb-3">{element.deckTitle}</p>
+              <button 
+                className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80"
+                onClick={() => onUpdateElement(element.id, { deckId: undefined, deckTitle: undefined })}
+              >
+                Change Deck
+              </button>
+            </div>
+          ) : (
+            <div className="w-full">
+              <DeckSelector
+                onDeckSelect={(deckId, deckTitle) => {
+                  onUpdateElement(element.id, { deckId, deckTitle });
+                }}
+                currentDeckId={element.deckId}
+              />
+            </div>
+          )}
+        </div>
+      );
     case 'drawing':
       return (
-        <DrawingCanvas
-          width={element.width}
-          height={element.height}
-          onDrawingComplete={(drawingData) => {
-            onUpdateElement(element.id, { 
-              drawingData
-            });
-          }}
-          initialDrawing={element.drawingData}
-          strokeColor={element.strokeColor}
-          strokeWidth={element.strokeWidth}
-        />
+        <div className="w-full h-full relative group">
+          {/* Draggable header */}
+          <div className="absolute top-0 left-0 right-0 h-6 bg-gray-200 dark:bg-gray-700 flex items-center justify-center cursor-move z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="text-gray-600 dark:text-gray-300">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13 7h8v2h-8V7zM13 15h8v2h-8v-2zM3 7h8v2H3V7zM3 15h8v2H3v-2z"/>
+              </svg>
+            </div>
+          </div>
+          <DrawingCanvas
+            width={element.width}
+            height={element.height}
+            onDrawingComplete={(drawingData) => {
+              onUpdateElement(element.id, { 
+                drawingData
+              });
+            }}
+            initialDrawing={element.drawingData}
+            strokeColor={element.strokeColor}
+            strokeWidth={element.strokeWidth}
+          />
+        </div>
       );
     case 'audio':
       return (
