@@ -2,6 +2,7 @@
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface StudyCardRendererProps {
   elements: CanvasElement[];
@@ -9,6 +10,9 @@ interface StudyCardRendererProps {
 }
 
 export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, className = '' }) => {
+  const { theme } = useTheme();
+  const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
+
   const getTextStyle = (element: CanvasElement) => ({
     fontSize: element.fontSize,
     color: element.color,
@@ -28,6 +32,17 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
         return <YouTubeRenderer element={element} />;
       case 'deck-embed':
         return <DeckEmbedRenderer element={element} />;
+      case 'audio':
+        return (
+          <div className={`w-full h-full flex items-center justify-center p-1 sm:p-2 rounded ${
+            isDarkTheme ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <audio controls className="w-full max-w-full">
+              <source src={element.audioUrl} type="audio/mpeg" />
+              Your browser does not support audio playback.
+            </audio>
+          </div>
+        );
       case 'text':
         return (
           <div
@@ -36,7 +51,7 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
               ...getTextStyle(element),
               wordWrap: 'break-word',
               overflow: 'visible',
-              whiteSpace: 'normal',
+              whiteSpace: 'pre-wrap',
               fontSize: `clamp(12px, ${element.fontSize || 16}px, ${(element.fontSize || 16) * 1.5}px)`,
             }}
           >
@@ -59,7 +74,11 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
 
   return (
     <div 
-      className={`relative bg-card border border-border rounded-lg overflow-hidden shadow-sm ${className}`} 
+      className={`relative border border-border rounded-lg overflow-hidden shadow-sm ${
+        isDarkTheme 
+          ? 'bg-gray-900 border-gray-700' 
+          : 'bg-card border-gray-200'
+      } ${className}`} 
       style={{ 
         width: '100%', 
         height: '300px',
@@ -87,7 +106,9 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
           </div>
         ))
       ) : (
-        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+        <div className={`w-full h-full flex items-center justify-center ${
+          isDarkTheme ? 'text-gray-400' : 'text-muted-foreground'
+        }`}>
           <span>No content to display</span>
         </div>
       )}

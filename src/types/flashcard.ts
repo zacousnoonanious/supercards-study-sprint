@@ -1,6 +1,6 @@
 export interface CanvasElement {
   id: string;
-  type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed';
+  type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed' | 'audio';
   x: number;
   y: number;
   width: number;
@@ -23,6 +23,8 @@ export interface CanvasElement {
   // Deck embed specific
   deckId?: string;
   deckTitle?: string;
+  // Audio specific
+  audioUrl?: string;
 }
 
 export interface Flashcard {

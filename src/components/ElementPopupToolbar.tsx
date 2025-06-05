@@ -1,15 +1,12 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash2, Plus, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ElementPopupToolbarProps {
   element: CanvasElement;
@@ -24,7 +21,10 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
   onDelete,
   position,
 }) => {
+  const { theme } = useTheme();
   const [localOptions, setLocalOptions] = useState(element.multipleChoiceOptions || ['Option 1', 'Option 2']);
+
+  const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
 
   const handleOptionChange = (index: number, value: string) => {
     const newOptions = [...localOptions];
@@ -45,7 +45,6 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
       setLocalOptions(newOptions);
       onUpdate({ multipleChoiceOptions: newOptions });
       
-      // Adjust correct answer if needed
       if (element.correctAnswer === index) {
         onUpdate({ correctAnswer: 0 });
       } else if (element.correctAnswer && element.correctAnswer > index) {
@@ -56,16 +55,6 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
 
   const renderTextSettings = () => (
     <div className="space-y-3">
-      <div>
-        <Label className="text-xs font-medium">Text Content</Label>
-        <Textarea
-          value={element.content || ''}
-          onChange={(e) => onUpdate({ content: e.target.value })}
-          placeholder="Enter text content"
-          className="h-16 text-xs"
-        />
-      </div>
-      
       <div>
         <Label className="text-xs font-medium">Font Size</Label>
         <Input
@@ -328,6 +317,28 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
     </div>
   );
 
+  const renderAudioSettings = () => (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-xs font-medium">Audio URL</Label>
+        <Input
+          value={element.audioUrl || ''}
+          onChange={(e) => onUpdate({ audioUrl: e.target.value })}
+          placeholder="Enter audio URL or upload file"
+          className="h-8 text-xs"
+        />
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-medium">Auto Play</Label>
+        <Switch
+          checked={element.autoplay || false}
+          onCheckedChange={(checked) => onUpdate({ autoplay: checked })}
+        />
+      </div>
+    </div>
+  );
+
   const renderSettings = () => {
     switch (element.type) {
       case 'text':
@@ -342,6 +353,8 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
         return renderYouTubeSettings();
       case 'deck-embed':
         return renderDeckEmbedSettings();
+      case 'audio':
+        return renderAudioSettings();
       default:
         return null;
     }
@@ -349,7 +362,11 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
 
   return (
     <Card
-      className="absolute z-50 w-64 shadow-lg border bg-white"
+      className={`absolute z-50 w-64 shadow-lg border ${
+        isDarkTheme 
+          ? 'bg-gray-800 border-gray-600 text-white' 
+          : 'bg-white border-gray-200'
+      }`}
       style={{
         left: position.x,
         top: position.y,

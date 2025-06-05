@@ -21,12 +21,13 @@ import {
   CheckSquare,
   ToggleLeft,
   Youtube,
-  BookOpen
+  BookOpen,
+  Mic
 } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
 
 interface ElementToolbarProps {
-  onAddElement: (type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed') => void;
+  onAddElement: (type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed' | 'audio') => void;
   selectedElement: CanvasElement | null;
   onUpdateElement: (updates: Partial<CanvasElement>) => void;
   onDeleteElement: () => void;
@@ -80,6 +81,14 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
           >
             <Image className="w-4 h-4 mr-2" />
             Add Image
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => onAddElement('audio')}
+          >
+            <Mic className="w-4 h-4 mr-2" />
+            Add Audio
           </Button>
           <Button
             variant="outline"
@@ -193,6 +202,20 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
                 className="mt-2"
               />
             </div>
+
+            {/* Audio-specific properties */}
+            {selectedElement.type === 'audio' && (
+              <div>
+                <Label htmlFor="audioUrl" className="text-xs">Audio URL</Label>
+                <Input
+                  id="audioUrl"
+                  value={selectedElement.audioUrl || ''}
+                  onChange={(e) => onUpdateElement({ audioUrl: e.target.value })}
+                  placeholder="Enter audio URL"
+                  className="h-8"
+                />
+              </div>
+            )}
 
             {/* Text-specific properties */}
             {selectedElement.type === 'text' && (
