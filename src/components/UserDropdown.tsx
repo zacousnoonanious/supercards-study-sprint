@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -45,6 +46,31 @@ export const UserDropdown = () => {
   const { theme, size, setTheme, setSize } = useTheme();
   const { t } = useI18n();
   const navigate = useNavigate();
+  const [avatarUrl, setAvatarUrl] = useState('/placeholder.svg');
+
+  useEffect(() => {
+    if (user) {
+      fetchUserAvatar();
+    }
+  }, [user]);
+
+  const fetchUserAvatar = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user?.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      if (data?.avatar_url) {
+        setAvatarUrl(data.avatar_url);
+      }
+    } catch (error) {
+      console.error('Error fetching user avatar:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -61,7 +87,7 @@ export const UserDropdown = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src="" alt={user?.email || ''} />
+            <AvatarImage src={avatarUrl} alt={user?.email || ''} />
             <AvatarFallback className="bg-indigo-100 text-indigo-600">
               {getUserInitials()}
             </AvatarFallback>

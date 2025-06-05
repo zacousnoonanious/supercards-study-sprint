@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -9,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AvatarCustomizer } from '@/components/AvatarCustomizer';
+import { AvatarSelector } from '@/components/AvatarSelector';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { User } from 'lucide-react';
@@ -37,7 +36,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   
   const [profile, setProfile] = useState<Profile>({
     id: '',
@@ -154,14 +153,14 @@ const Profile = () => {
     );
   }
 
-  if (showAvatarCustomizer) {
+  if (showAvatarSelector) {
     return (
       <div className="min-h-screen bg-background p-4">
         <div className="max-w-4xl mx-auto py-6">
-          <AvatarCustomizer
+          <AvatarSelector
             currentAvatarUrl={profile.avatar_url}
             onAvatarChange={handleAvatarChange}
-            onClose={() => setShowAvatarCustomizer(false)}
+            onClose={() => setShowAvatarSelector(false)}
           />
         </div>
       </div>
@@ -199,9 +198,9 @@ const Profile = () => {
               <div>
                 <Button
                   variant="outline"
-                  onClick={() => setShowAvatarCustomizer(true)}
+                  onClick={() => setShowAvatarSelector(true)}
                 >
-                  Customize Avatar
+                  Change Avatar
                 </Button>
               </div>
             </div>
