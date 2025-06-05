@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarCustomizer } from '@/components/AvatarCustomizer';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { User } from 'lucide-react';
@@ -20,19 +21,6 @@ interface Profile {
   avatar_url: string;
   language: string;
 }
-
-const defaultAvatars = [
-  '/placeholder.svg',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=5',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=7',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=8',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=9',
-];
 
 const languages = [
   { code: 'en', name: 'lang.en' },
@@ -49,7 +37,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
   
   const [profile, setProfile] = useState<Profile>({
     id: '',
@@ -154,6 +142,10 @@ const Profile = () => {
     }
   };
 
+  const handleAvatarChange = (newAvatarUrl: string) => {
+    setProfile({ ...profile, avatar_url: newAvatarUrl });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -162,9 +154,23 @@ const Profile = () => {
     );
   }
 
+  if (showAvatarCustomizer) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-4xl mx-auto py-6">
+          <AvatarCustomizer
+            currentAvatarUrl={profile.avatar_url}
+            onAvatarChange={handleAvatarChange}
+            onClose={() => setShowAvatarCustomizer(false)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-background">
+      <header className="shadow-sm border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
@@ -193,39 +199,12 @@ const Profile = () => {
               <div>
                 <Button
                   variant="outline"
-                  onClick={() => setShowAvatarSelector(!showAvatarSelector)}
+                  onClick={() => setShowAvatarCustomizer(true)}
                 >
-                  {t('profile.selectAvatar')}
+                  Customize Avatar
                 </Button>
               </div>
             </div>
-
-            {/* Avatar Selector */}
-            {showAvatarSelector && (
-              <div className="grid grid-cols-5 gap-4 p-4 border rounded-lg bg-gray-50">
-                {defaultAvatars.map((avatarUrl, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setProfile({ ...profile, avatar_url: avatarUrl });
-                      setShowAvatarSelector(false);
-                    }}
-                    className={`p-2 rounded-lg border-2 transition-colors ${
-                      profile.avatar_url === avatarUrl
-                        ? 'border-indigo-500 bg-indigo-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <Avatar className="w-12 h-12 mx-auto">
-                      <AvatarImage src={avatarUrl} alt={`Avatar ${index + 1}`} />
-                      <AvatarFallback>
-                        <User className="w-6 h-6" />
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                ))}
-              </div>
-            )}
 
             {/* Personal Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
