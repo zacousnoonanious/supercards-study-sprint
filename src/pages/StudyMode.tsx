@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Eye, EyeOff, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { StudyCardRenderer } from '@/components/StudyCardRenderer';
+import { StudyNavigationBar } from '@/components/StudyNavigationBar';
 import { Flashcard, FlashcardSet, CanvasElement } from '@/types/flashcard';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -25,6 +26,7 @@ const StudyMode = () => {
   const [studyComplete, setStudyComplete] = useState(false);
   const [showPanelView, setShowPanelView] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [allowNavigation, setAllowNavigation] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -105,6 +107,33 @@ const StudyMode = () => {
     } else {
       setStudyComplete(true);
     }
+  };
+
+  const handleNavigate = (direction: 'prev' | 'next') => {
+    if (!allowNavigation) return;
+    
+    if (direction === 'prev' && currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+      setShowAnswer(false);
+      setShowHint(false);
+    } else if (direction === 'next' && currentIndex < cards.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setShowAnswer(false);
+      setShowHint(false);
+    }
+  };
+
+  const handleFlipCard = () => {
+    setShowAnswer(!showAnswer);
+  };
+
+  const handleTimeUp = () => {
+    toast({
+      title: "Time's up!",
+      description: "The timer for this card has expired.",
+      variant: "destructive",
+    });
+    setShowAnswer(true);
   };
 
   const resetStudy = () => {
@@ -212,7 +241,7 @@ const StudyMode = () => {
   const progress = ((currentIndex + 1) / cards.length) * 100;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <style dangerouslySetInnerHTML={{
         __html: `
           .preserve-3d {
@@ -278,7 +307,7 @@ const StudyMode = () => {
 
       {showSettings && (
         <div className="bg-card border-b border-border px-4 py-3">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto space-y-3">
             <div className="flex items-center space-x-2">
               <Switch
                 id="panel-view"
@@ -289,12 +318,22 @@ const StudyMode = () => {
                 Show answer as panel below (instead of card flip)
               </Label>
             </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="allow-navigation"
+                checked={allowNavigation}
+                onCheckedChange={setAllowNavigation}
+              />
+              <Label htmlFor="allow-navigation" className="text-sm">
+                Allow navigation between cards during study
+              </Label>
+            </div>
           </div>
         </div>
       )}
 
-      <main className="max-w-4xl mx-auto py-4 sm:py-8 px-4">
-        <div className="space-y-4 sm:space-y-6">
+      <main className="max-w-4xl mx-auto py-4 sm:py-8 px-4 flex-1 flex flex-col">
+        <div className="space-y-4 sm:space-y-6 flex-1">
           {showPanelView ? (
             // Panel View (Original behavior)
             <>
@@ -315,7 +354,7 @@ const StudyMode = () => {
                     {showHint ? 'Hide Hint' : 'Show Hint'}
                   </Button>
                   {showHint && (
-                    <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-xs sm:text-sm max-w-2xl mx-auto">
+                    <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 text-xs sm:text-sm max-w-2xl mx-auto">
                       <strong>Hint:</strong> {currentCard.hint}
                     </div>
                   )}
@@ -356,7 +395,7 @@ const StudyMode = () => {
             </>
           ) : (
             // Card Flip View (New behavior)
-            <div className="text-center space-y-6">
+            <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
               <div className="relative mx-auto max-w-full sm:max-w-2xl" style={{ perspective: '1000px' }}>
                 <div 
                   className={`relative w-full transition-transform duration-700 preserve-3d ${showAnswer ? 'rotate-y-180' : ''}`}
@@ -386,18 +425,14 @@ const StudyMode = () => {
                     {showHint ? 'Hide Hint' : 'Show Hint'}
                   </Button>
                   {showHint && (
-                    <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-xs sm:text-sm max-w-2xl mx-auto">
+                    <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 text-xs sm:text-sm max-w-2xl mx-auto">
                       <strong>Hint:</strong> {currentCard.hint}
                     </div>
                   )}
                 </div>
               )}
 
-              {!showAnswer ? (
-                <Button onClick={() => setShowAnswer(true)} size="lg" className="w-full sm:w-auto">
-                  Reveal Answer
-                </Button>
-              ) : (
+              {showAnswer && (
                 <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 justify-center">
                   <Button
                     onClick={() => handleAnswer(false)}
@@ -420,6 +455,17 @@ const StudyMode = () => {
           )}
         </div>
       </main>
+
+      <StudyNavigationBar
+        currentIndex={currentIndex}
+        totalCards={cards.length}
+        onNavigate={handleNavigate}
+        onFlipCard={handleFlipCard}
+        showAnswer={showAnswer}
+        countdownTimer={currentCard?.countdown_timer || 0}
+        onTimeUp={handleTimeUp}
+        allowNavigation={allowNavigation}
+      />
     </div>
   );
 };
