@@ -38,6 +38,8 @@ export const useCardEditor = () => {
 
   const fetchSetAndCards = async () => {
     try {
+      console.log('Fetching set and cards for setId:', setId);
+      
       // Fetch set details
       const { data: setData, error: setError } = await supabase
         .from('flashcard_sets')
@@ -45,7 +47,10 @@ export const useCardEditor = () => {
         .eq('id', setId)
         .single();
 
-      if (setError) throw setError;
+      if (setError) {
+        console.error('Set fetch error:', setError);
+        throw setError;
+      }
       
       // Check if user owns this set
       if (setData.user_id !== user?.id) {
@@ -59,6 +64,7 @@ export const useCardEditor = () => {
       }
       
       setSet(setData);
+      console.log('Set data loaded:', setData);
 
       // Fetch cards with front_elements and back_elements
       const { data: cardsData, error: cardsError } = await supabase
@@ -67,7 +73,10 @@ export const useCardEditor = () => {
         .eq('set_id', setId)
         .order('created_at', { ascending: true });
 
-      if (cardsError) throw cardsError;
+      if (cardsError) {
+        console.error('Cards fetch error:', cardsError);
+        throw cardsError;
+      }
       
       // Transform the data to match our Flashcard type
       const initializedCards: Flashcard[] = cardsData?.map(card => ({
@@ -77,6 +86,7 @@ export const useCardEditor = () => {
       })) || [];
       
       setCards(initializedCards);
+      console.log('Cards loaded:', initializedCards.length, 'cards');
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -92,6 +102,8 @@ export const useCardEditor = () => {
 
   const createNewCard = async () => {
     if (!setId) return;
+
+    console.log('Creating new card for setId:', setId);
 
     const defaultFrontElement: CanvasElement = {
       id: `front-text-${Date.now()}`,
@@ -169,6 +181,8 @@ export const useCardEditor = () => {
     if (!cards[currentCardIndex]) return;
     
     const card = cards[currentCardIndex];
+    console.log('Saving card:', card.id);
+    
     try {
       const { error } = await supabase
         .from('flashcards')
@@ -195,6 +209,8 @@ export const useCardEditor = () => {
   };
 
   const addElement = (type: 'text' | 'image') => {
+    console.log('Adding element of type:', type);
+    
     const newElement: CanvasElement = {
       id: `element-${Date.now()}`,
       type,
@@ -224,6 +240,8 @@ export const useCardEditor = () => {
   };
 
   const updateElement = (elementId: string, updates: Partial<CanvasElement>) => {
+    console.log('Updating element:', elementId, 'with updates:', updates);
+    
     const updatedCards = [...cards];
     const elements = currentSide === 'front' 
       ? updatedCards[currentCardIndex].front_elements 
@@ -237,6 +255,8 @@ export const useCardEditor = () => {
   };
 
   const deleteElement = (elementId: string) => {
+    console.log('Deleting element:', elementId);
+    
     const updatedCards = [...cards];
     if (currentSide === 'front') {
       updatedCards[currentCardIndex].front_elements = 
@@ -250,6 +270,8 @@ export const useCardEditor = () => {
   };
 
   const navigateCard = (direction: 'prev' | 'next') => {
+    console.log('Navigating card:', direction);
+    
     if (direction === 'prev' && currentCardIndex > 0) {
       setCurrentCardIndex(currentCardIndex - 1);
     } else if (direction === 'next' && currentCardIndex < cards.length - 1) {

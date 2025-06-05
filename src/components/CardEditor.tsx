@@ -7,7 +7,7 @@ import { CardNavigation } from './CardNavigation';
 import { EditorHeader } from './EditorHeader';
 import { useCardEditor } from '@/hooks/useCardEditor';
 
-export const CardEditor = () => {
+export const CardEditor: React.FC = () => {
   const {
     set,
     cards,
@@ -24,6 +24,8 @@ export const CardEditor = () => {
     navigateCard,
     createNewCard,
   } = useCardEditor();
+
+  console.log('CardEditor render - loading:', loading, 'set:', set, 'cards:', cards.length);
 
   if (loading) {
     return (
