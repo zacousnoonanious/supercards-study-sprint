@@ -27,17 +27,23 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
             left: element.x,
             top: element.y,
             width: element.width,
-            height: element.height,
+            height: 'auto', // Changed from element.height to auto
+            minHeight: element.height, // Keep original height as minimum
             transform: `rotate(${element.rotation}deg)`,
             transformOrigin: 'center',
           }}
         >
           {element.type === 'text' ? (
             <div
-              className="w-full h-full flex items-center justify-center p-2 overflow-hidden"
-              style={getTextStyle(element)}
+              className="w-full h-full flex items-center justify-center p-2"
+              style={{
+                ...getTextStyle(element),
+                wordWrap: 'break-word',
+                overflow: 'visible',
+                whiteSpace: 'normal',
+              }}
             >
-              <span className="w-full h-full flex items-center">{element.content}</span>
+              <span className="w-full text-center leading-normal">{element.content}</span>
             </div>
           ) : (
             <img
