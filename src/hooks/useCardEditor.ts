@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -136,6 +137,7 @@ export const useCardEditor = () => {
       width: type === 'text' ? 200 : type === 'image' ? 300 : type === 'drawing' ? 400 : 250,
       height: type === 'text' ? 100 : type === 'image' ? 200 : type === 'drawing' ? 300 : 150,
       rotation: 0,
+      zIndex: 0,
       content: type === 'text' ? 'Double-click to edit' : type === 'multiple-choice' ? 'What is your question?' : type === 'true-false' ? 'True or False statement' : '',
       fontSize: type === 'text' ? 16 : undefined,
       color: type === 'text' ? '#000000' : undefined,
@@ -205,38 +207,37 @@ export const useCardEditor = () => {
   };
 
   const createNewCard = async () => {
-    if (!setId) return;
+    if (!setId) {
+      console.error('No setId available for creating new card');
+      return;
+    }
 
     console.log('Creating new card for setId:', setId);
 
-    const newCard: Partial<Flashcard> = {
+    const newCard = {
       question: 'New Card',
       answer: 'Answer',
       hint: '',
-      front_elements: [],
-      back_elements: [],
+      front_elements: [] as any,
+      back_elements: [] as any,
       set_id: setId,
-      card_type: 'standard',
+      card_type: 'standard' as const,
       countdown_timer: 0,
     };
 
     try {
       const { data, error } = await supabase
         .from('flashcards')
-        .insert({
-          question: newCard.question,
-          answer: newCard.answer,
-          hint: newCard.hint,
-          front_elements: newCard.front_elements as any,
-          back_elements: newCard.back_elements as any,
-          set_id: newCard.set_id,
-          card_type: newCard.card_type,
-          countdown_timer: newCard.countdown_timer,
-        })
+        .insert(newCard)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Card created successfully:', data);
 
       const createdCard: Flashcard = {
         ...data,
@@ -246,9 +247,15 @@ export const useCardEditor = () => {
         last_reviewed_at: data.last_reviewed_at || null
       };
 
-      setCards(prevCards => [...prevCards, createdCard]);
+      setCards(prevCards => {
+        const newCards = [...prevCards, createdCard];
+        console.log('Updated cards array:', newCards);
+        return newCards;
+      });
+      
       setCurrentCardIndex(cards.length);
       setSelectedElement(null);
+      console.log('Set current card index to:', cards.length);
     } catch (error) {
       console.error('Error creating new card:', error);
     }
@@ -258,7 +265,7 @@ export const useCardEditor = () => {
     if (!setId || cards.length === 0) return;
 
     const currentCard = cards[currentCardIndex];
-    const newCard: Partial<Flashcard> = {
+    const newCard = {
       question: 'New Card',
       answer: 'Answer', 
       hint: '',
@@ -266,12 +273,12 @@ export const useCardEditor = () => {
         ...el,
         id: Date.now().toString() + Math.random(),
         content: el.type === 'text' ? 'Double-click to edit' : el.content,
-      })),
+      })) as any,
       back_elements: currentCard.back_elements.map(el => ({
         ...el,
         id: Date.now().toString() + Math.random(),
         content: el.type === 'text' ? 'Double-click to edit' : el.content,
-      })),
+      })) as any,
       set_id: setId,
       card_type: currentCard.card_type,
       countdown_timer: currentCard.countdown_timer,
@@ -280,16 +287,7 @@ export const useCardEditor = () => {
     try {
       const { data, error } = await supabase
         .from('flashcards')
-        .insert({
-          question: newCard.question,
-          answer: newCard.answer,
-          hint: newCard.hint,
-          front_elements: newCard.front_elements as any,
-          back_elements: newCard.back_elements as any,
-          set_id: newCard.set_id,
-          card_type: newCard.card_type,
-          countdown_timer: newCard.countdown_timer,
-        })
+        .insert(newCard)
         .select()
         .single();
 

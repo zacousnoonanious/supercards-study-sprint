@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { CanvasElement } from '@/types/flashcard';
 import { ElementPopupToolbar } from './ElementPopupToolbar';
 import { ElementContextMenu } from './ElementContextMenu';
+import { DrawingToolsPopup } from './DrawingToolsPopup';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
 import { DrawingCanvas } from './DrawingCanvas';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -43,6 +44,9 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [showDrawingTools, setShowDrawingTools] = useState(false);
+  const [drawingToolsPosition, setDrawingToolsPosition] = useState({ x: 400, y: 100 });
+  const [drawingTool, setDrawingTool] = useState<'brush' | 'eraser'>('brush');
 
   const gridSize = 20;
 
@@ -65,6 +69,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         onSelectElement(null);
         setEditingElement(null);
         setShowPopupFor(null);
+        setShowDrawingTools(false);
         return;
       }
 
@@ -105,7 +110,14 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   // Check if selected element is a drawing element
   useEffect(() => {
     const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
-    setIsDrawingMode(selectedElementData?.type === 'drawing');
+    const isDrawing = selectedElementData?.type === 'drawing';
+    setIsDrawingMode(isDrawing);
+    
+    if (isDrawing && !showDrawingTools) {
+      setShowDrawingTools(true);
+    } else if (!isDrawing && showDrawingTools) {
+      setShowDrawingTools(false);
+    }
   }, [selectedElement, elements]);
 
   // Improved popup position calculation
@@ -155,16 +167,19 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     const element = elements.find(el => el.id === elementId);
     if (!element) return;
 
-    // Don't allow dragging when in drawing mode
+    // Don't allow dragging when in drawing mode and it's a drawing element
     if (isDrawingMode && element.type === 'drawing' && action === 'drag') {
       return;
     }
 
     onSelectElement(elementId);
     
-    setShowPopupFor(elementId);
-    const position = calculatePopupPosition(element);
-    setPopupPosition(position);
+    // Only show popup for non-drawing elements or when not in drawing mode
+    if (element.type !== 'drawing' || !isDrawingMode) {
+      setShowPopupFor(elementId);
+      const position = calculatePopupPosition(element);
+      setPopupPosition(position);
+    }
     
     setDragState({
       isDragging: action === 'drag',
@@ -248,6 +263,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       onSelectElement(null);
       setEditingElement(null);
       setShowPopupFor(null);
+      setShowDrawingTools(false);
     }
   };
 
@@ -280,52 +296,31 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     const currentIndex = elements.findIndex(el => el.id === elementId);
     if (currentIndex === -1) return;
 
-    let newIndex = currentIndex;
+    const maxZ = Math.max(...elements.map(el => el.zIndex || 0));
+    let newZIndex = 0;
     
     switch (direction) {
       case 'up':
-        newIndex = Math.min(currentIndex + 1, elements.length - 1);
+        newZIndex = (elements.find(el => el.id === elementId)?.zIndex || 0) + 1;
         break;
       case 'down':
-        newIndex = Math.max(currentIndex - 1, 0);
+        newZIndex = Math.max((elements.find(el => el.id === elementId)?.zIndex || 0) - 1, 0);
         break;
       case 'top':
-        newIndex = elements.length - 1;
+        newZIndex = maxZ + 1;
         break;
       case 'bottom':
-        newIndex = 0;
+        newZIndex = 0;
+        // Bump up all other elements
+        elements.forEach(el => {
+          if (el.id !== elementId) {
+            onUpdateElement(el.id, { zIndex: (el.zIndex || 0) + 1 });
+          }
+        });
         break;
     }
-
-    if (newIndex !== currentIndex) {
-      // Since we can't reorder the array directly, we'll use z-index simulation
-      // by updating a zIndex property on the element
-      const maxZ = Math.max(...elements.map(el => el.zIndex || 0));
-      let newZIndex = 0;
-      
-      switch (direction) {
-        case 'up':
-          newZIndex = (elements[currentIndex].zIndex || 0) + 1;
-          break;
-        case 'down':
-          newZIndex = Math.max((elements[currentIndex].zIndex || 0) - 1, 0);
-          break;
-        case 'top':
-          newZIndex = maxZ + 1;
-          break;
-        case 'bottom':
-          newZIndex = 0;
-          // Bump up all other elements
-          elements.forEach(el => {
-            if (el.id !== elementId) {
-              onUpdateElement(el.id, { zIndex: (el.zIndex || 0) + 1 });
-            }
-          });
-          break;
-      }
-      
-      onUpdateElement(elementId, { zIndex: newZIndex });
-    }
+    
+    onUpdateElement(elementId, { zIndex: newZIndex });
   };
 
   const duplicateElement = (elementId: string) => {
@@ -465,6 +460,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
   // Find the selected element for the popup
   const popupElement = showPopupFor ? elements.find(el => el.id === showPopupFor) : null;
+  const selectedDrawingElement = selectedElement ? elements.find(el => el.id === selectedElement && el.type === 'drawing') : null;
 
   return (
     <Card className={`relative overflow-hidden ${isDarkTheme ? 'bg-gray-900' : 'bg-white'}`} style={style || { aspectRatio: '3/2', minHeight: '400px' }}>
@@ -540,7 +536,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             onRotate={() => rotateElement(element.id)}
           >
             <div
-              className={`absolute cursor-move ${
+              className={`absolute ${
                 selectedElement === element.id ? 'ring-2 ring-blue-500' : ''
               } ${isDrawingMode && element.type === 'drawing' ? 'cursor-crosshair' : 'cursor-move'}`}
               style={{
@@ -556,14 +552,18 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 onSelectElement(element.id);
-                setShowPopupFor(element.id);
-                const position = calculatePopupPosition(element);
-                setPopupPosition(position);
+                
+                // Only show popup for non-drawing elements
+                if (element.type !== 'drawing') {
+                  setShowPopupFor(element.id);
+                  const position = calculatePopupPosition(element);
+                  setPopupPosition(position);
+                }
               }}
             >
               {renderElement(element)}
 
-              {/* Resize handles - only show if not in drawing mode */}
+              {/* Resize handles - only show if not in drawing mode or not a drawing element */}
               {selectedElement === element.id && (!isDrawingMode || element.type !== 'drawing') && (
                 <>
                   {['nw', 'ne', 'sw', 'se'].map((handle) => (
@@ -587,8 +587,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           </ElementContextMenu>
         ))}
 
-        {/* Popup Toolbar - Only render if element exists */}
-        {showPopupFor && popupElement && (
+        {/* Popup Toolbar - Only render if element exists and is not a drawing element */}
+        {showPopupFor && popupElement && popupElement.type !== 'drawing' && (
           <ElementPopupToolbar
             element={popupElement}
             onUpdate={(updates) => onUpdateElement(showPopupFor, updates)}
@@ -597,6 +597,22 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
               setShowPopupFor(null);
             }}
             position={popupPosition}
+          />
+        )}
+
+        {/* Drawing Tools Popup */}
+        {showDrawingTools && selectedDrawingElement && (
+          <DrawingToolsPopup
+            position={drawingToolsPosition}
+            onPositionChange={setDrawingToolsPosition}
+            onClose={() => setShowDrawingTools(false)}
+            strokeColor={selectedDrawingElement.strokeColor || '#000000'}
+            strokeWidth={selectedDrawingElement.strokeWidth || 2}
+            tool={drawingTool}
+            onStrokeColorChange={(color) => onUpdateElement(selectedDrawingElement.id, { strokeColor: color })}
+            onStrokeWidthChange={(width) => onUpdateElement(selectedDrawingElement.id, { strokeWidth: width })}
+            onToolChange={setDrawingTool}
+            onClear={() => onUpdateElement(selectedDrawingElement.id, { drawingData: '' })}
           />
         )}
       </div>

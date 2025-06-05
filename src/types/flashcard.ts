@@ -1,36 +1,43 @@
-
 export interface CanvasElement {
   id: string;
-  type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed' | 'audio' | 'drawing';
+  type: 'text' | 'image' | 'audio' | 'drawing' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed';
   x: number;
   y: number;
   width: number;
   height: number;
-  rotation: number;
+  rotation?: number;
+  zIndex?: number;
+  
+  // Text properties
   content?: string;
   fontSize?: number;
   color?: string;
-  fontWeight?: 'normal' | 'bold';
-  fontStyle?: 'normal' | 'italic';
-  textDecoration?: 'none' | 'underline';
-  textAlign?: 'left' | 'center' | 'right' | 'justify';
+  fontWeight?: string;
+  fontStyle?: string;
+  textDecoration?: string;
+  textAlign?: string;
+  
+  // Image properties
   imageUrl?: string;
-  // Multiple choice specific
-  multipleChoiceOptions?: string[];
-  correctAnswer?: number;
-  // YouTube specific
-  youtubeUrl?: string;
-  autoplay?: boolean;
-  // Deck embed specific
-  deckId?: string;
-  deckTitle?: string;
-  // Audio specific
+  
+  // Audio properties
   audioUrl?: string;
-  // Drawing specific
-  drawingData?: string; // SVG path data
+  
+  // Drawing properties
+  drawingData?: string;
   strokeColor?: string;
   strokeWidth?: number;
   animated?: boolean;
+  
+  // Interactive element properties
+  multipleChoiceOptions?: string[];
+  correctAnswer?: number;
+  
+  // YouTube properties
+  youtubeUrl?: string;
+  
+  // Deck embed properties
+  deckId?: string;
 }
 
 export interface Flashcard {
