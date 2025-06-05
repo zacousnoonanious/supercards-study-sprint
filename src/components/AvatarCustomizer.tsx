@@ -94,7 +94,7 @@ const skinColors = [
 ];
 
 const accessories = [
-  { value: '', label: 'None' },
+  { value: 'none', label: 'None' },
   { value: 'glasses01', label: 'Glasses 1' },
   { value: 'glasses02', label: 'Glasses 2' },
   { value: 'sunglasses01', label: 'Sunglasses' },
@@ -135,7 +135,7 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
     eyebrows: 'variant01',
     mouth: 'variant01',
     skinColor: 'f2d3b1',
-    accessories: '',
+    accessories: 'none',
     clothingGraphic: '',
     clothing: 'shirt01',
     clothingColor: '3c4f5c',
@@ -151,17 +151,14 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
       eyebrows: opts.eyebrows,
       mouth: opts.mouth,
       skinColor: opts.skinColor,
-      accessories: opts.accessories,
       clothing: opts.clothing,
       clothingColor: opts.clothingColor,
     });
 
-    // Remove empty parameters
-    Object.keys(params).forEach(key => {
-      if (!params.get(key)) {
-        params.delete(key);
-      }
-    });
+    // Only add accessories if it's not 'none'
+    if (opts.accessories !== 'none') {
+      params.set('accessories', opts.accessories);
+    }
     
     return `https://api.dicebear.com/7.x/avataaars/svg?${params.toString()}`;
   };
@@ -181,7 +178,7 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
       eyebrows: eyebrowStyles[Math.floor(Math.random() * eyebrowStyles.length)].value,
       mouth: mouthStyles[Math.floor(Math.random() * mouthStyles.length)].value,
       skinColor: skinColors[Math.floor(Math.random() * skinColors.length)].value,
-      accessories: Math.random() > 0.5 ? accessories[Math.floor(Math.random() * accessories.length)].value : '',
+      accessories: Math.random() > 0.5 ? accessories[Math.floor(Math.random() * accessories.length)].value : 'none',
       clothingGraphic: '',
       clothing: clothingStyles[Math.floor(Math.random() * clothingStyles.length)].value,
       clothingColor: clothingColors[Math.floor(Math.random() * clothingColors.length)].value,

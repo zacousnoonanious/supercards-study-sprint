@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,8 +59,8 @@ export const useCardEditor = () => {
       // Transform the data to match our Flashcard type
       const initializedCards: Flashcard[] = cardsData?.map(card => ({
         ...card,
-        front_elements: Array.isArray(card.front_elements) ? card.front_elements as CanvasElement[] : [],
-        back_elements: Array.isArray(card.back_elements) ? card.back_elements as CanvasElement[] : []
+        front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
+        back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : []
       })) || [];
       
       setCards(initializedCards);
