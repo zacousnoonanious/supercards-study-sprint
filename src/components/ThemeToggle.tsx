@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Palette, Type } from 'lucide-react';
 
-const themes = [
+const allThemes = [
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
   { value: 'blue', label: 'Blue' },
@@ -26,9 +26,17 @@ const sizes = [
   { value: 'large', label: 'Large' },
 ] as const;
 
-export const ThemeToggle = () => {
+interface ThemeToggleProps {
+  limitedThemes?: boolean;
+}
+
+export const ThemeToggle = ({ limitedThemes = false }: ThemeToggleProps) => {
   const { theme, size, setTheme, setSize } = useTheme();
   const [open, setOpen] = useState(false);
+
+  const themes = limitedThemes 
+    ? allThemes.filter(t => t.value === 'light' || t.value === 'dark')
+    : allThemes;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

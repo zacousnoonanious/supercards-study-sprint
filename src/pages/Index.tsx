@@ -1,6 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { GlobalStyles } from '@/components/home/GlobalStyles';
 import { ParallaxFlashcards } from '@/components/home/ParallaxFlashcards';
 import { HeroSection } from '@/components/home/HeroSection';
@@ -48,7 +50,8 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
-            <div className="space-x-4">
+            <div className="flex items-center space-x-4">
+              <ThemeToggle limitedThemes={true} />
               <Link to="/auth">
                 <Button variant="outline">Sign In</Button>
               </Link>
