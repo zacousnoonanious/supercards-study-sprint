@@ -266,15 +266,20 @@ export const useCardEditor = () => {
         last_reviewed_at: data.last_reviewed_at || null
       };
 
+      // Add the card to state and navigate to it
       setCards(prevCards => {
         const newCards = [...prevCards, createdCard];
         console.log('Updated cards array:', newCards);
         return newCards;
       });
       
-      setCurrentCardIndex(cards.length);
+      // Navigate to the new card (it will be at the end of the array)
+      const newCardIndex = cards.length;
+      setCurrentCardIndex(newCardIndex);
       setSelectedElement(null);
-      console.log('Set current card index to:', cards.length);
+      setCurrentSide('front'); // Always start on front side for new cards
+      
+      console.log('Set current card index to:', newCardIndex);
     } catch (error) {
       console.error('Error creating new card:', error);
     }
@@ -320,9 +325,14 @@ export const useCardEditor = () => {
         last_reviewed_at: data.last_reviewed_at || null
       };
 
+      // Add the card to state and navigate to it
       setCards(prevCards => [...prevCards, createdCard]);
-      setCurrentCardIndex(cards.length);
+      
+      // Navigate to the new card
+      const newCardIndex = cards.length;
+      setCurrentCardIndex(newCardIndex);
       setSelectedElement(null);
+      setCurrentSide('front');
     } catch (error) {
       console.error('Error creating new card with layout:', error);
     }
