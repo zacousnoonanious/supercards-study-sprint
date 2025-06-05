@@ -41,7 +41,7 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
                 wordWrap: 'break-word',
                 overflow: 'visible',
                 whiteSpace: 'normal',
-                fontSize: `clamp(${Math.max(10, parseInt(element.fontSize) * 0.6)}px, ${element.fontSize}, ${parseInt(element.fontSize) * 1.2}px)`,
+                fontSize: `clamp(${Math.max(10, (element.fontSize || 16) * 0.6)}px, ${element.fontSize || 16}px, ${(element.fontSize || 16) * 1.2}px)`,
               }}
             >
               <span className="w-full text-center leading-normal break-words">{element.content}</span>
