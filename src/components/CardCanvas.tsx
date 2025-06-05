@@ -12,6 +12,8 @@ interface CardCanvasProps {
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
   onDeleteElement: (id: string) => void;
   cardSide: 'front' | 'back';
+  cardType?: 'standard' | 'informational' | 'single-sided' | 'password-protected' | 'quiz-only' | 'timed-challenge';
+  style?: React.CSSProperties;
 }
 
 export const CardCanvas: React.FC<CardCanvasProps> = ({
@@ -21,6 +23,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   onUpdateElement,
   onDeleteElement,
   cardSide,
+  cardType = 'standard',
+  style,
 }) => {
   const { theme } = useTheme();
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -372,7 +376,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
 
   return (
-    <Card className={`relative overflow-hidden ${isDarkTheme ? 'bg-gray-900' : 'bg-white'}`} style={{ aspectRatio: '3/2', minHeight: '400px' }}>
+    <Card className={`relative overflow-hidden ${isDarkTheme ? 'bg-gray-900' : 'bg-white'}`} style={style || { aspectRatio: '3/2', minHeight: '400px' }}>
       <div
         ref={canvasRef}
         className="relative w-full h-full cursor-crosshair"

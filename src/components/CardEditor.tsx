@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ElementToolbar } from './ElementToolbar';
@@ -5,6 +6,7 @@ import { CardCanvas } from './CardCanvas';
 import { CardNavigation } from './CardNavigation';
 import { EditorHeader } from './EditorHeader';
 import { KeyboardShortcutsTooltip } from './KeyboardShortcutsTooltip';
+import { CardTypeSelector } from './CardTypeSelector';
 import { useCardEditor } from '@/hooks/useCardEditor';
 
 export const CardEditor: React.FC = () => {
@@ -145,7 +147,6 @@ export const CardEditor: React.FC = () => {
                     onUpdateElement={updateElement}
                     onDeleteElement={deleteElement}
                     cardSide={currentSide}
-                    cardType={currentCard?.card_type || 'standard'}
                     style={getCanvasStyle()}
                   />
                 </div>

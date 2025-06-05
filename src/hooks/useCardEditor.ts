@@ -280,6 +280,37 @@ export const useCardEditor = () => {
     }
   };
 
+  const updateCard = async (cardId: string, updates: Partial<Flashcard>) => {
+    console.log('Updating card:', cardId, 'with updates:', updates);
+    
+    try {
+      const { error } = await supabase
+        .from('flashcards')
+        .update(updates)
+        .eq('id', cardId);
+
+      if (error) throw error;
+      
+      // Update local state
+      const updatedCards = cards.map(card => 
+        card.id === cardId ? { ...card, ...updates } : card
+      );
+      setCards(updatedCards);
+      
+      toast({
+        title: "Success",
+        description: "Card updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error updating card:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update card.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const addElement = (type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed' | 'audio') => {
     console.log('Adding element of type:', type);
     
@@ -457,6 +488,7 @@ export const useCardEditor = () => {
     saveCard,
     addElement,
     updateElement,
+    updateCard,
     deleteElement,
     navigateCard,
     createNewCard,
