@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -10,6 +11,8 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Decks from "./pages/Decks";
+import Marketplace from "./pages/Marketplace";
 import CreateSet from "./pages/CreateSet";
 import SetView from "./pages/SetView";
 import StudyMode from "./pages/StudyMode";
@@ -33,6 +36,8 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/decks" element={<Decks />} />
+                <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/create-set" element={<CreateSet />} />
                 <Route path="/set/:setId" element={<SetView />} />

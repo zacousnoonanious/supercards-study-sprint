@@ -5,10 +5,11 @@ import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, BookOpen, Edit, Trash2 } from 'lucide-react';
+import { BookOpen, Brain, Clock, TrendingUp, Play, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { UserDropdown } from '@/components/UserDropdown';
+import { Navigation } from '@/components/Navigation';
 
 interface FlashcardSet {
   id: string;
@@ -18,10 +19,23 @@ interface FlashcardSet {
   updated_at: string;
 }
 
+interface DashboardStats {
+  totalDecks: number;
+  totalCards: number;
+  studyStreak: number;
+  cardsReviewed: number;
+}
+
 const Dashboard = () => {
   const { user } = useAuth();
   const { t } = useI18n();
-  const [sets, setSets] = useState<FlashcardSet[]>([]);
+  const [recentSets, setRecentSets] = useState<FlashcardSet[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalDecks: 0,
+    totalCards: 0,
+    studyStreak: 3,
+    cardsReviewed: 45
+  });
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -31,50 +45,50 @@ const Dashboard = () => {
       navigate('/auth');
       return;
     }
-    fetchSets();
+    fetchDashboardData();
   }, [user, navigate]);
 
-  const fetchSets = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch recent sets (limit to 3)
+      const { data: setsData, error: setsError } = await supabase
         .from('flashcard_sets')
         .select('*')
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false })
+        .limit(3);
 
-      if (error) throw error;
-      setSets(data || []);
+      if (setsError) throw setsError;
+      setRecentSets(setsData || []);
+
+      // Fetch total decks count
+      const { count: decksCount, error: decksCountError } = await supabase
+        .from('flashcard_sets')
+        .select('*', { count: 'exact', head: true });
+
+      if (decksCountError) throw decksCountError;
+
+      // Fetch total cards count
+      const { count: cardsCount, error: cardsCountError } = await supabase
+        .from('flashcards')
+        .select('*', { count: 'exact', head: true });
+
+      if (cardsCountError) throw cardsCountError;
+
+      setStats(prev => ({
+        ...prev,
+        totalDecks: decksCount || 0,
+        totalCards: cardsCount || 0
+      }));
+
     } catch (error) {
-      console.error('Error fetching sets:', error);
+      console.error('Error fetching dashboard data:', error);
       toast({
         title: "Error",
-        description: "Failed to load your flashcard sets.",
+        description: "Failed to load dashboard data.",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const deleteSet = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('flashcard_sets')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      setSets(sets.filter(set => set.id !== id));
-      toast({
-        title: "Success",
-        description: "Flashcard set deleted successfully."
-      });
-    } catch (error) {
-      console.error('Error deleting set:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete flashcard set.",
-        variant: "destructive"
-      });
     }
   };
 
@@ -91,69 +105,131 @@ const Dashboard = () => {
       <header className="shadow-sm border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground hidden sm:block">
-                {t('welcome')}, {user?.email}
-              </span>
-              <UserDropdown />
+            <div className="flex items-center space-x-8">
+              <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
+              <Navigation />
             </div>
+            <UserDropdown />
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h2 className="text-xl font-semibold text-foreground">{t('dashboard.title')}</h2>
-          <Button onClick={() => navigate('/create-set')} className="flex items-center gap-2 w-full sm:w-auto">
-            <Plus className="w-4 h-4" />
-            {t('nav.createSet')}
-          </Button>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Welcome back!</h2>
+          <p className="text-muted-foreground">Here's your learning progress at a glance.</p>
         </div>
 
-        {sets.length === 0 ? (
-          <Card className="text-center py-12">
+        {/* Stats Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Decks</CardTitle>
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
             <CardContent>
-              <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">{t('dashboard.noSets')}</h3>
-              <p className="text-muted-foreground mb-4">{t('dashboard.noSetsDesc')}</p>
-              <Button onClick={() => navigate('/create-set')}>
-                {t('dashboard.createFirst')}
-              </Button>
+              <div className="text-2xl font-bold">{stats.totalDecks}</div>
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {sets.map(set => (
-              <Card key={set.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="truncate">{set.title}</span>
-                    <div className="flex space-x-1">
-                      <Button variant="ghost" size="sm" onClick={() => navigate(`/edit-set/${set.id}`)}>
-                        <Edit className="w-4 h-4" />
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Cards</CardTitle>
+              <Brain className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalCards}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Study Streak</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.studyStreak} days</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Cards Reviewed</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.cardsReviewed}</div>
+              <p className="text-xs text-muted-foreground">This week</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Decks Section */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Recently Created Decks</h3>
+            <Button variant="outline" onClick={() => navigate('/decks')}>
+              View All Decks
+            </Button>
+          </div>
+          
+          {recentSets.length === 0 ? (
+            <Card className="text-center py-8">
+              <CardContent>
+                <BookOpen className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                <h4 className="text-md font-medium text-foreground mb-2">No decks yet</h4>
+                <p className="text-muted-foreground mb-4">Create your first deck to start learning!</p>
+                <Button onClick={() => navigate('/create-set')}>
+                  Create Your First Deck
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {recentSets.map(set => (
+                <Card key={set.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="text-sm truncate">{set.title}</CardTitle>
+                    <CardDescription className="text-xs">{set.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/set/${set.id}`)} className="flex-1">
+                        <Eye className="w-3 h-3 mr-1" />
+                        View
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => deleteSet(set.id)}>
-                        <Trash2 className="w-4 h-4" />
+                      <Button size="sm" onClick={() => navigate(`/study/${set.id}`)} className="flex-1">
+                        <Play className="w-3 h-3 mr-1" />
+                        Study
                       </Button>
                     </div>
-                  </CardTitle>
-                  <CardDescription>{set.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button variant="outline" onClick={() => navigate(`/set/${set.id}`)} className="flex-1">
-                      {t('dashboard.viewCards')}
-                    </Button>
-                    <Button onClick={() => navigate(`/study/${set.id}`)} className="flex-1">
-                      {t('dashboard.study')}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Get started with your learning journey</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button onClick={() => navigate('/create-set')} className="flex-1">
+                Create New Deck
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/decks')} className="flex-1">
+                Browse My Decks
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/marketplace')} className="flex-1">
+                Explore Marketplace
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

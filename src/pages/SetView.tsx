@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Trash2, Play, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { UserDropdown } from '@/components/UserDropdown';
+import { Navigation } from '@/components/Navigation';
 
 interface Flashcard {
   id: string;
@@ -109,7 +112,7 @@ const SetView = () => {
   if (!set) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Set not found</div>
+        <div className="text-lg">Deck not found</div>
       </div>
     );
   }
@@ -119,14 +122,14 @@ const SetView = () => {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-8">
               <Button
                 variant="ghost"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/decks')}
                 className="mr-4"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
+                Back to Decks
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-indigo-600">{set.title}</h1>
@@ -135,19 +138,23 @@ const SetView = () => {
                 )}
               </div>
             </div>
-            <div className="flex space-x-2">
-              <Button
-                onClick={() => navigate(`/edit-cards/${setId}`)}
-              >
-                <Palette className="w-4 h-4 mr-2" />
-                Visual Editor
-              </Button>
-              {cards.length > 0 && (
-                <Button onClick={() => navigate(`/study/${setId}`)}>
-                  <Play className="w-4 h-4 mr-2" />
-                  Study
+            <div className="flex items-center space-x-4">
+              <Navigation />
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => navigate(`/edit-cards/${setId}`)}
+                >
+                  <Palette className="w-4 h-4 mr-2" />
+                  Visual Editor
                 </Button>
-              )}
+                {cards.length > 0 && (
+                  <Button onClick={() => navigate(`/study/${setId}`)}>
+                    <Play className="w-4 h-4 mr-2" />
+                    Study
+                  </Button>
+                )}
+              </div>
+              <UserDropdown />
             </div>
           </div>
         </div>

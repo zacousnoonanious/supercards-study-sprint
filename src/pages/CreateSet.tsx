@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
 import { UserDropdown } from '@/components/UserDropdown';
+import { Navigation } from '@/components/Navigation';
 
 const CreateSet = () => {
   const { user } = useAuth();
@@ -46,7 +47,7 @@ const CreateSet = () => {
 
       toast({
         title: "Success",
-        description: "Flashcard set created successfully!",
+        description: "Deck created successfully!",
       });
       
       navigate(`/set/${data.id}`);
@@ -54,7 +55,7 @@ const CreateSet = () => {
       console.error('Error creating set:', error);
       toast({
         title: "Error",
-        description: "Failed to create flashcard set.",
+        description: "Failed to create deck.",
         variant: "destructive",
       });
     } finally {
@@ -67,19 +68,22 @@ const CreateSet = () => {
       <header className="shadow-sm border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-8">
               <Button
                 variant="ghost"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/decks')}
                 className="mr-4"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Back to Dashboard</span>
+                <span className="hidden sm:inline">Back to Decks</span>
                 <span className="sm:hidden">Back</span>
               </Button>
-              <h1 className="text-xl sm:text-2xl font-bold text-indigo-600">Create New Set</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-indigo-600">Create New Deck</h1>
             </div>
-            <UserDropdown />
+            <div className="flex items-center space-x-8">
+              <Navigation />
+              <UserDropdown />
+            </div>
           </div>
         </div>
       </header>
@@ -87,12 +91,12 @@ const CreateSet = () => {
       <main className="max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <Card>
           <CardHeader>
-            <CardTitle>New Flashcard Set</CardTitle>
+            <CardTitle>New Flashcard Deck</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="title">Title</Label>
+                <Label htmlFor="title">Deck Title</Label>
                 <Input
                   id="title"
                   value={title}
@@ -107,20 +111,20 @@ const CreateSet = () => {
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Brief description of this set..."
+                  placeholder="Brief description of this deck..."
                 />
               </div>
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate('/decks')}
                   className="flex-1"
                 >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={loading} className="flex-1">
-                  {loading ? 'Creating...' : 'Create Set'}
+                  {loading ? 'Creating...' : 'Create Deck'}
                 </Button>
               </div>
             </form>
