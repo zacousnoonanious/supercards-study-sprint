@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { CanvasElement } from '@/types/flashcard';
@@ -250,13 +249,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     
     if (e.detail === 2) {
       setEditingElement(elementId);
-      // Set cursor position based on click location
-      const rect = (e.target as HTMLElement).getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const text = elements.find(el => el.id === elementId)?.content || '';
-      const charWidth = 8; // Approximate character width
-      const position = Math.min(Math.floor(x / charWidth), text.length);
-      setTextCursorPosition(position);
     }
   };
 
@@ -316,9 +308,18 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       case 'drawing':
         return (
           <DrawingCanvas
-            element={element}
-            onUpdate={(updates) => onUpdateElement(element.id, updates)}
-            isEditing={true}
+            width={element.width}
+            height={element.height}
+            onDrawingComplete={(drawingData, animated) => {
+              onUpdateElement(element.id, { 
+                drawingData,
+                animated 
+              });
+            }}
+            initialDrawing={element.drawingData}
+            strokeColor={element.strokeColor}
+            strokeWidth={element.strokeWidth}
+            animated={element.animated}
           />
         );
       case 'audio':
@@ -518,29 +519,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
               Grid: {snapToGrid ? 'ON' : 'OFF'}
             </button>
             <button
-              onClick={() => {
-                if (!canvasRef.current) return;
-                
-                const canvas = canvasRef.current;
-                const canvasWidth = canvas.offsetWidth;
-                const canvasHeight = canvas.offsetHeight;
-                const padding = 20;
-                const cols = Math.ceil(Math.sqrt(elements.length));
-                const cellWidth = (canvasWidth - padding * 2) / cols;
-                const cellHeight = (canvasHeight - padding * 2) / Math.ceil(elements.length / cols);
-
-                elements.forEach((element, index) => {
-                  const col = index % cols;
-                  const row = Math.floor(index / cols);
-                  const x = padding + col * cellWidth + (cellWidth - element.width) / 2;
-                  const y = padding + row * cellHeight + (cellHeight - element.height) / 2;
-                  
-                  onUpdateElement(element.id, { 
-                    x: Math.max(0, Math.min(x, canvasWidth - element.width)),
-                    y: Math.max(0, Math.min(y, canvasHeight - element.height))
-                  });
-                });
-              }}
+              onClick={autoArrangeElements}
               className={`px-2 py-1 text-xs rounded ${
                 isDarkTheme 
                   ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
