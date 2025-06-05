@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -157,37 +158,39 @@ const SetView = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Set Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{set.title}</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 break-words">{set.title}</h1>
           {set.description && (
-            <p className="text-gray-600 mb-4">{set.description}</p>
+            <p className="text-gray-600 mb-4 text-sm sm:text-base">{set.description}</p>
           )}
           
-          <div className="flex flex-wrap gap-4">
-            <Button onClick={handleStudy} className="bg-green-600 hover:bg-green-700">
-              <Play className="mr-2 h-4 w-4" />
-              Study ({cards.length} cards)
+          <div className="flex flex-wrap gap-2 sm:gap-4">
+            <Button onClick={handleStudy} className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none min-w-0">
+              <Play className="mr-1 sm:mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="truncate">Study ({cards.length})</span>
             </Button>
             
-            <Button onClick={handleVisualEditor} variant="outline">
-              <Edit className="mr-2 h-4 w-4" />
-              Visual Editor
+            <Button onClick={handleVisualEditor} variant="outline" className="flex-1 sm:flex-none min-w-0">
+              <Edit className="mr-1 sm:mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Visual Editor</span>
+              <span className="sm:hidden">Editor</span>
             </Button>
             
-            <Button onClick={handleAddCard} variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Card
+            <Button onClick={handleAddCard} variant="outline" className="flex-1 sm:flex-none min-w-0">
+              <Plus className="mr-1 sm:mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Add Card</span>
+              <span className="sm:hidden">Add</span>
             </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" size="icon" className="flex-shrink-0">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleEditSet}>
                   <Edit className="mr-2 h-4 w-4" />
                   Edit Set
@@ -204,47 +207,49 @@ const SetView = () => {
         {/* Interactive Card Creator Modal */}
         {showCardCreator && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <InteractiveCardCreator
-              setId={setId!}
-              onCardCreated={handleCardCreated}
-              onClose={() => setShowCardCreator(false)}
-            />
+            <div className="w-full max-w-4xl max-h-[90vh] overflow-auto">
+              <InteractiveCardCreator
+                setId={setId!}
+                onCardCreated={handleCardCreated}
+                onClose={() => setShowCardCreator(false)}
+              />
+            </div>
           </div>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
           {/* AI Flashcard Generator */}
-          <div className="lg:col-span-1">
+          <div className="xl:col-span-1 order-2 xl:order-1">
             <AIFlashcardGenerator setId={setId!} onGenerated={fetchCards} />
           </div>
 
           {/* Cards Grid */}
-          <div className="lg:col-span-2">
+          <div className="xl:col-span-2 order-1 xl:order-2">
             {cards.length === 0 ? (
               <Card>
-                <CardContent className="text-center py-12">
-                  <div className="text-gray-500 mb-4">No flashcards yet</div>
-                  <div className="space-y-2">
-                    <Button onClick={handleAddCard} className="mr-2">
+                <CardContent className="text-center py-8 sm:py-12">
+                  <div className="text-gray-500 mb-4 text-sm sm:text-base">No flashcards yet</div>
+                  <div className="space-y-3">
+                    <Button onClick={handleAddCard} className="w-full sm:w-auto">
                       <Plus className="mr-2 h-4 w-4" />
                       Create Your First Card
                     </Button>
-                    <div className="text-sm text-gray-400">or use the AI generator</div>
+                    <div className="text-xs sm:text-sm text-gray-400">or use the AI generator</div>
                   </div>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                 {cards.map((card, index) => (
                   <Card 
                     key={card.id} 
                     className="cursor-pointer hover:shadow-md transition-shadow"
                     onClick={() => handleCardClick(index)}
                   >
-                    <CardContent className="p-4">
+                    <CardContent className="p-3 sm:p-4">
                       <div className="flex justify-between items-start mb-2">
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-500">Card {index + 1}</span>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="text-xs sm:text-sm text-gray-500">Card {index + 1}</span>
                           {card.card_type && card.card_type !== 'standard' && (
                             <span className="text-xs text-blue-600 font-medium capitalize">
                               {card.card_type.replace('-', ' ')}
@@ -261,11 +266,11 @@ const SetView = () => {
                             asChild 
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 flex-shrink-0">
+                              <MoreVertical className="h-3 w-3" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent>
+                          <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation();
                               handleCardClick(index);
@@ -290,12 +295,12 @@ const SetView = () => {
                       <div className="space-y-2">
                         <div>
                           <div className="text-xs text-gray-400 mb-1">Front:</div>
-                          <div className="text-sm line-clamp-2">{card.question}</div>
+                          <div className="text-xs sm:text-sm line-clamp-2 break-words">{card.question}</div>
                         </div>
                         {card.card_type !== 'no-back' && (
                           <div>
                             <div className="text-xs text-gray-400 mb-1">Back:</div>
-                            <div className="text-sm text-gray-600 line-clamp-2">{card.answer}</div>
+                            <div className="text-xs sm:text-sm text-gray-600 line-clamp-2 break-words">{card.answer}</div>
                           </div>
                         )}
                       </div>

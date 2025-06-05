@@ -128,19 +128,20 @@ const StudyMode = () => {
               <Button
                 variant="ghost"
                 onClick={() => navigate(`/set/${setId}`)}
-                className="mr-4"
+                className="mr-2 sm:mr-4 p-2"
+                size="sm"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Set
+                <ArrowLeft className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Set</span>
               </Button>
-              <h1 className="text-2xl font-bold text-indigo-600">Study Mode</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">Study Mode</h1>
             </div>
           </div>
         </header>
-        <main className="max-w-2xl mx-auto py-12 px-4 text-center">
-          <h2 className="text-xl font-semibold mb-4">No cards to study</h2>
-          <p className="text-gray-600 mb-6">Create some flashcards in the visual editor first!</p>
-          <Button onClick={() => navigate(`/edit-cards/${setId}`)}>
+        <main className="max-w-2xl mx-auto py-8 sm:py-12 px-4 text-center">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">No cards to study</h2>
+          <p className="text-gray-600 mb-6 text-sm sm:text-base">Create some flashcards in the visual editor first!</p>
+          <Button onClick={() => navigate(`/edit-cards/${setId}`)} className="w-full sm:w-auto">
             Open Visual Editor
           </Button>
         </main>
@@ -160,33 +161,34 @@ const StudyMode = () => {
               <Button
                 variant="ghost"
                 onClick={() => navigate(`/set/${setId}`)}
-                className="mr-4"
+                className="mr-2 sm:mr-4 p-2"
+                size="sm"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Set
+                <ArrowLeft className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Set</span>
               </Button>
-              <h1 className="text-2xl font-bold text-indigo-600">Study Complete!</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">Study Complete!</h1>
             </div>
           </div>
         </header>
-        <main className="max-w-2xl mx-auto py-12 px-4">
+        <main className="max-w-2xl mx-auto py-8 sm:py-12 px-4">
           <Card className="text-center">
             <CardHeader>
-              <CardTitle className="text-2xl text-green-600">Great job!</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl text-green-600">Great job!</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-4xl font-bold text-indigo-600">{accuracy}%</div>
+            <CardContent className="space-y-4 sm:space-y-6">
+              <div className="text-3xl sm:text-4xl font-bold text-indigo-600">{accuracy}%</div>
               <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{sessionStats.correct}</div>
-                  <div className="text-sm text-gray-600">Correct</div>
+                  <div className="text-xl sm:text-2xl font-bold text-green-600">{sessionStats.correct}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Correct</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{sessionStats.incorrect}</div>
-                  <div className="text-sm text-gray-600">Incorrect</div>
+                  <div className="text-xl sm:text-2xl font-bold text-red-600">{sessionStats.incorrect}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Incorrect</div>
                 </div>
               </div>
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                 <Button onClick={resetStudy} className="flex-1">
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Study Again
@@ -210,24 +212,30 @@ const StudyMode = () => {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
+            <div className="flex items-center min-w-0 flex-1">
               <Button
                 variant="ghost"
                 onClick={() => navigate(`/set/${setId}`)}
-                className="mr-4"
+                className="mr-2 sm:mr-4 p-2 flex-shrink-0"
+                size="sm"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Set
+                <ArrowLeft className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Set</span>
               </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-indigo-600">Study: {set.title}</h1>
-                <p className="text-sm text-gray-600">
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-indigo-600 truncate">Study: {set.title}</h1>
+                <p className="text-xs sm:text-sm text-gray-600">
                   Card {currentIndex + 1} of {cards.length}
                 </p>
               </div>
             </div>
-            <div className="text-sm text-gray-600">
-              Correct: {sessionStats.correct} | Incorrect: {sessionStats.incorrect}
+            <div className="text-xs sm:text-sm text-gray-600 text-right flex-shrink-0">
+              <div className="hidden sm:block">
+                Correct: {sessionStats.correct} | Incorrect: {sessionStats.incorrect}
+              </div>
+              <div className="sm:hidden">
+                {sessionStats.correct}/{sessionStats.incorrect}
+              </div>
             </div>
           </div>
         </div>
@@ -240,12 +248,12 @@ const StudyMode = () => {
         />
       </div>
 
-      <main className="max-w-4xl mx-auto py-8 px-4">
-        <div className="space-y-6">
+      <main className="max-w-4xl mx-auto py-4 sm:py-8 px-4">
+        <div className="space-y-4 sm:space-y-6">
           {/* Front Side */}
           <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">Question</h3>
-            <StudyCardRenderer elements={currentCard.front_elements} className="mx-auto max-w-2xl" />
+            <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-4 text-center">Question</h3>
+            <StudyCardRenderer elements={currentCard.front_elements} className="mx-auto max-w-full sm:max-w-2xl" />
           </div>
           
           {currentCard.hint && (
@@ -260,7 +268,7 @@ const StudyMode = () => {
                 {showHint ? 'Hide Hint' : 'Show Hint'}
               </Button>
               {showHint && (
-                <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm max-w-2xl mx-auto">
+                <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-xs sm:text-sm max-w-2xl mx-auto">
                   <strong>Hint:</strong> {currentCard.hint}
                 </div>
               )}
@@ -269,27 +277,27 @@ const StudyMode = () => {
 
           <div className="text-center">
             {!showAnswer ? (
-              <Button onClick={() => setShowAnswer(true)} size="lg">
+              <Button onClick={() => setShowAnswer(true)} size="lg" className="w-full sm:w-auto">
                 Reveal Answer
               </Button>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">Answer</h3>
-                  <StudyCardRenderer elements={currentCard.back_elements} className="mx-auto max-w-2xl" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-4 text-center">Answer</h3>
+                  <StudyCardRenderer elements={currentCard.back_elements} className="mx-auto max-w-full sm:max-w-2xl" />
                 </div>
-                <div className="flex space-x-4 justify-center">
+                <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 justify-center">
                   <Button
                     onClick={() => handleAnswer(false)}
                     variant="outline"
-                    className="flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50"
+                    className="flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50 flex-1 sm:flex-none"
                   >
                     <XCircle className="w-4 h-4" />
                     Incorrect
                   </Button>
                   <Button
                     onClick={() => handleAnswer(true)}
-                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
                   >
                     <CheckCircle className="w-4 h-4" />
                     Correct

@@ -46,9 +46,9 @@ export const CardEditor = () => {
     return (
       <div className="min-h-screen bg-background">
         <EditorHeader set={set} onSave={saveCard} />
-        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-1">
+        <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="lg:col-span-1 order-2 lg:order-1">
               <ElementToolbar
                 onAddElement={addElement}
                 selectedElement={null}
@@ -57,10 +57,10 @@ export const CardEditor = () => {
                 onCreateNewCard={createNewCard}
               />
             </div>
-            <div className="lg:col-span-3 flex items-center justify-center">
+            <div className="lg:col-span-3 order-1 lg:order-2 flex items-center justify-center min-h-[300px]">
               <div className="text-center">
-                <h2 className="text-xl font-semibold mb-4">No cards in this set</h2>
-                <p className="text-gray-600">Create your first card to get started!</p>
+                <h2 className="text-lg sm:text-xl font-semibold mb-4">No cards in this set</h2>
+                <p className="text-gray-600 text-sm sm:text-base">Create your first card to get started!</p>
               </div>
             </div>
           </div>
@@ -77,23 +77,25 @@ export const CardEditor = () => {
     <div className="min-h-screen bg-background">
       <EditorHeader set={set} onSave={saveCard} />
 
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Toolbar */}
-          <div className="lg:col-span-1">
-            <ElementToolbar
-              onAddElement={addElement}
-              selectedElement={selectedElementData}
-              onUpdateElement={(updates) => selectedElement && updateElement(selectedElement, updates)}
-              onDeleteElement={() => selectedElement && deleteElement(selectedElement)}
-              onCreateNewCard={createNewCard}
-            />
+          <div className="lg:col-span-1 order-2 lg:order-1">
+            <div className="sticky top-4">
+              <ElementToolbar
+                onAddElement={addElement}
+                selectedElement={selectedElementData}
+                onUpdateElement={(updates) => selectedElement && updateElement(selectedElement, updates)}
+                onDeleteElement={() => selectedElement && deleteElement(selectedElement)}
+                onCreateNewCard={createNewCard}
+              />
+            </div>
           </div>
 
           {/* Canvas Area */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 order-1 lg:order-2">
             <Card className="mb-4">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <CardNavigation
                   currentIndex={currentCardIndex}
                   totalCards={cards.length}
@@ -102,13 +104,15 @@ export const CardEditor = () => {
                   onSideChange={setCurrentSide}
                 />
 
-                <CardCanvas
-                  elements={currentElements}
-                  selectedElement={selectedElement}
-                  onSelectElement={setSelectedElement}
-                  onUpdateElement={updateElement}
-                  cardSide={currentSide}
-                />
+                <div className="overflow-auto">
+                  <CardCanvas
+                    elements={currentElements}
+                    selectedElement={selectedElement}
+                    onSelectElement={setSelectedElement}
+                    onUpdateElement={updateElement}
+                    cardSide={currentSide}
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>

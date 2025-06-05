@@ -18,32 +18,33 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
   });
 
   return (
-    <div className={`relative bg-white border rounded-lg overflow-hidden ${className}`} style={{ aspectRatio: '3/2', minHeight: '300px' }}>
+    <div className={`relative bg-white border rounded-lg overflow-hidden ${className}`} style={{ aspectRatio: '3/2', minHeight: '200px' }}>
       {elements.map((element) => (
         <div
           key={element.id}
           className="absolute"
           style={{
-            left: element.x,
-            top: element.y,
-            width: element.width,
-            height: 'auto', // Changed from element.height to auto
-            minHeight: element.height, // Keep original height as minimum
+            left: `${(element.x / 800) * 100}%`,
+            top: `${(element.y / 533) * 100}%`,
+            width: `${(element.width / 800) * 100}%`,
+            height: 'auto',
+            minHeight: `${(element.height / 533) * 100}%`,
             transform: `rotate(${element.rotation}deg)`,
             transformOrigin: 'center',
           }}
         >
           {element.type === 'text' ? (
             <div
-              className="w-full h-full flex items-center justify-center p-2"
+              className="w-full h-full flex items-center justify-center p-1 sm:p-2"
               style={{
                 ...getTextStyle(element),
                 wordWrap: 'break-word',
                 overflow: 'visible',
                 whiteSpace: 'normal',
+                fontSize: `clamp(${Math.max(10, parseInt(element.fontSize) * 0.6)}px, ${element.fontSize}, ${parseInt(element.fontSize) * 1.2}px)`,
               }}
             >
-              <span className="w-full text-center leading-normal">{element.content}</span>
+              <span className="w-full text-center leading-normal break-words">{element.content}</span>
             </div>
           ) : (
             <img
