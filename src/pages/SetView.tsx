@@ -106,7 +106,7 @@ const SetView = () => {
   };
 
   const handleCardClick = (index: number) => {
-    navigate(`/edit-card/${cards[index].id}`);
+    navigate(`/edit-cards/${setId}?card=${index}`);
   };
 
   const handleDeleteCard = async (cardId: string) => {
