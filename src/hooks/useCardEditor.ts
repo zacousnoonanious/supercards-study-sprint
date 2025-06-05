@@ -50,6 +50,7 @@ export const useCardEditor = () => {
           hint: card.hint || '',
           last_reviewed_at: card.last_reviewed_at || null,
           card_type: (card.card_type as Flashcard['card_type']) || 'standard',
+          interactive_type: (card.interactive_type as Flashcard['interactive_type']) || null,
           countdown_timer: card.countdown_timer || 0,
           password: card.password || null
         }));
@@ -248,6 +249,7 @@ export const useCardEditor = () => {
         hint: data.hint || '',
         last_reviewed_at: data.last_reviewed_at || null,
         card_type: (data.card_type as Flashcard['card_type']) || 'standard',
+        interactive_type: (data.interactive_type as Flashcard['interactive_type']) || null,
         countdown_timer: data.countdown_timer || 0,
         password: data.password || null
       };
@@ -308,6 +310,7 @@ export const useCardEditor = () => {
         hint: data.hint || '',
         last_reviewed_at: data.last_reviewed_at || null,
         card_type: (data.card_type as Flashcard['card_type']) || 'standard',
+        interactive_type: (data.interactive_type as Flashcard['interactive_type']) || null,
         countdown_timer: data.countdown_timer || 0,
         password: data.password || null
       };
