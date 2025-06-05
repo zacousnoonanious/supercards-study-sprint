@@ -72,32 +72,23 @@ const Decks = () => {
     try {
       console.log('Deleting set:', id);
       
-      // First, let's try to delete AI generation records using a more direct approach
-      // Check if there are any AI generation records for this set
-      const { data: aiGenRecords, error: aiGenCheckError } = await supabase
-        .from('ai_flashcard_generations')
-        .select('id')
-        .eq('set_id', id);
+      // Use a more robust approach - delete AI generation records first if they exist
+      try {
+        const { error: aiGenError } = await supabase
+          .from('ai_flashcard_generations')
+          .delete()
+          .eq('set_id', id);
 
-      if (aiGenCheckError) {
-        console.error('Error checking AI generation records:', aiGenCheckError);
-      } else if (aiGenRecords && aiGenRecords.length > 0) {
-        console.log(`Found ${aiGenRecords.length} AI generation records to delete`);
-        
-        // Delete each AI generation record individually
-        for (const record of aiGenRecords) {
-          const { error: deleteAiError } = await supabase
-            .from('ai_flashcard_generations')
-            .delete()
-            .eq('id', record.id);
-          
-          if (deleteAiError) {
-            console.error('Error deleting AI generation record:', deleteAiError);
-          }
+        if (aiGenError) {
+          console.log('Note: AI generation records deletion had an issue (this might be normal):', aiGenError);
+          // Don't throw here - continue with the deletion process
         }
+      } catch (aiError) {
+        console.log('AI generation records deletion failed (continuing anyway):', aiError);
+        // Continue with deletion even if AI records can't be deleted
       }
 
-      // Then delete all flashcards in the set
+      // Delete all flashcards in the set
       const { error: cardsError } = await supabase
         .from('flashcards')
         .delete()
@@ -128,7 +119,7 @@ const Decks = () => {
       console.error('Error deleting set:', error);
       toast({
         title: "Error",
-        description: "Failed to delete deck.",
+        description: "Failed to delete deck. Please try again.",
         variant: "destructive"
       });
     } finally {
