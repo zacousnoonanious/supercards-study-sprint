@@ -241,6 +241,88 @@
     --ring: 0 0% 0%;
   }
 
+  /* Theme-specific background overrides */
+  .light .min-h-screen {
+    background: linear-gradient(135deg, hsl(214 100% 97%) 0%, hsl(210 40% 96%) 100%);
+  }
+
+  .dark .min-h-screen {
+    background: linear-gradient(135deg, hsl(222.2 84% 4.9%) 0%, hsl(217.2 32.6% 17.5%) 100%);
+  }
+
+  .blue .min-h-screen {
+    background: linear-gradient(135deg, hsl(214 100% 97%) 0%, hsl(214 84% 90%) 100%);
+  }
+
+  .green .min-h-screen {
+    background: linear-gradient(135deg, hsl(142 100% 97%) 0%, hsl(142 76% 90%) 100%);
+  }
+
+  .red .min-h-screen {
+    background: linear-gradient(135deg, hsl(0 100% 97%) 0%, hsl(0 76% 90%) 100%);
+  }
+
+  .winterland .min-h-screen {
+    background: linear-gradient(135deg, hsl(204 100% 97%) 0%, hsl(204 100% 85%) 100%);
+  }
+
+  .cobalt .min-h-screen {
+    background: linear-gradient(135deg, hsl(225 39% 10%) 0%, hsl(225 39% 15%) 100%);
+  }
+
+  .darcula .min-h-screen {
+    background: linear-gradient(135deg, hsl(0 0% 13%) 0%, hsl(0 0% 18%) 100%);
+  }
+
+  .console .min-h-screen {
+    background: linear-gradient(135deg, hsl(120 100% 4%) 0%, hsl(120 100% 8%) 100%);
+  }
+
+  .high-contrast .min-h-screen {
+    background: hsl(0 0% 100%);
+  }
+
+  /* Additional theme backgrounds for specific elements */
+  .light .bg-gray-50 {
+    background: linear-gradient(135deg, hsl(210 40% 98%) 0%, hsl(214 32% 95%) 100%);
+  }
+
+  .dark .bg-gray-50 {
+    background: linear-gradient(135deg, hsl(222.2 84% 4.9%) 0%, hsl(217.2 32.6% 17.5%) 100%);
+  }
+
+  .blue .bg-gray-50 {
+    background: linear-gradient(135deg, hsl(214 100% 95%) 0%, hsl(214 50% 92%) 100%);
+  }
+
+  .green .bg-gray-50 {
+    background: linear-gradient(135deg, hsl(142 100% 95%) 0%, hsl(142 50% 92%) 100%);
+  }
+
+  .red .bg-gray-50 {
+    background: linear-gradient(135deg, hsl(0 100% 95%) 0%, hsl(0 50% 92%) 100%);
+  }
+
+  .winterland .bg-gray-50 {
+    background: linear-gradient(135deg, hsl(204 100% 95%) 0%, hsl(204 70% 88%) 100%);
+  }
+
+  .cobalt .bg-gray-50 {
+    background: linear-gradient(135deg, hsl(225 39% 12%) 0%, hsl(225 39% 18%) 100%);
+  }
+
+  .darcula .bg-gray-50 {
+    background: linear-gradient(135deg, hsl(0 0% 15%) 0%, hsl(0 0% 20%) 100%);
+  }
+
+  .console .bg-gray-50 {
+    background: linear-gradient(135deg, hsl(120 100% 6%) 0%, hsl(120 100% 10%) 100%);
+  }
+
+  .high-contrast .bg-gray-50 {
+    background: hsl(0 0% 95%);
+  }
+
   /* Size scaling */
   .size-small {
     font-size: 14px;
