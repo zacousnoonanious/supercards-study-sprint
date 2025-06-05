@@ -8,6 +8,7 @@ import { Plus, BookOpen, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
+
 interface FlashcardSet {
   id: string;
   title: string;
@@ -15,20 +16,15 @@ interface FlashcardSet {
   created_at: string;
   updated_at: string;
 }
+
 const Dashboard = () => {
-  const {
-    user,
-    signOut
-  } = useAuth();
-  const {
-    t
-  } = useI18n();
+  const { user, signOut } = useAuth();
+  const { t } = useI18n();
   const [sets, setSets] = useState<FlashcardSet[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -36,14 +32,14 @@ const Dashboard = () => {
     }
     fetchSets();
   }, [user, navigate]);
+
   const fetchSets = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('flashcard_sets').select('*').order('updated_at', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from('flashcard_sets')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
       if (error) throw error;
       setSets(data || []);
     } catch (error) {
@@ -57,11 +53,14 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
   const deleteSet = async (id: string) => {
     try {
-      const {
-        error
-      } = await supabase.from('flashcard_sets').delete().eq('id', id);
+      const { error } = await supabase
+        .from('flashcard_sets')
+        .delete()
+        .eq('id', id);
+
       if (error) throw error;
       setSets(sets.filter(set => set.id !== id));
       toast({
@@ -77,22 +76,28 @@ const Dashboard = () => {
       });
     }
   };
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
   };
+
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">{t('loading')}</div>
-      </div>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-lg text-foreground">{t('loading')}</div>
+      </div>
+    );
   }
-  return <div className="min-h-screen bg-zinc-950">
-      <header className="shadow-sm border-b bg-slate-800 rounded-sm">
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="shadow-sm border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">{t('welcome')}, {user?.email}</span>
+              <span className="text-sm text-muted-foreground">{t('welcome')}, {user?.email}</span>
               <ThemeToggle />
               <Button variant="outline" onClick={() => navigate('/profile')}>
                 {t('nav.profile')}
@@ -107,24 +112,28 @@ const Dashboard = () => {
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">{t('dashboard.title')}</h2>
+          <h2 className="text-xl font-semibold text-foreground">{t('dashboard.title')}</h2>
           <Button onClick={() => navigate('/create-set')} className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
             {t('nav.createSet')}
           </Button>
         </div>
 
-        {sets.length === 0 ? <Card className="text-center py-12">
+        {sets.length === 0 ? (
+          <Card className="text-center py-12">
             <CardContent>
-              <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">{t('dashboard.noSets')}</h3>
-              <p className="text-gray-600 mb-4">{t('dashboard.noSetsDesc')}</p>
+              <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">{t('dashboard.noSets')}</h3>
+              <p className="text-muted-foreground mb-4">{t('dashboard.noSetsDesc')}</p>
               <Button onClick={() => navigate('/create-set')}>
                 {t('dashboard.createFirst')}
               </Button>
             </CardContent>
-          </Card> : <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {sets.map(set => <Card key={set.id} className="hover:shadow-lg transition-shadow">
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {sets.map(set => (
+              <Card key={set.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="truncate">{set.title}</span>
@@ -149,9 +158,13 @@ const Dashboard = () => {
                     </Button>
                   </div>
                 </CardContent>
-              </Card>)}
-          </div>}
+              </Card>
+            ))}
+          </div>
+        )}
       </main>
-    </div>;
+    </div>
+  );
 };
+
 export default Dashboard;
