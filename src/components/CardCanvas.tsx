@@ -2,6 +2,8 @@
 import React, { useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { CanvasElement } from '@/types/flashcard';
+import { ElementPopupToolbar } from './ElementPopupToolbar';
+import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
 
 interface CardCanvasProps {
   elements: CanvasElement[];
@@ -27,6 +29,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     resizeHandle?: string;
   } | null>(null);
   const [editingElement, setEditingElement] = useState<string | null>(null);
+  const [showPopupFor, setShowPopupFor] = useState<string | null>(null);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 
   const handleMouseDown = (e: React.MouseEvent, elementId: string, action: 'drag' | 'resize', resizeHandle?: string) => {
     e.preventDefault();
@@ -36,6 +40,14 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     if (!element) return;
 
     onSelectElement(elementId);
+    
+    // Show popup for interactive elements
+    if (['multiple-choice', 'true-false', 'youtube', 'deck-embed'].includes(element.type)) {
+      setShowPopupFor(elementId);
+      setPopupPosition({ x: element.x + element.width, y: element.y });
+    } else {
+      setShowPopupFor(null);
+    }
     
     setDragState({
       isDragging: action === 'drag',
@@ -58,29 +70,37 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     const deltaY = e.clientY - dragState.dragStart.y;
 
     if (dragState.isDragging) {
-      onUpdateElement(selectedElement, {
-        x: Math.max(0, dragState.elementStart.x + deltaX),
-        y: Math.max(0, dragState.elementStart.y + deltaY)
-      });
+      const newX = Math.max(0, dragState.elementStart.x + deltaX);
+      const newY = Math.max(0, dragState.elementStart.y + deltaY);
+      
+      onUpdateElement(selectedElement, { x: newX, y: newY });
+      
+      // Update popup position if showing
+      if (showPopupFor === selectedElement) {
+        const element = elements.find(el => el.id === selectedElement);
+        if (element) {
+          setPopupPosition({ x: newX + element.width, y: newY });
+        }
+      }
     } else if (dragState.isResizing && dragState.resizeHandle) {
       const updates: Partial<CanvasElement> = {};
       
       switch (dragState.resizeHandle) {
-        case 'se': // Southeast corner
+        case 'se':
           updates.width = Math.max(20, dragState.elementStart.width + deltaX);
           updates.height = Math.max(20, dragState.elementStart.height + deltaY);
           break;
-        case 'sw': // Southwest corner
+        case 'sw':
           updates.width = Math.max(20, dragState.elementStart.width - deltaX);
           updates.height = Math.max(20, dragState.elementStart.height + deltaY);
           updates.x = dragState.elementStart.x + deltaX;
           break;
-        case 'ne': // Northeast corner
+        case 'ne':
           updates.width = Math.max(20, dragState.elementStart.width + deltaX);
           updates.height = Math.max(20, dragState.elementStart.height - deltaY);
           updates.y = dragState.elementStart.y + deltaY;
           break;
-        case 'nw': // Northwest corner
+        case 'nw':
           updates.width = Math.max(20, dragState.elementStart.width - deltaX);
           updates.height = Math.max(20, dragState.elementStart.height - deltaY);
           updates.x = dragState.elementStart.x + deltaX;
@@ -100,6 +120,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     if (e.target === canvasRef.current) {
       onSelectElement(null);
       setEditingElement(null);
+      setShowPopupFor(null);
     }
   };
 
@@ -110,14 +131,11 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const handleTextClick = (e: React.MouseEvent, elementId: string) => {
     e.stopPropagation();
     
-    // Handle double and triple clicks for text selection
     if (e.detail === 2) {
-      // Double click - select all text
       const target = e.currentTarget.querySelector('input, span') as HTMLInputElement | HTMLElement;
       if (target && 'select' in target) {
         target.select();
       } else if (target) {
-        // For span elements, select all text
         const selection = window.getSelection();
         const range = document.createRange();
         range.selectNodeContents(target);
@@ -126,7 +144,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       }
       setEditingElement(elementId);
     } else if (e.detail === 3) {
-      // Triple click - also select all text (same as double click for our use case)
       const target = e.currentTarget.querySelector('input, span') as HTMLInputElement | HTMLElement;
       if (target && 'select' in target) {
         target.select();
@@ -159,6 +176,58 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     textDecoration: element.textDecoration,
     textAlign: element.textAlign as any,
   });
+
+  const renderElement = (element: CanvasElement) => {
+    switch (element.type) {
+      case 'multiple-choice':
+        return <MultipleChoiceRenderer element={element} isEditing={true} />;
+      case 'true-false':
+        return <TrueFalseRenderer element={element} isEditing={true} />;
+      case 'youtube':
+        return <YouTubeRenderer element={element} />;
+      case 'deck-embed':
+        return <DeckEmbedRenderer element={element} />;
+      case 'text':
+        return (
+          <div
+            className="w-full h-full flex items-center justify-center p-2 bg-white border border-gray-300 rounded overflow-hidden cursor-text"
+            style={getTextStyle(element)}
+            onClick={(e) => handleTextClick(e, element.id)}
+          >
+            {editingElement === element.id ? (
+              <input
+                type="text"
+                value={element.content || ''}
+                onChange={(e) => handleTextChange(element.id, e.target.value)}
+                onKeyDown={(e) => handleTextKeyDown(e, element.id)}
+                onBlur={() => setEditingElement(null)}
+                className="w-full h-full bg-transparent border-none outline-none text-center"
+                style={getTextStyle(element)}
+                autoFocus
+              />
+            ) : (
+              <span 
+                className="w-full h-full flex items-center justify-center"
+                style={{ textAlign: element.textAlign || 'center' }}
+              >
+                {element.content}
+              </span>
+            )}
+          </div>
+        );
+      case 'image':
+        return (
+          <img
+            src={element.imageUrl}
+            alt="Element"
+            className="w-full h-full object-cover border border-gray-300 rounded"
+            draggable={false}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <Card className="relative overflow-hidden bg-white" style={{ aspectRatio: '3/2', minHeight: '400px' }}>
@@ -194,41 +263,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             }}
             onMouseDown={(e) => handleMouseDown(e, element.id, 'drag')}
           >
-            {/* Element content */}
-            {element.type === 'text' ? (
-              <div
-                className="w-full h-full flex items-center justify-center p-2 bg-white border border-gray-300 rounded overflow-hidden cursor-text"
-                style={getTextStyle(element)}
-                onClick={(e) => handleTextClick(e, element.id)}
-              >
-                {editingElement === element.id ? (
-                  <input
-                    type="text"
-                    value={element.content || ''}
-                    onChange={(e) => handleTextChange(element.id, e.target.value)}
-                    onKeyDown={(e) => handleTextKeyDown(e, element.id)}
-                    onBlur={() => setEditingElement(null)}
-                    className="w-full h-full bg-transparent border-none outline-none text-center"
-                    style={getTextStyle(element)}
-                    autoFocus
-                  />
-                ) : (
-                  <span 
-                    className="w-full h-full flex items-center justify-center"
-                    style={{ textAlign: element.textAlign || 'center' }}
-                  >
-                    {element.content}
-                  </span>
-                )}
-              </div>
-            ) : (
-              <img
-                src={element.imageUrl}
-                alt="Element"
-                className="w-full h-full object-cover border border-gray-300 rounded"
-                draggable={false}
-              />
-            )}
+            {renderElement(element)}
 
             {/* Resize handles */}
             {selectedElement === element.id && (
@@ -252,6 +287,21 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             )}
           </div>
         ))}
+
+        {/* Popup Toolbar */}
+        {showPopupFor && (
+          <ElementPopupToolbar
+            element={elements.find(el => el.id === showPopupFor)!}
+            onUpdate={(updates) => onUpdateElement(showPopupFor, updates)}
+            onDelete={() => {
+              setShowPopupFor(null);
+              // Handle delete through parent component
+              const deleteEvent = new CustomEvent('deleteElement', { detail: showPopupFor });
+              window.dispatchEvent(deleteEvent);
+            }}
+            position={popupPosition}
+          />
+        )}
       </div>
     </Card>
   );

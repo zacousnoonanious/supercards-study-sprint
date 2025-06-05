@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -208,26 +207,88 @@ export const useCardEditor = () => {
     }
   };
 
-  const addElement = (type: 'text' | 'image') => {
+  const addElement = (type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed') => {
     console.log('Adding element of type:', type);
     
-    const newElement: CanvasElement = {
-      id: `element-${Date.now()}`,
-      type,
-      x: type === 'text' ? 150 : 50,
-      y: type === 'text' ? 180 : 50,
-      width: type === 'text' ? 300 : 150,
-      height: type === 'text' ? 60 : 150,
-      rotation: 0,
-      content: type === 'text' ? 'Edit this text' : '',
-      fontSize: type === 'text' ? 20 : undefined,
-      color: type === 'text' ? '#000000' : undefined,
-      fontWeight: type === 'text' ? 'normal' : undefined,
-      fontStyle: type === 'text' ? 'normal' : undefined,
-      textDecoration: type === 'text' ? 'none' : undefined,
-      textAlign: type === 'text' ? 'center' : undefined,
-      imageUrl: type === 'image' ? '/placeholder.svg' : undefined
+    const getElementDefaults = (elementType: typeof type) => {
+      const baseDefaults = {
+        id: `element-${Date.now()}`,
+        type: elementType,
+        rotation: 0,
+      };
+
+      switch (elementType) {
+        case 'text':
+          return {
+            ...baseDefaults,
+            x: 150,
+            y: 180,
+            width: 300,
+            height: 60,
+            content: 'Edit this text',
+            fontSize: 20,
+            color: '#000000',
+            fontWeight: 'normal' as const,
+            fontStyle: 'normal' as const,
+            textDecoration: 'none' as const,
+            textAlign: 'center' as const,
+          };
+        case 'image':
+          return {
+            ...baseDefaults,
+            x: 50,
+            y: 50,
+            width: 150,
+            height: 150,
+            imageUrl: '/placeholder.svg',
+          };
+        case 'multiple-choice':
+          return {
+            ...baseDefaults,
+            x: 50,
+            y: 50,
+            width: 350,
+            height: 200,
+            content: 'Which option is correct?',
+            multipleChoiceOptions: ['Option 1', 'Option 2', 'Option 3'],
+            correctAnswer: 0,
+          };
+        case 'true-false':
+          return {
+            ...baseDefaults,
+            x: 50,
+            y: 50,
+            width: 300,
+            height: 150,
+            content: 'This statement is true.',
+            correctAnswer: 1,
+          };
+        case 'youtube':
+          return {
+            ...baseDefaults,
+            x: 50,
+            y: 50,
+            width: 400,
+            height: 225,
+            youtubeUrl: '',
+            autoplay: false,
+          };
+        case 'deck-embed':
+          return {
+            ...baseDefaults,
+            x: 50,
+            y: 50,
+            width: 300,
+            height: 200,
+            deckId: '',
+            deckTitle: '',
+          };
+        default:
+          return baseDefaults;
+      }
     };
+
+    const newElement: CanvasElement = getElementDefaults(type);
 
     const updatedCards = [...cards];
     if (currentSide === 'front') {

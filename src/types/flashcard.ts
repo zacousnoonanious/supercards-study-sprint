@@ -1,7 +1,6 @@
-
 export interface CanvasElement {
   id: string;
-  type: 'text' | 'image';
+  type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed';
   x: number;
   y: number;
   width: number;
@@ -15,6 +14,15 @@ export interface CanvasElement {
   textDecoration?: 'none' | 'underline';
   textAlign?: 'left' | 'center' | 'right' | 'justify';
   imageUrl?: string;
+  // Multiple choice specific
+  multipleChoiceOptions?: string[];
+  correctAnswer?: number;
+  // YouTube specific
+  youtubeUrl?: string;
+  autoplay?: boolean;
+  // Deck embed specific
+  deckId?: string;
+  deckTitle?: string;
 }
 
 export interface Flashcard {

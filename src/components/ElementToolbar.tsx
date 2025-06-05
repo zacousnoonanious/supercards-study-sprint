@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,11 +6,27 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Type, Image, Trash2, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify, Plus } from 'lucide-react';
+import { 
+  Type, 
+  Image, 
+  Trash2, 
+  Bold, 
+  Italic, 
+  Underline, 
+  AlignLeft, 
+  AlignCenter, 
+  AlignRight, 
+  AlignJustify, 
+  Plus,
+  CheckSquare,
+  ToggleLeft,
+  Youtube,
+  BookOpen
+} from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
 
 interface ElementToolbarProps {
-  onAddElement: (type: 'text' | 'image') => void;
+  onAddElement: (type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed') => void;
   selectedElement: CanvasElement | null;
   onUpdateElement: (updates: Partial<CanvasElement>) => void;
   onDeleteElement: () => void;
@@ -65,6 +80,38 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
           >
             <Image className="w-4 h-4 mr-2" />
             Add Image
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => onAddElement('multiple-choice')}
+          >
+            <CheckSquare className="w-4 h-4 mr-2" />
+            Multiple Choice
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => onAddElement('true-false')}
+          >
+            <ToggleLeft className="w-4 h-4 mr-2" />
+            True/False
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => onAddElement('youtube')}
+          >
+            <Youtube className="w-4 h-4 mr-2" />
+            YouTube Video
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => onAddElement('deck-embed')}
+          >
+            <BookOpen className="w-4 h-4 mr-2" />
+            Embed Deck
           </Button>
         </CardContent>
       </Card>
