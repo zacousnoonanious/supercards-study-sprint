@@ -57,10 +57,18 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     if (!canvasRef.current) return { x: 0, y: 0 };
     
     const canvasRect = canvasRef.current.getBoundingClientRect();
-    return {
-      x: element.x + element.width + 10,
-      y: element.y,
-    };
+    const elementRight = element.x + element.width;
+    const elementTop = element.y;
+    
+    // Position popup to the right of the element, or to the left if not enough space
+    const popupWidth = 250;
+    const spaceOnRight = canvasRect.width - elementRight;
+    
+    if (spaceOnRight >= popupWidth + 20) {
+      return { x: elementRight + 10, y: elementTop };
+    } else {
+      return { x: Math.max(10, element.x - popupWidth - 10), y: elementTop };
+    }
   };
 
   const handleQuizAddElement = (type: string, position: number) => {
@@ -233,8 +241,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   }
 
   // For informational cards, make canvas taller to accommodate more content
-  const canvasHeight = cardType === 'informational' ? '800px' : '533px';
-  const canvasWidth = '800px';
+  const canvasHeight = cardType === 'informational' ? '800px' : '600px';
+  const canvasWidth = '900px';
 
   return (
     <div
@@ -245,7 +253,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       style={{ 
         width: canvasWidth, 
         height: canvasHeight,
-        aspectRatio: cardType === 'informational' ? 'unset' : '3/2',
         ...style 
       }}
       onMouseDown={(e) => {
@@ -295,13 +302,23 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       ))}
 
       {/* Resize handles for selected element */}
-      {selectedElement && (
-        <CanvasInteractionHandler
-          selectedElement={selectedElement}
-          dragState={dragState}
-          onMouseDown={handleMouseDown}
-          isDrawingMode={false}
-        />
+      {selectedElement && selectedElementData && (
+        <>
+          <CanvasInteractionHandler
+            selectedElement={selectedElement}
+            dragState={dragState}
+            onMouseDown={handleMouseDown}
+            isDrawingMode={false}
+          />
+
+          {/* Element Popup Toolbar - follows the element */}
+          <ElementPopupToolbar
+            element={selectedElementData}
+            onUpdate={(updates) => selectedElement && onUpdateElement(selectedElement, updates)}
+            onDelete={() => selectedElement && onDeleteElement(selectedElement)}
+            position={getElementPopupPosition(selectedElementData)}
+          />
+        </>
       )}
 
       {/* Context Menu */}

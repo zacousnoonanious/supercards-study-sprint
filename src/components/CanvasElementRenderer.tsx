@@ -74,7 +74,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
       );
     case 'deck-embed':
       return (
-        <div className={`w-full h-full flex items-center justify-center p-4 rounded border ${
+        <div className={`w-full h-full flex items-center justify-center p-2 rounded border ${
           theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
         }`}>
           {element.deckId ? (
@@ -128,7 +128,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
       );
     case 'audio':
       return (
-        <div className={`w-full h-full flex items-center justify-center p-2 rounded border ${
+        <div className={`w-full h-full flex items-center justify-center rounded border ${
           theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
         }`}>
           <audio controls className="w-full h-full max-w-full max-h-full">
@@ -140,7 +140,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
     case 'text':
       return (
         <div
-          className={`w-full h-full flex items-center justify-center p-2 border rounded overflow-hidden cursor-text ${
+          className={`w-full h-full flex items-center justify-center border rounded overflow-hidden cursor-text ${
             theme === 'dark' ? 'bg-gray-800 text-white border-gray-600' : 'bg-white border-gray-300'
           }`}
           style={{
@@ -150,6 +150,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
             fontStyle: element.fontStyle,
             textDecoration: element.textDecoration,
             textAlign: element.textAlign as React.CSSProperties['textAlign'],
+            padding: '4px 8px', // Minimal padding
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -165,12 +166,13 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
                 const newContent = e.target.value;
                 onUpdateElement(element.id, { content: newContent });
                 
-                // Auto-resize text element based on content
+                // Auto-resize text element based on content with minimal padding
                 const lines = newContent.split('\n').length;
                 const longestLine = Math.max(...newContent.split('\n').map(line => line.length));
                 
-                const newWidth = Math.max(200, Math.min(600, longestLine * 8 * textScale + 40));
-                const newHeight = Math.max(60, lines * 24 * textScale + 40);
+                const fontSize = (element.fontSize || 16) * textScale;
+                const newWidth = Math.max(100, Math.min(600, longestLine * fontSize * 0.6 + 16));
+                const newHeight = Math.max(32, lines * fontSize * 1.2 + 16);
                 
                 if (newWidth !== element.width || newHeight !== element.height) {
                   onUpdateElement(element.id, { 
@@ -197,6 +199,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
                 textDecoration: element.textDecoration,
                 textAlign: element.textAlign as React.CSSProperties['textAlign'],
                 whiteSpace: 'pre-wrap',
+                padding: '4px 8px',
               }}
               autoFocus
             />
@@ -205,7 +208,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
               className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words leading-tight"
               style={{ 
                 textAlign: element.textAlign || 'center',
-                fontSize: `${Math.min((element.fontSize || 16) * textScale, element.height / 3)}px`,
+                fontSize: `${Math.min((element.fontSize || 16) * textScale, element.height / 2)}px`,
                 lineHeight: '1.2'
               }}
             >

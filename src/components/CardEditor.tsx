@@ -5,7 +5,6 @@ import { CardCanvas } from './CardCanvas';
 import { EditorHeader } from './EditorHeader';
 import { CanvasOverlayToolbar } from './CanvasOverlayToolbar';
 import { CardTypePanel } from './CardTypePanel';
-import { ElementPopupToolbar } from './ElementPopupToolbar';
 import { useCardEditor } from '@/hooks/useCardEditor';
 
 export const CardEditor: React.FC = () => {
@@ -120,20 +119,6 @@ export const CardEditor: React.FC = () => {
 
   const currentCard = cards[currentCardIndex];
   const currentElements = currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements;
-  const selectedElementData = selectedElement ? currentElements.find(el => el.id === selectedElement) : null;
-
-  // Determine canvas size based on card type
-  const getCanvasStyle = () => {
-    const cardType = currentCard?.card_type || 'standard';
-    switch (cardType) {
-      case 'informational':
-        return { aspectRatio: '16/9', minHeight: '700px' };
-      case 'quiz-only':
-        return { aspectRatio: '4/3', minHeight: '600px' };
-      default:
-        return { aspectRatio: '3/2', minHeight: '500px' };
-    }
-  };
 
   const handleDeleteCard = async (): Promise<boolean> => {
     return await deleteCard(currentCard.id);
@@ -143,60 +128,42 @@ export const CardEditor: React.FC = () => {
     <div className="min-h-screen bg-background">
       <EditorHeader set={set} onSave={saveCard} />
 
-      <main className="h-[calc(100vh-80px)] p-1">
-        <div className="relative h-full">
-          <div className="h-full flex items-center justify-center pt-8">
-            <CardCanvas
-              elements={currentElements}
-              selectedElement={selectedElement}
-              onSelectElement={setSelectedElement}
-              onUpdateElement={updateElement}
-              onDeleteElement={deleteElement}
-              cardSide={currentSide}
-              style={{
-                ...getCanvasStyle(),
-                maxWidth: '90%',
-                maxHeight: '90%',
-                width: 'auto',
-                height: 'auto'
-              }}
-              cardType={currentCard?.card_type}
-              onAddElement={addElement}
-            />
-          </div>
+      <main className="h-[calc(100vh-80px)] relative">
+        {/* Compact Overlay Toolbar */}
+        <CanvasOverlayToolbar
+          set={set}
+          currentCard={currentCard}
+          currentCardIndex={currentCardIndex}
+          totalCards={cards.length}
+          currentSide={currentSide}
+          onAddElement={addElement}
+          onUpdateCard={updateCard}
+          onNavigateCard={navigateCard}
+          onSideChange={setCurrentSide}
+          onCreateNewCard={createNewCard}
+          onCreateNewCardWithLayout={createNewCardWithLayout}
+          onDeleteCard={handleDeleteCard}
+          onSave={saveCard}
+        />
 
-          {/* Compact Overlay Toolbar */}
-          <CanvasOverlayToolbar
-            set={set}
-            currentCard={currentCard}
-            currentCardIndex={currentCardIndex}
-            totalCards={cards.length}
-            currentSide={currentSide}
+        {/* Card Type Panel - Floating on the right */}
+        <CardTypePanel
+          currentCard={currentCard}
+          onUpdateCard={(updates) => updateCard(currentCard.id, updates)}
+        />
+
+        {/* Canvas takes up the full remaining space */}
+        <div className="h-full flex items-center justify-center pt-10 pb-4">
+          <CardCanvas
+            elements={currentElements}
+            selectedElement={selectedElement}
+            onSelectElement={setSelectedElement}
+            onUpdateElement={updateElement}
+            onDeleteElement={deleteElement}
+            cardSide={currentSide}
+            cardType={currentCard?.card_type}
             onAddElement={addElement}
-            onUpdateCard={updateCard}
-            onNavigateCard={navigateCard}
-            onSideChange={setCurrentSide}
-            onCreateNewCard={createNewCard}
-            onCreateNewCardWithLayout={createNewCardWithLayout}
-            onDeleteCard={handleDeleteCard}
-            onSave={saveCard}
           />
-
-          {/* Card Type Panel - Separate from main toolbar */}
-          <CardTypePanel
-            currentCard={currentCard}
-            onUpdateCard={(updates) => updateCard(currentCard.id, updates)}
-          />
-
-          {/* Element Popup Toolbar */}
-          {selectedElementData && (
-            <ElementPopupToolbar
-              element={selectedElementData}
-              onUpdate={(updates) => selectedElement && updateElement(selectedElement, updates)}
-              onDelete={() => selectedElement && deleteElement(selectedElement)}
-              position={{ x: 100, y: 100 }}
-            />
-          )}
         </div>
       </main>
     </div>
