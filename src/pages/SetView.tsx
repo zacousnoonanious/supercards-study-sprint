@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,7 +46,16 @@ const SetView = () => {
 
       if (cardsError) throw cardsError;
       
-      setCards(cardsData || []);
+      // Type cast the data to match our Flashcard interface
+      const typedCards: Flashcard[] = (cardsData || []).map(card => ({
+        ...card,
+        front_elements: Array.isArray(card.front_elements) ? card.front_elements : [],
+        back_elements: Array.isArray(card.back_elements) ? card.back_elements : [],
+        hint: card.hint || '',
+        last_reviewed_at: card.last_reviewed_at || null
+      }));
+      
+      setCards(typedCards);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
