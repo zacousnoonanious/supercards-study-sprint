@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { FlashcardSet, Flashcard } from '@/types/flashcard';
+import { FlashcardSet, Flashcard, CanvasElement } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
 import { Play, Edit, Plus, MoreVertical, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
