@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Plus, Edit, Trash2, Play } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Play, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Flashcard {
@@ -148,8 +148,8 @@ const SetView = () => {
                 variant="outline"
                 onClick={() => navigate(`/edit-cards/${setId}`)}
               >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Cards
+                <Palette className="w-4 h-4 mr-2" />
+                Visual Editor
               </Button>
               {cards.length > 0 && (
                 <Button onClick={() => navigate(`/study/${setId}`)}>

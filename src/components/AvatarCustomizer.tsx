@@ -8,15 +8,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Palette, User } from 'lucide-react';
 
 interface AvatarOptions {
-  skinColor: string;
+  seed: string;
+  backgroundColor: string;
+  hair: string;
   hairColor: string;
-  hairStyle: string;
-  eyeColor: string;
-  faceStyle: string;
-  noseStyle: string;
-  hat: string;
-  width: string;
-  height: string;
+  eyes: string;
+  eyebrows: string;
+  mouth: string;
+  skinColor: string;
+  accessories: string;
+  clothingGraphic: string;
+  clothing: string;
+  clothingColor: string;
 }
 
 interface AvatarCustomizerProps {
@@ -25,69 +28,97 @@ interface AvatarCustomizerProps {
   onClose: () => void;
 }
 
-const skinColors = [
-  { value: 'light', label: 'Light', color: '#fdbcb4' },
-  { value: 'medium', label: 'Medium', color: '#edb98a' },
-  { value: 'tan', label: 'Tan', color: '#d08b5b' },
-  { value: 'dark', label: 'Dark', color: '#ae7242' },
-  { value: 'deep', label: 'Deep', color: '#8d5524' },
-];
-
-const hairColors = [
-  { value: 'blonde', label: 'Blonde', color: '#faf0be' },
-  { value: 'brown', label: 'Brown', color: '#8b4513' },
-  { value: 'black', label: 'Black', color: '#2c1810' },
-  { value: 'red', label: 'Red', color: '#cc4125' },
-  { value: 'gray', label: 'Gray', color: '#a0a0a0' },
-  { value: 'blue', label: 'Blue', color: '#4a90e2' },
+const backgroundColors = [
+  { value: 'b6e3f4', label: 'Light Blue' },
+  { value: 'c0aede', label: 'Light Purple' },
+  { value: 'ffd93d', label: 'Yellow' },
+  { value: 'ffb3ba', label: 'Pink' },
+  { value: 'bae1ff', label: 'Blue' },
+  { value: 'ffffba', label: 'Light Yellow' },
+  { value: 'ffdfba', label: 'Peach' },
+  { value: 'baffc9', label: 'Light Green' },
 ];
 
 const hairStyles = [
-  { value: 'short', label: 'Short' },
-  { value: 'long', label: 'Long' },
-  { value: 'curly', label: 'Curly' },
-  { value: 'straight', label: 'Straight' },
-  { value: 'wavy', label: 'Wavy' },
-  { value: 'bald', label: 'Bald' },
+  { value: 'short01', label: 'Short 1' },
+  { value: 'short02', label: 'Short 2' },
+  { value: 'short03', label: 'Short 3' },
+  { value: 'short04', label: 'Short 4' },
+  { value: 'short05', label: 'Short 5' },
+  { value: 'long01', label: 'Long 1' },
+  { value: 'long02', label: 'Long 2' },
+  { value: 'long03', label: 'Long 3' },
+  { value: 'dreads01', label: 'Dreads 1' },
+  { value: 'dreads02', label: 'Dreads 2' },
+  { value: 'fonze01', label: 'Fonze' },
+  { value: 'mrClean01', label: 'Bald' },
 ];
 
-const eyeColors = [
-  { value: 'brown', label: 'Brown', color: '#8b4513' },
-  { value: 'blue', label: 'Blue', color: '#4a90e2' },
-  { value: 'green', label: 'Green', color: '#50c878' },
-  { value: 'hazel', label: 'Hazel', color: '#8e7618' },
-  { value: 'gray', label: 'Gray', color: '#708090' },
+const hairColors = [
+  { value: '724133', label: 'Brown' },
+  { value: '2c1b18', label: 'Black' },
+  { value: 'b58143', label: 'Blonde' },
+  { value: 'a55728', label: 'Auburn' },
+  { value: 'd6b370', label: 'Light Brown' },
+  { value: 'c93305', label: 'Red' },
 ];
 
-const faceStyles = [
-  { value: 'round', label: 'Round' },
-  { value: 'oval', label: 'Oval' },
-  { value: 'square', label: 'Square' },
-  { value: 'heart', label: 'Heart' },
-  { value: 'diamond', label: 'Diamond' },
+const eyeStyles = [
+  { value: 'variant01', label: 'Default' },
+  { value: 'variant02', label: 'Happy' },
+  { value: 'variant03', label: 'Squint' },
+  { value: 'variant04', label: 'Wink' },
+  { value: 'variant05', label: 'Surprised' },
 ];
 
-const noseStyles = [
-  { value: 'small', label: 'Small' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'large', label: 'Large' },
-  { value: 'button', label: 'Button' },
-  { value: 'straight', label: 'Straight' },
+const eyebrowStyles = [
+  { value: 'variant01', label: 'Default' },
+  { value: 'variant02', label: 'Raised' },
+  { value: 'variant03', label: 'Angry' },
+  { value: 'variant04', label: 'Sad' },
 ];
 
-const hats = [
-  { value: 'none', label: 'None' },
-  { value: 'cap', label: 'Baseball Cap' },
-  { value: 'beanie', label: 'Beanie' },
-  { value: 'fedora', label: 'Fedora' },
-  { value: 'cowboy', label: 'Cowboy Hat' },
-  { value: 'beret', label: 'Beret' },
+const mouthStyles = [
+  { value: 'variant01', label: 'Smile' },
+  { value: 'variant02', label: 'Serious' },
+  { value: 'variant03', label: 'Open' },
+  { value: 'variant04', label: 'Surprised' },
+  { value: 'variant05', label: 'Tongue' },
 ];
 
-const sizes = [
-  { value: 'small', label: 'Small' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'large', label: 'Large' },
+const skinColors = [
+  { value: 'f2d3b1', label: 'Light' },
+  { value: 'e4a853', label: 'Medium' },
+  { value: 'a76f42', label: 'Tan' },
+  { value: '8b5a2b', label: 'Dark' },
+];
+
+const accessories = [
+  { value: '', label: 'None' },
+  { value: 'glasses01', label: 'Glasses 1' },
+  { value: 'glasses02', label: 'Glasses 2' },
+  { value: 'sunglasses01', label: 'Sunglasses' },
+  { value: 'eyepatch01', label: 'Eyepatch' },
+];
+
+const clothingStyles = [
+  { value: 'shirt01', label: 'Shirt' },
+  { value: 'shirt02', label: 'Polo' },
+  { value: 'shirt03', label: 'Tank Top' },
+  { value: 'shirt04', label: 'Sweater' },
+  { value: 'shirt05', label: 'Hoodie' },
+  { value: 'shirt06', label: 'Dress Shirt' },
+];
+
+const clothingColors = [
+  { value: '3c4f5c', label: 'Dark Blue' },
+  { value: '5199e4', label: 'Blue' },
+  { value: '25557c', label: 'Navy' },
+  { value: 'd84315', label: 'Orange' },
+  { value: '4caf50', label: 'Green' },
+  { value: 'e91e63', label: 'Pink' },
+  { value: '9c27b0', label: 'Purple' },
+  { value: 'f44336', label: 'Red' },
 ];
 
 export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
@@ -96,27 +127,40 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
   onClose,
 }) => {
   const [options, setOptions] = React.useState<AvatarOptions>({
-    skinColor: 'light',
-    hairColor: 'brown',
-    hairStyle: 'short',
-    eyeColor: 'brown',
-    faceStyle: 'oval',
-    noseStyle: 'medium',
-    hat: 'none',
-    width: 'medium',
-    height: 'medium',
+    seed: 'custom-avatar',
+    backgroundColor: 'b6e3f4',
+    hair: 'short01',
+    hairColor: '724133',
+    eyes: 'variant01',
+    eyebrows: 'variant01',
+    mouth: 'variant01',
+    skinColor: 'f2d3b1',
+    accessories: '',
+    clothingGraphic: '',
+    clothing: 'shirt01',
+    clothingColor: '3c4f5c',
   });
 
   const generateAvatarUrl = (opts: AvatarOptions) => {
     const params = new URLSearchParams({
-      seed: `${opts.skinColor}-${opts.hairColor}-${opts.hairStyle}-${opts.eyeColor}-${opts.faceStyle}-${opts.noseStyle}-${opts.hat}-${opts.width}-${opts.height}`,
+      seed: opts.seed,
+      backgroundColor: opts.backgroundColor,
+      hair: opts.hair,
+      hairColor: opts.hairColor,
+      eyes: opts.eyes,
+      eyebrows: opts.eyebrows,
+      mouth: opts.mouth,
       skinColor: opts.skinColor,
-      hair: `${opts.hairStyle},${opts.hairColor}`,
-      eyes: opts.eyeColor,
-      face: opts.faceStyle,
-      nose: opts.noseStyle,
-      accessories: opts.hat !== 'none' ? opts.hat : '',
-      size: `${opts.width}x${opts.height}`,
+      accessories: opts.accessories,
+      clothing: opts.clothing,
+      clothingColor: opts.clothingColor,
+    });
+
+    // Remove empty parameters
+    Object.keys(params).forEach(key => {
+      if (!params.get(key)) {
+        params.delete(key);
+      }
     });
     
     return `https://api.dicebear.com/7.x/avataaars/svg?${params.toString()}`;
@@ -124,6 +168,24 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
 
   const updateOption = (key: keyof AvatarOptions, value: string) => {
     const newOptions = { ...options, [key]: value };
+    setOptions(newOptions);
+  };
+
+  const randomizeAvatar = () => {
+    const newOptions: AvatarOptions = {
+      seed: `avatar-${Date.now()}`,
+      backgroundColor: backgroundColors[Math.floor(Math.random() * backgroundColors.length)].value,
+      hair: hairStyles[Math.floor(Math.random() * hairStyles.length)].value,
+      hairColor: hairColors[Math.floor(Math.random() * hairColors.length)].value,
+      eyes: eyeStyles[Math.floor(Math.random() * eyeStyles.length)].value,
+      eyebrows: eyebrowStyles[Math.floor(Math.random() * eyebrowStyles.length)].value,
+      mouth: mouthStyles[Math.floor(Math.random() * mouthStyles.length)].value,
+      skinColor: skinColors[Math.floor(Math.random() * skinColors.length)].value,
+      accessories: Math.random() > 0.5 ? accessories[Math.floor(Math.random() * accessories.length)].value : '',
+      clothingGraphic: '',
+      clothing: clothingStyles[Math.floor(Math.random() * clothingStyles.length)].value,
+      clothingColor: clothingColors[Math.floor(Math.random() * clothingColors.length)].value,
+    };
     setOptions(newOptions);
   };
 
@@ -145,38 +207,58 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Preview */}
-        <div className="flex justify-center">
+        <div className="flex justify-center items-center gap-4">
           <Avatar className="w-32 h-32">
             <AvatarImage src={currentGeneratedUrl} alt="Avatar Preview" />
             <AvatarFallback>
               <User className="w-16 h-16" />
             </AvatarFallback>
           </Avatar>
+          <Button onClick={randomizeAvatar} variant="outline">
+            Randomize
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Skin Color */}
+          {/* Background Color */}
           <div>
-            <Label className="text-sm font-medium mb-3 block">Skin Color</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {skinColors.map((color) => (
+            <Label className="text-sm font-medium mb-3 block">Background Color</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {backgroundColors.map((color) => (
                 <button
                   key={color.value}
-                  onClick={() => updateOption('skinColor', color.value)}
+                  onClick={() => updateOption('backgroundColor', color.value)}
                   className={`p-3 rounded-lg border-2 transition-all ${
-                    options.skinColor === color.value
+                    options.backgroundColor === color.value
                       ? 'border-indigo-500 bg-indigo-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
                   <div
                     className="w-6 h-6 rounded-full mx-auto mb-1"
-                    style={{ backgroundColor: color.color }}
+                    style={{ backgroundColor: `#${color.value}` }}
                   />
                   <span className="text-xs">{color.label}</span>
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Hair Style */}
+          <div>
+            <Label htmlFor="hair" className="text-sm font-medium">Hair Style</Label>
+            <Select value={options.hair} onValueChange={(value) => updateOption('hair', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select hair style" />
+              </SelectTrigger>
+              <SelectContent>
+                {hairStyles.map((style) => (
+                  <SelectItem key={style.value} value={style.value}>
+                    {style.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Hair Color */}
@@ -195,7 +277,7 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
                 >
                   <div
                     className="w-6 h-6 rounded-full mx-auto mb-1"
-                    style={{ backgroundColor: color.color }}
+                    style={{ backgroundColor: `#${color.value}` }}
                   />
                   <span className="text-xs">{color.label}</span>
                 </button>
@@ -203,40 +285,23 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
             </div>
           </div>
 
-          {/* Hair Style */}
+          {/* Skin Color */}
           <div>
-            <Label htmlFor="hairStyle" className="text-sm font-medium">Hair Style</Label>
-            <Select value={options.hairStyle} onValueChange={(value) => updateOption('hairStyle', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select hair style" />
-              </SelectTrigger>
-              <SelectContent>
-                {hairStyles.map((style) => (
-                  <SelectItem key={style.value} value={style.value}>
-                    {style.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Eye Color */}
-          <div>
-            <Label className="text-sm font-medium mb-3 block">Eye Color</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {eyeColors.map((color) => (
+            <Label className="text-sm font-medium mb-3 block">Skin Color</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {skinColors.map((color) => (
                 <button
                   key={color.value}
-                  onClick={() => updateOption('eyeColor', color.value)}
+                  onClick={() => updateOption('skinColor', color.value)}
                   className={`p-3 rounded-lg border-2 transition-all ${
-                    options.eyeColor === color.value
+                    options.skinColor === color.value
                       ? 'border-indigo-500 bg-indigo-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
                   <div
                     className="w-6 h-6 rounded-full mx-auto mb-1"
-                    style={{ backgroundColor: color.color }}
+                    style={{ backgroundColor: `#${color.value}` }}
                   />
                   <span className="text-xs">{color.label}</span>
                 </button>
@@ -244,15 +309,15 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
             </div>
           </div>
 
-          {/* Face Style */}
+          {/* Eyes */}
           <div>
-            <Label htmlFor="faceStyle" className="text-sm font-medium">Face Shape</Label>
-            <Select value={options.faceStyle} onValueChange={(value) => updateOption('faceStyle', value)}>
+            <Label htmlFor="eyes" className="text-sm font-medium">Eyes</Label>
+            <Select value={options.eyes} onValueChange={(value) => updateOption('eyes', value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select face shape" />
+                <SelectValue placeholder="Select eye style" />
               </SelectTrigger>
               <SelectContent>
-                {faceStyles.map((style) => (
+                {eyeStyles.map((style) => (
                   <SelectItem key={style.value} value={style.value}>
                     {style.label}
                   </SelectItem>
@@ -261,15 +326,15 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
             </Select>
           </div>
 
-          {/* Nose Style */}
+          {/* Eyebrows */}
           <div>
-            <Label htmlFor="noseStyle" className="text-sm font-medium">Nose Style</Label>
-            <Select value={options.noseStyle} onValueChange={(value) => updateOption('noseStyle', value)}>
+            <Label htmlFor="eyebrows" className="text-sm font-medium">Eyebrows</Label>
+            <Select value={options.eyebrows} onValueChange={(value) => updateOption('eyebrows', value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select nose style" />
+                <SelectValue placeholder="Select eyebrow style" />
               </SelectTrigger>
               <SelectContent>
-                {noseStyles.map((style) => (
+                {eyebrowStyles.map((style) => (
                   <SelectItem key={style.value} value={style.value}>
                     {style.label}
                   </SelectItem>
@@ -278,51 +343,51 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
             </Select>
           </div>
 
-          {/* Hat */}
+          {/* Mouth */}
           <div>
-            <Label htmlFor="hat" className="text-sm font-medium">Hat/Accessory</Label>
-            <Select value={options.hat} onValueChange={(value) => updateOption('hat', value)}>
+            <Label htmlFor="mouth" className="text-sm font-medium">Mouth</Label>
+            <Select value={options.mouth} onValueChange={(value) => updateOption('mouth', value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select hat" />
+                <SelectValue placeholder="Select mouth style" />
               </SelectTrigger>
               <SelectContent>
-                {hats.map((hat) => (
-                  <SelectItem key={hat.value} value={hat.value}>
-                    {hat.label}
+                {mouthStyles.map((style) => (
+                  <SelectItem key={style.value} value={style.value}>
+                    {style.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Avatar Width */}
+          {/* Accessories */}
           <div>
-            <Label htmlFor="width" className="text-sm font-medium">Avatar Width</Label>
-            <Select value={options.width} onValueChange={(value) => updateOption('width', value)}>
+            <Label htmlFor="accessories" className="text-sm font-medium">Accessories</Label>
+            <Select value={options.accessories} onValueChange={(value) => updateOption('accessories', value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select width" />
+                <SelectValue placeholder="Select accessories" />
               </SelectTrigger>
               <SelectContent>
-                {sizes.map((size) => (
-                  <SelectItem key={size.value} value={size.value}>
-                    {size.label}
+                {accessories.map((accessory) => (
+                  <SelectItem key={accessory.value} value={accessory.value}>
+                    {accessory.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Avatar Height */}
+          {/* Clothing */}
           <div>
-            <Label htmlFor="height" className="text-sm font-medium">Avatar Height</Label>
-            <Select value={options.height} onValueChange={(value) => updateOption('height', value)}>
+            <Label htmlFor="clothing" className="text-sm font-medium">Clothing</Label>
+            <Select value={options.clothing} onValueChange={(value) => updateOption('clothing', value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select height" />
+                <SelectValue placeholder="Select clothing" />
               </SelectTrigger>
               <SelectContent>
-                {sizes.map((size) => (
-                  <SelectItem key={size.value} value={size.value}>
-                    {size.label}
+                {clothingStyles.map((style) => (
+                  <SelectItem key={style.value} value={style.value}>
+                    {style.label}
                   </SelectItem>
                 ))}
               </SelectContent>

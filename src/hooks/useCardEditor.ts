@@ -57,11 +57,11 @@ export const useCardEditor = () => {
 
       if (cardsError) throw cardsError;
       
-      // Initialize elements arrays if they don't exist and ensure proper typing
+      // Transform the data to match our Flashcard type
       const initializedCards: Flashcard[] = cardsData?.map(card => ({
         ...card,
-        front_elements: Array.isArray(card.front_elements) ? card.front_elements : [],
-        back_elements: Array.isArray(card.back_elements) ? card.back_elements : []
+        front_elements: Array.isArray(card.front_elements) ? card.front_elements as CanvasElement[] : [],
+        back_elements: Array.isArray(card.back_elements) ? card.back_elements as CanvasElement[] : []
       })) || [];
       
       setCards(initializedCards);
@@ -86,8 +86,8 @@ export const useCardEditor = () => {
       const { error } = await supabase
         .from('flashcards')
         .update({
-          front_elements: card.front_elements,
-          back_elements: card.back_elements
+          front_elements: card.front_elements as any,
+          back_elements: card.back_elements as any
         })
         .eq('id', card.id);
 
