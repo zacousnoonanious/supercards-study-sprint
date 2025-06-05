@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CardCanvas } from './CardCanvas';
 import { EditorHeader } from './EditorHeader';
 import { CanvasOverlayToolbar } from './CanvasOverlayToolbar';
+import { CardTypePanel } from './CardTypePanel';
 import { ElementPopupToolbar } from './ElementPopupToolbar';
 import { useCardEditor } from '@/hooks/useCardEditor';
 
@@ -88,7 +89,7 @@ export const CardEditor: React.FC = () => {
     return (
       <div className="min-h-screen bg-background">
         <EditorHeader set={set} onSave={saveCard} />
-        <main className="h-[calc(100vh-80px)] p-2">
+        <main className="h-[calc(100vh-80px)] p-1">
           <div className="relative h-full">
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -126,11 +127,11 @@ export const CardEditor: React.FC = () => {
     const cardType = currentCard?.card_type || 'standard';
     switch (cardType) {
       case 'informational':
-        return { aspectRatio: '16/9', minHeight: '600px' };
+        return { aspectRatio: '16/9', minHeight: '700px' };
       case 'quiz-only':
-        return { aspectRatio: '4/3', minHeight: '500px' };
+        return { aspectRatio: '4/3', minHeight: '600px' };
       default:
-        return { aspectRatio: '3/2', minHeight: '400px' };
+        return { aspectRatio: '3/2', minHeight: '500px' };
     }
   };
 
@@ -142,9 +143,9 @@ export const CardEditor: React.FC = () => {
     <div className="min-h-screen bg-background">
       <EditorHeader set={set} onSave={saveCard} />
 
-      <main className="h-[calc(100vh-80px)] p-2">
+      <main className="h-[calc(100vh-80px)] p-1">
         <div className="relative h-full">
-          <div className="h-full flex items-center justify-center pt-12">
+          <div className="h-full flex items-center justify-center pt-8">
             <CardCanvas
               elements={currentElements}
               selectedElement={selectedElement}
@@ -154,8 +155,8 @@ export const CardEditor: React.FC = () => {
               cardSide={currentSide}
               style={{
                 ...getCanvasStyle(),
-                maxWidth: '95%',
-                maxHeight: '85%',
+                maxWidth: '90%',
+                maxHeight: '90%',
                 width: 'auto',
                 height: 'auto'
               }}
@@ -164,7 +165,7 @@ export const CardEditor: React.FC = () => {
             />
           </div>
 
-          {/* Overlay Toolbar */}
+          {/* Compact Overlay Toolbar */}
           <CanvasOverlayToolbar
             set={set}
             currentCard={currentCard}
@@ -179,6 +180,12 @@ export const CardEditor: React.FC = () => {
             onCreateNewCardWithLayout={createNewCardWithLayout}
             onDeleteCard={handleDeleteCard}
             onSave={saveCard}
+          />
+
+          {/* Card Type Panel - Separate from main toolbar */}
+          <CardTypePanel
+            currentCard={currentCard}
+            onUpdateCard={(updates) => updateCard(currentCard.id, updates)}
           />
 
           {/* Element Popup Toolbar */}
