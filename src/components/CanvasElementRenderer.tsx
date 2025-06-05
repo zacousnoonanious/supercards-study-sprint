@@ -2,6 +2,7 @@
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
+import { FillInBlankEditor } from './FillInBlankEditor';
 import { DrawingCanvas } from './DrawingCanvas';
 import { DeckSelector } from './DeckSelector';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -51,6 +52,16 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           <TrueFalseRenderer 
             element={element} 
             isEditing={true} 
+            textScale={textScale}
+          />
+        </div>
+      );
+    case 'fill-in-blank':
+      return (
+        <div className="w-full h-full">
+          <FillInBlankEditor
+            element={element}
+            onUpdate={(updates) => onUpdateElement(element.id, updates)}
             textScale={textScale}
           />
         </div>

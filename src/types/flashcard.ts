@@ -1,7 +1,7 @@
 
 export interface CanvasElement {
   id: string;
-  type: 'text' | 'image' | 'audio' | 'drawing' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed';
+  type: 'text' | 'image' | 'audio' | 'drawing' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed' | 'fill-in-blank';
   x: number;
   y: number;
   width: number;
@@ -34,6 +34,16 @@ export interface CanvasElement {
   multipleChoiceOptions?: string[];
   correctAnswer?: number;
   
+  // Fill in blank properties
+  fillInBlankText?: string;
+  fillInBlankBlanks?: Array<{
+    word: string;
+    position: number;
+    id: string;
+  }>;
+  showLetterCount?: boolean;
+  ignoreCase?: boolean;
+  
   // YouTube properties
   youtubeUrl?: string;
   
@@ -53,7 +63,7 @@ export interface Flashcard {
   updated_at: string;
   set_id: string;
   last_reviewed_at: string | null;
-  card_type?: 'standard' | 'informational' | 'single-sided' | 'password-protected' | 'quiz-only' | 'timed-challenge' | null;
+  card_type?: 'standard' | 'informational' | 'single-sided' | 'password-protected' | 'quiz-only' | null;
   interactive_type?: 'multiple-choice' | 'true-false' | 'fill-blank' | null;
   interactive_data?: {
     options?: string[];

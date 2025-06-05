@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
 import { InteractiveQuizRenderer } from './InteractiveQuizRenderer';
+import { FillInBlankRenderer } from './FillInBlankRenderer';
 import { EmbeddedDeckViewer } from './EmbeddedDeckViewer';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -13,8 +13,10 @@ interface StudyCardRendererProps {
   onQuizAnswer?: (elementId: string, correct: boolean, answerIndex: number) => void;
   showQuizResults?: boolean;
   quizAnswers?: {[elementId: string]: number};
+  fillInBlankAnswers?: {[elementId: string]: {[blankId: string]: string}};
   requireAnswer?: boolean;
   textScale?: number;
+  isInformationalCard?: boolean;
 }
 
 export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ 
@@ -24,8 +26,10 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
   onQuizAnswer,
   showQuizResults = false,
   quizAnswers = {},
+  fillInBlankAnswers = {},
   requireAnswer = false,
-  textScale = 1
+  textScale = 1,
+  isInformationalCard = false
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
@@ -58,10 +62,27 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
         return element.type === 'multiple-choice' 
           ? <MultipleChoiceRenderer element={element} isEditing={false} textScale={textScale} />
           : <TrueFalseRenderer element={element} isEditing={false} textScale={textScale} />;
+      case 'fill-in-blank':
+        return (
+          <FillInBlankRenderer
+            element={element}
+            onAnswer={(correct) => onQuizAnswer && onQuizAnswer(element.id, correct, 0)}
+            showResults={showQuizResults}
+            userAnswers={fillInBlankAnswers[element.id]}
+            requireAnswer={requireAnswer}
+            textScale={textScale}
+          />
+        );
       case 'youtube':
         return (
           <div className="w-full h-full">
-            <YouTubeRenderer element={element} />
+            <iframe
+              src={element.youtubeUrl ? getEmbedUrl(element.youtubeUrl) : ''}
+              className="w-full h-full rounded"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
         );
       case 'deck-embed':
@@ -135,7 +156,21 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
     }
   };
 
-  const defaultStyle = {
+  const getEmbedUrl = (url: string) => {
+    const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1];
+    if (!videoId) return '';
+    return `https://www.youtube.com/embed/${videoId}`;
+  };
+
+  // For informational cards, use full viewport with scrolling
+  const defaultStyle = isInformationalCard ? {
+    width: '100vw',
+    height: '100vh',
+    minHeight: '100vh',
+    maxWidth: 'none',
+    aspectRatio: 'unset',
+    overflow: 'auto'
+  } : {
     width: '100%', 
     height: '300px',
     minHeight: '300px',
@@ -145,11 +180,11 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
 
   return (
     <div 
-      className={`relative border border-border rounded-lg overflow-hidden shadow-sm ${
+      className={`relative border border-border rounded-lg shadow-sm ${
         isDarkTheme 
           ? 'bg-gray-900 border-gray-700' 
           : 'bg-card border-gray-200'
-      } ${className}`} 
+      } ${isInformationalCard ? 'overflow-auto' : 'overflow-hidden'} ${className}`} 
       style={{ ...defaultStyle, ...style }}
     >
       {elements && elements.length > 0 ? (
