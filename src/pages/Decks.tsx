@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -10,6 +9,17 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { UserDropdown } from '@/components/UserDropdown';
 import { Navigation } from '@/components/Navigation';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface FlashcardSet {
   id: string;
@@ -24,6 +34,7 @@ const Decks = () => {
   const { t } = useI18n();
   const [sets, setSets] = useState<FlashcardSet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingSetId, setDeletingSetId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -56,18 +67,37 @@ const Decks = () => {
     }
   };
 
-  const deleteSet = async (id: string) => {
+  const deleteSet = async (id: string, title: string) => {
+    setDeletingSetId(id);
     try {
-      const { error } = await supabase
+      console.log('Deleting set:', id);
+      
+      // First delete all flashcards in the set
+      const { error: cardsError } = await supabase
+        .from('flashcards')
+        .delete()
+        .eq('set_id', id);
+
+      if (cardsError) {
+        console.error('Error deleting cards:', cardsError);
+        throw cardsError;
+      }
+
+      // Then delete the set itself
+      const { error: setError } = await supabase
         .from('flashcard_sets')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (setError) {
+        console.error('Error deleting set:', setError);
+        throw setError;
+      }
+
       setSets(sets.filter(set => set.id !== id));
       toast({
         title: "Success",
-        description: "Deck deleted successfully."
+        description: `Deck "${title}" deleted successfully.`
       });
     } catch (error) {
       console.error('Error deleting set:', error);
@@ -76,6 +106,8 @@ const Decks = () => {
         description: "Failed to delete deck.",
         variant: "destructive"
       });
+    } finally {
+      setDeletingSetId(null);
     }
   };
 
@@ -133,9 +165,35 @@ const Decks = () => {
                       <Button variant="ghost" size="sm" onClick={() => navigate(`/edit-cards/${set.id}`)}>
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => deleteSet(set.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            disabled={deletingSetId === set.id}
+                            className="hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Deck</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{set.title}"? This action cannot be undone and will permanently delete all cards in this deck.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteSet(set.id, set.title)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </CardTitle>
                   <CardDescription>{set.description}</CardDescription>
