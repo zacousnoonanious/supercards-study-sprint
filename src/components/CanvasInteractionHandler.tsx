@@ -31,7 +31,7 @@ export const CanvasInteractionHandler: React.FC<CanvasInteractionHandlerProps> =
           key={handle}
           className={`absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-${
             handle === 'nw' || handle === 'se' ? 'nw' : 'ne'
-          }-resize`}
+          }-resize z-50`}
           style={{
             top: handle.includes('n') ? -6 : 'auto',
             bottom: handle.includes('s') ? -6 : 'auto',

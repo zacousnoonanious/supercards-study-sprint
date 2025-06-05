@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
@@ -23,6 +22,14 @@ interface CardCanvasProps {
   onQuizTitleChange?: (title: string) => void;
 }
 
+interface DragState {
+  isDragging: boolean;
+  isResizing: boolean;
+  dragStart: { x: number; y: number };
+  elementStart: { x: number; y: number; width: number; height: number };
+  resizeHandle?: string;
+}
+
 export const CardCanvas: React.FC<CardCanvasProps> = ({
   elements,
   selectedElement,
@@ -42,6 +49,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [gridSize] = useState(20);
+  const [dragState, setDragState] = useState<DragState | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const handleQuizAddElement = (type: string, position: number) => {
@@ -73,6 +81,119 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       });
     });
   };
+
+  const handleMouseDown = useCallback((e: React.MouseEvent, elementId: string, action: 'drag' | 'resize', resizeHandle?: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+
+    onSelectElement(elementId);
+
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    setDragState({
+      isDragging: action === 'drag',
+      isResizing: action === 'resize',
+      dragStart: {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      },
+      elementStart: {
+        x: element.x,
+        y: element.y,
+        width: element.width,
+        height: element.height,
+      },
+      resizeHandle,
+    });
+  }, [elements, onSelectElement]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!dragState || !selectedElement || !canvasRef.current) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+    
+    const deltaX = currentX - dragState.dragStart.x;
+    const deltaY = currentY - dragState.dragStart.y;
+
+    if (dragState.isDragging) {
+      let newX = dragState.elementStart.x + deltaX;
+      let newY = dragState.elementStart.y + deltaY;
+
+      // Snap to grid if enabled
+      if (snapToGrid) {
+        newX = Math.round(newX / gridSize) * gridSize;
+        newY = Math.round(newY / gridSize) * gridSize;
+      }
+
+      // Keep element within canvas bounds
+      newX = Math.max(0, Math.min(newX, canvasRef.current.offsetWidth - dragState.elementStart.width));
+      newY = Math.max(0, Math.min(newY, canvasRef.current.offsetHeight - dragState.elementStart.height));
+
+      onUpdateElement(selectedElement, { x: newX, y: newY });
+    } else if (dragState.isResizing && dragState.resizeHandle) {
+      const handle = dragState.resizeHandle;
+      let newWidth = dragState.elementStart.width;
+      let newHeight = dragState.elementStart.height;
+      let newX = dragState.elementStart.x;
+      let newY = dragState.elementStart.y;
+
+      if (handle.includes('e')) {
+        newWidth = dragState.elementStart.width + deltaX;
+      }
+      if (handle.includes('w')) {
+        newWidth = dragState.elementStart.width - deltaX;
+        newX = dragState.elementStart.x + deltaX;
+      }
+      if (handle.includes('s')) {
+        newHeight = dragState.elementStart.height + deltaY;
+      }
+      if (handle.includes('n')) {
+        newHeight = dragState.elementStart.height - deltaY;
+        newY = dragState.elementStart.y + deltaY;
+      }
+
+      // Minimum size constraints
+      newWidth = Math.max(50, newWidth);
+      newHeight = Math.max(30, newHeight);
+
+      // Snap to grid if enabled
+      if (snapToGrid) {
+        newWidth = Math.round(newWidth / gridSize) * gridSize;
+        newHeight = Math.round(newHeight / gridSize) * gridSize;
+        newX = Math.round(newX / gridSize) * gridSize;
+        newY = Math.round(newY / gridSize) * gridSize;
+      }
+
+      onUpdateElement(selectedElement, { 
+        x: newX, 
+        y: newY, 
+        width: newWidth, 
+        height: newHeight 
+      });
+    }
+  }, [dragState, selectedElement, onUpdateElement, snapToGrid, gridSize]);
+
+  const handleMouseUp = useCallback(() => {
+    setDragState(null);
+  }, []);
+
+  // Add global mouse event listeners
+  React.useEffect(() => {
+    if (dragState) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [dragState, handleMouseMove, handleMouseUp]);
 
   // For quiz-only cards, use the specialized layout
   if (cardType === 'quiz-only') {
@@ -115,6 +236,12 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         aspectRatio: cardType === 'informational' ? 'unset' : '3/2',
         ...style 
       }}
+      onMouseDown={(e) => {
+        // Deselect element when clicking on empty canvas
+        if (e.target === e.currentTarget) {
+          onSelectElement(null);
+        }
+      }}
     >
       <CanvasBackground 
         cardSide={cardSide}
@@ -124,13 +251,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         onAutoArrange={handleAutoArrange}
       />
       
-      <CanvasInteractionHandler
-        selectedElement={selectedElement}
-        dragState={null}
-        onMouseDown={(e, elementId, action, resizeHandle) => {}}
-        isDrawingMode={false}
-      />
-
       {/* Render elements */}
       {elements.map((element) => (
         <div
@@ -147,6 +267,11 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             transformOrigin: 'center',
             zIndex: element.zIndex || 0,
           }}
+          onMouseDown={(e) => handleMouseDown(e, element.id, 'drag')}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelectElement(element.id);
+          }}
         >
           <CanvasElementRenderer
             element={element}
@@ -156,6 +281,16 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           />
         </div>
       ))}
+
+      {/* Resize handles for selected element */}
+      {selectedElement && (
+        <CanvasInteractionHandler
+          selectedElement={selectedElement}
+          dragState={dragState}
+          onMouseDown={handleMouseDown}
+          isDrawingMode={false}
+        />
+      )}
 
       {/* Popup Toolbar */}
       {popupToolbar && (
