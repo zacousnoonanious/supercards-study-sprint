@@ -1,23 +1,24 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
 
-interface InteractiveQuizRendererProps {
+export interface InteractiveQuizRendererProps {
   element: CanvasElement;
-  onAnswer?: (correct: boolean) => void;
-  showResults?: boolean;
-  userAnswer?: number | null;
+  onAnswer: (correct: boolean) => void;
+  showResults: boolean;
+  userAnswer?: number;
   requireAnswer?: boolean;
+  textScale?: number;
 }
 
 export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = ({
   element,
   onAnswer,
-  showResults = false,
-  userAnswer = null,
+  showResults,
+  userAnswer,
   requireAnswer = false,
+  textScale = 1
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(userAnswer);
   const [hasAnswered, setHasAnswered] = useState(userAnswer !== null);

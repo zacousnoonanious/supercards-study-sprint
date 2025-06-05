@@ -1,17 +1,28 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { CanvasElement } from '@/types/flashcard';
 
 interface ElementRendererProps {
   element: CanvasElement;
-  isEditing?: boolean;
+  isEditing: boolean;
+  onUpdate?: (updates: Partial<CanvasElement>) => void;
+  textScale?: number;
 }
 
-export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({ element, isEditing }) => {
+interface YouTubeRendererProps {
+  element: CanvasElement;
+}
+
+export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({ 
+  element, 
+  isEditing, 
+  onUpdate,
+  textScale = 1
+}) => {
   const options = element.multipleChoiceOptions || ['Option 1', 'Option 2'];
   
   return (
@@ -38,7 +49,11 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({ element
   );
 };
 
-export const TrueFalseRenderer: React.FC<ElementRendererProps> = ({ element, isEditing }) => {
+export const TrueFalseRenderer: React.FC<ElementRendererProps> = ({ 
+  element, 
+  isEditing,
+  textScale = 1
+}) => {
   return (
     <Card className="w-full h-full">
       <CardContent className="p-3">
@@ -66,7 +81,7 @@ export const TrueFalseRenderer: React.FC<ElementRendererProps> = ({ element, isE
   );
 };
 
-export const YouTubeRenderer: React.FC<ElementRendererProps> = ({ element }) => {
+export const YouTubeRenderer: React.FC<YouTubeRendererProps> = ({ element }) => {
   const getEmbedUrl = (url: string) => {
     const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1];
     if (!videoId) return '';

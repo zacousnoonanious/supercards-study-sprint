@@ -10,9 +10,14 @@ import { FlashcardSet } from '@/types/flashcard';
 interface DeckSelectorProps {
   onDeckSelect: (deckId: string, deckTitle: string) => void;
   currentDeckId?: string;
+  textScale?: number;
 }
 
-export const DeckSelector: React.FC<DeckSelectorProps> = ({ onDeckSelect, currentDeckId }) => {
+export const DeckSelector: React.FC<DeckSelectorProps> = ({ 
+  onDeckSelect, 
+  currentDeckId,
+  textScale = 1
+}) => {
   const { user } = useAuth();
   const { setId } = useParams();
   const [decks, setDecks] = useState<FlashcardSet[]>([]);
@@ -45,19 +50,34 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({ onDeckSelect, curren
   }, [user, setId]);
 
   if (loading) {
-    return <div className="text-sm text-muted-foreground">Loading decks...</div>;
+    return (
+      <div 
+        className="text-sm text-muted-foreground"
+        style={{ fontSize: `${12 * textScale}px` }}
+      >
+        Loading decks...
+      </div>
+    );
   }
 
   return (
     <div className="space-y-4">
-      <h3 className="font-medium text-sm">Select a deck to embed:</h3>
+      <h3 
+        className="font-medium text-sm"
+        style={{ fontSize: `${14 * textScale}px` }}
+      >
+        Select a deck to embed:
+      </h3>
       <Select value={currentDeckId} onValueChange={(value) => {
         const selectedDeck = decks.find(deck => deck.id === value);
         if (selectedDeck) {
           onDeckSelect(selectedDeck.id, selectedDeck.title);
         }
       }}>
-        <SelectTrigger className="w-full h-8 text-xs">
+        <SelectTrigger 
+          className="w-full h-8 text-xs"
+          style={{ fontSize: `${12 * textScale}px` }}
+        >
           <SelectValue placeholder="Choose a deck..." />
         </SelectTrigger>
         <SelectContent>
@@ -69,7 +89,12 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({ onDeckSelect, curren
         </SelectContent>
       </Select>
       {decks.length === 0 && (
-        <p className="text-xs text-muted-foreground">No other decks available to embed.</p>
+        <p 
+          className="text-xs text-muted-foreground"
+          style={{ fontSize: `${10 * textScale}px` }}
+        >
+          No other decks available to embed.
+        </p>
       )}
     </div>
   );
