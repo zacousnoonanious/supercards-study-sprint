@@ -205,6 +205,14 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
     setMcOptions(newOptions);
   };
 
+  const handleCardTypeChange = (value: string) => {
+    setCardType(value as 'standard' | 'informational' | 'no-back' | 'password-protected');
+  };
+
+  const handleInteractiveTypeChange = (value: string) => {
+    setInteractiveType(value as 'none' | 'multiple-choice' | 'true-false' | 'fill-blank');
+  };
+
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
@@ -234,7 +242,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
         {/* Card Type */}
         <div className="space-y-2">
           <Label>Card Type</Label>
-          <Select value={cardType} onValueChange={setCardType}>
+          <Select value={cardType} onValueChange={handleCardTypeChange}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -263,7 +271,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
         {/* Interactive Type */}
         <div className="space-y-2">
           <Label>Interactive Elements</Label>
-          <Select value={interactiveType} onValueChange={setInteractiveType}>
+          <Select value={interactiveType} onValueChange={handleInteractiveTypeChange}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
