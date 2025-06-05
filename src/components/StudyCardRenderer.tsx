@@ -18,7 +18,7 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
   });
 
   return (
-    <div className={`relative bg-card border border-border rounded-lg overflow-hidden shadow-sm ${className}`} style={{ aspectRatio: '3/2', minHeight: '300px' }}>
+    <div className={`relative bg-card border border-border rounded-lg overflow-hidden shadow-sm ${className}`} style={{ width: '100%', height: '400px', maxWidth: '600px' }}>
       {elements && elements.length > 0 ? (
         elements.map((element) => (
           <div

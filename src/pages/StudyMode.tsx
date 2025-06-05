@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -228,8 +227,8 @@ const StudyMode = () => {
         />
       )}
 
-      <main className="max-w-4xl mx-auto py-4 sm:py-8 px-4 flex-1 flex flex-col">
-        <div className="space-y-4 sm:space-y-6 flex-1">
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex items-center justify-center p-4">
           <StudyModeContent
             currentCard={currentCard}
             showPanelView={showPanelView}

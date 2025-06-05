@@ -28,10 +28,12 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
 }) => {
   if (showPanelView) {
     return (
-      <>
+      <div className="w-full max-w-4xl mx-auto space-y-6">
         <div>
           <h3 className="text-base sm:text-lg font-medium text-foreground mb-4 text-center">Question</h3>
-          <StudyCardRenderer elements={currentCard.front_elements} className="mx-auto max-w-full sm:max-w-2xl" />
+          <div className="flex justify-center">
+            <StudyCardRenderer elements={currentCard.front_elements} />
+          </div>
         </div>
         
         {currentCard.hint && (
@@ -62,7 +64,9 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
             <div className="space-y-4 sm:space-y-6">
               <div>
                 <h3 className="text-base sm:text-lg font-medium text-foreground mb-4 text-center">Answer</h3>
-                <StudyCardRenderer elements={currentCard.back_elements} className="mx-auto max-w-full sm:max-w-2xl" />
+                <div className="flex justify-center">
+                  <StudyCardRenderer elements={currentCard.back_elements} />
+                </div>
               </div>
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 justify-center">
                 <Button
@@ -84,23 +88,23 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
             </div>
           )}
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
-      <div className="relative mx-auto max-w-full sm:max-w-2xl" style={{ perspective: '1000px' }}>
+    <div className="w-full max-w-4xl mx-auto text-center space-y-6">
+      <div className="flex justify-center" style={{ perspective: '1000px' }}>
         <div 
-          className={`relative w-full transition-transform duration-700 preserve-3d ${showAnswer ? 'rotate-y-180' : ''}`}
+          className={`relative transition-transform duration-700 preserve-3d ${showAnswer ? 'rotate-y-180' : ''}`}
           style={{ transformStyle: 'preserve-3d' }}
         >
-          <div className="absolute w-full backface-hidden">
-            <StudyCardRenderer elements={currentCard.front_elements} className="w-full" />
+          <div className="backface-hidden">
+            <StudyCardRenderer elements={currentCard.front_elements} />
           </div>
           
-          <div className="absolute w-full backface-hidden rotate-y-180">
-            <StudyCardRenderer elements={currentCard.back_elements} className="w-full" />
+          <div className="absolute top-0 left-0 backface-hidden rotate-y-180">
+            <StudyCardRenderer elements={currentCard.back_elements} />
           </div>
         </div>
       </div>
