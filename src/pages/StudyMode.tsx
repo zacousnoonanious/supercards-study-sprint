@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -394,7 +393,7 @@ const StudyMode = () => {
               </div>
             </>
           ) : (
-            // Card Flip View (New behavior)
+            // Card Flip View
             <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
               <div className="relative mx-auto max-w-full sm:max-w-2xl" style={{ perspective: '1000px' }}>
                 <div 
