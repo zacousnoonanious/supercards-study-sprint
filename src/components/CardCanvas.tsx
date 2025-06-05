@@ -40,6 +40,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const [editingElement, setEditingElement] = useState<string | null>(null);
   const [popupToolbar, setPopupToolbar] = useState<{ element: CanvasElement; position: { x: number; y: number } } | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [snapToGrid, setSnapToGrid] = useState(false);
+  const [gridSize] = useState(20);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const handleQuizAddElement = (type: string, position: number) => {
@@ -54,6 +56,22 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         }
       }, 100);
     }
+  };
+
+  const handleAutoArrange = () => {
+    // Auto-arrange elements in a grid
+    const cols = Math.ceil(Math.sqrt(elements.length));
+    const cellWidth = 200;
+    const cellHeight = 150;
+    
+    elements.forEach((element, index) => {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      onUpdateElement(element.id, {
+        x: col * cellWidth + 20,
+        y: row * cellHeight + 20,
+      });
+    });
   };
 
   // For quiz-only cards, use the specialized layout
@@ -98,16 +116,19 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         ...style 
       }}
     >
-      <CanvasBackground />
+      <CanvasBackground 
+        cardSide={cardSide}
+        snapToGrid={snapToGrid}
+        gridSize={gridSize}
+        onSnapToGridToggle={() => setSnapToGrid(!snapToGrid)}
+        onAutoArrange={handleAutoArrange}
+      />
       
       <CanvasInteractionHandler
-        elements={elements}
         selectedElement={selectedElement}
-        onSelectElement={onSelectElement}
-        onUpdateElement={onUpdateElement}
-        onShowPopupToolbar={setPopupToolbar}
-        onContextMenu={setContextMenu}
-        canvasRef={canvasRef}
+        dragState={null}
+        onMouseDown={(e, elementId, action, resizeHandle) => {}}
+        isDrawingMode={false}
       />
 
       {/* Render elements */}
@@ -152,10 +173,16 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       {/* Context Menu */}
       {contextMenu && (
         <CanvasContextMenu
-          position={contextMenu}
-          onClose={() => setContextMenu(null)}
-          onAddElement={onAddElement || (() => {})}
-        />
+          onUndo={() => {}}
+          onRedo={() => {}}
+          canUndo={false}
+          canRedo={false}
+          onChangeBackground={() => {}}
+          onToggleGrid={() => setSnapToGrid(!snapToGrid)}
+          onSettings={() => {}}
+        >
+          <div />
+        </CanvasContextMenu>
       )}
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ElementToolbar } from './ElementToolbar';
@@ -89,8 +88,6 @@ export const CardEditor: React.FC = () => {
         return { aspectRatio: '16/9', minHeight: '600px' };
       case 'quiz-only':
         return { aspectRatio: '4/3', minHeight: '500px' };
-      case 'timed-challenge':
-        return { aspectRatio: '3/2', minHeight: '400px' };
       default:
         return { aspectRatio: '3/2', minHeight: '400px' };
     }

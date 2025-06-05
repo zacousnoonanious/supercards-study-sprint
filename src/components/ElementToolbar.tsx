@@ -64,8 +64,8 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
       <div>
         <Label className="text-sm font-medium">Text</Label>
         <Input
-          value={selectedElement?.text || ''}
-          onChange={(e) => onUpdateElement({ text: e.target.value })}
+          value={selectedElement?.content || ''}
+          onChange={(e) => onUpdateElement({ content: e.target.value })}
           placeholder="Enter your text here..."
           className="h-20"
         />
@@ -74,32 +74,32 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Bold</Label>
         <Switch
-          checked={selectedElement?.bold || false}
-          onCheckedChange={(checked) => onUpdateElement({ bold: checked })}
+          checked={selectedElement?.fontWeight === 'bold'}
+          onCheckedChange={(checked) => onUpdateElement({ fontWeight: checked ? 'bold' : 'normal' })}
         />
       </div>
       
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Italic</Label>
         <Switch
-          checked={selectedElement?.italic || false}
-          onCheckedChange={(checked) => onUpdateElement({ italic: checked })}
+          checked={selectedElement?.fontStyle === 'italic'}
+          onCheckedChange={(checked) => onUpdateElement({ fontStyle: checked ? 'italic' : 'normal' })}
         />
       </div>
       
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Underline</Label>
         <Switch
-          checked={selectedElement?.underline || false}
-          onCheckedChange={(checked) => onUpdateElement({ underline: checked })}
+          checked={selectedElement?.textDecoration === 'underline'}
+          onCheckedChange={(checked) => onUpdateElement({ textDecoration: checked ? 'underline' : 'none' })}
         />
       </div>
       
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Align</Label>
         <Select
-          value={selectedElement?.align || 'left'}
-          onValueChange={(value) => onUpdateElement({ align: value })}
+          value={selectedElement?.textAlign || 'left'}
+          onValueChange={(value) => onUpdateElement({ textAlign: value as 'left' | 'center' | 'right' | 'justify' })}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Align" />
@@ -126,24 +126,6 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
           className="h-20"
         />
       </div>
-      
-      <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium">Align</Label>
-        <Select
-          value={selectedElement?.align || 'left'}
-          onValueChange={(value) => onUpdateElement({ align: value })}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Align" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="left">Left</SelectItem>
-            <SelectItem value="center">Center</SelectItem>
-            <SelectItem value="right">Right</SelectItem>
-            <SelectItem value="justify">Justify</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
     </div>
   );
 
@@ -152,8 +134,8 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
       <div>
         <Label className="text-sm font-medium">Question</Label>
         <Textarea
-          value={selectedElement?.question || ''}
-          onChange={(e) => onUpdateElement({ question: e.target.value })}
+          value={selectedElement?.content || ''}
+          onChange={(e) => onUpdateElement({ content: e.target.value })}
           placeholder="Enter your question here..."
           className="h-20"
         />
@@ -162,14 +144,14 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
       <div>
         <Label className="text-sm font-medium">Options</Label>
         <div className="space-y-2">
-          {selectedElement?.options.map((option, index) => (
+          {selectedElement?.multipleChoiceOptions?.map((option, index) => (
             <div key={index} className="flex items-center">
               <Input
                 value={option}
                 onChange={(e) => {
-                  const newOptions = [...selectedElement?.options || []];
+                  const newOptions = [...selectedElement?.multipleChoiceOptions || []];
                   newOptions[index] = e.target.value;
-                  onUpdateElement({ options: newOptions });
+                  onUpdateElement({ multipleChoiceOptions: newOptions });
                 }}
                 placeholder="Option"
                 className="w-full"
@@ -178,9 +160,9 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  const newOptions = [...selectedElement?.options || []];
+                  const newOptions = [...selectedElement?.multipleChoiceOptions || []];
                   newOptions.splice(index, 1);
-                  onUpdateElement({ options: newOptions });
+                  onUpdateElement({ multipleChoiceOptions: newOptions });
                 }}
                 className="ml-2"
               >
@@ -191,9 +173,9 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
           <Button
             variant="outline"
             onClick={() => {
-              const newOptions = [...(selectedElement?.options || [])];
+              const newOptions = [...(selectedElement?.multipleChoiceOptions || [])];
               newOptions.push('');
-              onUpdateElement({ options: newOptions });
+              onUpdateElement({ multipleChoiceOptions: newOptions });
             }}
             className="w-full justify-start text-sm"
           >
@@ -205,15 +187,15 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Correct Answer</Label>
         <Select
-          value={selectedElement?.correctAnswer || ''}
-          onValueChange={(value) => onUpdateElement({ correctAnswer: value })}
+          value={selectedElement?.correctAnswer?.toString() || ''}
+          onValueChange={(value) => onUpdateElement({ correctAnswer: parseInt(value) })}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Correct Answer" />
           </SelectTrigger>
           <SelectContent>
-            {selectedElement?.options.map((option, index) => (
-              <SelectItem key={index} value={option}>{option}</SelectItem>
+            {selectedElement?.multipleChoiceOptions?.map((option, index) => (
+              <SelectItem key={index} value={index.toString()}>{option}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -226,45 +208,25 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
       <div>
         <Label className="text-sm font-medium">Question</Label>
         <Textarea
-          value={selectedElement?.question || ''}
-          onChange={(e) => onUpdateElement({ question: e.target.value })}
+          value={selectedElement?.content || ''}
+          onChange={(e) => onUpdateElement({ content: e.target.value })}
           placeholder="Enter your question here..."
           className="h-20"
         />
       </div>
       
-      <div>
-        <Label className="text-sm font-medium">Options</Label>
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <Input
-              value={selectedElement?.trueOption || ''}
-              onChange={(e) => onUpdateElement({ trueOption: e.target.value })}
-              placeholder="True"
-              className="w-full"
-            />
-            <Input
-              value={selectedElement?.falseOption || ''}
-              onChange={(e) => onUpdateElement({ falseOption: e.target.value })}
-              placeholder="False"
-              className="w-full"
-            />
-          </div>
-        </div>
-      </div>
-      
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Correct Answer</Label>
         <Select
-          value={selectedElement?.correctAnswer || ''}
-          onValueChange={(value) => onUpdateElement({ correctAnswer: value })}
+          value={selectedElement?.correctAnswer?.toString() || ''}
+          onValueChange={(value) => onUpdateElement({ correctAnswer: parseInt(value) })}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Correct Answer" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="true">True</SelectItem>
-            <SelectItem value="false">False</SelectItem>
+            <SelectItem value="1">True</SelectItem>
+            <SelectItem value="0">False</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -324,11 +286,11 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
   const renderDeckEmbedSettings = () => (
     <div className="space-y-3">
       <div>
-        <Label className="text-sm font-medium">Deck Embed URL</Label>
+        <Label className="text-sm font-medium">Deck Title</Label>
         <Input
-          value={selectedElement?.deckEmbedUrl || ''}
-          onChange={(e) => onUpdateElement({ deckEmbedUrl: e.target.value })}
-          placeholder="Enter Deck Embed URL here..."
+          value={selectedElement?.deckTitle || ''}
+          onChange={(e) => onUpdateElement({ deckTitle: e.target.value })}
+          placeholder="Deck title..."
           className="h-20"
         />
       </div>
