@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
@@ -116,11 +115,29 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           {editingElement === element.id ? (
             <textarea
               value={element.content || ''}
-              onChange={(e) => onUpdateElement(element.id, { content: e.target.value })}
+              onChange={(e) => {
+                const newContent = e.target.value;
+                onUpdateElement(element.id, { content: newContent });
+                
+                // Auto-resize text element based on content
+                const lines = newContent.split('\n').length;
+                const longestLine = Math.max(...newContent.split('\n').map(line => line.length));
+                
+                const newWidth = Math.max(200, Math.min(600, longestLine * 8 + 40));
+                const newHeight = Math.max(60, lines * 24 + 40);
+                
+                if (newWidth !== element.width || newHeight !== element.height) {
+                  onUpdateElement(element.id, { 
+                    width: newWidth, 
+                    height: newHeight 
+                  });
+                }
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Escape') {
                   onEditingChange(null);
                 }
+                e.stopPropagation(); // Prevent canvas keyboard handlers
               }}
               onBlur={() => onEditingChange(null)}
               className={`w-full h-full bg-transparent border-none outline-none resize-none ${
@@ -139,8 +156,12 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
             />
           ) : (
             <span 
-              className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words"
-              style={{ textAlign: element.textAlign || 'center' }}
+              className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words leading-tight"
+              style={{ 
+                textAlign: element.textAlign || 'center',
+                fontSize: `${Math.min(element.fontSize || 16, element.height / 3)}px`, // Scale font to fit height
+                lineHeight: '1.2'
+              }}
             >
               {element.content}
             </span>

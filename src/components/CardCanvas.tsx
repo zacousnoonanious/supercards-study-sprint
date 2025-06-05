@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { CanvasElement } from '@/types/flashcard';
@@ -8,6 +7,9 @@ import { DrawingToolsPopup } from './DrawingToolsPopup';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
 import { CanvasBackground } from './CanvasBackground';
 import { CanvasInteractionHandler } from './CanvasInteractionHandler';
+import { CanvasContextMenu } from './CanvasContextMenu';
+import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CardCanvasProps {
@@ -48,8 +50,23 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const [showDrawingTools, setShowDrawingTools] = useState(false);
   const [drawingToolsPosition, setDrawingToolsPosition] = useState({ x: 400, y: 100 });
   const [drawingTool, setDrawingTool] = useState<'brush' | 'eraser'>('brush');
+  const [canvasBackgroundColor, setCanvasBackgroundColor] = useState('#ffffff');
+
+  const {
+    saveState,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    currentState
+  } = useUndoRedo(elements);
 
   const gridSize = 20;
+
+  // Save state when elements change
+  useEffect(() => {
+    saveState(elements);
+  }, [elements, saveState]);
 
   const snapToGridIfEnabled = (value: number) => {
     return snapToGrid ? Math.round(value / gridSize) * gridSize : value;
@@ -58,13 +75,21 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   // Handle keyboard shortcuts and delete key press
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Prevent interference with browser shortcuts
+      if (event.target instanceof HTMLInputElement || 
+          event.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
       if (event.key === 'Delete' && selectedElement) {
+        event.preventDefault();
         onDeleteElement(selectedElement);
         setShowPopupFor(null);
         return;
       }
 
       if (event.key === 'Escape') {
+        event.preventDefault();
         onSelectElement(null);
         setEditingElement(null);
         setShowPopupFor(null);
@@ -72,16 +97,53 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         return;
       }
 
-      if (!editingElement && (event.ctrlKey || event.metaKey)) {
+      if (event.ctrlKey || event.metaKey) {
         switch (event.key.toLowerCase()) {
-          case 'a':
-            event.preventDefault();
+          case 'z':
+            if (!event.shiftKey) {
+              event.preventDefault();
+              const undoState = undo();
+              if (undoState) {
+                // Apply undo state to elements
+                undoState.forEach(el => onUpdateElement(el.id, el));
+              }
+            }
             break;
-          case 'o':
+          case 'y':
             event.preventDefault();
-            autoArrangeElements();
+            const redoState = redo();
+            if (redoState) {
+              // Apply redo state to elements
+              redoState.forEach(el => onUpdateElement(el.id, el));
+            }
+            break;
+          case 's':
+            event.preventDefault();
+            // Save functionality would be handled by parent
             break;
         }
+      }
+
+      // Arrow key movement for selected element
+      if (selectedElement && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        event.preventDefault();
+        const element = elements.find(el => el.id === selectedElement);
+        if (!element) return;
+
+        const moveDistance = event.shiftKey ? 10 : 1;
+        let deltaX = 0, deltaY = 0;
+
+        switch (event.key) {
+          case 'ArrowUp': deltaY = -moveDistance; break;
+          case 'ArrowDown': deltaY = moveDistance; break;
+          case 'ArrowLeft': deltaX = -moveDistance; break;
+          case 'ArrowRight': deltaX = moveDistance; break;
+        }
+
+        onUpdateElement(selectedElement, {
+          x: Math.max(0, element.x + deltaX),
+          y: Math.max(0, element.y + deltaY)
+        });
       }
     };
 
@@ -89,7 +151,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedElement, onDeleteElement, editingElement, onSelectElement]);
+  }, [selectedElement, onDeleteElement, editingElement, onSelectElement, elements, onUpdateElement, undo, redo]);
 
   useEffect(() => {
     const handleDeleteElement = (event: CustomEvent) => {
@@ -253,7 +315,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     if (e.target === canvasRef.current) {
       onSelectElement(null);
       setEditingElement(null);
-      setShowPopupFor(null);
+      setShowPopupFor(null); // Hide popup when clicking canvas
       setShowDrawingTools(false);
     }
   };
@@ -335,117 +397,156 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     onUpdateElement(elementId, { rotation: newRotation });
   };
 
+  const handleCanvasUndo = () => {
+    const undoState = undo();
+    if (undoState) {
+      undoState.forEach(el => onUpdateElement(el.id, el));
+    }
+  };
+
+  const handleCanvasRedo = () => {
+    const redoState = redo();
+    if (redoState) {
+      redoState.forEach(el => onUpdateElement(el.id, el));
+    }
+  };
+
+  const handleChangeBackground = () => {
+    const colors = ['#ffffff', '#f0f0f0', '#e8f4fd', '#fff2e8', '#f0fff0', '#fff0f8'];
+    const currentIndex = colors.indexOf(canvasBackgroundColor);
+    const nextIndex = (currentIndex + 1) % colors.length;
+    setCanvasBackgroundColor(colors[nextIndex]);
+  };
+
   const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
   const popupElement = showPopupFor ? elements.find(el => el.id === showPopupFor) : null;
   const selectedDrawingElement = selectedElement ? elements.find(el => el.id === selectedElement && el.type === 'drawing') : null;
 
   return (
     <Card className={`relative overflow-hidden ${isDarkTheme ? 'bg-gray-900' : 'bg-white'}`} style={style || { aspectRatio: '3/2', minHeight: '400px' }}>
-      <div
-        ref={canvasRef}
-        className="relative w-full h-full cursor-crosshair"
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onClick={handleCanvasClick}
-        tabIndex={0}
-        style={{ outline: 'none' }}
-      >
-        <CanvasBackground
-          cardSide={cardSide}
-          snapToGrid={snapToGrid}
-          gridSize={gridSize}
-          onSnapToGridToggle={() => setSnapToGrid(!snapToGrid)}
-          onAutoArrange={autoArrangeElements}
-        />
-
-        {/* Render elements */}
-        {elements
-          .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
-          .map((element) => (
-          <ElementContextMenu
-            key={element.id}
-            onMoveUp={() => moveElementLayer(element.id, 'up')}
-            onMoveDown={() => moveElementLayer(element.id, 'down')}
-            onMoveToTop={() => moveElementLayer(element.id, 'top')}
-            onMoveToBottom={() => moveElementLayer(element.id, 'bottom')}
-            onDuplicate={() => duplicateElement(element.id)}
-            onDelete={() => onDeleteElement(element.id)}
-            onRotate={() => rotateElement(element.id)}
-          >
-            <div
-              className={`absolute ${
-                selectedElement === element.id ? 'ring-2 ring-blue-500' : ''
-              } ${isDrawingMode && element.type === 'drawing' ? 'cursor-crosshair' : 'cursor-move'}`}
-              style={{
-                left: element.x,
-                top: element.y,
-                width: element.width,
-                height: element.height,
-                transform: `rotate(${element.rotation || 0}deg)`,
-                transformOrigin: 'center',
-                zIndex: element.zIndex || 0,
-              }}
-              onMouseDown={(e) => handleMouseDown(e, element.id, 'drag')}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectElement(element.id);
-                
-                if (element.type !== 'drawing') {
-                  setShowPopupFor(element.id);
-                  const position = calculatePopupPosition(element);
-                  setPopupPosition(position);
-                }
-              }}
-            >
-              <CanvasElementRenderer
-                element={element}
-                editingElement={editingElement}
-                onUpdateElement={onUpdateElement}
-                onEditingChange={setEditingElement}
-              />
-
-              {selectedElement === element.id && (!isDrawingMode || element.type !== 'drawing') && (
-                <CanvasInteractionHandler
-                  selectedElement={selectedElement}
-                  dragState={dragState}
-                  onMouseDown={handleMouseDown}
-                  isDrawingMode={isDrawingMode}
-                />
-              )}
-            </div>
-          </ElementContextMenu>
-        ))}
-
-        {/* Popup Toolbar */}
-        {showPopupFor && popupElement && popupElement.type !== 'drawing' && (
-          <ElementPopupToolbar
-            element={popupElement}
-            onUpdate={(updates) => onUpdateElement(showPopupFor, updates)}
-            onDelete={() => {
-              onDeleteElement(showPopupFor);
-              setShowPopupFor(null);
-            }}
-            position={popupPosition}
-          />
-        )}
-
-        {/* Drawing Tools Popup */}
-        {showDrawingTools && selectedDrawingElement && (
-          <DrawingToolsPopup
-            position={drawingToolsPosition}
-            onPositionChange={setDrawingToolsPosition}
-            onClose={() => setShowDrawingTools(false)}
-            strokeColor={selectedDrawingElement.strokeColor || '#000000'}
-            strokeWidth={selectedDrawingElement.strokeWidth || 2}
-            tool={drawingTool}
-            onStrokeColorChange={(color) => onUpdateElement(selectedDrawingElement.id, { strokeColor: color })}
-            onStrokeWidthChange={(width) => onUpdateElement(selectedDrawingElement.id, { strokeWidth: width })}
-            onToolChange={setDrawingTool}
-            onClear={() => onUpdateElement(selectedDrawingElement.id, { drawingData: '' })}
-          />
-        )}
+      {/* Keyboard Shortcuts Help */}
+      <div className="absolute top-2 right-2 z-50">
+        <KeyboardShortcutsHelp />
       </div>
+
+      <CanvasContextMenu
+        onUndo={handleCanvasUndo}
+        onRedo={handleCanvasRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onChangeBackground={handleChangeBackground}
+        onToggleGrid={() => setSnapToGrid(!snapToGrid)}
+        onSettings={() => {}}
+      >
+        <div
+          ref={canvasRef}
+          className="relative w-full h-full cursor-crosshair"
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onClick={handleCanvasClick}
+          tabIndex={0}
+          style={{ 
+            outline: 'none',
+            backgroundColor: canvasBackgroundColor
+          }}
+        >
+          <CanvasBackground
+            cardSide={cardSide}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onSnapToGridToggle={() => setSnapToGrid(!snapToGrid)}
+            onAutoArrange={autoArrangeElements}
+          />
+
+          {/* Render elements */}
+          {elements
+            .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+            .map((element) => (
+            <ElementContextMenu
+              key={element.id}
+              onMoveUp={() => moveElementLayer(element.id, 'up')}
+              onMoveDown={() => moveElementLayer(element.id, 'down')}
+              onMoveToTop={() => moveElementLayer(element.id, 'top')}
+              onMoveToBottom={() => moveElementLayer(element.id, 'bottom')}
+              onDuplicate={() => duplicateElement(element.id)}
+              onDelete={() => onDeleteElement(element.id)}
+              onRotate={() => rotateElement(element.id)}
+            >
+              <div
+                className={`absolute ${
+                  selectedElement === element.id ? 'ring-2 ring-blue-500' : ''
+                } ${isDrawingMode && element.type === 'drawing' ? 'cursor-crosshair' : 'cursor-move'}`}
+                style={{
+                  left: element.x,
+                  top: element.y,
+                  width: element.width,
+                  height: element.height,
+                  transform: `rotate(${element.rotation || 0}deg)`,
+                  transformOrigin: 'center',
+                  zIndex: element.zIndex || 0,
+                }}
+                onMouseDown={(e) => handleMouseDown(e, element.id, 'drag')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectElement(element.id);
+                  
+                  if (element.type !== 'drawing') {
+                    setShowPopupFor(element.id);
+                    const position = calculatePopupPosition(element);
+                    setPopupPosition(position);
+                  }
+                }}
+              >
+                <CanvasElementRenderer
+                  element={element}
+                  editingElement={editingElement}
+                  onUpdateElement={onUpdateElement}
+                  onEditingChange={setEditingElement}
+                />
+
+                {selectedElement === element.id && (!isDrawingMode || element.type !== 'drawing') && (
+                  <CanvasInteractionHandler
+                    selectedElement={selectedElement}
+                    dragState={dragState}
+                    onMouseDown={handleMouseDown}
+                    isDrawingMode={isDrawingMode}
+                  />
+                )}
+              </div>
+            </ElementContextMenu>
+          ))}
+
+          {/* Popup Toolbar - Only show when element is selected and not clicked away */}
+          {showPopupFor && popupElement && popupElement.type !== 'drawing' && selectedElement === showPopupFor && (
+            <ElementPopupToolbar
+              element={popupElement}
+              onUpdate={(updates) => onUpdateElement(showPopupFor, updates)}
+              onDelete={() => {
+                onDeleteElement(showPopupFor);
+                setShowPopupFor(null);
+              }}
+              position={popupPosition}
+            />
+          )}
+
+          {/* Drawing Tools Popup */}
+          {showDrawingTools && selectedDrawingElement && (
+            <DrawingToolsPopup
+              position={drawingToolsPosition}
+              onPositionChange={setDrawingToolsPosition}
+              onClose={() => setShowDrawingTools(false)}
+              strokeColor={selectedDrawingElement.strokeColor || '#000000'}
+              strokeWidth={selectedDrawingElement.strokeWidth || 2}
+              tool={drawingTool}
+              onStrokeColorChange={(color) => onUpdateElement(selectedDrawingElement.id, { strokeColor: color })}
+              onStrokeWidthChange={(width) => onUpdateElement(selectedDrawingElement.id, { strokeWidth: width })}
+              onToolChange={setDrawingTool}
+              onClear={() => onUpdateElement(selectedDrawingElement.id, { drawingData: '' })}
+            />
+          )}
+        </div>
+      </CanvasContextMenu>
     </Card>
   );
 };
