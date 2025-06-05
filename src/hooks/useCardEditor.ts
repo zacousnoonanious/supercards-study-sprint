@@ -214,11 +214,30 @@ export const useCardEditor = () => {
 
     console.log('Creating new card for setId:', setId);
 
+    // Create a default text element for new cards
+    const defaultTextElement: CanvasElement = {
+      id: `${Date.now()}-default-text`,
+      type: 'text',
+      x: 200,
+      y: 150,
+      width: 200,
+      height: 100,
+      rotation: 0,
+      zIndex: 0,
+      content: 'Double-click to edit',
+      fontSize: 16,
+      color: '#000000',
+      fontWeight: 'normal',
+      fontStyle: 'normal',
+      textDecoration: 'none',
+      textAlign: 'center',
+    };
+
     const newCard = {
       question: 'New Card',
       answer: 'Answer',
       hint: '',
-      front_elements: [] as any,
+      front_elements: [defaultTextElement] as any,
       back_elements: [] as any,
       set_id: setId,
       card_type: 'standard' as const,

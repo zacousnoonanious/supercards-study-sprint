@@ -5,8 +5,9 @@ import { CanvasElement } from '@/types/flashcard';
 import { ElementPopupToolbar } from './ElementPopupToolbar';
 import { ElementContextMenu } from './ElementContextMenu';
 import { DrawingToolsPopup } from './DrawingToolsPopup';
-import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
-import { DrawingCanvas } from './DrawingCanvas';
+import { CanvasElementRenderer } from './CanvasElementRenderer';
+import { CanvasBackground } from './CanvasBackground';
+import { CanvasInteractionHandler } from './CanvasInteractionHandler';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CardCanvasProps {
@@ -57,14 +58,12 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   // Handle keyboard shortcuts and delete key press
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Delete key
       if (event.key === 'Delete' && selectedElement) {
         onDeleteElement(selectedElement);
         setShowPopupFor(null);
         return;
       }
 
-      // Escape key to deselect
       if (event.key === 'Escape') {
         onSelectElement(null);
         setEditingElement(null);
@@ -73,12 +72,10 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         return;
       }
 
-      // Keyboard shortcuts (only when not editing text)
       if (!editingElement && (event.ctrlKey || event.metaKey)) {
         switch (event.key.toLowerCase()) {
           case 'a':
             event.preventDefault();
-            // Select all elements (could implement multi-select in future)
             break;
           case 'o':
             event.preventDefault();
@@ -120,7 +117,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     }
   }, [selectedElement, elements]);
 
-  // Improved popup position calculation
   const calculatePopupPosition = (element: CanvasElement) => {
     if (!canvasRef.current) return { x: element.x + element.width, y: element.y };
 
@@ -134,7 +130,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     let x = element.x + element.width + 10;
     let y = element.y;
 
-    // Keep popup within canvas bounds
     if (x + popupWidth > canvasWidth) {
       x = Math.max(10, element.x - popupWidth - 10);
     }
@@ -143,12 +138,10 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       y = Math.max(10, canvasHeight - popupHeight - 10);
     }
 
-    // Ensure popup doesn't go above canvas
     if (y < 10) {
       y = 10;
     }
 
-    // Final check to ensure popup is fully visible
     if (x < 10) {
       x = 10;
     }
@@ -167,14 +160,12 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     const element = elements.find(el => el.id === elementId);
     if (!element) return;
 
-    // Don't allow dragging when in drawing mode and it's a drawing element
     if (isDrawingMode && element.type === 'drawing' && action === 'drag') {
       return;
     }
 
     onSelectElement(elementId);
     
-    // Only show popup for non-drawing elements or when not in drawing mode
     if (element.type !== 'drawing' || !isDrawingMode) {
       setShowPopupFor(elementId);
       const position = calculatePopupPosition(element);
@@ -291,7 +282,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     });
   };
 
-  // Layer management functions
   const moveElementLayer = (elementId: string, direction: 'up' | 'down' | 'top' | 'bottom') => {
     const currentIndex = elements.findIndex(el => el.id === elementId);
     if (currentIndex === -1) return;
@@ -311,7 +301,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         break;
       case 'bottom':
         newZIndex = 0;
-        // Bump up all other elements
         elements.forEach(el => {
           if (el.id !== elementId) {
             onUpdateElement(el.id, { zIndex: (el.zIndex || 0) + 1 });
@@ -334,7 +323,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       y: element.y + 20,
     };
 
-    // This would need to be implemented in the parent component
     console.log('Duplicate element:', newElement);
   };
 
@@ -347,118 +335,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     onUpdateElement(elementId, { rotation: newRotation });
   };
 
-  const renderElement = (element: CanvasElement) => {
-    switch (element.type) {
-      case 'multiple-choice':
-        return <MultipleChoiceRenderer element={element} isEditing={true} />;
-      case 'true-false':
-        return <TrueFalseRenderer element={element} isEditing={true} />;
-      case 'youtube':
-        return <YouTubeRenderer element={element} />;
-      case 'deck-embed':
-        return <DeckEmbedRenderer element={element} />;
-      case 'drawing':
-        return (
-          <DrawingCanvas
-            width={element.width}
-            height={element.height}
-            onDrawingComplete={(drawingData, animated) => {
-              onUpdateElement(element.id, { 
-                drawingData,
-                animated 
-              });
-            }}
-            initialDrawing={element.drawingData}
-            strokeColor={element.strokeColor}
-            strokeWidth={element.strokeWidth}
-            animated={element.animated}
-          />
-        );
-      case 'audio':
-        return (
-          <div className={`w-full h-full flex items-center justify-center p-2 rounded border ${
-            theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
-          }`}>
-            <audio controls className="w-full">
-              <source src={element.audioUrl} type="audio/mpeg" />
-              Your browser does not support audio playback.
-            </audio>
-          </div>
-        );
-      case 'text':
-        return (
-          <div
-            className={`w-full h-full flex items-center justify-center p-2 border rounded overflow-hidden cursor-text ${
-              theme === 'dark' ? 'bg-gray-800 text-white border-gray-600' : 'bg-white border-gray-300'
-            }`}
-            style={{
-              fontSize: element.fontSize,
-              color: element.color,
-              fontWeight: element.fontWeight,
-              fontStyle: element.fontStyle,
-              textDecoration: element.textDecoration,
-              textAlign: element.textAlign as React.CSSProperties['textAlign'],
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (e.detail === 2) {
-                setEditingElement(element.id);
-              }
-            }}
-          >
-            {editingElement === element.id ? (
-              <textarea
-                value={element.content || ''}
-                onChange={(e) => onUpdateElement(element.id, { content: e.target.value })}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    setEditingElement(null);
-                  }
-                }}
-                onBlur={() => setEditingElement(null)}
-                className={`w-full h-full bg-transparent border-none outline-none resize-none ${
-                  theme === 'dark' ? 'text-white' : 'text-black'
-                }`}
-                style={{
-                  fontSize: element.fontSize,
-                  color: element.color,
-                  fontWeight: element.fontWeight,
-                  fontStyle: element.fontStyle,
-                  textDecoration: element.textDecoration,
-                  textAlign: element.textAlign as React.CSSProperties['textAlign'],
-                  whiteSpace: 'pre-wrap',
-                }}
-                autoFocus
-              />
-            ) : (
-              <span 
-                className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words"
-                style={{ textAlign: element.textAlign || 'center' }}
-              >
-                {element.content}
-              </span>
-            )}
-          </div>
-        );
-      case 'image':
-        return (
-          <img
-            src={element.imageUrl}
-            alt="Element"
-            className={`w-full h-full object-cover rounded border ${
-              theme === 'dark' ? 'border-gray-600' : 'border-gray-300'
-            }`}
-            draggable={false}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
   const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
-
-  // Find the selected element for the popup
   const popupElement = showPopupFor ? elements.find(el => el.id === showPopupFor) : null;
   const selectedDrawingElement = selectedElement ? elements.find(el => el.id === selectedElement && el.type === 'drawing') : null;
 
@@ -474,52 +351,13 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         tabIndex={0}
         style={{ outline: 'none' }}
       >
-        {/* Canvas background with grid */}
-        <div className={`absolute inset-0 border-2 border-dashed rounded-lg ${
-          isDarkTheme 
-            ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-600' 
-            : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-300'
-        }`}>
-          {snapToGrid && (
-            <div 
-              className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage: `
-                  radial-gradient(circle at ${gridSize}px ${gridSize}px, ${isDarkTheme ? '#ffffff' : '#000000'} 1px, transparent 0),
-                  radial-gradient(circle at 0 0, ${isDarkTheme ? '#ffffff' : '#000000'} 1px, transparent 0)
-                `,
-                backgroundSize: `${gridSize}px ${gridSize}px`,
-              }}
-            />
-          )}
-          <div className={`absolute top-2 left-2 text-xs font-medium ${isDarkTheme ? 'text-gray-400' : 'text-gray-400'}`}>
-            {cardSide} side
-          </div>
-          <div className="absolute top-2 right-2 flex gap-2">
-            <button
-              onClick={() => setSnapToGrid(!snapToGrid)}
-              className={`px-2 py-1 text-xs rounded ${
-                snapToGrid 
-                  ? 'bg-blue-500 text-white' 
-                  : isDarkTheme 
-                    ? 'bg-gray-700 text-gray-300' 
-                    : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              Grid: {snapToGrid ? 'ON' : 'OFF'}
-            </button>
-            <button
-              onClick={autoArrangeElements}
-              className={`px-2 py-1 text-xs rounded ${
-                isDarkTheme 
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Auto Arrange
-            </button>
-          </div>
-        </div>
+        <CanvasBackground
+          cardSide={cardSide}
+          snapToGrid={snapToGrid}
+          gridSize={gridSize}
+          onSnapToGridToggle={() => setSnapToGrid(!snapToGrid)}
+          onAutoArrange={autoArrangeElements}
+        />
 
         {/* Render elements */}
         {elements
@@ -553,7 +391,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
                 e.stopPropagation();
                 onSelectElement(element.id);
                 
-                // Only show popup for non-drawing elements
                 if (element.type !== 'drawing') {
                   setShowPopupFor(element.id);
                   const position = calculatePopupPosition(element);
@@ -561,33 +398,26 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
                 }
               }}
             >
-              {renderElement(element)}
+              <CanvasElementRenderer
+                element={element}
+                editingElement={editingElement}
+                onUpdateElement={onUpdateElement}
+                onEditingChange={setEditingElement}
+              />
 
-              {/* Resize handles - only show if not in drawing mode or not a drawing element */}
               {selectedElement === element.id && (!isDrawingMode || element.type !== 'drawing') && (
-                <>
-                  {['nw', 'ne', 'sw', 'se'].map((handle) => (
-                    <div
-                      key={handle}
-                      className={`absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-${
-                        handle === 'nw' || handle === 'se' ? 'nw' : 'ne'
-                      }-resize`}
-                      style={{
-                        top: handle.includes('n') ? -6 : 'auto',
-                        bottom: handle.includes('s') ? -6 : 'auto',
-                        left: handle.includes('w') ? -6 : 'auto',
-                        right: handle.includes('e') ? -6 : 'auto',
-                      }}
-                      onMouseDown={(e) => handleMouseDown(e, element.id, 'resize', handle)}
-                    />
-                  ))}
-                </>
+                <CanvasInteractionHandler
+                  selectedElement={selectedElement}
+                  dragState={dragState}
+                  onMouseDown={handleMouseDown}
+                  isDrawingMode={isDrawingMode}
+                />
               )}
             </div>
           </ElementContextMenu>
         ))}
 
-        {/* Popup Toolbar - Only render if element exists and is not a drawing element */}
+        {/* Popup Toolbar */}
         {showPopupFor && popupElement && popupElement.type !== 'drawing' && (
           <ElementPopupToolbar
             element={popupElement}
