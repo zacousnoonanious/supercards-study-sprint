@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +11,7 @@ import {
   Volume2,
   Paintbrush,
   GripVertical,
-  MoreHorizontal,
+  Plus,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -37,12 +38,6 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
   onCreateNewCard,
   onCreateNewCardWithLayout,
 }) => {
-  const [isExpanded, setIsExpanded] = React.useState(false);
-
-  const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
-  };
-
   const elementTypes = [
     { type: 'text' as const, icon: Type, label: 'Text' },
     { type: 'image' as const, icon: Image, label: 'Image' },
@@ -56,43 +51,53 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2">
-        {elementTypes.slice(0, isExpanded ? elementTypes.length : 4).map((item) => (
+      {/* Element Types - Responsive Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-2">
+        {elementTypes.map((item) => (
           <Button
             key={item.type}
             variant="outline"
-            className="w-full h-12 flex-col justify-center"
+            className="w-full h-12 flex flex-col justify-center text-xs lg:text-sm"
             onClick={() => onAddElement(item.type)}
           >
-            <item.icon className="h-4 w-4 mb-1" />
-            <span>{item.label}</span>
+            <item.icon className="h-3 w-3 lg:h-4 lg:w-4 mb-1" />
+            <span className="hidden sm:inline">{item.label}</span>
+            <span className="sm:hidden">{item.label.split(' ')[0]}</span>
           </Button>
         ))}
-        {elementTypes.length > 4 && (
-          <Button variant="ghost" className="w-full h-12 flex-col justify-center" onClick={toggleExpanded}>
-            <MoreHorizontal className="h-4 w-4 mb-1" />
-            <span>{isExpanded ? 'Less' : 'More'}</span>
-          </Button>
-        )}
       </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="w-full">
-            Card Actions <GripVertical className="w-4 h-4 ml-2" />
+      {/* Card Actions */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-medium text-gray-700">Card Actions</h3>
+        <div className="space-y-2">
+          <Button
+            variant="outline"
+            className="w-full justify-start text-sm"
+            onClick={onCreateNewCard}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Card
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56">
-          <DropdownMenuItem onClick={onCreateNewCard}>Create New Card</DropdownMenuItem>
-          <DropdownMenuItem onClick={onCreateNewCardWithLayout}>Duplicate Card Layout</DropdownMenuItem>
-          <DropdownMenuSeparator />
+          <Button
+            variant="outline"
+            className="w-full justify-start text-sm"
+            onClick={onCreateNewCardWithLayout}
+          >
+            <Layers className="w-4 h-4 mr-2" />
+            Duplicate Layout
+          </Button>
           {selectedElement && (
-            <>
-              <DropdownMenuItem onClick={onDeleteElement}>Delete Element</DropdownMenuItem>
-            </>
+            <Button
+              variant="destructive"
+              className="w-full justify-start text-sm"
+              onClick={onDeleteElement}
+            >
+              Delete Element
+            </Button>
           )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </div>
+      </div>
     </div>
   );
 };
