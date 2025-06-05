@@ -1,3 +1,4 @@
+
 export interface CanvasElement {
   id: string;
   type: 'text' | 'image' | 'audio' | 'drawing' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed';
@@ -28,7 +29,6 @@ export interface CanvasElement {
   drawingData?: string;
   strokeColor?: string;
   strokeWidth?: number;
-  animated?: boolean;
   
   // Interactive element properties
   multipleChoiceOptions?: string[];
@@ -53,15 +53,15 @@ export interface Flashcard {
   updated_at: string;
   set_id: string;
   last_reviewed_at: string | null;
-  card_type?: 'standard' | 'informational' | 'single-sided' | 'password-protected' | 'quiz-only' | 'timed-challenge';
+  card_type?: 'standard' | 'informational' | 'single-sided' | 'password-protected' | 'quiz-only' | 'timed-challenge' | null;
   interactive_type?: 'multiple-choice' | 'true-false' | 'fill-blank' | null;
   interactive_data?: {
     options?: string[];
     correctAnswer?: number;
     explanation?: string;
   };
-  password?: string;
-  countdown_timer?: number;
+  password?: string | null;
+  countdown_timer?: number | null;
   is_unskippable?: boolean;
   shuffle_enabled?: boolean;
   reverse_mode?: boolean;

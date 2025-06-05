@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Paintbrush, Eraser, RotateCcw } from 'lucide-react';
+import { Paintbrush, Eraser, RotateCcw, Move } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface DrawingCanvasProps {
@@ -24,6 +24,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   strokeWidth = 2,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
   
@@ -31,27 +32,25 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const [currentStrokeWidth, setCurrentStrokeWidth] = useState(strokeWidth);
   const [currentColor, setCurrentColor] = useState(strokeColor);
   const [tool, setTool] = useState<'brush' | 'eraser'>('brush');
-  const [paths, setPaths] = useState<Array<{
-    path: string;
-    color: string;
-    width: number;
-  }>>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
-    if (initialDrawing) {
+    if (initialDrawing && canvasRef.current) {
       const canvas = canvasRef.current;
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          const img = new Image();
-          img.onload = () => ctx.drawImage(img, 0, 0);
-          img.src = `data:image/svg+xml,${encodeURIComponent(initialDrawing)}`;
-        }
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.src = `data:image/svg+xml,${encodeURIComponent(initialDrawing)}`;
       }
     }
   }, [initialDrawing]);
 
   const startDrawing = (e: React.MouseEvent) => {
+    if (isDragging) return;
+    
     setIsDrawing(true);
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -78,7 +77,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   };
 
   const draw = (e: React.MouseEvent) => {
-    if (!isDrawing) return;
+    if (!isDrawing || isDragging) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -100,23 +99,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
     const canvas = canvasRef.current;
     if (canvas) {
-      setPaths(prev => [...prev, {
-        path: canvas.toDataURL('image/png'),
-        color: currentColor,
-        width: currentStrokeWidth,
-      }]);
-
-      // Convert to transparent SVG format for saving
-      const svgData = canvasToTransparentSVG(canvas);
-      onDrawingComplete(svgData);
+      // Convert to transparent PNG
+      const dataURL = canvas.toDataURL('image/png');
+      onDrawingComplete(dataURL);
     }
-  };
-
-  const canvasToTransparentSVG = (canvas: HTMLCanvasElement): string => {
-    const dataURL = canvas.toDataURL('image/png');
-    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <image href="${dataURL}" width="${width}" height="${height}" style="mix-blend-mode: multiply;"/>
-    </svg>`;
   };
 
   const clearCanvas = () => {
@@ -125,83 +111,139 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        setPaths([]);
         onDrawingComplete('');
       }
     }
   };
 
+  const handleDragStart = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    e.preventDefault();
+  };
+
+  const handleDragMove = (e: React.MouseEvent) => {
+    if (!isDragging || !containerRef.current) return;
+    
+    const deltaX = e.clientX - dragStart.x;
+    const deltaY = e.clientY - dragStart.y;
+    
+    const container = containerRef.current;
+    const rect = container.getBoundingClientRect();
+    const newX = rect.left + deltaX;
+    const newY = rect.top + deltaY;
+    
+    container.style.left = `${newX}px`;
+    container.style.top = `${newY}px`;
+    
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex gap-2">
-          <Button
-            variant={tool === 'brush' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTool('brush')}
-            className="flex items-center gap-2"
-          >
-            <Paintbrush className="w-4 h-4" />
-            Brush
-          </Button>
-          <Button
-            variant={tool === 'eraser' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTool('eraser')}
-            className="flex items-center gap-2"
-          >
-            <Eraser className="w-4 h-4" />
-            Eraser
-          </Button>
-        </div>
-
+    <div 
+      ref={containerRef}
+      className={`relative ${isExpanded ? 'fixed z-50 bg-white dark:bg-gray-800 border rounded-lg shadow-lg p-4' : ''}`}
+      style={isExpanded ? { width: '600px', height: '500px' } : {}}
+      onMouseMove={handleDragMove}
+      onMouseUp={handleDragEnd}
+      onMouseLeave={handleDragEnd}
+    >
+      {/* Drag Handle */}
+      <div 
+        className={`flex items-center justify-between p-2 cursor-move ${
+          isDarkTheme ? 'bg-gray-700' : 'bg-gray-100'
+        } rounded-t border-b`}
+        onMouseDown={handleDragStart}
+      >
         <div className="flex items-center gap-2">
-          <Label className="text-sm">Size:</Label>
-          <Slider
-            value={[currentStrokeWidth]}
-            onValueChange={(value) => setCurrentStrokeWidth(value[0])}
-            max={20}
-            min={1}
-            step={1}
-            className="w-20"
-          />
-          <span className="text-sm w-8">{currentStrokeWidth}</span>
+          <Move className="w-4 h-4" />
+          <span className="text-sm font-medium">Drawing Tools</span>
         </div>
-
-        <div className="flex items-center gap-2">
-          <Label className="text-sm">Color:</Label>
-          <input
-            type="color"
-            value={currentColor}
-            onChange={(e) => setCurrentColor(e.target.value)}
-            className="w-8 h-8 rounded border"
-          />
-        </div>
-
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          onClick={clearCanvas}
-          className="flex items-center gap-2"
+          onClick={() => setIsExpanded(!isExpanded)}
         >
-          <RotateCcw className="w-4 h-4" />
-          Clear
+          {isExpanded ? 'Collapse' : 'Expand'}
         </Button>
       </div>
 
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        className={`border rounded cursor-crosshair ${
-          isDarkTheme ? 'border-gray-600' : 'border-gray-300'
-        }`}
-        style={{ backgroundColor: 'transparent' }}
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
-        onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
-      />
+      {/* Tools */}
+      <div className="space-y-4 p-2">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex gap-2">
+            <Button
+              variant={tool === 'brush' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTool('brush')}
+              className="flex items-center gap-2"
+            >
+              <Paintbrush className="w-4 h-4" />
+              Brush
+            </Button>
+            <Button
+              variant={tool === 'eraser' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTool('eraser')}
+              className="flex items-center gap-2"
+            >
+              <Eraser className="w-4 h-4" />
+              Eraser
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Size:</Label>
+            <Slider
+              value={[currentStrokeWidth]}
+              onValueChange={(value) => setCurrentStrokeWidth(value[0])}
+              max={20}
+              min={1}
+              step={1}
+              className="w-20"
+            />
+            <span className="text-sm w-8">{currentStrokeWidth}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Color:</Label>
+            <input
+              type="color"
+              value={currentColor}
+              onChange={(e) => setCurrentColor(e.target.value)}
+              className="w-8 h-8 rounded border"
+            />
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearCanvas}
+            className="flex items-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Clear
+          </Button>
+        </div>
+
+        <canvas
+          ref={canvasRef}
+          width={isExpanded ? 560 : width}
+          height={isExpanded ? 300 : height}
+          className={`border rounded cursor-crosshair ${
+            isDarkTheme ? 'border-gray-600' : 'border-gray-300'
+          }`}
+          style={{ backgroundColor: 'transparent' }}
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+        />
+      </div>
     </div>
   );
 };

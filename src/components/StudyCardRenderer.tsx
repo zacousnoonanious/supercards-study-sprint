@@ -1,19 +1,29 @@
 
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
-import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
+import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
+import { InteractiveQuizRenderer } from './InteractiveQuizRenderer';
+import { DeckSelector } from './DeckSelector';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface StudyCardRendererProps {
   elements: CanvasElement[];
   className?: string;
   style?: React.CSSProperties;
+  onQuizAnswer?: (elementId: string, correct: boolean, answerIndex: number) => void;
+  showQuizResults?: boolean;
+  quizAnswers?: {[elementId: string]: number};
+  requireAnswer?: boolean;
 }
 
 export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ 
   elements, 
   className = '', 
-  style = {} 
+  style = {},
+  onQuizAnswer,
+  showQuizResults = false,
+  quizAnswers = {},
+  requireAnswer = false
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
@@ -30,13 +40,49 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
   const renderElement = (element: CanvasElement) => {
     switch (element.type) {
       case 'multiple-choice':
-        return <MultipleChoiceRenderer element={element} isEditing={false} />;
       case 'true-false':
-        return <TrueFalseRenderer element={element} isEditing={false} />;
+        if (onQuizAnswer) {
+          return (
+            <InteractiveQuizRenderer
+              element={element}
+              onAnswer={(correct) => onQuizAnswer(element.id, correct, quizAnswers[element.id] || 0)}
+              showResults={showQuizResults}
+              userAnswer={quizAnswers[element.id]}
+              requireAnswer={requireAnswer}
+            />
+          );
+        }
+        return element.type === 'multiple-choice' 
+          ? <MultipleChoiceRenderer element={element} isEditing={false} />
+          : <TrueFalseRenderer element={element} isEditing={false} />;
       case 'youtube':
         return <YouTubeRenderer element={element} />;
       case 'deck-embed':
-        return <DeckEmbedRenderer element={element} />;
+        return (
+          <div className={`w-full h-full flex items-center justify-center p-4 rounded ${
+            isDarkTheme ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            {element.deckId ? (
+              <div className="text-center">
+                <h3 className="font-medium mb-2">Embedded Deck</h3>
+                <p className="text-sm text-muted-foreground">{element.deckTitle}</p>
+                <button 
+                  className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded text-sm"
+                  onClick={() => window.open(`/set/${element.deckId}`, '_blank')}
+                >
+                  Open Deck
+                </button>
+              </div>
+            ) : (
+              <DeckSelector
+                onDeckSelect={(deckId, deckTitle) => {
+                  // This would need to be handled by the parent component
+                  console.log('Deck selected:', deckId, deckTitle);
+                }}
+              />
+            )}
+          </div>
+        );
       case 'audio':
         return (
           <div className={`w-full h-full flex items-center justify-center p-1 sm:p-2 rounded ${
@@ -76,7 +122,12 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
         return (
           <div 
             className="w-full h-full"
-            dangerouslySetInnerHTML={{ __html: element.drawingData || '' }}
+            style={{
+              backgroundImage: element.drawingData ? `url(${element.drawingData})` : 'none',
+              backgroundSize: 'contain',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center'
+            }}
           />
         );
       default:

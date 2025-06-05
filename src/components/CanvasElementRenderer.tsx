@@ -34,16 +34,14 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
         <DrawingCanvas
           width={element.width}
           height={element.height}
-          onDrawingComplete={(drawingData, animated) => {
+          onDrawingComplete={(drawingData) => {
             onUpdateElement(element.id, { 
-              drawingData,
-              animated 
+              drawingData
             });
           }}
           initialDrawing={element.drawingData}
           strokeColor={element.strokeColor}
           strokeWidth={element.strokeWidth}
-          animated={element.animated}
         />
       );
     case 'audio':

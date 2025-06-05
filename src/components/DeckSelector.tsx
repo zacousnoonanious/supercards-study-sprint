@@ -1,0 +1,71 @@
+
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FlashcardSet } from '@/types/flashcard';
+
+interface DeckSelectorProps {
+  onDeckSelect: (deckId: string, deckTitle: string) => void;
+  currentDeckId?: string;
+}
+
+export const DeckSelector: React.FC<DeckSelectorProps> = ({ onDeckSelect, currentDeckId }) => {
+  const { user } = useAuth();
+  const [decks, setDecks] = useState<FlashcardSet[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchDecks = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('flashcard_sets')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setDecks(data || []);
+      } catch (error) {
+        console.error('Error fetching decks:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDecks();
+  }, [user]);
+
+  if (loading) {
+    return <div className="text-sm text-muted-foreground">Loading decks...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-medium">Select a deck to embed:</h3>
+      <Select value={currentDeckId} onValueChange={(value) => {
+        const selectedDeck = decks.find(deck => deck.id === value);
+        if (selectedDeck) {
+          onDeckSelect(selectedDeck.id, selectedDeck.title);
+        }
+      }}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Choose a deck..." />
+        </SelectTrigger>
+        <SelectContent>
+          {decks.map((deck) => (
+            <SelectItem key={deck.id} value={deck.id}>
+              {deck.title}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {decks.length === 0 && (
+        <p className="text-sm text-muted-foreground">No decks available to embed.</p>
+      )}
+    </div>
+  );
+};

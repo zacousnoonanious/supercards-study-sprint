@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Eye, EyeOff, Lock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { StudyCardRenderer } from '@/components/StudyCardRenderer';
-import { Flashcard } from '@/types/flashcard';
+import { InteractiveQuizRenderer } from '@/components/InteractiveQuizRenderer';
+import { Flashcard, CanvasElement } from '@/types/flashcard';
 
 interface StudyModeContentProps {
   currentCard: Flashcard;
@@ -30,6 +31,8 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   const [passwordInput, setPasswordInput] = useState('');
   const [isPasswordCorrect, setIsPasswordCorrect] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  const [quizAnswers, setQuizAnswers] = useState<{[elementId: string]: number}>({});
+  const [hasAnsweredAllQuiz, setHasAnsweredAllQuiz] = useState(false);
 
   const handlePasswordSubmit = () => {
     if (passwordInput === currentCard.password) {
@@ -37,6 +40,24 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
       setPasswordError('');
     } else {
       setPasswordError('Incorrect password. Please try again.');
+    }
+  };
+
+  const handleQuizAnswer = (elementId: string, correct: boolean, answerIndex: number) => {
+    setQuizAnswers(prev => ({ ...prev, [elementId]: answerIndex }));
+    
+    // Check if all quiz elements have been answered
+    const quizElements = currentCard.front_elements.filter(el => 
+      el.type === 'multiple-choice' || el.type === 'true-false'
+    );
+    
+    const newAnswers = { ...quizAnswers, [elementId]: answerIndex };
+    const allAnswered = quizElements.every(el => newAnswers[el.id] !== undefined);
+    setHasAnsweredAllQuiz(allAnswered);
+    
+    // For non-quiz cards, proceed immediately
+    if (currentCard.card_type !== 'quiz-only') {
+      onAnswer(correct);
     }
   };
 
@@ -70,6 +91,11 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
     );
   }
 
+  // Check if card has interactive elements
+  const hasInteractiveElements = currentCard.front_elements.some(el => 
+    el.type === 'multiple-choice' || el.type === 'true-false'
+  );
+
   // Full screen layout for informational cards
   if (currentCard.card_type === 'informational') {
     return (
@@ -79,6 +105,9 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
             elements={currentCard.front_elements} 
             className="w-full h-full max-w-none max-h-none"
             style={{ width: '100vw', height: '80vh', maxWidth: 'none', aspectRatio: 'unset' }}
+            onQuizAnswer={handleQuizAnswer}
+            showQuizResults={showAnswer}
+            quizAnswers={quizAnswers}
           />
         </div>
         
@@ -110,9 +139,71 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
       <div className="w-full max-w-5xl mx-auto space-y-8 p-4">
         <div className="space-y-4">
           <div className="flex justify-center">
-            <StudyCardRenderer elements={currentCard.front_elements} />
+            <StudyCardRenderer 
+              elements={currentCard.front_elements}
+              onQuizAnswer={handleQuizAnswer}
+              showQuizResults={showAnswer}
+              quizAnswers={quizAnswers}
+            />
           </div>
         </div>
+        
+        {currentCard.hint && (
+          <div className="text-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleHint}
+              className="text-primary"
+            >
+              {showHint ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+              {showHint ? 'Hide Hint' : 'Show Hint'}
+            </Button>
+            {showHint && (
+              <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 text-xs sm:text-sm max-w-2xl mx-auto">
+                <strong>Hint:</strong> {currentCard.hint}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Quiz-only cards
+  if (currentCard.card_type === 'quiz-only') {
+    return (
+      <div className="w-full max-w-5xl mx-auto space-y-8 p-4">
+        <div className="space-y-4">
+          <div className="flex justify-center">
+            <StudyCardRenderer 
+              elements={currentCard.front_elements}
+              onQuizAnswer={handleQuizAnswer}
+              showQuizResults={false} // Don't show results until end
+              quizAnswers={quizAnswers}
+              requireAnswer={true}
+            />
+          </div>
+        </div>
+        
+        {hasInteractiveElements && hasAnsweredAllQuiz && (
+          <div className="text-center">
+            <Button onClick={() => {
+              // Calculate score
+              const quizElements = currentCard.front_elements.filter(el => 
+                el.type === 'multiple-choice' || el.type === 'true-false'
+              );
+              const correctAnswers = quizElements.filter(el => 
+                quizAnswers[el.id] === el.correctAnswer
+              ).length;
+              const totalQuestions = quizElements.length;
+              const isCorrect = correctAnswers === totalQuestions;
+              onAnswer(isCorrect);
+            }}>
+              Submit Answers
+            </Button>
+          </div>
+        )}
         
         {currentCard.hint && (
           <div className="text-center">
@@ -143,7 +234,12 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
         <div className="space-y-4">
           <h3 className="text-base sm:text-lg font-medium text-foreground mb-4 text-center">Question</h3>
           <div className="flex justify-center">
-            <StudyCardRenderer elements={currentCard.front_elements} />
+            <StudyCardRenderer 
+              elements={currentCard.front_elements}
+              onQuizAnswer={handleQuizAnswer}
+              showQuizResults={showAnswer}
+              quizAnswers={quizAnswers}
+            />
           </div>
         </div>
         
@@ -168,7 +264,12 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
 
         <div className="text-center">
           {!showAnswer ? (
-            <Button onClick={onRevealAnswer} size="lg" className="w-full sm:w-auto">
+            <Button 
+              onClick={onRevealAnswer} 
+              size="lg" 
+              className="w-full sm:w-auto"
+              disabled={hasInteractiveElements && !hasAnsweredAllQuiz}
+            >
               Reveal Answer
             </Button>
           ) : (
@@ -211,7 +312,12 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
           style={{ transformStyle: 'preserve-3d' }}
         >
           <div className="backface-hidden">
-            <StudyCardRenderer elements={currentCard.front_elements} />
+            <StudyCardRenderer 
+              elements={currentCard.front_elements}
+              onQuizAnswer={handleQuizAnswer}
+              showQuizResults={showAnswer}
+              quizAnswers={quizAnswers}
+            />
           </div>
           
           <div className="absolute top-0 left-0 backface-hidden rotate-y-180">

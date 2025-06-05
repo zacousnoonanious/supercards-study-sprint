@@ -48,7 +48,10 @@ export const useCardEditor = () => {
           front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
           back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
           hint: card.hint || '',
-          last_reviewed_at: card.last_reviewed_at || null
+          last_reviewed_at: card.last_reviewed_at || null,
+          card_type: (card.card_type as Flashcard['card_type']) || 'standard',
+          countdown_timer: card.countdown_timer || 0,
+          password: card.password || null
         }));
         
         setCards(typedCards);
@@ -243,7 +246,10 @@ export const useCardEditor = () => {
         front_elements: data.front_elements as unknown as CanvasElement[] || [],
         back_elements: data.back_elements as unknown as CanvasElement[] || [],
         hint: data.hint || '',
-        last_reviewed_at: data.last_reviewed_at || null
+        last_reviewed_at: data.last_reviewed_at || null,
+        card_type: (data.card_type as Flashcard['card_type']) || 'standard',
+        countdown_timer: data.countdown_timer || 0,
+        password: data.password || null
       };
 
       // Calculate the new index before updating state
@@ -300,7 +306,10 @@ export const useCardEditor = () => {
         front_elements: data.front_elements as unknown as CanvasElement[] || [],
         back_elements: data.back_elements as unknown as CanvasElement[] || [],
         hint: data.hint || '',
-        last_reviewed_at: data.last_reviewed_at || null
+        last_reviewed_at: data.last_reviewed_at || null,
+        card_type: (data.card_type as Flashcard['card_type']) || 'standard',
+        countdown_timer: data.countdown_timer || 0,
+        password: data.password || null
       };
 
       // Calculate the new index before updating state
