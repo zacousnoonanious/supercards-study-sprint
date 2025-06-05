@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -213,6 +212,20 @@ const StudyMode = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .preserve-3d {
+            transform-style: preserve-3d;
+          }
+          .backface-hidden {
+            backface-visibility: hidden;
+          }
+          .rotate-y-180 {
+            transform: rotateY(180deg);
+          }
+        `
+      }} />
+      
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -406,18 +419,6 @@ const StudyMode = () => {
           )}
         </div>
       </main>
-
-      <style jsx>{`
-        .preserve-3d {
-          transform-style: preserve-3d;
-        }
-        .backface-hidden {
-          backface-visibility: hidden;
-        }
-        .rotate-y-180 {
-          transform: rotateY(180deg);
-        }
-      `}</style>
     </div>
   );
 };
