@@ -1,30 +1,14 @@
+
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Type, 
-  Image, 
-  Trash2, 
-  Bold, 
-  Italic, 
-  Underline, 
-  AlignLeft, 
-  AlignCenter, 
-  AlignRight, 
-  AlignJustify, 
-  Plus,
-  CheckSquare,
-  ToggleLeft,
-  Youtube,
-  BookOpen,
-  Mic
-} from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Type, Image, HelpCircle, CheckSquare, Youtube, Copy, Plus, Mic } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ElementToolbarProps {
   onAddElement: (type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed' | 'audio') => void;
@@ -32,6 +16,7 @@ interface ElementToolbarProps {
   onUpdateElement: (updates: Partial<CanvasElement>) => void;
   onDeleteElement: () => void;
   onCreateNewCard: () => void;
+  onCreateNewCardWithLayout: () => void;
 }
 
 export const ElementToolbar: React.FC<ElementToolbarProps> = ({
@@ -40,305 +25,184 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
   onUpdateElement,
   onDeleteElement,
   onCreateNewCard,
+  onCreateNewCardWithLayout,
 }) => {
+  const { theme } = useTheme();
+  const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
+
   return (
-    <div className="space-y-4">
-      {/* Card Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Card Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={onCreateNewCard}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Card
-          </Button>
-        </CardContent>
-      </Card>
+    <Card className={`${isDarkTheme ? 'bg-gray-800 border-gray-600' : 'bg-white'}`}>
+      <CardHeader className="pb-3">
+        <CardTitle className={`text-lg ${isDarkTheme ? 'text-white' : 'text-gray-900'}`}>
+          Card Editor
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Add Elements Section */}
+        <div>
+          <Label className={`text-sm font-medium ${isDarkTheme ? 'text-gray-200' : 'text-gray-700'}`}>
+            Add Elements
+          </Label>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Button
+              onClick={() => onAddElement('text')}
+              variant="outline"
+              size="sm"
+              className={`flex items-center gap-2 ${isDarkTheme ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
+            >
+              <Type className="w-4 h-4" />
+              Text
+            </Button>
+            <Button
+              onClick={() => onAddElement('image')}
+              variant="outline"
+              size="sm"
+              className={`flex items-center gap-2 ${isDarkTheme ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
+            >
+              <Image className="w-4 h-4" />
+              Image
+            </Button>
+            <Button
+              onClick={() => onAddElement('multiple-choice')}
+              variant="outline"
+              size="sm"
+              className={`flex items-center gap-2 ${isDarkTheme ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
+            >
+              <HelpCircle className="w-4 h-4" />
+              Quiz
+            </Button>
+            <Button
+              onClick={() => onAddElement('true-false')}
+              variant="outline"
+              size="sm"
+              className={`flex items-center gap-2 ${isDarkTheme ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
+            >
+              <CheckSquare className="w-4 h-4" />
+              T/F
+            </Button>
+            <Button
+              onClick={() => onAddElement('youtube')}
+              variant="outline"
+              size="sm"
+              className={`flex items-center gap-2 ${isDarkTheme ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
+            >
+              <Youtube className="w-4 h-4" />
+              Video
+            </Button>
+            <Button
+              onClick={() => onAddElement('audio')}
+              variant="outline"
+              size="sm"
+              className={`flex items-center gap-2 ${isDarkTheme ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
+            >
+              <Mic className="w-4 h-4" />
+              Audio
+            </Button>
+          </div>
+        </div>
 
-      {/* Add Elements */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Add Elements</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => onAddElement('text')}
-          >
-            <Type className="w-4 h-4 mr-2" />
-            Add Text
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => onAddElement('image')}
-          >
-            <Image className="w-4 h-4 mr-2" />
-            Add Image
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => onAddElement('audio')}
-          >
-            <Mic className="w-4 h-4 mr-2" />
-            Add Audio
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => onAddElement('multiple-choice')}
-          >
-            <CheckSquare className="w-4 h-4 mr-2" />
-            Multiple Choice
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => onAddElement('true-false')}
-          >
-            <ToggleLeft className="w-4 h-4 mr-2" />
-            True/False
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => onAddElement('youtube')}
-          >
-            <Youtube className="w-4 h-4 mr-2" />
-            YouTube Video
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => onAddElement('deck-embed')}
-          >
-            <BookOpen className="w-4 h-4 mr-2" />
-            Embed Deck
-          </Button>
-        </CardContent>
-      </Card>
+        <Separator className={isDarkTheme ? 'bg-gray-600' : ''} />
 
-      {/* Element Properties */}
-      {selectedElement && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm flex items-center justify-between">
-              Element Properties
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onDeleteElement}
-                className="text-red-500 hover:text-red-700"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Position */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="x" className="text-xs">X Position</Label>
-                <Input
-                  id="x"
-                  type="number"
-                  value={selectedElement.x}
-                  onChange={(e) => onUpdateElement({ x: parseInt(e.target.value) })}
-                  className="h-8"
-                />
-              </div>
-              <div>
-                <Label htmlFor="y" className="text-xs">Y Position</Label>
-                <Input
-                  id="y"
-                  type="number"
-                  value={selectedElement.y}
-                  onChange={(e) => onUpdateElement({ y: parseInt(e.target.value) })}
-                  className="h-8"
-                />
-              </div>
-            </div>
+        {/* Card Actions */}
+        <div>
+          <Label className={`text-sm font-medium ${isDarkTheme ? 'text-gray-200' : 'text-gray-700'}`}>
+            Card Actions
+          </Label>
+          <div className="space-y-2 mt-2">
+            <Button
+              onClick={onCreateNewCard}
+              variant="outline"
+              size="sm"
+              className={`w-full flex items-center gap-2 ${isDarkTheme ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
+            >
+              <Plus className="w-4 h-4" />
+              New Card
+            </Button>
+            <Button
+              onClick={onCreateNewCardWithLayout}
+              variant="outline"
+              size="sm"
+              className={`w-full flex items-center gap-2 ${isDarkTheme ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
+            >
+              <Copy className="w-4 h-4" />
+              Copy Layout
+            </Button>
+          </div>
+        </div>
 
-            {/* Size */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="width" className="text-xs">Width</Label>
-                <Input
-                  id="width"
-                  type="number"
-                  value={selectedElement.width}
-                  onChange={(e) => onUpdateElement({ width: parseInt(e.target.value) })}
-                  className="h-8"
-                />
-              </div>
-              <div>
-                <Label htmlFor="height" className="text-xs">Height</Label>
-                <Input
-                  id="height"
-                  type="number"
-                  value={selectedElement.height}
-                  onChange={(e) => onUpdateElement({ height: parseInt(e.target.value) })}
-                  className="h-8"
-                />
-              </div>
-            </div>
-
-            {/* Rotation */}
+        {/* Element Properties */}
+        {selectedElement && (
+          <>
+            <Separator className={isDarkTheme ? 'bg-gray-600' : ''} />
             <div>
-              <Label htmlFor="rotation" className="text-xs">Rotation ({selectedElement.rotation}°)</Label>
-              <Slider
-                value={[selectedElement.rotation]}
-                onValueChange={([value]) => onUpdateElement({ rotation: value })}
-                max={360}
-                min={0}
-                step={1}
-                className="mt-2"
-              />
-            </div>
-
-            {/* Audio-specific properties */}
-            {selectedElement.type === 'audio' && (
-              <div>
-                <Label htmlFor="audioUrl" className="text-xs">Audio URL</Label>
-                <Input
-                  id="audioUrl"
-                  value={selectedElement.audioUrl || ''}
-                  onChange={(e) => onUpdateElement({ audioUrl: e.target.value })}
-                  placeholder="Enter audio URL"
-                  className="h-8"
-                />
-              </div>
-            )}
-
-            {/* Text-specific properties */}
-            {selectedElement.type === 'text' && (
-              <>
-                <div>
-                  <Label htmlFor="content" className="text-xs">Text Content</Label>
-                  <Textarea
-                    id="content"
-                    value={selectedElement.content || ''}
-                    onChange={(e) => onUpdateElement({ content: e.target.value })}
-                    className="h-20 text-sm"
-                  />
+              <Label className={`text-sm font-medium ${isDarkTheme ? 'text-gray-200' : 'text-gray-700'}`}>
+                Element Properties
+              </Label>
+              <div className="space-y-3 mt-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className={`text-xs ${isDarkTheme ? 'text-gray-300' : 'text-gray-600'}`}>X</Label>
+                    <Input
+                      type="number"
+                      value={selectedElement.x}
+                      onChange={(e) => onUpdateElement({ x: parseInt(e.target.value) })}
+                      className={`h-8 text-xs ${isDarkTheme ? 'bg-gray-700 border-gray-600 text-white' : ''}`}
+                    />
+                  </div>
+                  <div>
+                    <Label className={`text-xs ${isDarkTheme ? 'text-gray-300' : 'text-gray-600'}`}>Y</Label>
+                    <Input
+                      type="number"
+                      value={selectedElement.y}
+                      onChange={(e) => onUpdateElement({ y: parseInt(e.target.value) })}
+                      className={`h-8 text-xs ${isDarkTheme ? 'bg-gray-700 border-gray-600 text-white' : ''}`}
+                    />
+                  </div>
                 </div>
-                
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className={`text-xs ${isDarkTheme ? 'text-gray-300' : 'text-gray-600'}`}>Width</Label>
+                    <Input
+                      type="number"
+                      value={selectedElement.width}
+                      onChange={(e) => onUpdateElement({ width: parseInt(e.target.value) })}
+                      className={`h-8 text-xs ${isDarkTheme ? 'bg-gray-700 border-gray-600 text-white' : ''}`}
+                    />
+                  </div>
+                  <div>
+                    <Label className={`text-xs ${isDarkTheme ? 'text-gray-300' : 'text-gray-600'}`}>Height</Label>
+                    <Input
+                      type="number"
+                      value={selectedElement.height}
+                      onChange={(e) => onUpdateElement({ height: parseInt(e.target.value) })}
+                      className={`h-8 text-xs ${isDarkTheme ? 'bg-gray-700 border-gray-600 text-white' : ''}`}
+                    />
+                  </div>
+                </div>
                 <div>
-                  <Label htmlFor="fontSize" className="text-xs">Font Size</Label>
+                  <Label className={`text-xs ${isDarkTheme ? 'text-gray-300' : 'text-gray-600'}`}>Rotation</Label>
                   <Input
-                    id="fontSize"
                     type="number"
-                    value={selectedElement.fontSize || 16}
-                    onChange={(e) => onUpdateElement({ fontSize: parseInt(e.target.value) })}
-                    className="h-8"
+                    value={selectedElement.rotation}
+                    onChange={(e) => onUpdateElement({ rotation: parseInt(e.target.value) })}
+                    className={`h-8 text-xs ${isDarkTheme ? 'bg-gray-700 border-gray-600 text-white' : ''}`}
+                    min="-180"
+                    max="180"
                   />
                 </div>
-                
-                <div>
-                  <Label htmlFor="color" className="text-xs">Color</Label>
-                  <Input
-                    id="color"
-                    type="color"
-                    value={selectedElement.color || '#000000'}
-                    onChange={(e) => onUpdateElement({ color: e.target.value })}
-                    className="h-8"
-                  />
-                </div>
-
-                {/* Text Formatting */}
-                <div>
-                  <Label className="text-xs">Text Formatting</Label>
-                  <div className="flex gap-1 mt-1">
-                    <Button
-                      variant={selectedElement.fontWeight === 'bold' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => onUpdateElement({ 
-                        fontWeight: selectedElement.fontWeight === 'bold' ? 'normal' : 'bold' 
-                      })}
-                    >
-                      <Bold className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant={selectedElement.fontStyle === 'italic' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => onUpdateElement({ 
-                        fontStyle: selectedElement.fontStyle === 'italic' ? 'normal' : 'italic' 
-                      })}
-                    >
-                      <Italic className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant={selectedElement.textDecoration === 'underline' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => onUpdateElement({ 
-                        textDecoration: selectedElement.textDecoration === 'underline' ? 'none' : 'underline' 
-                      })}
-                    >
-                      <Underline className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Text Alignment */}
-                <div>
-                  <Label className="text-xs">Text Alignment</Label>
-                  <div className="flex gap-1 mt-1">
-                    <Button
-                      variant={selectedElement.textAlign === 'left' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => onUpdateElement({ textAlign: 'left' })}
-                    >
-                      <AlignLeft className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant={selectedElement.textAlign === 'center' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => onUpdateElement({ textAlign: 'center' })}
-                    >
-                      <AlignCenter className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant={selectedElement.textAlign === 'right' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => onUpdateElement({ textAlign: 'right' })}
-                    >
-                      <AlignRight className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant={selectedElement.textAlign === 'justify' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => onUpdateElement({ textAlign: 'justify' })}
-                    >
-                      <AlignJustify className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Image-specific properties */}
-            {selectedElement.type === 'image' && (
-              <div>
-                <Label htmlFor="imageUrl" className="text-xs">Image URL</Label>
-                <Input
-                  id="imageUrl"
-                  value={selectedElement.imageUrl || ''}
-                  onChange={(e) => onUpdateElement({ imageUrl: e.target.value })}
-                  placeholder="Enter image URL"
-                  className="h-8"
-                />
+                <Button
+                  onClick={onDeleteElement}
+                  variant="destructive"
+                  size="sm"
+                  className="w-full"
+                >
+                  Delete Element
+                </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-    </div>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 };

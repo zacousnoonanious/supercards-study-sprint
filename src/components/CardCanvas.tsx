@@ -35,6 +35,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const [showPopupFor, setShowPopupFor] = useState<string | null>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [snapToGrid, setSnapToGrid] = useState(false);
+  const [textCursorPosition, setTextCursorPosition] = useState(0);
 
   const gridSize = 20;
 
@@ -42,12 +43,43 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     return snapToGrid ? Math.round(value / gridSize) * gridSize : value;
   };
 
-  // Handle delete key press
+  // Handle keyboard shortcuts and delete key press
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Delete key
       if (event.key === 'Delete' && selectedElement) {
         onDeleteElement(selectedElement);
         setShowPopupFor(null);
+        return;
+      }
+
+      // Keyboard shortcuts (only when not editing text)
+      if (!editingElement && (event.ctrlKey || event.metaKey)) {
+        switch (event.key.toLowerCase()) {
+          case 'a':
+            event.preventDefault();
+            // Select all elements (could implement multi-select in future)
+            break;
+          case 'o':
+            event.preventDefault();
+            autoArrangeElements();
+            break;
+          case 't':
+            event.preventDefault();
+            // Add text element shortcut
+            window.dispatchEvent(new CustomEvent('addElement', { detail: 'text' }));
+            break;
+          case 'i':
+            event.preventDefault();
+            // Add image element shortcut
+            window.dispatchEvent(new CustomEvent('addElement', { detail: 'image' }));
+            break;
+          case 'u':
+            event.preventDefault();
+            // Add audio element shortcut
+            window.dispatchEvent(new CustomEvent('addElement', { detail: 'audio' }));
+            break;
+        }
       }
     };
 
@@ -55,7 +87,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedElement, onDeleteElement]);
+  }, [selectedElement, onDeleteElement, editingElement]);
 
   useEffect(() => {
     const handleDeleteElement = (event: CustomEvent) => {
@@ -70,20 +102,21 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     };
   }, [onDeleteElement]);
 
-  // Calculate optimal popup position to keep it visible within canvas bounds
+  // Improved popup position calculation
   const calculatePopupPosition = (element: CanvasElement) => {
     if (!canvasRef.current) return { x: element.x + element.width, y: element.y };
 
     const canvas = canvasRef.current;
-    const canvasWidth = canvas.offsetWidth;
-    const canvasHeight = canvas.offsetHeight;
+    const canvasRect = canvas.getBoundingClientRect();
+    const canvasWidth = canvasRect.width;
+    const canvasHeight = canvasRect.height;
     const popupWidth = 250;
-    const popupHeight = 250; // Reduced height since we're removing text content field
+    const popupHeight = 300;
 
     let x = element.x + element.width + 10;
     let y = element.y;
 
-    // Constrain to canvas boundaries with improved bottom edge handling
+    // Keep popup within canvas bounds
     if (x + popupWidth > canvasWidth) {
       x = Math.max(10, element.x - popupWidth - 10);
     }
@@ -92,10 +125,12 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       y = Math.max(10, canvasHeight - popupHeight - 10);
     }
 
+    // Ensure popup doesn't go above canvas
     if (y < 10) {
       y = 10;
     }
 
+    // Final check to ensure popup is fully visible
     if (x < 10) {
       x = 10;
     }
@@ -205,15 +240,18 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     }
   };
 
-  const handleTextDoubleClick = (elementId: string) => {
-    setEditingElement(elementId);
-  };
-
   const handleTextClick = (e: React.MouseEvent, elementId: string) => {
     e.stopPropagation();
     
     if (e.detail === 2) {
       setEditingElement(elementId);
+      // Set cursor position based on click location
+      const rect = (e.target as HTMLElement).getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const text = elements.find(el => el.id === elementId)?.content || '';
+      const charWidth = 8; // Approximate character width
+      const position = Math.min(Math.floor(x / charWidth), text.length);
+      setTextCursorPosition(position);
     }
   };
 
@@ -272,7 +310,9 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         return <DeckEmbedRenderer element={element} />;
       case 'audio':
         return (
-          <div className="w-full h-full flex items-center justify-center p-2 bg-white border border-gray-300 rounded">
+          <div className={`w-full h-full flex items-center justify-center p-2 rounded border ${
+            theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+          }`}>
             <audio controls className="w-full">
               <source src={element.audioUrl} type="audio/mpeg" />
               Your browser does not support audio playback.
@@ -282,8 +322,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       case 'text':
         return (
           <div
-            className={`w-full h-full flex items-center justify-center p-2 border border-gray-300 rounded overflow-hidden cursor-text ${
-              theme === 'dark' ? 'bg-gray-800 text-white border-gray-600' : 'bg-white'
+            className={`w-full h-full flex items-center justify-center p-2 border rounded overflow-hidden cursor-text ${
+              theme === 'dark' ? 'bg-gray-800 text-white border-gray-600' : 'bg-white border-gray-300'
             }`}
             style={getTextStyle(element)}
             onClick={(e) => handleTextClick(e, element.id)}
@@ -297,12 +337,15 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
                 className={`w-full h-full bg-transparent border-none outline-none resize-none ${
                   theme === 'dark' ? 'text-white' : 'text-black'
                 }`}
-                style={getTextStyle(element)}
+                style={{
+                  ...getTextStyle(element),
+                  whiteSpace: 'pre-wrap',
+                }}
                 autoFocus
               />
             ) : (
               <span 
-                className="w-full h-full flex items-center justify-center whitespace-pre-wrap"
+                className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words"
                 style={{ textAlign: element.textAlign || 'center' }}
               >
                 {element.content}
@@ -315,7 +358,9 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           <img
             src={element.imageUrl}
             alt="Element"
-            className="w-full h-full object-cover border border-gray-300 rounded"
+            className={`w-full h-full object-cover rounded border ${
+              theme === 'dark' ? 'border-gray-600' : 'border-gray-300'
+            }`}
             draggable={false}
           />
         );

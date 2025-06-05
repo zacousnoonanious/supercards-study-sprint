@@ -5,6 +5,7 @@ import { ElementToolbar } from './ElementToolbar';
 import { CardCanvas } from './CardCanvas';
 import { CardNavigation } from './CardNavigation';
 import { EditorHeader } from './EditorHeader';
+import { KeyboardShortcutsTooltip } from './KeyboardShortcutsTooltip';
 import { useCardEditor } from '@/hooks/useCardEditor';
 
 export const CardEditor: React.FC = () => {
@@ -23,6 +24,7 @@ export const CardEditor: React.FC = () => {
     deleteElement,
     navigateCard,
     createNewCard,
+    createNewCardWithLayout,
   } = useCardEditor();
 
   console.log('CardEditor render - loading:', loading, 'set:', set, 'cards:', cards.length);
@@ -57,6 +59,7 @@ export const CardEditor: React.FC = () => {
                 onUpdateElement={() => {}}
                 onDeleteElement={() => {}}
                 onCreateNewCard={createNewCard}
+                onCreateNewCardWithLayout={createNewCardWithLayout}
               />
             </div>
             <div className="lg:col-span-3 order-1 lg:order-2 flex items-center justify-center min-h-[300px]">
@@ -90,6 +93,7 @@ export const CardEditor: React.FC = () => {
                 onUpdateElement={(updates) => selectedElement && updateElement(selectedElement, updates)}
                 onDeleteElement={() => selectedElement && deleteElement(selectedElement)}
                 onCreateNewCard={createNewCard}
+                onCreateNewCardWithLayout={createNewCardWithLayout}
               />
             </div>
           </div>
@@ -98,13 +102,16 @@ export const CardEditor: React.FC = () => {
           <div className="lg:col-span-3 order-1 lg:order-2">
             <Card className="mb-4">
               <CardContent className="p-3 sm:p-4">
-                <CardNavigation
-                  currentIndex={currentCardIndex}
-                  totalCards={cards.length}
-                  onNavigate={navigateCard}
-                  currentSide={currentSide}
-                  onSideChange={setCurrentSide}
-                />
+                <div className="flex justify-between items-center mb-4">
+                  <CardNavigation
+                    currentIndex={currentCardIndex}
+                    totalCards={cards.length}
+                    onNavigate={navigateCard}
+                    currentSide={currentSide}
+                    onSideChange={setCurrentSide}
+                  />
+                  <KeyboardShortcutsTooltip />
+                </div>
 
                 <div className="overflow-auto">
                   <CardCanvas

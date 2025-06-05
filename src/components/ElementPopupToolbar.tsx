@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Trash2, Plus, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -324,7 +325,23 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
         <Input
           value={element.audioUrl || ''}
           onChange={(e) => onUpdate({ audioUrl: e.target.value })}
-          placeholder="Enter audio URL or upload file"
+          placeholder="Enter audio URL"
+          className="h-8 text-xs"
+        />
+      </div>
+      
+      <div>
+        <Label className="text-xs font-medium">Upload Audio</Label>
+        <Input
+          type="file"
+          accept="audio/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              const url = URL.createObjectURL(file);
+              onUpdate({ audioUrl: url });
+            }
+          }}
           className="h-8 text-xs"
         />
       </div>

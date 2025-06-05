@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,6 +34,19 @@ export const useCardEditor = () => {
       }
     }
   }, [searchParams, cards.length]);
+
+  // Listen for keyboard shortcut events
+  useEffect(() => {
+    const handleAddElement = (event: CustomEvent) => {
+      const elementType = event.detail;
+      addElement(elementType);
+    };
+
+    window.addEventListener('addElement', handleAddElement as EventListener);
+    return () => {
+      window.removeEventListener('addElement', handleAddElement as EventListener);
+    };
+  }, []);
 
   const fetchSetAndCards = async () => {
     try {
@@ -177,6 +189,66 @@ export const useCardEditor = () => {
     }
   };
 
+  const createNewCardWithLayout = async () => {
+    if (!setId || cards.length === 0) {
+      createNewCard();
+      return;
+    }
+
+    console.log('Creating new card with current layout for setId:', setId);
+
+    const currentCard = cards[currentCardIndex];
+    
+    // Copy elements from current card with new IDs
+    const copyElementsWithNewIds = (elements: CanvasElement[]): CanvasElement[] => {
+      return elements.map(element => ({
+        ...element,
+        id: `${element.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        content: element.type === 'text' ? 'New text' : element.content,
+      }));
+    };
+
+    const newFrontElements = copyElementsWithNewIds(currentCard.front_elements);
+    const newBackElements = copyElementsWithNewIds(currentCard.back_elements);
+
+    try {
+      const { data: newCard, error } = await supabase
+        .from('flashcards')
+        .insert({
+          set_id: setId,
+          question: 'New Card',
+          answer: 'Answer',
+          front_elements: newFrontElements as any,
+          back_elements: newBackElements as any
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const formattedCard: Flashcard = {
+        ...newCard,
+        front_elements: newFrontElements,
+        back_elements: newBackElements
+      };
+
+      setCards([...cards, formattedCard]);
+      setCurrentCardIndex(cards.length);
+      
+      toast({
+        title: "Success",
+        description: "New card created with current layout.",
+      });
+    } catch (error) {
+      console.error('Error creating card with layout:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create new card with layout.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const saveCard = async () => {
     if (!cards[currentCardIndex]) return;
     
@@ -208,7 +280,7 @@ export const useCardEditor = () => {
     }
   };
 
-  const addElement = (type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed') => {
+  const addElement = (type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed' | 'audio') => {
     console.log('Adding element of type:', type);
     
     const getElementDefaults = (elementType: typeof type): CanvasElement => {
@@ -290,8 +362,18 @@ export const useCardEditor = () => {
             deckId: '',
             deckTitle: '',
           };
+        case 'audio':
+          return {
+            ...baseDefaults,
+            type: 'audio' as const,
+            x: 50,
+            y: 50,
+            width: 300,
+            height: 100,
+            audioUrl: '',
+            autoplay: false,
+          };
         default:
-          // This should never happen, but TypeScript requires it
           return {
             ...baseDefaults,
             type: 'text' as const,
@@ -378,5 +460,6 @@ export const useCardEditor = () => {
     deleteElement,
     navigateCard,
     createNewCard,
+    createNewCardWithLayout,
   };
 };
