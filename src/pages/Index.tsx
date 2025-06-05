@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,26 +21,21 @@ const Index = () => {
   }, []);
 
   const flashcardPool = [
-    { front: 'What is React?', back: 'A JavaScript library for building user interfaces' },
-    { front: 'CSS Flexbox', back: 'A layout method for arranging items in rows or columns' },
-    { front: 'HTTP Status 404', back: 'Not Found - The requested resource could not be found' },
-    { front: 'JavaScript const', back: 'Declares a block-scoped constant variable' },
-    { front: 'Git commit', back: 'Records changes to the repository' },
-    { front: 'Machine Learning', back: 'AI technique that enables computers to learn from data' },
-    { front: 'Photosynthesis', back: 'Process plants use to convert sunlight into energy' },
-    { front: 'DNA', back: 'Deoxyribonucleic acid - carries genetic information' },
-    { front: 'Newton\'s First Law', back: 'An object at rest stays at rest unless acted upon by force' },
-    { front: 'Mitochondria', back: 'The powerhouse of the cell' },
-    { front: 'Supply & Demand', back: 'Economic principle of price determination' },
-    { front: 'World War II', back: 'Global conflict from 1939-1945' },
-    { front: 'Pythagorean Theorem', back: 'a² + b² = c² for right triangles' },
-    { front: 'Spanish: Hola', back: 'English: Hello' },
-    { front: 'Quantum Physics', back: 'Study of matter and energy at atomic scale' },
-    { front: 'Marketing Mix', back: 'Product, Price, Place, Promotion (4 Ps)' },
-    { front: 'Cellular Respiration', back: 'Process cells use to break down glucose for energy' },
-    { front: 'French Revolution', back: 'Political revolution in France (1789-1799)' },
-    { front: 'Binary Code', back: 'Computer language using only 0s and 1s' },
-    { front: 'Ecosystem', back: 'Community of living organisms and their environment' }
+    { front: 'Caterpillar', back: 'A larval stage of a butterfly or moth, characterized by a segmented body and multiple legs.' },
+    { front: 'James Joyce', back: 'An Irish novelist and poet best known for groundbreaking works like Ulysses and Finnegans Wake.' },
+    { front: 'Quasar', back: 'An extremely bright and distant active galactic nucleus powered by a supermassive black hole.' },
+    { front: 'Photosynthesis', back: 'The process by which green plants and some bacteria convert sunlight into chemical energy.' },
+    { front: 'Kafkaesque', back: 'Describing situations that are nightmarishly complex, bizarre, or illogical, inspired by Franz Kafka\'s writings.' },
+    { front: 'Mitochondria', back: 'Organelles within eukaryotic cells responsible for producing energy (ATP) through cellular respiration.' },
+    { front: 'Marie Curie', back: 'A physicist and chemist who pioneered research on radioactivity; first woman to win a Nobel Prize.' },
+    { front: 'Blockchain', back: 'A decentralized digital ledger that records transactions across many computers in a way that prevents alteration.' },
+    { front: 'Saffron', back: 'A spice derived from the stigma of the Crocus sativus flower, prized for its color, flavor, and high cost.' },
+    { front: 'Hammurabi', back: 'An ancient Babylonian king famous for creating one of the world\'s earliest sets of laws (the Code of Hammurabi).' },
+    { front: 'Hologram', back: 'A three-dimensional image formed by the interference of light beams from a laser or other coherent light source.' },
+    { front: 'Viking', back: 'Norse seafarers from Scandinavia (8th–11th centuries) known for exploration, trade, and raiding across Europe.' },
+    { front: 'Entropy', back: 'A measure of disorder or randomness in a system; in thermodynamics, it indicates energy dispersal.' },
+    { front: 'Rosetta Stone', back: 'An ancient Egyptian granodiorite stele inscribed with a decree in three scripts, enabling the decipherment of hieroglyphs.' },
+    { front: 'Penicillin', back: 'The first true antibiotic discovered by Alexander Fleming, derived from the mold Penicillium, which kills bacteria.' }
   ];
 
   const selectedCards = flashcardPool.slice(0, 8);
