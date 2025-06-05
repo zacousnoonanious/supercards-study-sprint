@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Plus, BookOpen, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface FlashcardSet {
   id: string;
@@ -99,6 +100,7 @@ const Dashboard = () => {
             <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">{t('welcome')}, {user?.email}</span>
+              <ThemeToggle />
               <Button variant="outline" onClick={() => navigate('/profile')}>
                 {t('nav.profile')}
               </Button>
