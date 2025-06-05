@@ -5,10 +5,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Eye, EyeOff, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { StudyCardRenderer } from '@/components/StudyCardRenderer';
 import { Flashcard, FlashcardSet, CanvasElement } from '@/types/flashcard';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const StudyMode = () => {
   const { setId } = useParams();
@@ -21,6 +23,8 @@ const StudyMode = () => {
   const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0 });
   const [loading, setLoading] = useState(true);
   const [studyComplete, setStudyComplete] = useState(false);
+  const [showPanelView, setShowPanelView] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -229,12 +233,22 @@ const StudyMode = () => {
                 </p>
               </div>
             </div>
-            <div className="text-xs sm:text-sm text-gray-600 text-right flex-shrink-0">
-              <div className="hidden sm:block">
-                Correct: {sessionStats.correct} | Incorrect: {sessionStats.incorrect}
-              </div>
-              <div className="sm:hidden">
-                {sessionStats.correct}/{sessionStats.incorrect}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSettings(!showSettings)}
+                className="flex-shrink-0"
+              >
+                <Settings className="w-4 h-4" />
+              </Button>
+              <div className="text-xs sm:text-sm text-gray-600 text-right flex-shrink-0">
+                <div className="hidden sm:block">
+                  Correct: {sessionStats.correct} | Incorrect: {sessionStats.incorrect}
+                </div>
+                <div className="sm:hidden">
+                  {sessionStats.correct}/{sessionStats.incorrect}
+                </div>
               </div>
             </div>
           </div>
@@ -248,44 +262,128 @@ const StudyMode = () => {
         />
       </div>
 
+      {showSettings && (
+        <div className="bg-white border-b px-4 py-3">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="panel-view"
+                checked={showPanelView}
+                onCheckedChange={setShowPanelView}
+              />
+              <Label htmlFor="panel-view" className="text-sm">
+                Show answer as panel below (instead of card flip)
+              </Label>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="max-w-4xl mx-auto py-4 sm:py-8 px-4">
         <div className="space-y-4 sm:space-y-6">
-          {/* Front Side */}
-          <div>
-            <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-4 text-center">Question</h3>
-            <StudyCardRenderer elements={currentCard.front_elements} className="mx-auto max-w-full sm:max-w-2xl" />
-          </div>
-          
-          {currentCard.hint && (
-            <div className="text-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowHint(!showHint)}
-                className="text-indigo-600"
-              >
-                {showHint ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                {showHint ? 'Hide Hint' : 'Show Hint'}
-              </Button>
-              {showHint && (
-                <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-xs sm:text-sm max-w-2xl mx-auto">
-                  <strong>Hint:</strong> {currentCard.hint}
+          {showPanelView ? (
+            // Panel View (Original behavior)
+            <>
+              <div>
+                <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-4 text-center">Question</h3>
+                <StudyCardRenderer elements={currentCard.front_elements} className="mx-auto max-w-full sm:max-w-2xl" />
+              </div>
+              
+              {currentCard.hint && (
+                <div className="text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowHint(!showHint)}
+                    className="text-indigo-600"
+                  >
+                    {showHint ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                    {showHint ? 'Hide Hint' : 'Show Hint'}
+                  </Button>
+                  {showHint && (
+                    <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-xs sm:text-sm max-w-2xl mx-auto">
+                      <strong>Hint:</strong> {currentCard.hint}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
 
-          <div className="text-center">
-            {!showAnswer ? (
-              <Button onClick={() => setShowAnswer(true)} size="lg" className="w-full sm:w-auto">
-                Reveal Answer
-              </Button>
-            ) : (
-              <div className="space-y-4 sm:space-y-6">
-                <div>
-                  <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-4 text-center">Answer</h3>
-                  <StudyCardRenderer elements={currentCard.back_elements} className="mx-auto max-w-full sm:max-w-2xl" />
+              <div className="text-center">
+                {!showAnswer ? (
+                  <Button onClick={() => setShowAnswer(true)} size="lg" className="w-full sm:w-auto">
+                    Reveal Answer
+                  </Button>
+                ) : (
+                  <div className="space-y-4 sm:space-y-6">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-4 text-center">Answer</h3>
+                      <StudyCardRenderer elements={currentCard.back_elements} className="mx-auto max-w-full sm:max-w-2xl" />
+                    </div>
+                    <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 justify-center">
+                      <Button
+                        onClick={() => handleAnswer(false)}
+                        variant="outline"
+                        className="flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50 flex-1 sm:flex-none"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Incorrect
+                      </Button>
+                      <Button
+                        onClick={() => handleAnswer(true)}
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Correct
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            // Card Flip View (New behavior)
+            <div className="text-center space-y-6">
+              <div className="relative mx-auto max-w-full sm:max-w-2xl" style={{ perspective: '1000px' }}>
+                <div 
+                  className={`relative w-full transition-transform duration-700 preserve-3d ${showAnswer ? 'rotate-y-180' : ''}`}
+                  style={{ transformStyle: 'preserve-3d' }}
+                >
+                  {/* Front Side */}
+                  <div className="absolute w-full backface-hidden">
+                    <StudyCardRenderer elements={currentCard.front_elements} className="w-full" />
+                  </div>
+                  
+                  {/* Back Side */}
+                  <div className="absolute w-full backface-hidden rotate-y-180">
+                    <StudyCardRenderer elements={currentCard.back_elements} className="w-full" />
+                  </div>
                 </div>
+              </div>
+
+              {currentCard.hint && (
+                <div className="text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowHint(!showHint)}
+                    className="text-indigo-600"
+                  >
+                    {showHint ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                    {showHint ? 'Hide Hint' : 'Show Hint'}
+                  </Button>
+                  {showHint && (
+                    <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-xs sm:text-sm max-w-2xl mx-auto">
+                      <strong>Hint:</strong> {currentCard.hint}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!showAnswer ? (
+                <Button onClick={() => setShowAnswer(true)} size="lg" className="w-full sm:w-auto">
+                  Reveal Answer
+                </Button>
+              ) : (
                 <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 justify-center">
                   <Button
                     onClick={() => handleAnswer(false)}
@@ -303,11 +401,23 @@ const StudyMode = () => {
                     Correct
                   </Button>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
+
+      <style jsx>{`
+        .preserve-3d {
+          transform-style: preserve-3d;
+        }
+        .backface-hidden {
+          backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+          transform: rotateY(180deg);
+        }
+      `}</style>
     </div>
   );
 };
