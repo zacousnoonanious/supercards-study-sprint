@@ -63,6 +63,15 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
               Image
             </Button>
             <Button
+              onClick={() => onAddElement('drawing')}
+              variant="outline"
+              size="sm"
+              className={`flex items-center gap-2 ${isDarkTheme ? 'border-gray-600 text-gray-200 hover:bg-gray-700' : ''}`}
+            >
+              <Type className="w-4 h-4" />
+              Draw
+            </Button>
+            <Button
               onClick={() => onAddElement('multiple-choice')}
               variant="outline"
               size="sm"

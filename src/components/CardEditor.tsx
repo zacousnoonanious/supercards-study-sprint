@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ElementToolbar } from './ElementToolbar';
@@ -21,6 +20,7 @@ export const CardEditor: React.FC = () => {
     saveCard,
     addElement,
     updateElement,
+    updateCard,
     deleteElement,
     navigateCard,
     createNewCard,
@@ -78,6 +78,21 @@ export const CardEditor: React.FC = () => {
   const currentElements = currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements;
   const selectedElementData = selectedElement ? currentElements.find(el => el.id === selectedElement) : null;
 
+  // Determine canvas size based on card type
+  const getCanvasStyle = () => {
+    const cardType = currentCard?.card_type || 'standard';
+    switch (cardType) {
+      case 'informational':
+        return { aspectRatio: '16/9', minHeight: '600px' };
+      case 'quiz-only':
+        return { aspectRatio: '4/3', minHeight: '500px' };
+      case 'timed-challenge':
+        return { aspectRatio: '3/2', minHeight: '400px' };
+      default:
+        return { aspectRatio: '3/2', minHeight: '400px' };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <EditorHeader set={set} onSave={saveCard} />
@@ -86,7 +101,17 @@ export const CardEditor: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Toolbar */}
           <div className="lg:col-span-1 order-2 lg:order-1">
-            <div className="sticky top-4">
+            <div className="sticky top-4 space-y-4">
+              {/* Card Type Selector */}
+              <Card>
+                <CardContent className="p-4">
+                  <CardTypeSelector
+                    card={currentCard}
+                    onUpdateCard={(updates) => updateCard(currentCard.id, updates)}
+                  />
+                </CardContent>
+              </Card>
+
               <ElementToolbar
                 onAddElement={addElement}
                 selectedElement={selectedElementData}
@@ -102,16 +127,15 @@ export const CardEditor: React.FC = () => {
           <div className="lg:col-span-3 order-1 lg:order-2">
             <Card className="mb-4">
               <CardContent className="p-3 sm:p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <CardNavigation
-                    currentIndex={currentCardIndex}
-                    totalCards={cards.length}
-                    onNavigate={navigateCard}
-                    currentSide={currentSide}
-                    onSideChange={setCurrentSide}
-                  />
-                  <KeyboardShortcutsTooltip />
-                </div>
+                <CardNavigation
+                  currentIndex={currentCardIndex}
+                  totalCards={cards.length}
+                  onNavigate={navigateCard}
+                  currentSide={currentSide}
+                  onSideChange={setCurrentSide}
+                  onCreateNewCard={createNewCard}
+                  cardType={currentCard?.card_type}
+                />
 
                 <div className="overflow-auto">
                   <CardCanvas
@@ -121,6 +145,8 @@ export const CardEditor: React.FC = () => {
                     onUpdateElement={updateElement}
                     onDeleteElement={deleteElement}
                     cardSide={currentSide}
+                    cardType={currentCard?.card_type || 'standard'}
+                    style={getCanvasStyle()}
                   />
                 </div>
               </CardContent>
