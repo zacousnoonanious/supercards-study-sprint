@@ -130,7 +130,7 @@ const Decks = () => {
                   <CardTitle className="flex items-center justify-between">
                     <span className="truncate">{set.title}</span>
                     <div className="flex space-x-1">
-                      <Button variant="ghost" size="sm" onClick={() => navigate(`/edit-set/${set.id}`)}>
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/edit-cards/${set.id}`)}>
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => deleteSet(set.id)}>
