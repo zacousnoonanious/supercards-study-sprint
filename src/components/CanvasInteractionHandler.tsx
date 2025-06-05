@@ -21,7 +21,8 @@ export const CanvasInteractionHandler: React.FC<CanvasInteractionHandlerProps> =
   onMouseDown,
   isDrawingMode,
 }) => {
-  if (!selectedElement || !dragState) return null;
+  // Show resize handles when an element is selected (not just during dragging)
+  if (!selectedElement || isDrawingMode) return null;
 
   return (
     <>
