@@ -18,7 +18,16 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
   });
 
   return (
-    <div className={`relative bg-card border border-border rounded-lg overflow-hidden shadow-sm ${className}`} style={{ width: '100%', height: '400px', maxWidth: '600px' }}>
+    <div 
+      className={`relative bg-card border border-border rounded-lg overflow-hidden shadow-sm ${className}`} 
+      style={{ 
+        width: '100%', 
+        height: '300px',
+        minHeight: '300px',
+        maxWidth: '500px',
+        aspectRatio: '4/3'
+      }}
+    >
       {elements && elements.length > 0 ? (
         elements.map((element) => (
           <div
@@ -42,7 +51,7 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ elements, 
                   wordWrap: 'break-word',
                   overflow: 'visible',
                   whiteSpace: 'normal',
-                  fontSize: `clamp(${Math.max(10, (element.fontSize || 16) * 0.6)}px, ${element.fontSize || 16}px, ${(element.fontSize || 16) * 1.2}px)`,
+                  fontSize: `clamp(12px, ${element.fontSize || 16}px, ${(element.fontSize || 16) * 1.5}px)`,
                 }}
               >
                 <span className="w-full text-center leading-normal break-words">{element.content}</span>

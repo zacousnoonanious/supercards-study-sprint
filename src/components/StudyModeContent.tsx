@@ -28,8 +28,8 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
 }) => {
   if (showPanelView) {
     return (
-      <div className="w-full max-w-4xl mx-auto space-y-6">
-        <div>
+      <div className="w-full max-w-5xl mx-auto space-y-8 p-4">
+        <div className="space-y-4">
           <h3 className="text-base sm:text-lg font-medium text-foreground mb-4 text-center">Question</h3>
           <div className="flex justify-center">
             <StudyCardRenderer elements={currentCard.front_elements} />
@@ -61,8 +61,8 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
               Reveal Answer
             </Button>
           ) : (
-            <div className="space-y-4 sm:space-y-6">
-              <div>
+            <div className="space-y-6">
+              <div className="space-y-4">
                 <h3 className="text-base sm:text-lg font-medium text-foreground mb-4 text-center">Answer</h3>
                 <div className="flex justify-center">
                   <StudyCardRenderer elements={currentCard.back_elements} />
@@ -93,7 +93,7 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto text-center space-y-6">
+    <div className="w-full max-w-5xl mx-auto text-center space-y-8 p-4">
       <div className="flex justify-center" style={{ perspective: '1000px' }}>
         <div 
           className={`relative transition-transform duration-700 preserve-3d ${showAnswer ? 'rotate-y-180' : ''}`}
