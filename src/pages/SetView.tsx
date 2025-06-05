@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Navigation } from '@/components/Navigation';
 import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
+import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
 
 const SetView = () => {
   const { setId } = useParams();
@@ -17,6 +18,7 @@ const SetView = () => {
   const [set, setSet] = useState<FlashcardSet | null>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCardCreator, setShowCardCreator] = useState(false);
 
   useEffect(() => {
     if (!user || !setId) return;
@@ -67,7 +69,12 @@ const SetView = () => {
   };
 
   const handleAddCard = () => {
-    navigate(`/add-card/${setId}`);
+    setShowCardCreator(true);
+  };
+
+  const handleCardCreated = () => {
+    fetchSetAndCards();
+    setShowCardCreator(false);
   };
 
   const handleEditSet = () => {
@@ -194,6 +201,17 @@ const SetView = () => {
           </div>
         </div>
 
+        {/* Interactive Card Creator Modal */}
+        {showCardCreator && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <InteractiveCardCreator
+              setId={setId!}
+              onCardCreated={handleCardCreated}
+              onClose={() => setShowCardCreator(false)}
+            />
+          </div>
+        )}
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* AI Flashcard Generator */}
           <div className="lg:col-span-1">
@@ -225,7 +243,19 @@ const SetView = () => {
                   >
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-sm text-gray-500">Card {index + 1}</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-500">Card {index + 1}</span>
+                          {card.card_type && card.card_type !== 'standard' && (
+                            <span className="text-xs text-blue-600 font-medium capitalize">
+                              {card.card_type.replace('-', ' ')}
+                            </span>
+                          )}
+                          {card.interactive_type && (
+                            <span className="text-xs text-green-600 font-medium capitalize">
+                              {card.interactive_type.replace('-', ' ')}
+                            </span>
+                          )}
+                        </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger 
                             asChild 
@@ -262,10 +292,12 @@ const SetView = () => {
                           <div className="text-xs text-gray-400 mb-1">Front:</div>
                           <div className="text-sm line-clamp-2">{card.question}</div>
                         </div>
-                        <div>
-                          <div className="text-xs text-gray-400 mb-1">Back:</div>
-                          <div className="text-sm text-gray-600 line-clamp-2">{card.answer}</div>
-                        </div>
+                        {card.card_type !== 'no-back' && (
+                          <div>
+                            <div className="text-xs text-gray-400 mb-1">Back:</div>
+                            <div className="text-sm text-gray-600 line-clamp-2">{card.answer}</div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

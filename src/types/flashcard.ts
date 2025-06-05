@@ -28,6 +28,14 @@ export interface Flashcard {
   updated_at: string;
   set_id: string;
   last_reviewed_at: string | null;
+  card_type?: 'standard' | 'informational' | 'no-back' | 'password-protected';
+  interactive_type?: 'multiple-choice' | 'true-false' | 'fill-blank' | null;
+  interactive_data?: any;
+  password?: string;
+  countdown_timer?: number;
+  is_unskippable?: boolean;
+  shuffle_enabled?: boolean;
+  reverse_mode?: boolean;
 }
 
 export interface FlashcardSet {
