@@ -1,46 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { FlashcardSet, Flashcard } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Trash2, Play, Palette } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { UserDropdown } from '@/components/UserDropdown';
+import { Play, Edit, Plus, MoreVertical, Trash2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Navigation } from '@/components/Navigation';
-
-interface Flashcard {
-  id: string;
-  question: string;
-  answer: string;
-  hint: string;
-  created_at: string;
-}
-
-interface FlashcardSet {
-  id: string;
-  title: string;
-  description: string;
-}
+import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
 
 const SetView = () => {
   const { setId } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [set, setSet] = useState<FlashcardSet | null>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    if (setId) {
-      fetchSetAndCards();
-    }
-  }, [user, setId, navigate]);
+    if (!user || !setId) return;
+    fetchSetAndCards();
+  }, [user, setId]);
 
   const fetchSetAndCards = async () => {
     try {
@@ -52,6 +33,7 @@ const SetView = () => {
         .single();
 
       if (setError) throw setError;
+      
       setSet(setData);
 
       // Fetch cards
@@ -62,172 +44,228 @@ const SetView = () => {
         .order('created_at', { ascending: true });
 
       if (cardsError) throw cardsError;
+      
       setCards(cardsData || []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load flashcard set.",
-        variant: "destructive",
-      });
-      navigate('/dashboard');
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteCard = async (cardId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent card click when deleting
-    try {
-      const { error } = await supabase
-        .from('flashcards')
-        .delete()
-        .eq('id', cardId);
+  const handleStudy = () => {
+    navigate(`/study/${setId}`);
+  };
 
-      if (error) throw error;
-      
-      setCards(cards.filter(card => card.id !== cardId));
-      toast({
-        title: "Success",
-        description: "Flashcard deleted successfully.",
-      });
-    } catch (error) {
-      console.error('Error deleting card:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete flashcard.",
-        variant: "destructive",
-      });
+  const handleAddCard = () => {
+    navigate(`/add-card/${setId}`);
+  };
+
+  const handleEditSet = () => {
+    navigate(`/edit-set/${setId}`);
+  };
+
+  const handleVisualEditor = () => {
+    navigate(`/edit-cards/${setId}`);
+  };
+
+  const handleDeleteSet = async () => {
+    if (!setId) return;
+
+    if (window.confirm("Are you sure you want to delete this set? This action cannot be undone.")) {
+      try {
+        const { error } = await supabase
+          .from('flashcard_sets')
+          .delete()
+          .eq('id', setId);
+
+        if (error) throw error;
+
+        navigate('/dashboard');
+      } catch (error) {
+        console.error('Error deleting set:', error);
+      }
     }
   };
 
-  const handleCardClick = (cardIndex: number) => {
-    navigate(`/edit-cards/${setId}?card=${cardIndex}`);
+  const handleCardClick = (index: number) => {
+    navigate(`/edit-card/${cards[index].id}`);
   };
+
+  const handleDeleteCard = async (cardId: string) => {
+    if (!setId) return;
+
+    if (window.confirm("Are you sure you want to delete this card? This action cannot be undone.")) {
+      try {
+        const { error } = await supabase
+          .from('flashcards')
+          .delete()
+          .eq('id', cardId);
+
+        if (error) throw error;
+
+        fetchSetAndCards(); // Refresh cards after deletion
+      } catch (error) {
+        console.error('Error deleting card:', error);
+      }
+    }
+  };
+
+  const fetchCards = () => {
+    fetchSetAndCards();
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading...</div>
+        </div>
       </div>
     );
   }
 
   if (!set) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Deck not found</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Set not found</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/decks')}
-                className="mr-4"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Decks
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-indigo-600">{set.title}</h1>
-                {set.description && (
-                  <p className="text-sm text-gray-600">{set.description}</p>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Navigation />
-              <div className="flex space-x-2">
-                <Button
-                  onClick={() => navigate(`/edit-cards/${setId}`)}
-                >
-                  <Palette className="w-4 h-4 mr-2" />
-                  Visual Editor
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Navigation />
+      
+      <div className="container mx-auto px-4 py-8">
+        {/* Set Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{set.title}</h1>
+          {set.description && (
+            <p className="text-gray-600 mb-4">{set.description}</p>
+          )}
+          
+          <div className="flex flex-wrap gap-4">
+            <Button onClick={handleStudy} className="bg-green-600 hover:bg-green-700">
+              <Play className="mr-2 h-4 w-4" />
+              Study ({cards.length} cards)
+            </Button>
+            
+            <Button onClick={handleVisualEditor} variant="outline">
+              <Edit className="mr-2 h-4 w-4" />
+              Visual Editor
+            </Button>
+            
+            <Button onClick={handleAddCard} variant="outline">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Card
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
-                {cards.length > 0 && (
-                  <Button onClick={() => navigate(`/study/${setId}`)}>
-                    <Play className="w-4 h-4 mr-2" />
-                    Study
-                  </Button>
-                )}
-              </div>
-              <UserDropdown />
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleEditSet}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Set
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDeleteSet} className="text-red-600">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Set
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Flashcards ({cards.length})
-          </h2>
-          <Button onClick={() => navigate(`/edit-cards/${setId}`)}>
-            <Palette className="w-4 h-4 mr-2" />
-            Open Visual Editor
-          </Button>
-        </div>
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* AI Flashcard Generator */}
+          <div className="lg:col-span-1">
+            <AIFlashcardGenerator setId={setId!} onGenerated={fetchCards} />
+          </div>
 
-        {cards.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No flashcards yet</h3>
-              <p className="text-gray-600 mb-4">Use the Visual Editor to create your first flashcard!</p>
-              <Button onClick={() => navigate(`/edit-cards/${setId}`)}>
-                <Palette className="w-4 h-4 mr-2" />
-                Open Visual Editor
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {cards.map((card, index) => (
-              <Card 
-                key={card.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => handleCardClick(index)}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Question</span>
-                    <div className="flex space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => deleteCard(card.id, e)}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <p className="font-medium text-gray-900 mb-2">{card.question}</p>
+          {/* Cards Grid */}
+          <div className="lg:col-span-2">
+            {cards.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <div className="text-gray-500 mb-4">No flashcards yet</div>
+                  <div className="space-y-2">
+                    <Button onClick={handleAddCard} className="mr-2">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Your First Card
+                    </Button>
+                    <div className="text-sm text-gray-400">or use the AI generator</div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Answer:</p>
-                    <p className="text-gray-800">{card.answer}</p>
-                  </div>
-                  {card.hint && (
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Hint:</p>
-                      <p className="text-gray-700 text-sm">{card.hint}</p>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {cards.map((card, index) => (
+                  <Card 
+                    key={card.id} 
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => handleCardClick(index)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-sm text-gray-500">Card {index + 1}</span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger 
+                            asChild 
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              handleCardClick(index);
+                            }}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Card
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCard(card.id);
+                              }}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete Card
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div>
+                          <div className="text-xs text-gray-400 mb-1">Front:</div>
+                          <div className="text-sm line-clamp-2">{card.question}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-400 mb-1">Back:</div>
+                          <div className="text-sm text-gray-600 line-clamp-2">{card.answer}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </main>
+        </div>
+      </div>
     </div>
   );
 };
