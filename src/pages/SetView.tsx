@@ -49,8 +49,8 @@ const SetView = () => {
       // Type cast the data to match our Flashcard interface
       const typedCards: Flashcard[] = (cardsData || []).map(card => ({
         ...card,
-        front_elements: Array.isArray(card.front_elements) ? card.front_elements : [],
-        back_elements: Array.isArray(card.back_elements) ? card.back_elements : [],
+        front_elements: Array.isArray(card.front_elements) ? card.front_elements as CanvasElement[] : [],
+        back_elements: Array.isArray(card.back_elements) ? card.back_elements as CanvasElement[] : [],
         hint: card.hint || '',
         last_reviewed_at: card.last_reviewed_at || null
       }));
