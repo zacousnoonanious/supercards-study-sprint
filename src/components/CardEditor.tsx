@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CardCanvas } from './CardCanvas';
 import { EditorHeader } from './EditorHeader';
@@ -28,6 +28,43 @@ export const CardEditor: React.FC = () => {
     deleteCard,
   } = useCardEditor();
 
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Delete key to remove selected element
+      if (e.key === 'Delete' && selectedElement) {
+        e.preventDefault();
+        deleteElement(selectedElement);
+      }
+      
+      // Escape to deselect element
+      if (e.key === 'Escape' && selectedElement) {
+        e.preventDefault();
+        setSelectedElement(null);
+      }
+      
+      // Arrow keys for navigation
+      if (e.key === 'ArrowLeft' && e.ctrlKey) {
+        e.preventDefault();
+        navigateCard('prev');
+      }
+      
+      if (e.key === 'ArrowRight' && e.ctrlKey) {
+        e.preventDefault();
+        navigateCard('next');
+      }
+      
+      // Ctrl+S to save
+      if (e.key === 's' && e.ctrlKey) {
+        e.preventDefault();
+        saveCard();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedElement, deleteElement, setSelectedElement, navigateCard, saveCard]);
+
   console.log('CardEditor render - loading:', loading, 'set:', set, 'cards:', cards.length);
 
   if (loading) {
@@ -51,9 +88,9 @@ export const CardEditor: React.FC = () => {
     return (
       <div className="min-h-screen bg-background">
         <EditorHeader set={set} onSave={saveCard} />
-        <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-          <div className="relative">
-            <div className="flex items-center justify-center min-h-[600px]">
+        <main className="h-[calc(100vh-80px)] p-2">
+          <div className="relative h-full">
+            <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <h2 className="text-lg sm:text-xl font-semibold mb-4">No cards in this set</h2>
                 <p className="text-gray-600 text-sm sm:text-base">Create your first card to get started!</p>
@@ -105,25 +142,27 @@ export const CardEditor: React.FC = () => {
     <div className="min-h-screen bg-background">
       <EditorHeader set={set} onSave={saveCard} />
 
-      <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-        <div className="relative">
-          <Card className="mb-4">
-            <CardContent className="p-3 sm:p-4">
-              <div className="overflow-auto">
-                <CardCanvas
-                  elements={currentElements}
-                  selectedElement={selectedElement}
-                  onSelectElement={setSelectedElement}
-                  onUpdateElement={updateElement}
-                  onDeleteElement={deleteElement}
-                  cardSide={currentSide}
-                  style={getCanvasStyle()}
-                  cardType={currentCard?.card_type}
-                  onAddElement={addElement}
-                />
-              </div>
-            </CardContent>
-          </Card>
+      <main className="h-[calc(100vh-80px)] p-2">
+        <div className="relative h-full">
+          <div className="h-full flex items-center justify-center pt-12">
+            <CardCanvas
+              elements={currentElements}
+              selectedElement={selectedElement}
+              onSelectElement={setSelectedElement}
+              onUpdateElement={updateElement}
+              onDeleteElement={deleteElement}
+              cardSide={currentSide}
+              style={{
+                ...getCanvasStyle(),
+                maxWidth: '95%',
+                maxHeight: '85%',
+                width: 'auto',
+                height: 'auto'
+              }}
+              cardType={currentCard?.card_type}
+              onAddElement={addElement}
+            />
+          </div>
 
           {/* Overlay Toolbar */}
           <CanvasOverlayToolbar
@@ -148,7 +187,7 @@ export const CardEditor: React.FC = () => {
               element={selectedElementData}
               onUpdate={(updates) => selectedElement && updateElement(selectedElement, updates)}
               onDelete={() => selectedElement && deleteElement(selectedElement)}
-              position={{ x: 100, y: 100 }} // This will be positioned dynamically based on element
+              position={{ x: 100, y: 100 }}
             />
           )}
         </div>

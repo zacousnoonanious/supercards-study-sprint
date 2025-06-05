@@ -13,10 +13,12 @@ import {
   Layers,
   Plus,
   Copy,
-  FileText
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  Trash2
 } from 'lucide-react';
 import { CardTypeSelector } from './CardTypeSelector';
-import { CardNavigation } from './CardNavigation';
 import { Flashcard } from '@/types/flashcard';
 
 interface CanvasOverlayToolbarProps {
@@ -55,68 +57,131 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
     { type: 'image', icon: Image, label: 'Image' },
     { type: 'audio', icon: Volume2, label: 'Audio' },
     { type: 'drawing', icon: Pencil, label: 'Drawing' },
-    { type: 'multiple-choice', icon: CheckSquare, label: 'Multiple Choice' },
-    { type: 'true-false', icon: ToggleLeft, label: 'True/False' },
-    { type: 'fill-in-blank', icon: FileText, label: 'Fill in Blank' },
-    { type: 'youtube', icon: Youtube, label: 'YouTube' },
-    { type: 'deck-embed', icon: Layers, label: 'Embed Deck' },
+    { type: 'multiple-choice', icon: CheckSquare, label: 'MC' },
+    { type: 'true-false', icon: ToggleLeft, label: 'T/F' },
+    { type: 'fill-in-blank', icon: FileText, label: 'Fill' },
+    { type: 'youtube', icon: Youtube, label: 'Video' },
+    { type: 'deck-embed', icon: Layers, label: 'Embed' },
   ];
 
   return (
-    <div className="absolute top-4 left-4 right-4 z-40 pointer-events-none">
-      <div className="flex flex-col gap-4">
-        {/* Top toolbar with navigation and card type */}
-        <Card className="bg-white/90 backdrop-blur-sm border shadow-lg pointer-events-auto">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1">
-                <CardNavigation
-                  currentIndex={currentCardIndex}
-                  totalCards={totalCards}
-                  onNavigate={onNavigateCard}
-                  currentSide={currentSide}
-                  onSideChange={onSideChange}
-                  onCreateNewCard={onCreateNewCard}
-                  onCreateNewCardWithLayout={onCreateNewCardWithLayout}
-                  onDeleteCard={onDeleteCard}
-                  cardType={currentCard?.card_type}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <CardTypeSelector
-                  card={currentCard}
-                  onUpdateCard={(updates) => onUpdateCard(currentCard.id, updates)}
-                />
-                <Button onClick={onSave} size="sm">
-                  Save
+    <div className="absolute top-2 left-2 right-2 z-40 pointer-events-none">
+      <Card className="bg-white/95 backdrop-blur-sm border shadow-sm pointer-events-auto">
+        <CardContent className="p-2">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left section - Navigation */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onNavigateCard('prev')}
+                disabled={currentCardIndex === 0}
+                className="h-7 w-7 p-0"
+              >
+                <ChevronLeft className="w-3 h-3" />
+              </Button>
+              
+              <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded">
+                {currentCardIndex + 1}/{totalCards}
+              </span>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onNavigateCard('next')}
+                disabled={currentCardIndex === totalCards - 1}
+                className="h-7 w-7 p-0"
+              >
+                <ChevronRight className="w-3 h-3" />
+              </Button>
+
+              {/* Side toggle */}
+              <div className="flex bg-gray-100 rounded p-0.5">
+                <Button
+                  variant={currentSide === 'front' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => onSideChange('front')}
+                  className="h-6 px-2 text-xs"
+                >
+                  Front
+                </Button>
+                <Button
+                  variant={currentSide === 'back' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => onSideChange('back')}
+                  className="h-6 px-2 text-xs"
+                >
+                  Back
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Element toolbar */}
-        <Card className="bg-white/90 backdrop-blur-sm border shadow-lg pointer-events-auto">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-medium text-gray-600 mr-2">Add:</span>
+            {/* Center section - Add elements */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-600 mr-1">Add:</span>
               {elementTypes.map(({ type, icon: Icon, label }) => (
                 <Button
                   key={type}
                   variant="outline"
                   size="sm"
                   onClick={() => onAddElement(type)}
-                  className="h-8 px-2 text-xs"
-                  title={label}
+                  className="h-7 w-7 p-0"
+                  title={`Add ${label}`}
                 >
-                  <Icon className="w-3 h-3 mr-1" />
-                  {label}
+                  <Icon className="w-3 h-3" />
                 </Button>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+
+            {/* Right section - Card actions */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCreateNewCard}
+                className="h-7 px-2 text-xs"
+                title="New Card"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                New
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCreateNewCardWithLayout}
+                className="h-7 px-2 text-xs"
+                title="Duplicate Layout"
+              >
+                <Copy className="w-3 h-3 mr-1" />
+                Copy
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onDeleteCard}
+                className="h-7 px-2 text-xs text-red-600 hover:text-red-700"
+                title="Delete Card"
+              >
+                <Trash2 className="w-3 h-3 mr-1" />
+                Delete
+              </Button>
+
+              <div className="w-px h-6 bg-gray-300 mx-1" />
+
+              <CardTypeSelector
+                card={currentCard}
+                onUpdateCard={(updates) => onUpdateCard(currentCard.id, updates)}
+              />
+              
+              <Button onClick={onSave} size="sm" className="h-7 px-3 text-xs">
+                Save
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

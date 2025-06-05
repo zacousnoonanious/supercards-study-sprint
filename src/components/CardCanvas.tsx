@@ -211,11 +211,11 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     return (
       <div
         ref={canvasRef}
-        className={`relative border-2 border-dashed rounded-lg ${
+        className={`relative border-2 border-dashed rounded-lg shadow-lg ${
           theme === 'dark' ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
         }`}
         style={{ 
-          width: '100%', 
+          width: '800px', 
           height: '600px',
           minHeight: '600px',
           ...style 
@@ -223,7 +223,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       >
         <QuizOnlyLayout
           elements={elements}
-          onAddElement={handleQuizAddElement}
+          onAddElement={onAddElement || (() => {})}
           onUpdateElement={onUpdateElement}
           title={quizTitle}
           onTitleChange={onQuizTitleChange || (() => {})}
@@ -234,15 +234,16 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
   // For informational cards, make canvas taller to accommodate more content
   const canvasHeight = cardType === 'informational' ? '800px' : '533px';
+  const canvasWidth = '800px';
 
   return (
     <div
       ref={canvasRef}
-      className={`relative border-2 border-dashed overflow-hidden rounded-lg ${
+      className={`relative border-2 border-dashed overflow-hidden rounded-lg shadow-lg ${
         theme === 'dark' ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
       }`}
       style={{ 
-        width: '800px', 
+        width: canvasWidth, 
         height: canvasHeight,
         aspectRatio: cardType === 'informational' ? 'unset' : '3/2',
         ...style 
@@ -259,7 +260,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         snapToGrid={snapToGrid}
         gridSize={gridSize}
         onSnapToGridToggle={() => setSnapToGrid(!snapToGrid)}
-        onAutoArrange={handleAutoArrange}
+        onAutoArrange={() => {}}
       />
       
       {/* Render elements */}
@@ -300,16 +301,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           dragState={dragState}
           onMouseDown={handleMouseDown}
           isDrawingMode={false}
-        />
-      )}
-
-      {/* Popup Toolbar for selected element */}
-      {selectedElementData && (
-        <ElementPopupToolbar
-          element={selectedElementData}
-          onUpdate={(updates) => onUpdateElement(selectedElementData.id, updates)}
-          onDelete={() => onDeleteElement(selectedElementData.id)}
-          position={getElementPopupPosition(selectedElementData)}
         />
       )}
 
