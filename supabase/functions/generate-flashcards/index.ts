@@ -19,9 +19,12 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { prompt, style, setId, userId } = await req.json();
+    const { prompt, style, setId, userId, cardCount = 5 } = await req.json();
 
-    console.log('Generating flashcards with prompt:', prompt, 'style:', style);
+    console.log('Generating flashcards with prompt:', prompt, 'style:', style, 'cardCount:', cardCount);
+
+    // Validate cardCount
+    const validCardCount = Math.min(15, Math.max(1, cardCount));
 
     // Create the system prompt based on the selected style
     let systemPrompt = '';
@@ -55,7 +58,7 @@ serve(async (req) => {
             role: 'system', 
             content: `${systemPrompt}
 
-Generate exactly 5 flashcards about the given topic. Return the response as a valid JSON array with this exact structure:
+Generate exactly ${validCardCount} flashcards about the given topic. Return the response as a valid JSON array with this exact structure:
 [
   {
     "question": "Front side question/prompt",
@@ -65,7 +68,7 @@ Generate exactly 5 flashcards about the given topic. Return the response as a va
 
 Make sure each flashcard has a clear question on the front and a comprehensive answer on the back. The content should match the requested style (${style}).`
           },
-          { role: 'user', content: `Create flashcards about: ${prompt}` }
+          { role: 'user', content: `Create ${validCardCount} flashcards about: ${prompt}` }
         ],
         temperature: style === 'funny' || style === 'creative' ? 0.8 : 0.3,
       }),
@@ -153,6 +156,7 @@ Make sure each flashcard has a clear question on the front and a comprehensive a
       JSON.stringify({ 
         success: true, 
         message: `Generated ${flashcards.length} flashcards successfully`,
+        cardCount: flashcards.length,
         flashcards 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
