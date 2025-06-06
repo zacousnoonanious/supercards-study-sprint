@@ -20,6 +20,7 @@ interface LockableToolbarProps {
   onDeleteCard: () => Promise<boolean>;
   onSave: () => void;
   onAutoArrange?: (type: 'grid' | 'center' | 'justify' | 'stack') => void;
+  isBackSideDisabled?: boolean;
 }
 
 export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {

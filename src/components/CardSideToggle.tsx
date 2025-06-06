@@ -5,21 +5,25 @@ import { Button } from '@/components/ui/button';
 interface CardSideToggleProps {
   currentSide: 'front' | 'back';
   onSideChange: (side: 'front' | 'back') => void;
-  size?: 'sm' | 'default' | 'lg';
+  size?: 'sm' | 'md' | 'lg';
+  isBackDisabled?: boolean;
 }
 
 export const CardSideToggle: React.FC<CardSideToggleProps> = ({
   currentSide,
   onSideChange,
-  size = 'default'
+  size = 'md',
+  isBackDisabled = false,
 }) => {
+  const buttonClass = size === 'sm' ? 'h-7 px-3 text-xs' : size === 'lg' ? 'h-10 px-4' : 'h-8 px-3 text-sm';
+
   return (
-    <div className="flex bg-gray-100 dark:bg-gray-800 rounded-md p-1">
+    <div className="flex bg-muted rounded-md p-1">
       <Button
         variant={currentSide === 'front' ? 'default' : 'ghost'}
         size={size}
         onClick={() => onSideChange('front')}
-        className="h-8 px-3 text-xs"
+        className={buttonClass}
       >
         Front
       </Button>
@@ -27,7 +31,9 @@ export const CardSideToggle: React.FC<CardSideToggleProps> = ({
         variant={currentSide === 'back' ? 'default' : 'ghost'}
         size={size}
         onClick={() => onSideChange('back')}
-        className="h-8 px-3 text-xs"
+        className={buttonClass}
+        disabled={isBackDisabled}
+        title={isBackDisabled ? "Back side disabled for single-sided cards" : "Back side"}
       >
         Back
       </Button>

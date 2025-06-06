@@ -68,8 +68,6 @@ export const CardEditor: React.FC = () => {
       case 'standard': return 'Standard Card';
       case 'informational': return 'Informational Card';
       case 'single-sided': return 'Single-Sided Card';
-      case 'password-protected': return 'Password Protected Card';
-      case 'quiz-only': return 'Quiz Card';
       default: return 'Standard Card';
     }
   };
@@ -133,7 +131,16 @@ export const CardEditor: React.FC = () => {
   if (cards.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <EditorHeader set={set} onSave={saveCard} />
+        <EditorHeader 
+          set={set} 
+          onSave={saveCard}
+          isEditingDeckName={isEditingDeckName}
+          deckName={deckName}
+          onDeckNameChange={setDeckName}
+          onStartEdit={() => setIsEditingDeckName(true)}
+          onSaveEdit={handleSaveDeckName}
+          onCancelEdit={handleCancelEdit}
+        />
         <main className="h-[calc(100vh-80px)] p-1">
           <div className="relative h-full">
             <div className="flex items-center justify-center h-full pt-20">
@@ -195,7 +202,7 @@ export const CardEditor: React.FC = () => {
 
       case 'center':
         const canvasWidth = 900;
-        const canvasHeight = 600;
+        const canvasHeight = currentCard.card_type === 'informational' ? 800 : 600;
         const centerX = canvasWidth / 2;
         const centerY = canvasHeight / 2;
         
@@ -232,60 +239,27 @@ export const CardEditor: React.FC = () => {
     }
   };
 
+  // Force front side for single-sided cards
+  useEffect(() => {
+    if (currentCard?.card_type === 'single-sided' && currentSide === 'back') {
+      setCurrentSide('front');
+    }
+  }, [currentCard?.card_type, currentSide, setCurrentSide]);
+
   return (
     <div className="min-h-screen bg-background">
-      <EditorHeader set={set} onSave={saveCard} />
+      <EditorHeader 
+        set={set} 
+        onSave={saveCard}
+        isEditingDeckName={isEditingDeckName}
+        deckName={deckName}
+        onDeckNameChange={setDeckName}
+        onStartEdit={() => setIsEditingDeckName(true)}
+        onSaveEdit={handleSaveDeckName}
+        onCancelEdit={handleCancelEdit}
+      />
 
-      {/* Deck Name Editor */}
-      <div className="px-4 py-2 bg-background border-b">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Editing:</span>
-          {isEditingDeckName ? (
-            <div className="flex items-center gap-2">
-              <Input
-                value={deckName}
-                onChange={(e) => setDeckName(e.target.value)}
-                className="h-7 text-sm"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveDeckName();
-                  if (e.key === 'Escape') handleCancelEdit();
-                }}
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSaveDeckName}
-                className="h-7 w-7 p-0 text-green-600"
-              >
-                <Check className="w-3 h-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCancelEdit}
-                className="h-7 w-7 p-0 text-red-600"
-              >
-                <X className="w-3 h-3" />
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="font-medium">{deckName}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsEditingDeckName(true)}
-                className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700"
-              >
-                <Edit className="w-3 h-3" />
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <main className="h-[calc(100vh-120px)] relative">
+      <main className="h-[calc(100vh-80px)] relative">
         {/* Lockable Toolbar */}
         <LockableToolbar
           set={set}
@@ -302,6 +276,7 @@ export const CardEditor: React.FC = () => {
           onDeleteCard={handleDeleteCard}
           onSave={saveCard}
           onAutoArrange={handleAutoArrange}
+          isBackSideDisabled={currentCard?.card_type === 'single-sided'}
         />
 
         {/* Canvas with card type label and enhanced spacing */}

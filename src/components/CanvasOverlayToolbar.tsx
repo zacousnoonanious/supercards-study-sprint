@@ -1,7 +1,9 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil, Settings, ChevronDown, Grid3X3, AlignCenter, AlignJustify, Layers3 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil, Settings, ChevronDown, Grid3X3, AlignCenter, AlignJustify, Layers3, Clock } from 'lucide-react';
 import { CardSideToggle } from './CardSideToggle';
 import { FlashcardSet, Flashcard } from '@/types/flashcard';
 import { AIFlashcardGenerator } from './AIFlashcardGenerator';
@@ -20,6 +22,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface CanvasOverlayToolbarProps {
   set: FlashcardSet;
@@ -38,6 +45,7 @@ interface CanvasOverlayToolbarProps {
   onAutoArrange?: (type: 'grid' | 'center' | 'justify' | 'stack') => void;
   isCompact?: boolean;
   orientation?: 'horizontal' | 'vertical';
+  isBackSideDisabled?: boolean;
 }
 
 export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
@@ -57,8 +65,10 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
   onAutoArrange,
   isCompact = false,
   orientation = 'horizontal',
+  isBackSideDisabled = false,
 }) => {
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
+  const [countdownTimer, setCountdownTimer] = useState(currentCard?.countdown_timer || 0);
 
   const deleteCard = async () => {
     const confirmDelete = window.confirm('Are you sure you want to delete this card?');
@@ -72,23 +82,30 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
     onUpdateCard(currentCard.id, { card_type: cardType });
   };
 
+  const handleCountdownTimerChange = (timer: number) => {
+    setCountdownTimer(timer);
+    onUpdateCard(currentCard.id, { countdown_timer: timer });
+  };
+
   const getCardTypeLabel = (cardType: Flashcard['card_type']) => {
     switch (cardType) {
       case 'standard': return isCompact ? 'S' : 'Standard';
       case 'informational': return isCompact ? 'I' : 'Info';
       case 'single-sided': return isCompact ? 'SS' : 'Single';
-      case 'password-protected': return isCompact ? 'P' : 'Protected';
-      case 'quiz-only': return isCompact ? 'Q' : 'Quiz';
       default: return isCompact ? 'S' : 'Standard';
     }
   };
 
   const containerClass = orientation === 'vertical' 
-    ? "flex flex-col items-center gap-1 w-full"
+    ? isCompact 
+      ? "flex flex-col items-center gap-1 w-full"
+      : "grid grid-cols-2 gap-1 w-full max-w-[200px]"
     : "flex items-center justify-between gap-1 flex-wrap min-h-[36px]";
 
   const sectionClass = orientation === 'vertical'
-    ? "flex flex-col items-center gap-1 w-full"
+    ? isCompact
+      ? "flex flex-col items-center gap-1 w-full"
+      : "grid grid-cols-2 gap-1 w-full"
     : "flex items-center gap-1 flex-wrap";
 
   const buttonSize = isCompact ? "h-6 w-6 p-0" : "h-8 px-2";
@@ -300,6 +317,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
               onClick={() => onSideChange('back')}
               className="h-5 w-5 p-0 text-[10px]"
               title="Back Side"
+              disabled={isBackSideDisabled}
             >
               B
             </Button>
@@ -309,6 +327,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
             currentSide={currentSide}
             onSideChange={onSideChange}
             size="sm"
+            isBackDisabled={isBackSideDisabled}
           />
         )}
 
@@ -343,14 +362,41 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
             <DropdownMenuItem onClick={() => handleCardTypeChange('single-sided')}>
               Single Sided
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleCardTypeChange('password-protected')}>
-              Password Protected
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleCardTypeChange('quiz-only')}>
-              Quiz Only
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Countdown Timer */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={buttonSize}
+              title="Countdown Timer"
+            >
+              {isCompact ? <Clock className={iconSize} /> : (
+                <>
+                  <Clock className={`${iconSize} mr-1`} />
+                  <span className="text-xs">{countdownTimer}s</span>
+                </>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 bg-white dark:bg-gray-800 border shadow-lg z-50">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Countdown Timer (seconds)</Label>
+              <Input
+                type="number"
+                value={countdownTimer}
+                onChange={(e) => handleCountdownTimerChange(parseInt(e.target.value) || 0)}
+                min="0"
+                max="300"
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500">Set to 0 to disable timer</p>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Right section - Actions */}
