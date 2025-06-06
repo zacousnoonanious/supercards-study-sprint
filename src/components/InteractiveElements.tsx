@@ -31,18 +31,20 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
   
   const addOption = () => {
     const newOptions = [...options, `Option ${options.length + 1}`];
-    onUpdate?.({ multipleChoiceOptions: newOptions });
     
     // Auto-resize to fit new option
     const newHeight = Math.max(element.height, 120 + (newOptions.length * 40));
-    onUpdate?.({ height: newHeight });
+    onUpdate?.({ 
+      multipleChoiceOptions: newOptions,
+      height: newHeight
+    });
   };
 
   const removeOption = (index: number) => {
     if (options.length <= 2) return; // Keep at least 2 options
     const newOptions = options.filter((_, i) => i !== index);
     const newCorrectAnswer = element.correctAnswer === index ? 0 : 
-      element.correctAnswer > index ? element.correctAnswer - 1 : element.correctAnswer;
+      (element.correctAnswer || 0) > index ? (element.correctAnswer || 0) - 1 : element.correctAnswer;
     
     // Auto-resize to fit remaining options
     const newHeight = Math.max(120, 120 + (newOptions.length * 40));
@@ -65,7 +67,6 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
 
   // Calculate minimum height needed for all content
   const minHeight = 120 + (options.length * 40);
-  const currentHeight = Math.max(element.height, minHeight);
 
   // Auto-resize if current height is too small
   React.useEffect(() => {
@@ -83,14 +84,20 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
           {editingQuestion ? (
             <Textarea
               value={element.content || ''}
-              onChange={(e) => onUpdate?.({ content: e.target.value })}
+              onChange={(e) => {
+                e.stopPropagation();
+                onUpdate?.({ content: e.target.value });
+              }}
               onBlur={() => setEditingQuestion(false)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   setEditingQuestion(false);
                 }
+                e.stopPropagation();
               }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
               className="h-16 text-xs resize-none"
               placeholder="Enter your question"
               autoFocus
@@ -98,7 +105,10 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
           ) : (
             <div 
               className="min-h-[40px] p-2 border rounded text-xs cursor-text hover:bg-gray-50 relative"
-              onClick={() => isEditing && setEditingQuestion(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isEditing) setEditingQuestion(true);
+              }}
             >
               {element.content ? (
                 element.content
@@ -127,20 +137,29 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
                 {editingOption === index ? (
                   <Input
                     value={option}
-                    onChange={(e) => updateOption(index, e.target.value)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      updateOption(index, e.target.value);
+                    }}
                     onBlur={() => setEditingOption(null)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         setEditingOption(null);
                       }
+                      e.stopPropagation();
                     }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
                     className="flex-1 h-7 text-xs"
                     autoFocus
                   />
                 ) : (
                   <div 
                     className="flex-1 text-xs cursor-pointer py-1 px-2 rounded hover:bg-gray-50 border border-transparent min-h-[28px] flex items-center"
-                    onClick={() => isEditing && setEditingOption(index)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isEditing) setEditingOption(index);
+                    }}
                   >
                     {option}
                   </div>
@@ -151,7 +170,10 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
                     <Button
                       variant={element.correctAnswer === index ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setCorrectAnswer(index)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCorrectAnswer(index);
+                      }}
                       className="h-6 w-6 p-0"
                       title="Mark as correct answer"
                     >
@@ -162,7 +184,10 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => removeOption(index)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeOption(index);
+                        }}
                         className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Remove option"
                       >
@@ -183,7 +208,10 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={addOption}
+              onClick={(e) => {
+                e.stopPropagation();
+                addOption();
+              }}
               className="w-full text-xs h-7 mt-2"
             >
               + Add Option
@@ -212,14 +240,20 @@ export const TrueFalseRenderer: React.FC<ElementRendererProps> = ({
           {editingQuestion ? (
             <Textarea
               value={element.content || ''}
-              onChange={(e) => onUpdate?.({ content: e.target.value })}
+              onChange={(e) => {
+                e.stopPropagation();
+                onUpdate?.({ content: e.target.value });
+              }}
               onBlur={() => setEditingQuestion(false)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   setEditingQuestion(false);
                 }
+                e.stopPropagation();
               }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
               className="h-16 text-xs resize-none"
               placeholder="Enter your true/false question"
               autoFocus
@@ -227,7 +261,10 @@ export const TrueFalseRenderer: React.FC<ElementRendererProps> = ({
           ) : (
             <div 
               className="min-h-[40px] p-2 border rounded text-xs cursor-text hover:bg-gray-50 relative"
-              onClick={() => isEditing && setEditingQuestion(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isEditing) setEditingQuestion(true);
+              }}
             >
               {element.content ? (
                 element.content
@@ -246,7 +283,10 @@ export const TrueFalseRenderer: React.FC<ElementRendererProps> = ({
             variant={element.correctAnswer === 1 ? 'default' : 'outline'} 
             size="sm"
             className="flex-1 text-xs"
-            onClick={() => isEditing && onUpdate?.({ correctAnswer: 1 })}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isEditing) onUpdate?.({ correctAnswer: 1 });
+            }}
           >
             True {isEditing && element.correctAnswer === 1 && '✓'}
           </Button>
@@ -254,7 +294,10 @@ export const TrueFalseRenderer: React.FC<ElementRendererProps> = ({
             variant={element.correctAnswer === 0 ? 'default' : 'outline'} 
             size="sm"
             className="flex-1 text-xs"
-            onClick={() => isEditing && onUpdate?.({ correctAnswer: 0 })}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isEditing) onUpdate?.({ correctAnswer: 0 });
+            }}
           >
             False {isEditing && element.correctAnswer === 0 && '✓'}
           </Button>

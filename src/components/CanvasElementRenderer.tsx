@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
@@ -156,6 +157,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
             <textarea
               value={element.content || ''}
               onChange={(e) => {
+                e.stopPropagation();
                 const newContent = e.target.value;
                 onUpdateElement(element.id, { content: newContent });
                 
@@ -178,6 +180,12 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
                 if (e.key === 'Escape') {
                   onEditingChange(null);
                 }
+                e.stopPropagation();
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+              }}
+              onClick={(e) => {
                 e.stopPropagation();
               }}
               onBlur={() => onEditingChange(null)}

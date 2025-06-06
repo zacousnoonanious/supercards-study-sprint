@@ -28,7 +28,14 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
     if (!currentCard.countdown_timer || currentCard.countdown_timer === 0) {
       return 'No countdown';
     }
-    return `${currentCard.countdown_timer} seconds`;
+    
+    const seconds = currentCard.countdown_timer;
+    if (seconds < 60) {
+      return `${seconds}s`;
+    } else {
+      const minutes = Math.floor(seconds / 60);
+      return `${minutes}min`;
+    }
   };
 
   return (
@@ -68,11 +75,16 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="0">No countdown</SelectItem>
-                    <SelectItem value="10">10 seconds</SelectItem>
-                    <SelectItem value="30">30 seconds</SelectItem>
-                    <SelectItem value="60">60 seconds</SelectItem>
-                    <SelectItem value="120">2 minutes</SelectItem>
-                    <SelectItem value="300">5 minutes</SelectItem>
+                    <SelectItem value="1">1s</SelectItem>
+                    <SelectItem value="2">2s</SelectItem>
+                    <SelectItem value="3">3s</SelectItem>
+                    <SelectItem value="4">4s</SelectItem>
+                    <SelectItem value="5">5s</SelectItem>
+                    <SelectItem value="10">10s</SelectItem>
+                    <SelectItem value="20">20s</SelectItem>
+                    <SelectItem value="60">1min</SelectItem>
+                    <SelectItem value="180">3min</SelectItem>
+                    <SelectItem value="300">5min</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -132,14 +144,92 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                   </div>
                 )}
 
+                {selectedElement.type === 'multiple-choice' && (
+                  <div>
+                    <Label className="text-xs">Question & Options</Label>
+                    <Input
+                      value={selectedElement.content || ''}
+                      onChange={(e) => onUpdateElement(selectedElement.id, { content: e.target.value })}
+                      placeholder="Enter question"
+                      className="h-8 text-xs mb-2"
+                    />
+                    <div className="space-y-1">
+                      {(selectedElement.multipleChoiceOptions || []).map((option, index) => (
+                        <div key={index} className="flex gap-1 items-center">
+                          <Input
+                            value={option}
+                            onChange={(e) => {
+                              const newOptions = [...(selectedElement.multipleChoiceOptions || [])];
+                              newOptions[index] = e.target.value;
+                              onUpdateElement(selectedElement.id, { multipleChoiceOptions: newOptions });
+                            }}
+                            className="h-6 text-xs flex-1"
+                            placeholder={`Option ${index + 1}`}
+                          />
+                          <Button
+                            variant={selectedElement.correctAnswer === index ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => onUpdateElement(selectedElement.id, { correctAnswer: index })}
+                            className="h-6 w-6 p-0 text-xs"
+                          >
+                            ✓
+                          </Button>
+                          {(selectedElement.multipleChoiceOptions?.length || 0) > 2 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newOptions = (selectedElement.multipleChoiceOptions || []).filter((_, i) => i !== index);
+                                const newCorrectAnswer = selectedElement.correctAnswer === index ? 0 : 
+                                  (selectedElement.correctAnswer || 0) > index ? (selectedElement.correctAnswer || 0) - 1 : selectedElement.correctAnswer;
+                                
+                                // Auto-resize element when removing options
+                                const newHeight = Math.max(120, 120 + (newOptions.length * 40));
+                                
+                                onUpdateElement(selectedElement.id, { 
+                                  multipleChoiceOptions: newOptions,
+                                  correctAnswer: newCorrectAnswer,
+                                  height: newHeight
+                                });
+                              }}
+                              className="h-6 w-6 p-0 text-red-500"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const currentOptions = selectedElement.multipleChoiceOptions || [];
+                          const newOptions = [...currentOptions, `Option ${currentOptions.length + 1}`];
+                          
+                          // Auto-resize element when adding options
+                          const newHeight = Math.max(selectedElement.height, 120 + (newOptions.length * 40));
+                          
+                          onUpdateElement(selectedElement.id, { 
+                            multipleChoiceOptions: newOptions,
+                            height: newHeight
+                          });
+                        }}
+                        className="h-6 text-xs w-full"
+                      >
+                        + Add Option
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-4 gap-2">
                   <div>
                     <Label htmlFor="x" className="text-xs">X</Label>
                     <Input
                       id="x"
                       type="number"
-                      value={selectedElement.x}
-                      onChange={(e) => onUpdateElement(selectedElement.id, { x: parseInt(e.target.value) })}
+                      value={Math.round(selectedElement.x)}
+                      onChange={(e) => onUpdateElement(selectedElement.id, { x: parseInt(e.target.value) || 0 })}
                       className="h-8 text-xs"
                     />
                   </div>
@@ -148,28 +238,28 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                     <Input
                       id="y"
                       type="number"
-                      value={selectedElement.y}
-                      onChange={(e) => onUpdateElement(selectedElement.id, { y: parseInt(e.target.value) })}
+                      value={Math.round(selectedElement.y)}
+                      onChange={(e) => onUpdateElement(selectedElement.id, { y: parseInt(e.target.value) || 0 })}
                       className="h-8 text-xs"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="width" className="text-xs">Width</Label>
+                    <Label htmlFor="width" className="text-xs">W</Label>
                     <Input
                       id="width"
                       type="number"
-                      value={selectedElement.width}
-                      onChange={(e) => onUpdateElement(selectedElement.id, { width: parseInt(e.target.value) })}
+                      value={Math.round(selectedElement.width)}
+                      onChange={(e) => onUpdateElement(selectedElement.id, { width: parseInt(e.target.value) || 0 })}
                       className="h-8 text-xs"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="height" className="text-xs">Height</Label>
+                    <Label htmlFor="height" className="text-xs">H</Label>
                     <Input
                       id="height"
                       type="number"
-                      value={selectedElement.height}
-                      onChange={(e) => onUpdateElement(selectedElement.id, { height: parseInt(e.target.value) })}
+                      value={Math.round(selectedElement.height)}
+                      onChange={(e) => onUpdateElement(selectedElement.id, { height: parseInt(e.target.value) || 0 })}
                       className="h-8 text-xs"
                     />
                   </div>
@@ -192,6 +282,22 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                 <div className="text-xs text-muted-foreground">
                   Selected: {selectedElement.type} element
                 </div>
+              )}
+              {selectedElement && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    // Delete selected element
+                    const elementToDelete = selectedElement.id;
+                    onUpdateElement(elementToDelete, {});
+                    // This will trigger the delete in the parent component
+                  }}
+                  className="text-xs w-full"
+                >
+                  <Trash2 className="w-3 h-3 mr-1" />
+                  Delete Element
+                </Button>
               )}
             </div>
           </div>
