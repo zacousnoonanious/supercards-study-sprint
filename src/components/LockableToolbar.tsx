@@ -9,13 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Slider } from "@/components/ui/slider"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Card } from "@/components/ui/card"
-import { AspectRatio } from "@/components/ui/aspect-ratio"
 import {
   AlignLeft,
   AlignCenter,
@@ -39,8 +32,16 @@ import {
   ChevronDown,
   Grid,
   Layers,
+  Home,
+  Volume2,
+  Pencil,
+  Youtube,
+  CheckSquare,
+  ToggleLeft,
+  FileText,
 } from "lucide-react";
 import { Flashcard, CanvasElement } from '@/types/flashcard';
+import { useNavigate } from 'react-router-dom';
 
 interface LockableToolbarProps {
   set: any;
@@ -77,61 +78,120 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
   onAutoArrange,
   isBackSideDisabled = false,
 }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="fixed top-0 left-0 w-full h-20 bg-background/90 backdrop-blur-sm z-40 border-b border-border">
-      <div className="container max-w-5xl h-full flex items-center justify-between">
-        {/* Left Side - Set Info and Navigation */}
-        <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold">{set.title}</h1>
+      <div className="container max-w-full h-full flex items-center justify-between px-4">
+        {/* Left Side - Navigation and Set Info */}
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/decks')}
+            className="flex items-center gap-2"
+          >
+            <Home className="w-4 h-4" />
+            Decks
+          </Button>
           <div className="text-sm text-muted-foreground">
-            Card {currentCardIndex + 1} of {totalCards}
+            {set.title} • Card {currentCardIndex + 1} of {totalCards}
           </div>
         </div>
 
-        {/* Center - Card Editing Options */}
-        <div className="flex items-center gap-2">
-          {/* Add Element Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
-                <Plus className="w-4 h-4" />
-                Add Element
-                <ChevronDown className="w-3 h-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Add to Card</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onAddElement('text')}>
-                <Text className="w-4 h-4 mr-2" />
-                Text
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAddElement('image')}>
-                <ImageIcon className="w-4 h-4 mr-2" />
-                Image
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAddElement('drawing')}>
-                <ImageIcon className="w-4 h-4 mr-2" />
-                Drawing
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAddElement('multiple-choice')}>
-                <ListOrdered className="w-4 h-4 mr-2" />
-                Multiple Choice
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAddElement('true-false')}>
-                <List className="w-4 h-4 mr-2" />
-                True / False
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onAddElement('youtube')}>
-                <ImageIcon className="w-4 h-4 mr-2" />
-                YouTube Embed
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAddElement('deck-embed')}>
-                <LayoutDashboard className="w-4 h-4 mr-2" />
-                Deck Embed
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Center - Add Element Tools (Individual Icons) */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddElement('text')}
+            className="h-8 w-8 p-0"
+            title="Add Text"
+          >
+            <Text className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddElement('image')}
+            className="h-8 w-8 p-0"
+            title="Add Image"
+          >
+            <ImageIcon className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddElement('audio')}
+            className="h-8 w-8 p-0"
+            title="Add Audio"
+          >
+            <Volume2 className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddElement('drawing')}
+            className="h-8 w-8 p-0"
+            title="Add Drawing"
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddElement('youtube')}
+            className="h-8 w-8 p-0"
+            title="Add YouTube Video"
+          >
+            <Youtube className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddElement('deck-embed')}
+            className="h-8 w-8 p-0"
+            title="Embed Deck"
+          >
+            <Layers className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddElement('multiple-choice')}
+            className="h-8 w-8 p-0"
+            title="Multiple Choice"
+          >
+            <CheckSquare className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddElement('true-false')}
+            className="h-8 w-8 p-0"
+            title="True/False"
+          >
+            <ToggleLeft className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddElement('fill-in-blank')}
+            className="h-8 w-8 p-0"
+            title="Fill in Blank"
+          >
+            <FileText className="w-4 h-4" />
+          </Button>
+
+          <div className="w-px h-6 bg-border mx-2" />
 
           {/* Card Type Dropdown */}
           <DropdownMenu>
@@ -152,7 +212,6 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
               <DropdownMenuItem onClick={() => onUpdateCard(currentCard.id, { card_type: 'single-sided' })}>
                 Single-Sided Card
               </DropdownMenuItem>
-              {/* Add more card types here as needed */}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -189,17 +248,15 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
           </Button>
 
           <Button variant="ghost" size="sm" onClick={onCreateNewCard}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Card
+            <Plus className="w-4 h-4 mr-1" />
+            New
           </Button>
-          <Button variant="ghost" size="sm" onClick={onCreateNewCardWithLayout}>
-            <Copy className="w-4 h-4 mr-2" />
-            Clone Card
-          </Button>
+          
           <Button variant="ghost" size="sm" onClick={onSave}>
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-4 h-4 mr-1" />
             Save
           </Button>
+          
           <Button variant="destructive" size="sm" onClick={async () => {
             const confirmDelete = window.confirm("Are you sure you want to delete this card?");
             if (confirmDelete) {
@@ -209,7 +266,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
               }
             }
           }}>
-            <Trash className="w-4 h-4 mr-2" />
+            <Trash className="w-4 h-4 mr-1" />
             Delete
           </Button>
         </div>

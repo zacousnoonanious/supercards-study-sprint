@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
@@ -29,13 +28,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   const { theme } = useTheme();
 
   const handleMultipleChoiceUpdate = (updates: Partial<CanvasElement>) => {
-    // Auto-expand height when options are added
-    if (updates.multipleChoiceOptions && updates.multipleChoiceOptions.length > (element.multipleChoiceOptions?.length || 0)) {
-      const newHeight = Math.max(element.height, 60 + (updates.multipleChoiceOptions.length * 35));
-      onUpdateElement(element.id, { ...updates, height: newHeight });
-    } else {
-      onUpdateElement(element.id, updates);
-    }
+    onUpdateElement(element.id, updates);
   };
 
   switch (element.type) {
@@ -56,6 +49,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           <TrueFalseRenderer 
             element={element} 
             isEditing={true} 
+            onUpdate={(updates) => onUpdateElement(element.id, updates)}
             textScale={textScale}
           />
         </div>

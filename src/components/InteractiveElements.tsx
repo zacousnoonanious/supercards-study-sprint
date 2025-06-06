@@ -32,6 +32,10 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
   const addOption = () => {
     const newOptions = [...options, `Option ${options.length + 1}`];
     onUpdate?.({ multipleChoiceOptions: newOptions });
+    
+    // Auto-resize to fit new option
+    const newHeight = Math.max(element.height, 120 + (newOptions.length * 40));
+    onUpdate?.({ height: newHeight });
   };
 
   const removeOption = (index: number) => {
@@ -39,9 +43,13 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
     const newOptions = options.filter((_, i) => i !== index);
     const newCorrectAnswer = element.correctAnswer === index ? 0 : 
       element.correctAnswer > index ? element.correctAnswer - 1 : element.correctAnswer;
+    
+    // Auto-resize to fit remaining options
+    const newHeight = Math.max(120, 120 + (newOptions.length * 40));
     onUpdate?.({ 
       multipleChoiceOptions: newOptions,
-      correctAnswer: newCorrectAnswer
+      correctAnswer: newCorrectAnswer,
+      height: newHeight
     });
   };
 
@@ -55,11 +63,22 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
     onUpdate?.({ correctAnswer: index });
   };
 
+  // Calculate minimum height needed for all content
+  const minHeight = 120 + (options.length * 40);
+  const currentHeight = Math.max(element.height, minHeight);
+
+  // Auto-resize if current height is too small
+  React.useEffect(() => {
+    if (element.height < minHeight) {
+      onUpdate?.({ height: minHeight });
+    }
+  }, [options.length, element.height, minHeight, onUpdate]);
+
   return (
-    <Card className="w-full h-full">
-      <CardContent className="p-3 space-y-3">
+    <Card className="w-full h-full" style={{ minHeight: `${minHeight}px` }}>
+      <CardContent className="p-3 space-y-3 h-full flex flex-col">
         {/* Question */}
-        <div>
+        <div className="flex-shrink-0">
           <Label className="text-xs font-medium">Question:</Label>
           {editingQuestion ? (
             <Textarea
@@ -78,24 +97,31 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
             />
           ) : (
             <div 
-              className="min-h-[40px] p-2 border rounded text-xs cursor-text hover:bg-gray-50"
+              className="min-h-[40px] p-2 border rounded text-xs cursor-text hover:bg-gray-50 relative"
               onClick={() => isEditing && setEditingQuestion(true)}
             >
-              {element.content || 'Click to add question'}
+              {element.content ? (
+                element.content
+              ) : (
+                <span className="text-gray-400 pointer-events-none select-none">
+                  What is your question?
+                </span>
+              )}
             </div>
           )}
         </div>
 
         {/* Options */}
-        <div className="space-y-2">
+        <div className="flex-1 space-y-2 overflow-auto">
           <Label className="text-xs font-medium">Options:</Label>
           <RadioGroup value={element.correctAnswer?.toString() || "0"} onValueChange={(value) => setCorrectAnswer(parseInt(value))}>
             {options.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2 group">
+              <div key={index} className="flex items-center space-x-2 group min-h-[32px]">
                 <RadioGroupItem 
                   value={index.toString()} 
                   id={`option-${index}`}
                   disabled={!isEditing}
+                  className="flex-shrink-0"
                 />
                 
                 {editingOption === index ? (
@@ -113,7 +139,7 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
                   />
                 ) : (
                   <div 
-                    className="flex-1 text-xs cursor-pointer py-1 px-2 rounded hover:bg-gray-50 border border-transparent"
+                    className="flex-1 text-xs cursor-pointer py-1 px-2 rounded hover:bg-gray-50 border border-transparent min-h-[28px] flex items-center"
                     onClick={() => isEditing && setEditingOption(index)}
                   >
                     {option}
@@ -121,7 +147,7 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
                 )}
 
                 {isEditing && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <Button
                       variant={element.correctAnswer === index ? 'default' : 'outline'}
                       size="sm"
@@ -147,7 +173,7 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
                 )}
 
                 {isEditing && element.correctAnswer === index && (
-                  <span className="text-xs text-green-600 font-medium">✓ Correct</span>
+                  <span className="text-xs text-green-600 font-medium flex-shrink-0">✓ Correct</span>
                 )}
               </div>
             ))}
@@ -158,7 +184,7 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
               variant="outline"
               size="sm"
               onClick={addOption}
-              className="w-full text-xs h-7"
+              className="w-full text-xs h-7 mt-2"
             >
               + Add Option
             </Button>
@@ -200,10 +226,16 @@ export const TrueFalseRenderer: React.FC<ElementRendererProps> = ({
             />
           ) : (
             <div 
-              className="min-h-[40px] p-2 border rounded text-xs cursor-text hover:bg-gray-50"
+              className="min-h-[40px] p-2 border rounded text-xs cursor-text hover:bg-gray-50 relative"
               onClick={() => isEditing && setEditingQuestion(true)}
             >
-              {element.content || 'Click to add question'}
+              {element.content ? (
+                element.content
+              ) : (
+                <span className="text-gray-400 pointer-events-none select-none">
+                  What is your question?
+                </span>
+              )}
             </div>
           )}
         </div>
