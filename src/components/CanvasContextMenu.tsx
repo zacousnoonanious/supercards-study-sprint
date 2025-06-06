@@ -6,6 +6,9 @@ import {
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+  ContextMenuSub,
 } from '@/components/ui/context-menu';
 import { 
   Undo, 
@@ -13,7 +16,11 @@ import {
   Palette,
   Image,
   Grid,
-  Settings
+  Settings,
+  Maximize2,
+  Minimize2,
+  RotateCw,
+  Move
 } from 'lucide-react';
 
 interface CanvasContextMenuProps {
@@ -25,6 +32,9 @@ interface CanvasContextMenuProps {
   onChangeBackground: () => void;
   onToggleGrid: () => void;
   onSettings: () => void;
+  onChangeCardSize?: (size: 'small' | 'medium' | 'large' | 'custom') => void;
+  onScaleToElements?: () => void;
+  onSetDefaultSize?: () => void;
 }
 
 export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
@@ -36,7 +46,19 @@ export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
   onChangeBackground,
   onToggleGrid,
   onSettings,
+  onChangeCardSize,
+  onScaleToElements,
+  onSetDefaultSize,
 }) => {
+  const backgroundColors = [
+    { name: 'White', value: '#ffffff' },
+    { name: 'Light Gray', value: '#f5f5f5' },
+    { name: 'Blue', value: '#e3f2fd' },
+    { name: 'Green', value: '#e8f5e8' },
+    { name: 'Yellow', value: '#fff9c4' },
+    { name: 'Pink', value: '#fce4ec' },
+  ];
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -52,14 +74,65 @@ export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
           Redo
         </ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem onClick={onChangeBackground}>
-          <Palette className="w-4 h-4 mr-2" />
-          Change Background Color
-        </ContextMenuItem>
+        
+        <ContextMenuSub>
+          <ContextMenuSubTrigger>
+            <Palette className="w-4 h-4 mr-2" />
+            Background Color
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="w-48">
+            {backgroundColors.map((color) => (
+              <ContextMenuItem 
+                key={color.value}
+                onClick={() => {
+                  document.documentElement.style.setProperty('--canvas-bg', color.value);
+                }}
+                className="flex items-center justify-between"
+              >
+                <span>{color.name}</span>
+                <div 
+                  className="w-4 h-4 border border-gray-300 rounded"
+                  style={{ backgroundColor: color.value }}
+                />
+              </ContextMenuItem>
+            ))}
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+
         <ContextMenuItem onClick={() => {}}>
           <Image className="w-4 h-4 mr-2" />
           Background Image
         </ContextMenuItem>
+        
+        <ContextMenuSeparator />
+        
+        <ContextMenuSub>
+          <ContextMenuSubTrigger>
+            <Maximize2 className="w-4 h-4 mr-2" />
+            Card Size
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="w-40">
+            <ContextMenuItem onClick={() => onChangeCardSize?.('small')}>
+              Small (400x300)
+            </ContextMenuItem>
+            <ContextMenuItem onClick={() => onChangeCardSize?.('medium')}>
+              Medium (600x400)
+            </ContextMenuItem>
+            <ContextMenuItem onClick={() => onChangeCardSize?.('large')}>
+              Large (800x600)
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+            <ContextMenuItem onClick={onScaleToElements}>
+              <Move className="w-4 h-4 mr-2" />
+              Scale to Elements
+            </ContextMenuItem>
+            <ContextMenuItem onClick={onSetDefaultSize}>
+              <Settings className="w-4 h-4 mr-2" />
+              Set as Default Size
+            </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onToggleGrid}>
           <Grid className="w-4 h-4 mr-2" />

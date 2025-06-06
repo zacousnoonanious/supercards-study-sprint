@@ -1,367 +1,424 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Stage, Layer, Transformer } from 'react-konva';
 import { Button } from '@/components/ui/button';
-import { Check, X, Edit, LayoutGrid } from 'lucide-react';
-import { CardCanvas } from './CardCanvas';
-import { EditorHeader } from './EditorHeader';
+import { Input } from '@/components/ui/input';
+import { Flashcard, CanvasElement } from '@/types/flashcard';
 import { LockableToolbar } from './LockableToolbar';
-import { CardOverview } from './CardOverview';
-import { useCardEditor } from '@/hooks/useCardEditor';
-import { supabase } from '@/integrations/supabase/client';
+import { CanvasElementRenderer } from './CanvasElementRenderer';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createFlashcard, getFlashcard, updateFlashcard, deleteFlashcard } from '@/lib/api/flashcards';
+import { getSet } from '@/lib/api/sets';
+import { KonvaEventObject } from 'konva/lib/types/Node';
+import { v4 as uuidv4 } from 'uuid';
+import { CanvasContextMenu } from './CanvasContextMenu';
+import { EditorFooter } from './EditorFooter';
 
-export const CardEditor: React.FC = () => {
-  const {
-    set,
-    cards,
-    currentCardIndex,
-    currentSide,
-    selectedElement,
-    loading,
-    setCurrentSide,
-    setSelectedElement,
-    saveCard,
-    addElement,
-    updateElement,
-    updateCard,
-    deleteElement,
-    navigateCard,
-    createNewCard,
-    createNewCardWithLayout,
-    deleteCard,
-    reorderCards,
-    setCurrentCardIndex,
-  } = useCardEditor();
+interface CardCanvasProps {
+  elements: CanvasElement[];
+  selectedElementId: string | null;
+  onElementUpdate: (id: string, updates: Partial<CanvasElement>) => void;
+  onElementSelect: (id: string | null) => void;
+  onCreateElement: (element: CanvasElement) => void;
+  onDeleteElement: (id: string) => void;
+  cardWidth: number;
+  cardHeight: number;
+  textScale?: number;
+  isDragging?: boolean;
+  onElementDragStart?: (e: React.MouseEvent, elementId: string) => void;
+}
 
-  const [isEditingDeckName, setIsEditingDeckName] = useState(false);
-  const [deckName, setDeckName] = useState(set?.title || '');
-  const [showCardOverview, setShowCardOverview] = useState(false);
+export const CardEditor = () => {
+  const { cardId, setId } = useParams<{ cardId: string; setId: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [currentCard, setCurrentCard] = useState<Flashcard>({} as Flashcard);
+  const [elements, setElements] = useState<CanvasElement[]>([]);
+  const [currentSide, setCurrentSide] = useState<'front' | 'back'>('front');
+  const [transformer, setTransformer] = useState<Transformer | null>(null);
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [history, setHistory] = useState<CanvasElement[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
+  const { data: set } = useQuery({
+    queryKey: ['set', setId],
+    queryFn: () => getSet(setId!),
+    enabled: !!setId,
+  });
+
+  const { data: cardData, refetch: refetchCard } = useQuery({
+    queryKey: ['card', cardId],
+    queryFn: () => getFlashcard(cardId!),
+    enabled: !!cardId,
+    onSuccess: (data) => {
+      setCurrentCard(data);
+      setElements(JSON.parse(data.elements_json || '[]') as CanvasElement[]);
+    },
+  });
 
   useEffect(() => {
-    if (set?.title) {
-      setDeckName(set.title);
+    if (cardData) {
+      const parsedElements = JSON.parse(cardData.elements_json || '[]') as CanvasElement[];
+      setElements(parsedElements);
+      saveHistory(parsedElements);
     }
-  }, [set?.title]);
+  }, [cardData]);
 
-  // Force front side for single-sided cards - MUST be called before any conditional returns
+  const { mutate: updateCardMutation } = useMutation({
+    mutationFn: updateFlashcard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['card', cardId] });
+      queryClient.invalidateQueries({ queryKey: ['set', setId] });
+    },
+  });
+
+  const { mutate: createCardMutation } = useMutation({
+    mutationFn: createFlashcard,
+    onSuccess: (newCard) => {
+      queryClient.invalidateQueries({ queryKey: ['set', setId] });
+      navigate(`/sets/${setId}/cards/${newCard.id}`);
+    },
+  });
+
+  const { mutate: deleteCardMutation } = useMutation({
+    mutationFn: deleteFlashcard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['set', setId] });
+      navigate(`/sets/${setId}`);
+    },
+  });
+
   useEffect(() => {
-    const currentCard = cards[currentCardIndex];
-    if (currentCard?.card_type === 'single-sided' && currentSide === 'back') {
-      setCurrentSide('front');
+    if (elements) {
+      saveHistory(elements);
     }
-  }, [cards, currentCardIndex, currentSide, setCurrentSide]);
+  }, []);
 
-  // Add keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Delete key to remove selected element
-      if (e.key === 'Delete' && selectedElement) {
-        e.preventDefault();
-        deleteElement(selectedElement);
+  const saveHistory = (newElements: CanvasElement[]) => {
+    setHistory(prevHistory => {
+      const newHistory = [...prevHistory.slice(0, historyIndex + 1), newElements];
+      if (newHistory.length > 10) {
+        newHistory.shift();
       }
-      
-      // Escape to deselect element
-      if (e.key === 'Escape' && selectedElement) {
-        e.preventDefault();
-        setSelectedElement(null);
-      }
-      
-      // Arrow keys for navigation
-      if (e.key === 'ArrowLeft' && e.ctrlKey) {
-        e.preventDefault();
-        navigateCard('prev');
-      }
-      
-      if (e.key === 'ArrowRight' && e.ctrlKey) {
-        e.preventDefault();
-        navigateCard('next');
-      }
-      
-      // Ctrl+S to save
-      if (e.key === 's' && e.ctrlKey) {
-        e.preventDefault();
-        saveCard();
-      }
+      return newHistory;
+    });
+    setHistoryIndex(historyIndex => Math.min(historyIndex + 1, 9));
+  };
+
+  const undo = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(historyIndex - 1);
+      setElements(history[historyIndex - 1]);
+    }
+  };
+
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(historyIndex + 1);
+      setElements(history[historyIndex + 1]);
+    }
+  };
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const handleStageClick = (e: KonvaEventObject<any>) => {
+    if (e.target === e.target.getStage()) {
+      setSelectedElementId(null);
+    }
+  };
+
+  const handleAddElement = (type: string) => {
+    const newElement: CanvasElement = {
+      id: uuidv4(),
+      type: type,
+      x: 50,
+      y: 50,
+      width: 200,
+      height: 100,
+      rotation: 0,
+      content: 'New Text',
+      fontSize: 16,
+      color: '#000000',
+      fontWeight: 'normal',
+      fontStyle: 'normal',
+      textDecoration: 'none',
+      textAlign: 'center',
+      imageUrl: '',
+      audioUrl: '',
+      youtubeUrl: '',
+      autoplay: false,
+      multipleChoiceOptions: ['Option 1', 'Option 2'],
+      correctAnswer: 0,
+      drawingData: '',
+      strokeColor: '#000000',
+      strokeWidth: 5,
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedElement, deleteElement, setSelectedElement, navigateCard, saveCard]);
-
-  const handleEditCard = (cardIndex: number) => {
-    setCurrentCardIndex(cardIndex);
-    setShowCardOverview(false);
-    setSelectedElement(null);
-    setCurrentSide('front');
+    setElements([...elements, newElement]);
+    saveHistory([...elements, newElement]);
   };
 
-  const handleSaveDeckName = async () => {
-    if (!set) return;
-    
-    try {
-      const { error } = await supabase
-        .from('flashcard_sets')
-        .update({ title: deckName })
-        .eq('id', set.id);
+  const handleUpdateElement = (id: string, updates: Partial<CanvasElement>) => {
+    const updatedElements = elements.map((element) =>
+      element.id === id ? { ...element, ...updates } : element
+    );
+    setElements(updatedElements);
+    saveHistory(updatedElements);
+  };
 
-      if (error) throw error;
-      
-      setIsEditingDeckName(false);
-      console.log('Deck name updated successfully');
-    } catch (error) {
-      console.error('Error updating deck name:', error);
+  const handleCreateElement = (element: CanvasElement) => {
+    setElements([...elements, element]);
+    saveHistory([...elements, element]);
+  };
+
+  const handleDeleteElement = (id: string) => {
+    const newElements = elements.filter((element) => element.id !== id);
+    setElements(newElements);
+    setSelectedElementId(null);
+    saveHistory(newElements);
+  };
+
+  const handleUpdateCard = (cardId: string, updates: Partial<Flashcard>) => {
+    setCurrentCard({ ...currentCard, ...updates });
+    updateCardMutation({ id: cardId, ...updates });
+  };
+
+  const handleNavigateCard = (direction: 'prev' | 'next') => {
+    if (!set?.flashcards) return;
+
+    const currentIndex = set.flashcards.findIndex((card) => card.id === currentCard.id);
+    let newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+
+    if (newIndex < 0) {
+      newIndex = 0;
+    } else if (newIndex >= set.flashcards.length) {
+      newIndex = set.flashcards.length - 1;
+    }
+
+    if (set.flashcards[newIndex]) {
+      navigate(`/sets/${setId}/cards/${set.flashcards[newIndex].id}`);
     }
   };
 
-  const handleCancelEdit = () => {
-    setDeckName(set?.title || '');
-    setIsEditingDeckName(false);
+  const handleCreateNewCard = () => {
+    if (!setId) return;
+    createCardMutation({
+      set_id: setId,
+      front_elements_json: '[]',
+      back_elements_json: '[]',
+      card_type: 'standard',
+    });
   };
 
-  const getCardTypeLabel = (cardType: string) => {
-    switch (cardType) {
-      case 'standard': return 'Standard Card';
-      case 'informational': return 'Informational Card';
-      case 'single-sided': return 'Single-Sided Card';
-      default: return 'Standard Card';
+  const handleCreateNewCardWithLayout = () => {
+    if (!setId) return;
+
+    const defaultLayout = [
+      { id: uuidv4(), type: 'text', x: 50, y: 50, width: 200, height: 50, content: 'Title', fontSize: 24 },
+      { id: uuidv4(), type: 'text', x: 50, y: 150, width: 300, height: 100, content: 'Description', fontSize: 16 },
+    ];
+
+    createCardMutation({
+      set_id: setId,
+      front_elements_json: JSON.stringify(defaultLayout),
+      back_elements_json: '[]',
+      card_type: 'standard',
+    });
+  };
+
+  const handleDeleteCard = async () => {
+    if (!cardId || !set) return false;
+
+    if (set.flashcards.length <= 1) {
+      return false;
     }
+
+    await deleteCardMutation(cardId);
+    return true;
   };
 
-  console.log('CardEditor render - loading:', loading, 'set:', set, 'cards:', cards.length);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading editor...</div>
-      </div>
-    );
-  }
-
-  if (!set) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Set not found</div>
-      </div>
-    );
-  }
-
-  // Show card overview if requested
-  if (showCardOverview) {
-    return (
-      <CardOverview
-        cards={cards}
-        onReorderCards={reorderCards}
-        onBackToEditor={() => setShowCardOverview(false)}
-        onEditCard={handleEditCard}
-      />
-    );
-  }
-
-  // Show empty state if no cards exist
-  if (cards.length === 0) {
-    return (
-      <div className="min-h-screen bg-background">
-        <EditorHeader 
-          set={set} 
-          onSave={saveCard}
-          isEditingDeckName={isEditingDeckName}
-          deckName={deckName}
-          onDeckNameChange={setDeckName}
-          onStartEdit={() => setIsEditingDeckName(true)}
-          onSaveEdit={handleSaveDeckName}
-          onCancelEdit={handleCancelEdit}
-        />
-        <main className="h-[calc(100vh-80px)] p-1">
-          <div className="relative h-full">
-            <div className="flex items-center justify-center h-full pt-20">
-              <div className="text-center">
-                <h2 className="text-lg sm:text-xl font-semibold mb-4">No cards in this set</h2>
-                <p className="text-gray-600 text-sm sm:text-base">Create your first card to get started!</p>
-              </div>
-            </div>
-            <LockableToolbar
-              set={set}
-              currentCard={{} as any}
-              currentCardIndex={0}
-              totalCards={0}
-              currentSide={currentSide}
-              onAddElement={addElement}
-              onUpdateCard={updateCard}
-              onNavigateCard={navigateCard}
-              onSideChange={setCurrentSide}
-              onCreateNewCard={createNewCard}
-              onCreateNewCardWithLayout={createNewCardWithLayout}
-              onDeleteCard={async () => false}
-              onSave={saveCard}
-            />
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  const currentCard = cards[currentCardIndex];
-  const currentElements = currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements;
-
-  const handleDeleteCard = async (): Promise<boolean> => {
-    return await deleteCard(currentCard.id);
+  const handleSave = () => {
+    const elementsJSON = JSON.stringify(elements);
+    handleUpdateCard(currentCard.id, { elements_json: elementsJSON });
+    alert('Card saved!');
   };
 
   const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right') => {
-    const elementsToArrange = currentElements;
-    if (elementsToArrange.length === 0) return;
+    let arrangedElements = [...elements];
 
     switch (type) {
       case 'grid':
-        const cols = Math.ceil(Math.sqrt(elementsToArrange.length));
-        const cellWidth = 250;
-        const cellHeight = 180;
-        const margin = 20;
-        
-        elementsToArrange.forEach((element, index) => {
-          const row = Math.floor(index / cols);
-          const col = index % cols;
-          updateElement(element.id, {
-            x: col * cellWidth + margin,
-            y: row * cellHeight + margin,
-            width: Math.min(element.width, cellWidth - margin),
-            height: Math.min(element.height, cellHeight - margin),
-          });
-        });
+        arrangedElements = elements.map((element, index) => ({
+          ...element,
+          x: (index % 2) * (currentCard.canvas_width! / 2) + 20,
+          y: Math.floor(index / 2) * (currentCard.canvas_height! / 2) + 20,
+        }));
         break;
-
       case 'center':
-        const canvasWidth = 900;
-        const canvasHeight = currentCard.card_type === 'informational' ? 800 : 600;
-        const centerX = canvasWidth / 2;
-        const centerY = canvasHeight / 2;
-        
-        elementsToArrange.forEach((element) => {
-          updateElement(element.id, {
-            x: centerX - element.width / 2,
-            y: centerY - element.height / 2,
-          });
-        });
+        arrangedElements = elements.map(element => ({
+          ...element,
+          x: (currentCard.canvas_width! - element.width) / 2,
+          y: (currentCard.canvas_height! - element.height) / 2,
+        }));
         break;
-
       case 'justify':
-        const totalWidth = 900 - 40; // Canvas width minus margins
-        const elementSpacing = totalWidth / (elementsToArrange.length + 1);
-        
-        elementsToArrange.forEach((element, index) => {
-          updateElement(element.id, {
-            x: elementSpacing * (index + 1) - element.width / 2,
-            y: 100,
-          });
-        });
+        arrangedElements = elements.map((element, index) => ({
+          ...element,
+          x: 20,
+          width: currentCard.canvas_width! - 40,
+          y: index * (currentCard.canvas_height! / elements.length),
+        }));
         break;
-
       case 'stack':
-        const stackSpacing = 20;
-        
-        elementsToArrange.forEach((element, index) => {
-          updateElement(element.id, {
-            x: 50,
-            y: 50 + index * (element.height + stackSpacing),
-          });
-        });
+        arrangedElements = elements.map((element, index) => ({
+          ...element,
+          x: 20,
+          y: 20 + index * 10,
+        }));
         break;
-
       case 'align-left':
-        elementsToArrange.forEach((element) => {
-          if (element.type === 'text') {
-            updateElement(element.id, { textAlign: 'left' });
-          }
-        });
+        arrangedElements = elements.map(element => ({
+          ...element,
+          x: 20,
+        }));
         break;
-
       case 'align-center':
-        elementsToArrange.forEach((element) => {
-          if (element.type === 'text') {
-            updateElement(element.id, { textAlign: 'center' });
-          }
-        });
+        arrangedElements = elements.map(element => ({
+          ...element,
+          x: (currentCard.canvas_width! - element.width) / 2,
+        }));
         break;
-
       case 'align-right':
-        elementsToArrange.forEach((element) => {
-          if (element.type === 'text') {
-            updateElement(element.id, { textAlign: 'right' });
-          }
-        });
+        arrangedElements = elements.map(element => ({
+          ...element,
+          x: currentCard.canvas_width! - element.width - 20,
+        }));
+        break;
+      default:
         break;
     }
+
+    setElements(arrangedElements);
+    saveHistory(arrangedElements);
+  };
+
+  const handleElementDragStart = (e: React.MouseEvent, elementId: string) => {
+    setIsDragging(true);
+  };
+
+  const handleElementDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  const [selectedElement, setSelectedElement] = useState<CanvasElement | null>(null);
+
+  const handleElementSelect = (elementId: string | null) => {
+    const element = elementId ? elements.find(e => e.id === elementId) : null;
+    setSelectedElement(element || null);
+  };
+
+  const handleChangeCardSize = (size: 'small' | 'medium' | 'large' | 'custom') => {
+    const dimensions = {
+      small: { width: 400, height: 300 },
+      medium: { width: 600, height: 400 },
+      large: { width: 800, height: 600 },
+      custom: { width: 600, height: 400 } // Default for custom, user can adjust
+    };
+    
+    const newDimensions = dimensions[size];
+    handleUpdateCard(currentCard.id, {
+      canvas_width: newDimensions.width,
+      canvas_height: newDimensions.height
+    });
+  };
+
+  const handleScaleToElements = () => {
+    if (elements.length === 0) return;
+    
+    const bounds = elements.reduce((acc, element) => {
+      const right = element.x + element.width;
+      const bottom = element.y + element.height;
+      return {
+        minX: Math.min(acc.minX, element.x),
+        minY: Math.min(acc.minY, element.y),
+        maxX: Math.max(acc.maxX, right),
+        maxY: Math.max(acc.maxY, bottom)
+      };
+    }, { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity });
+    
+    const padding = 50;
+    const newWidth = Math.max(400, bounds.maxX - bounds.minX + padding * 2);
+    const newHeight = Math.max(300, bounds.maxY - bounds.minY + padding * 2);
+    
+    handleUpdateCard(currentCard.id, {
+      canvas_width: newWidth,
+      canvas_height: newHeight
+    });
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <EditorHeader 
-        set={set} 
-        onSave={saveCard}
-        isEditingDeckName={isEditingDeckName}
-        deckName={deckName}
-        onDeckNameChange={setDeckName}
-        onStartEdit={() => setIsEditingDeckName(true)}
-        onSaveEdit={handleSaveDeckName}
-        onCancelEdit={handleCancelEdit}
+      <LockableToolbar
+        set={set}
+        currentCard={currentCard}
+        currentCardIndex={set?.flashcards?.findIndex((card) => card.id === currentCard.id) || 0}
+        totalCards={set?.flashcards?.length || 0}
+        currentSide={currentSide}
+        onAddElement={handleAddElement}
+        onUpdateCard={handleUpdateCard}
+        onNavigateCard={handleNavigateCard}
+        onSideChange={setCurrentSide}
+        onCreateNewCard={handleCreateNewCard}
+        onCreateNewCardWithLayout={handleCreateNewCardWithLayout}
+        onDeleteCard={handleDeleteCard}
+        onSave={handleSave}
+        onAutoArrange={handleAutoArrange}
+        isBackSideDisabled={currentCard.card_type === 'single-sided'}
       />
-
-      {/* Card Overview Button */}
-      <div className="fixed top-24 right-4 z-30">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowCardOverview(true)}
-          className="bg-white/90 backdrop-blur-sm shadow-md"
-          title="View all cards"
+      
+      <div className="pt-14 pb-12">
+        <CanvasContextMenu
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          onChangeBackground={() => {}}
+          onToggleGrid={() => {}}
+          onSettings={() => {}}
+          onChangeCardSize={handleChangeCardSize}
+          onScaleToElements={handleScaleToElements}
+          onSetDefaultSize={() => {
+            // Store current card size as default
+            localStorage.setItem('defaultCardSize', JSON.stringify({
+              width: currentCard.canvas_width || 600,
+              height: currentCard.canvas_height || 400
+            }));
+          }}
         >
-          <LayoutGrid className="w-4 h-4 mr-2" />
-          Card Overview
-        </Button>
+          <CardCanvas
+            elements={elements}
+            selectedElementId={selectedElementId}
+            onElementUpdate={handleUpdateElement}
+            onElementSelect={handleElementSelect}
+            onCreateElement={handleCreateElement}
+            onDeleteElement={handleDeleteElement}
+            cardWidth={currentCard.canvas_width || 600}
+            cardHeight={currentCard.canvas_height || 400}
+            isDragging={isDragging}
+            onElementDragStart={handleElementDragStart}
+          />
+        </CanvasContextMenu>
       </div>
 
-      <main className="h-[calc(100vh-80px)] relative">
-        {/* Lockable Toolbar */}
-        <LockableToolbar
-          set={set}
-          currentCard={currentCard}
-          currentCardIndex={currentCardIndex}
-          totalCards={cards.length}
-          currentSide={currentSide}
-          onAddElement={addElement}
-          onUpdateCard={updateCard}
-          onNavigateCard={navigateCard}
-          onSideChange={setCurrentSide}
-          onCreateNewCard={createNewCard}
-          onCreateNewCardWithLayout={createNewCardWithLayout}
-          onDeleteCard={handleDeleteCard}
-          onSave={saveCard}
-          onAutoArrange={handleAutoArrange}
-          isBackSideDisabled={currentCard?.card_type === 'single-sided'}
-        />
-
-        {/* Canvas with card type label and enhanced spacing */}
-        <div className="h-full flex flex-col items-center justify-center pt-16 pb-16 px-12">
-          {/* Card Type Label */}
-          <div className="mb-4">
-            <span className="inline-block px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-full">
-              {getCardTypeLabel(currentCard?.card_type || 'standard')}
-            </span>
-          </div>
-          
-          <CardCanvas
-            elements={currentElements}
-            selectedElement={selectedElement}
-            onSelectElement={setSelectedElement}
-            onUpdateElement={updateElement}
-            onDeleteElement={deleteElement}
-            cardSide={currentSide}
-            cardType={currentCard?.card_type}
-            onAddElement={addElement}
-            onAutoArrange={() => handleAutoArrange('grid')}
-          />
-        </div>
-      </main>
+      <EditorFooter
+        currentCard={currentCard}
+        selectedElement={selectedElement}
+        onUpdateElement={handleUpdateElement}
+        onUpdateCard={handleUpdateCard}
+      />
     </div>
   );
 };
