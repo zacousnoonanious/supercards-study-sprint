@@ -66,8 +66,12 @@ export interface Flashcard {
   card_type: 'standard' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
   interactive_type?: 'multiple-choice' | 'true-false' | 'fill-in-blank' | null;
   countdown_timer?: number;
+  countdown_seconds?: number;
   countdown_behavior?: 'flip' | 'next';
   password?: string | null;
+  elements_json?: string;
+  canvas_width?: number;
+  canvas_height?: number;
 }
 
 export interface FlashcardSet {
@@ -77,4 +81,5 @@ export interface FlashcardSet {
   user_id: string;
   created_at: string;
   updated_at: string;
+  flashcards?: Flashcard[];
 }

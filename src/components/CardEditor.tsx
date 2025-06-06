@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Stage, Layer, Transformer } from 'react-konva';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Flashcard, CanvasElement } from '@/types/flashcard';
@@ -9,7 +9,6 @@ import { CanvasElementRenderer } from './CanvasElementRenderer';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFlashcard, getFlashcard, updateFlashcard, deleteFlashcard } from '@/lib/api/flashcards';
 import { getSet } from '@/lib/api/sets';
-import { KonvaEventObject } from 'konva/lib/types/Node';
 import { v4 as uuidv4 } from 'uuid';
 import { CanvasContextMenu } from './CanvasContextMenu';
 import { EditorFooter } from './EditorFooter';
@@ -28,6 +27,55 @@ interface CardCanvasProps {
   onElementDragStart?: (e: React.MouseEvent, elementId: string) => void;
 }
 
+const CardCanvas: React.FC<CardCanvasProps> = ({
+  elements,
+  selectedElementId,
+  onElementUpdate,
+  onElementSelect,
+  cardWidth,
+  cardHeight,
+  onElementDragStart
+}) => {
+  const [editingElement, setEditingElement] = useState<string | null>(null);
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
+      <div 
+        className="relative bg-white shadow-lg"
+        style={{ width: cardWidth, height: cardHeight }}
+        onClick={() => onElementSelect(null)}
+      >
+        {elements.map((element) => (
+          <div
+            key={element.id}
+            className={`absolute cursor-move ${selectedElementId === element.id ? 'ring-2 ring-blue-500' : ''}`}
+            style={{
+              left: element.x,
+              top: element.y,
+              width: element.width,
+              height: element.height,
+              transform: `rotate(${element.rotation || 0}deg)`,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onElementSelect(element.id);
+            }}
+            onMouseDown={(e) => onElementDragStart?.(e, element.id)}
+          >
+            <CanvasElementRenderer
+              element={element}
+              editingElement={editingElement}
+              onUpdateElement={onElementUpdate}
+              onEditingChange={setEditingElement}
+              onElementDragStart={onElementDragStart}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export const CardEditor = () => {
   const { cardId, setId } = useParams<{ cardId: string; setId: string }>();
   const navigate = useNavigate();
@@ -36,7 +84,6 @@ export const CardEditor = () => {
   const [currentCard, setCurrentCard] = useState<Flashcard>({} as Flashcard);
   const [elements, setElements] = useState<CanvasElement[]>([]);
   const [currentSide, setCurrentSide] = useState<'front' | 'back'>('front');
-  const [transformer, setTransformer] = useState<Transformer | null>(null);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [history, setHistory] = useState<CanvasElement[][]>([]);
@@ -52,14 +99,11 @@ export const CardEditor = () => {
     queryKey: ['card', cardId],
     queryFn: () => getFlashcard(cardId!),
     enabled: !!cardId,
-    onSuccess: (data) => {
-      setCurrentCard(data);
-      setElements(JSON.parse(data.elements_json || '[]') as CanvasElement[]);
-    },
   });
 
   useEffect(() => {
     if (cardData) {
+      setCurrentCard(cardData as Flashcard);
       const parsedElements = JSON.parse(cardData.elements_json || '[]') as CanvasElement[];
       setElements(parsedElements);
       saveHistory(parsedElements);
@@ -90,12 +134,6 @@ export const CardEditor = () => {
     },
   });
 
-  useEffect(() => {
-    if (elements) {
-      saveHistory(elements);
-    }
-  }, []);
-
   const saveHistory = (newElements: CanvasElement[]) => {
     setHistory(prevHistory => {
       const newHistory = [...prevHistory.slice(0, historyIndex + 1), newElements];
@@ -124,13 +162,7 @@ export const CardEditor = () => {
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
-  const handleStageClick = (e: KonvaEventObject<any>) => {
-    if (e.target === e.target.getStage()) {
-      setSelectedElementId(null);
-    }
-  };
-
-  const handleAddElement = (type: string) => {
+  const handleAddElement = (type: CanvasElement['type']) => {
     const newElement: CanvasElement = {
       id: uuidv4(),
       type: type,
@@ -232,11 +264,11 @@ export const CardEditor = () => {
   const handleDeleteCard = async () => {
     if (!cardId || !set) return false;
 
-    if (set.flashcards.length <= 1) {
+    if (set.flashcards && set.flashcards.length <= 1) {
       return false;
     }
 
-    await deleteCardMutation(cardId);
+    deleteCardMutation(cardId);
     return true;
   };
 
@@ -248,28 +280,30 @@ export const CardEditor = () => {
 
   const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right') => {
     let arrangedElements = [...elements];
+    const cardWidth = currentCard.canvas_width || 600;
+    const cardHeight = currentCard.canvas_height || 400;
 
     switch (type) {
       case 'grid':
         arrangedElements = elements.map((element, index) => ({
           ...element,
-          x: (index % 2) * (currentCard.canvas_width! / 2) + 20,
-          y: Math.floor(index / 2) * (currentCard.canvas_height! / 2) + 20,
+          x: (index % 2) * (cardWidth / 2) + 20,
+          y: Math.floor(index / 2) * (cardHeight / 2) + 20,
         }));
         break;
       case 'center':
         arrangedElements = elements.map(element => ({
           ...element,
-          x: (currentCard.canvas_width! - element.width) / 2,
-          y: (currentCard.canvas_height! - element.height) / 2,
+          x: (cardWidth - element.width) / 2,
+          y: (cardHeight - element.height) / 2,
         }));
         break;
       case 'justify':
         arrangedElements = elements.map((element, index) => ({
           ...element,
           x: 20,
-          width: currentCard.canvas_width! - 40,
-          y: index * (currentCard.canvas_height! / elements.length),
+          width: cardWidth - 40,
+          y: index * (cardHeight / elements.length),
         }));
         break;
       case 'stack':
@@ -288,13 +322,13 @@ export const CardEditor = () => {
       case 'align-center':
         arrangedElements = elements.map(element => ({
           ...element,
-          x: (currentCard.canvas_width! - element.width) / 2,
+          x: (cardWidth - element.width) / 2,
         }));
         break;
       case 'align-right':
         arrangedElements = elements.map(element => ({
           ...element,
-          x: currentCard.canvas_width! - element.width - 20,
+          x: cardWidth - element.width - 20,
         }));
         break;
       default:
@@ -309,15 +343,12 @@ export const CardEditor = () => {
     setIsDragging(true);
   };
 
-  const handleElementDragEnd = () => {
-    setIsDragging(false);
-  };
-
   const [selectedElement, setSelectedElement] = useState<CanvasElement | null>(null);
 
   const handleElementSelect = (elementId: string | null) => {
     const element = elementId ? elements.find(e => e.id === elementId) : null;
     setSelectedElement(element || null);
+    setSelectedElementId(elementId);
   };
 
   const handleChangeCardSize = (size: 'small' | 'medium' | 'large' | 'custom') => {
@@ -325,7 +356,7 @@ export const CardEditor = () => {
       small: { width: 400, height: 300 },
       medium: { width: 600, height: 400 },
       large: { width: 800, height: 600 },
-      custom: { width: 600, height: 400 } // Default for custom, user can adjust
+      custom: { width: 600, height: 400 }
     };
     
     const newDimensions = dimensions[size];
@@ -391,7 +422,6 @@ export const CardEditor = () => {
           onChangeCardSize={handleChangeCardSize}
           onScaleToElements={handleScaleToElements}
           onSetDefaultSize={() => {
-            // Store current card size as default
             localStorage.setItem('defaultCardSize', JSON.stringify({
               width: currentCard.canvas_width || 600,
               height: currentCard.canvas_height || 400

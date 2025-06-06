@@ -19,7 +19,7 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
   onUpdateElement,
   onUpdateCard,
 }) => {
-  const [countdownTime, setCountdownTime] = useState(currentCard.countdown_seconds || 30);
+  const [countdownTime, setCountdownTime] = useState(currentCard.countdown_timer || 30);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
 
   const handleCountdownChange = (value: number) => {
     setCountdownTime(value);
-    onUpdateCard?.(currentCard.id, { countdown_seconds: value });
+    onUpdateCard?.(currentCard.id, { countdown_timer: value });
   };
 
   const handlePositionChange = (axis: 'x' | 'y', value: number) => {
