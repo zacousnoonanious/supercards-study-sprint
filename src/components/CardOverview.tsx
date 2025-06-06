@@ -21,15 +21,23 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [draggedCard, setDraggedCard] = useState<string | null>(null);
+  const [dragOverCard, setDragOverCard] = useState<string | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
     setDraggedCard(cardId);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, cardId: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    setDragOverCard(cardId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverCard(null);
   };
 
   const handleDrop = (e: React.DragEvent, targetCardId: string) => {
@@ -37,6 +45,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     
     if (!draggedCard || draggedCard === targetCardId) {
       setDraggedCard(null);
+      setDragOverCard(null);
       return;
     }
 
@@ -51,10 +60,12 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
 
     onReorderCards(newCards);
     setDraggedCard(null);
+    setDragOverCard(null);
   };
 
   const handleDragEnd = () => {
     setDraggedCard(null);
+    setDragOverCard(null);
   };
 
   if (viewMode === 'fan') {
@@ -87,39 +98,57 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           </div>
         </div>
 
-        <div className="relative w-full h-[600px] overflow-hidden">
+        <div className="relative w-full h-[700px] overflow-hidden">
           <div className="absolute inset-0 flex items-center justify-center">
             {cards.map((card, index) => {
               const totalCards = cards.length;
-              const angle = (index - (totalCards - 1) / 2) * 8; // 8 degrees between cards
-              const offset = Math.abs(index - (totalCards - 1) / 2) * 20;
+              const centerIndex = (totalCards - 1) / 2;
+              const angleFromCenter = (index - centerIndex) * 6; // 6 degrees between cards
+              const radius = Math.min(400, totalCards * 15); // Adjust radius based on card count
+              
+              // Calculate position in arc
+              const angleRad = (angleFromCenter * Math.PI) / 180;
+              const x = Math.sin(angleRad) * radius;
+              const y = Math.cos(angleRad) * (radius * 0.3); // Flatten the arc
+              
+              const isHovered = hoveredCard === card.id;
+              const isDragged = draggedCard === card.id;
+              const isDragOver = dragOverCard === card.id;
               
               return (
                 <div
                   key={card.id}
-                  className={`absolute cursor-move transition-transform duration-300 hover:scale-105 hover:z-10 ${
-                    draggedCard === card.id ? 'opacity-50' : ''
+                  className={`absolute cursor-move transition-all duration-300 ${
+                    isDragged ? 'opacity-50 scale-105 z-50' : ''
+                  } ${isHovered && !isDragged ? 'scale-110 z-20 -translate-y-8' : ''} ${
+                    isDragOver ? 'scale-105' : ''
                   }`}
                   style={{
-                    transform: `rotate(${angle}deg) translateY(${offset}px)`,
-                    zIndex: index,
+                    transform: `translate(${x}px, ${y}px) rotate(${angleFromCenter}deg) ${
+                      isHovered && !isDragged ? 'translateY(-2rem)' : ''
+                    }`,
+                    zIndex: isDragged ? 50 : isHovered ? 20 : 10 + index,
+                    transition: 'all 0.3s ease-out',
                   }}
                   draggable
                   onDragStart={(e) => handleDragStart(e, card.id)}
-                  onDragOver={handleDragOver}
+                  onDragOver={(e) => handleDragOver(e, card.id)}
+                  onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, card.id)}
                   onDragEnd={handleDragEnd}
+                  onMouseEnter={() => setHoveredCard(card.id)}
+                  onMouseLeave={() => setHoveredCard(null)}
                 >
-                  <Card className="w-80 h-48 shadow-lg border-2">
-                    <CardContent className="p-4 h-full">
-                      <div className="text-sm font-medium mb-2">Card {index + 1}</div>
-                      <div className="text-xs text-gray-600 mb-2">
+                  <Card className="w-64 h-40 shadow-lg border-2 hover:shadow-xl transition-shadow">
+                    <CardContent className="p-3 h-full">
+                      <div className="text-xs font-medium mb-1">Card {index + 1}</div>
+                      <div className="text-xs text-gray-600 mb-1">
                         Type: {card.card_type || 'standard'}
                       </div>
-                      <div className="h-32 overflow-hidden">
+                      <div className="h-24 overflow-hidden">
                         <StudyCardRenderer
                           elements={card.front_elements}
-                          className="scale-50 origin-top-left"
+                          className="scale-[0.35] origin-top-left"
                         />
                       </div>
                     </CardContent>
@@ -131,7 +160,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
         </div>
 
         <div className="mt-8 text-center text-sm text-gray-600">
-          Drag and drop cards to reorder them
+          Hover over cards to lift them up • Drag and drop to reorder
         </div>
       </div>
     );
@@ -167,43 +196,65 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {cards.map((card, index) => (
-          <div
-            key={card.id}
-            className={`cursor-move transition-transform duration-200 hover:scale-105 ${
-              draggedCard === card.id ? 'opacity-50' : ''
-            }`}
-            draggable
-            onDragStart={(e) => handleDragStart(e, card.id)}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, card.id)}
-            onDragEnd={handleDragEnd}
-          >
-            <Card className="h-64 shadow-md border-2 hover:border-primary/50">
-              <CardContent className="p-4 h-full flex flex-col">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="text-sm font-medium">Card {index + 1}</div>
-                  <div className="text-xs text-gray-500">
-                    {card.card_type || 'standard'}
+        {cards.map((card, index) => {
+          const isDragged = draggedCard === card.id;
+          const isDragOver = dragOverCard === card.id;
+          
+          return (
+            <div
+              key={card.id}
+              className={`cursor-move transition-all duration-300 ease-out ${
+                isDragged 
+                  ? 'opacity-30 scale-95 rotate-3 z-50' 
+                  : 'hover:scale-105 hover:-translate-y-2 hover:shadow-lg'
+              } ${
+                isDragOver && !isDragged 
+                  ? 'scale-105 shadow-lg ring-2 ring-primary/50' 
+                  : ''
+              }`}
+              style={{
+                transform: isDragOver && !isDragged 
+                  ? 'scale(1.05) translateX(10px)' 
+                  : undefined,
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+              draggable
+              onDragStart={(e) => handleDragStart(e, card.id)}
+              onDragOver={(e) => handleDragOver(e, card.id)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, card.id)}
+              onDragEnd={handleDragEnd}
+            >
+              <Card className={`h-64 shadow-md border-2 transition-all duration-300 ${
+                isDragOver && !isDragged 
+                  ? 'border-primary/50 shadow-xl' 
+                  : 'hover:border-primary/30'
+              }`}>
+                <CardContent className="p-4 h-full flex flex-col">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="text-sm font-medium">Card {index + 1}</div>
+                    <div className="text-xs text-gray-500">
+                      {card.card_type || 'standard'}
+                    </div>
                   </div>
-                </div>
-                
-                <div className="flex-1 overflow-hidden border rounded p-2">
-                  <StudyCardRenderer
-                    elements={card.front_elements}
-                    className="scale-75 origin-top-left"
-                  />
-                </div>
-                
-                {card.countdown_timer && card.countdown_timer > 0 && (
-                  <div className="text-xs text-blue-600 mt-2">
-                    Timer: {card.countdown_timer}s → {card.countdown_behavior === 'flip' ? 'Flip' : 'Next'}
+                  
+                  <div className="flex-1 overflow-hidden border rounded p-2 bg-gray-50">
+                    <StudyCardRenderer
+                      elements={card.front_elements}
+                      className="scale-75 origin-top-left"
+                    />
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        ))}
+                  
+                  {card.countdown_timer && card.countdown_timer > 0 && (
+                    <div className="text-xs text-blue-600 mt-2">
+                      Timer: {card.countdown_timer}s → {card.countdown_behavior === 'flip' ? 'Flip' : 'Next'}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          );
+        })}
       </div>
 
       {cards.length === 0 && (
@@ -213,7 +264,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       )}
 
       <div className="mt-8 text-center text-sm text-gray-600">
-        Drag and drop cards to reorder them
+        Drag and drop cards to reorder them • Hover for preview
       </div>
     </div>
   );
