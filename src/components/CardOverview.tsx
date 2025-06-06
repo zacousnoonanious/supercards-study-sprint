@@ -63,8 +63,8 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     if (viewMode === 'fan') {
       const totalCards = cards.length;
       const centerIndex = (totalCards - 1) / 2;
-      const maxAngle = Math.min(45, totalCards * 6); // Reduced angle for better fan effect
-      const maxOffset = Math.min(150, totalCards * 12); // Reduced horizontal spread
+      const maxAngle = Math.min(60, totalCards * 8);
+      const maxOffset = Math.min(200, totalCards * 15);
       
       // Calculate angle and position for each card
       const angleStep = totalCards > 1 ? maxAngle / (totalCards - 1) : 0;
@@ -72,7 +72,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       
       const angle = (index - centerIndex) * angleStep;
       const horizontalOffset = (index - centerIndex) * offsetStep;
-      const verticalOffset = Math.abs(angle) * 2; // More pronounced arc
+      const verticalOffset = Math.abs(angle) * 3;
       
       // Z-index: center cards should be on top
       const zIndex = 100 - Math.abs(index - centerIndex);
@@ -125,11 +125,13 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       if (lastSelectedIndex !== -1) {
         const start = Math.min(lastSelectedIndex, cardIndex);
         const end = Math.max(lastSelectedIndex, cardIndex);
-        const rangeIds = [];
+        const rangeIds: string[] = [];
         
         // Get all card IDs in the range
         for (let i = start; i <= end; i++) {
-          rangeIds.push(cards[i].id);
+          if (cards[i]) {
+            rangeIds.push(cards[i].id);
+          }
         }
         
         setSelectedCards(prev => {
@@ -206,7 +208,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
             // Only update specified properties, preserve others
             const updatedElement = { ...element };
             Object.keys(updates.elementUpdates).forEach(key => {
-              if (updates.elementUpdates[key] !== undefined) {
+              if (updates.elementUpdates[key] !== undefined && updates.elementUpdates[key] !== '') {
                 updatedElement[key] = updates.elementUpdates[key];
               }
             });
@@ -221,7 +223,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
             // Only update specified properties, preserve others
             const updatedElement = { ...element };
             Object.keys(updates.elementUpdates).forEach(key => {
-              if (updates.elementUpdates[key] !== undefined) {
+              if (updates.elementUpdates[key] !== undefined && updates.elementUpdates[key] !== '') {
                 updatedElement[key] = updates.elementUpdates[key];
               }
             });
