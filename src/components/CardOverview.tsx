@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -238,25 +237,22 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       // Trigger reorder to update the cards in the parent
       onReorderCards(updatedCards);
     } else {
-      // Handle direct card property updates (question, answer, etc.)
+      // Handle direct card property updates (only for properties that exist on Flashcard)
       const updatedCards = cards.map(card => {
         if (!cardIds.includes(card.id)) return card;
         
         // Create updated card with proper typing
         const updatedCard = { ...card };
         
-        // Only update specific known properties to avoid type issues
+        // Only update specific known properties that exist on the Flashcard type
         if (updates.question !== undefined) {
           updatedCard.question = updates.question;
         }
         if (updates.answer !== undefined) {
           updatedCard.answer = updates.answer;
         }
-        if (updates.difficulty !== undefined) {
-          updatedCard.difficulty = updates.difficulty;
-        }
-        if (updates.tags !== undefined) {
-          updatedCard.tags = updates.tags;
+        if (updates.hint !== undefined) {
+          updatedCard.hint = updates.hint;
         }
         
         return updatedCard;
