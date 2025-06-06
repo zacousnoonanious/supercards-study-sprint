@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil, Settings } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil, Settings, ChevronDown } from 'lucide-react';
 import { CardSideToggle } from './CardSideToggle';
 import { FlashcardSet, Flashcard } from '@/types/flashcard';
 import { AIFlashcardGenerator } from './AIFlashcardGenerator';
@@ -69,13 +69,10 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
   const getCardTypeLabel = (cardType: Flashcard['card_type']) => {
     switch (cardType) {
       case 'standard': return 'Standard';
-      case 'cloze': return 'Cloze';
-      case 'multiple-choice': return 'Multiple Choice';
-      case 'true-false': return 'True/False';
-      case 'image-based': return 'Image';
-      case 'timed': return 'Timed';
-      case 'protected': return 'Protected';
-      case 'quiz-only': return 'Quiz Only';
+      case 'informational': return 'Info';
+      case 'single-sided': return 'Single';
+      case 'password-protected': return 'Protected';
+      case 'quiz-only': return 'Quiz';
       default: return 'Standard';
     }
   };
@@ -83,9 +80,9 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
   return (
     <div className="absolute top-2 left-2 right-2 z-20">
       <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-1 flex-wrap min-h-[36px]">
           {/* Left section - Add elements */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
             <Button
               variant="ghost"
               size="sm"
@@ -102,33 +99,38 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
             >
               <span className="text-xs">Image</span>
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onAddElement('multiple-choice')}
-              className="h-8 px-2"
-            >
-              <CheckSquare className="w-3 h-3 mr-1" />
-              <span className="text-xs">Quiz</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onAddElement('true-false')}
-              className="h-8 px-2"
-            >
-              <ToggleLeft className="w-3 h-3 mr-1" />
-              <span className="text-xs">T/F</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onAddElement('fill-in-blank')}
-              className="h-8 px-2"
-            >
-              <FileText className="w-3 h-3 mr-1" />
-              <span className="text-xs">Fill</span>
-            </Button>
+            
+            {/* Quiz Elements Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2"
+                >
+                  <CheckSquare className="w-3 h-3 mr-1" />
+                  <span className="text-xs">Quiz</span>
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48 bg-white dark:bg-gray-800 border shadow-lg z-50">
+                <DropdownMenuLabel>Quiz Elements</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onAddElement('multiple-choice')}>
+                  <CheckSquare className="w-3 h-3 mr-2" />
+                  Multiple Choice
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onAddElement('true-false')}>
+                  <ToggleLeft className="w-3 h-3 mr-2" />
+                  True/False
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onAddElement('fill-in-blank')}>
+                  <FileText className="w-3 h-3 mr-2" />
+                  Fill in Blank
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <Button
               variant="ghost"
               size="sm"
@@ -205,7 +207,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
               <ChevronLeft className="w-4 h-4" />
             </Button>
             
-            <span className="text-xs text-muted-foreground px-2">
+            <span className="text-xs text-muted-foreground px-2 whitespace-nowrap">
               {currentCardIndex + 1} of {totalCards}
             </span>
             
@@ -237,29 +239,20 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
                   <span className="text-xs">{getCardTypeLabel(currentCard?.card_type || 'standard')}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-48 bg-white dark:bg-gray-800 border shadow-lg">
+              <DropdownMenuContent align="center" className="w-48 bg-white dark:bg-gray-800 border shadow-lg z-50">
                 <DropdownMenuLabel>Card Type</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleCardTypeChange('standard')}>
                   Standard Card
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleCardTypeChange('cloze')}>
-                  Cloze Deletion
+                <DropdownMenuItem onClick={() => handleCardTypeChange('informational')}>
+                  Informational
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleCardTypeChange('multiple-choice')}>
-                  Multiple Choice
+                <DropdownMenuItem onClick={() => handleCardTypeChange('single-sided')}>
+                  Single Sided
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleCardTypeChange('true-false')}>
-                  True/False
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleCardTypeChange('image-based')}>
-                  Image Based
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleCardTypeChange('timed')}>
-                  Timed Card
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleCardTypeChange('protected')}>
-                  Protected Card
+                <DropdownMenuItem onClick={() => handleCardTypeChange('password-protected')}>
+                  Password Protected
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleCardTypeChange('quiz-only')}>
                   Quiz Only
