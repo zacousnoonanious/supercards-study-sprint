@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil, Settings, ChevronDown, Grid3X3, AlignCenter, AlignJustify, Layers3, Clock } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil, Settings, ChevronDown, Grid3X3, AlignCenter, AlignJustify, Layers3, Clock, Image } from 'lucide-react';
 import { CardSideToggle } from './CardSideToggle';
 import { FlashcardSet, Flashcard } from '@/types/flashcard';
 import { AIFlashcardGenerator } from './AIFlashcardGenerator';
@@ -131,7 +131,82 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           )}
         </Button>
         
-        {/* Quiz Elements Dropdown - More compact */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddElement('image')}
+          className={buttonSize}
+          title="Add Image"
+        >
+          {isCompact ? <Image className={iconSize} /> : (
+            <>
+              <Image className={`${iconSize} mr-1`} />
+              <span className={textSize}>Image</span>
+            </>
+          )}
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddElement('audio')}
+          className={buttonSize}
+          title="Add Audio"
+        >
+          {isCompact ? <Volume2 className={iconSize} /> : (
+            <>
+              <Volume2 className={`${iconSize} mr-1`} />
+              <span className={textSize}>Audio</span>
+            </>
+          )}
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddElement('drawing')}
+          className={buttonSize}
+          title="Add Drawing"
+        >
+          {isCompact ? <Pencil className={iconSize} /> : (
+            <>
+              <Pencil className={`${iconSize} mr-1`} />
+              <span className={textSize}>Draw</span>
+            </>
+          )}
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddElement('youtube')}
+          className={buttonSize}
+          title="Add YouTube Video"
+        >
+          {isCompact ? <Youtube className={iconSize} /> : (
+            <>
+              <Youtube className={`${iconSize} mr-1`} />
+              <span className={textSize}>Video</span>
+            </>
+          )}
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddElement('deck-embed')}
+          className={buttonSize}
+          title="Embed Deck"
+        >
+          {isCompact ? <Layers className={iconSize} /> : (
+            <>
+              <Layers className={`${iconSize} mr-1`} />
+              <span className={textSize}>Deck</span>
+            </>
+          )}
+        </Button>
+        
+        {/* Quiz Elements Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
