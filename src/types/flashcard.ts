@@ -1,3 +1,4 @@
+
 export interface CanvasElement {
   id: string;
   type: 'text' | 'image' | 'audio' | 'drawing' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed' | 'fill-in-blank';
@@ -62,7 +63,7 @@ export interface Flashcard {
   created_at: string;
   updated_at: string;
   last_reviewed_at?: string | null;
-  card_type: 'standard' | 'informational' | 'single-sided';
+  card_type: 'standard' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
   interactive_type?: 'multiple-choice' | 'true-false' | 'fill-in-blank' | null;
   countdown_timer?: number;
   countdown_behavior?: 'flip' | 'next';

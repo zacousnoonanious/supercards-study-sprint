@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,12 +11,14 @@ interface CardOverviewProps {
   onBackToEditor: () => void;
 }
 
+type ViewMode = 'fan' | 'grid';
+
 export const CardOverview: React.FC<CardOverviewProps> = ({
   cards,
   onReorderCards,
   onBackToEditor,
 }) => {
-  const [viewMode, setViewMode] = useState<'fan' | 'grid'>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [draggedCard, setDraggedCard] = useState<string | null>(null);
 
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
