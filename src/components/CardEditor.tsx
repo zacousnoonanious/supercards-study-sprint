@@ -40,37 +40,13 @@ export const CardEditor: React.FC = () => {
     }
   }, [set?.title]);
 
-  const handleSaveDeckName = async () => {
-    if (!set) return;
-    
-    try {
-      const { error } = await supabase
-        .from('flashcard_sets')
-        .update({ title: deckName })
-        .eq('id', set.id);
-
-      if (error) throw error;
-      
-      setIsEditingDeckName(false);
-      console.log('Deck name updated successfully');
-    } catch (error) {
-      console.error('Error updating deck name:', error);
+  // Force front side for single-sided cards - MUST be called before any conditional returns
+  useEffect(() => {
+    const currentCard = cards[currentCardIndex];
+    if (currentCard?.card_type === 'single-sided' && currentSide === 'back') {
+      setCurrentSide('front');
     }
-  };
-
-  const handleCancelEdit = () => {
-    setDeckName(set?.title || '');
-    setIsEditingDeckName(false);
-  };
-
-  const getCardTypeLabel = (cardType: string) => {
-    switch (cardType) {
-      case 'standard': return 'Standard Card';
-      case 'informational': return 'Informational Card';
-      case 'single-sided': return 'Single-Sided Card';
-      default: return 'Standard Card';
-    }
-  };
+  }, [cards, currentCardIndex, currentSide, setCurrentSide]);
 
   // Add keyboard shortcuts
   useEffect(() => {
@@ -108,6 +84,38 @@ export const CardEditor: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedElement, deleteElement, setSelectedElement, navigateCard, saveCard]);
+
+  const handleSaveDeckName = async () => {
+    if (!set) return;
+    
+    try {
+      const { error } = await supabase
+        .from('flashcard_sets')
+        .update({ title: deckName })
+        .eq('id', set.id);
+
+      if (error) throw error;
+      
+      setIsEditingDeckName(false);
+      console.log('Deck name updated successfully');
+    } catch (error) {
+      console.error('Error updating deck name:', error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setDeckName(set?.title || '');
+    setIsEditingDeckName(false);
+  };
+
+  const getCardTypeLabel = (cardType: string) => {
+    switch (cardType) {
+      case 'standard': return 'Standard Card';
+      case 'informational': return 'Informational Card';
+      case 'single-sided': return 'Single-Sided Card';
+      default: return 'Standard Card';
+    }
+  };
 
   console.log('CardEditor render - loading:', loading, 'set:', set, 'cards:', cards.length);
 
@@ -238,13 +246,6 @@ export const CardEditor: React.FC = () => {
         break;
     }
   };
-
-  // Force front side for single-sided cards
-  useEffect(() => {
-    if (currentCard?.card_type === 'single-sided' && currentSide === 'back') {
-      setCurrentSide('front');
-    }
-  }, [currentCard?.card_type, currentSide, setCurrentSide]);
 
   return (
     <div className="min-h-screen bg-background">
