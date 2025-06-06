@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil, Settings, ChevronDown, Grid3X3 } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil, Settings, ChevronDown, Grid3X3, AlignCenter, AlignJustify, Layers3 } from 'lucide-react';
 import { CardSideToggle } from './CardSideToggle';
 import { FlashcardSet, Flashcard } from '@/types/flashcard';
 import { AIFlashcardGenerator } from './AIFlashcardGenerator';
@@ -35,7 +35,7 @@ interface CanvasOverlayToolbarProps {
   onCreateNewCardWithLayout: () => void;
   onDeleteCard: () => Promise<boolean>;
   onSave: () => void;
-  onAutoArrange?: () => void;
+  onAutoArrange?: (type: 'grid' | 'center' | 'justify' | 'stack') => void;
 }
 
 export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
@@ -264,17 +264,42 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
 
         {/* Right section - Actions */}
         <div className="flex items-center gap-1">
+          {/* Arrange Dropdown */}
           {onAutoArrange && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onAutoArrange}
-              className="h-8 px-2"
-              title="Auto-arrange elements"
-            >
-              <Grid3X3 className="w-3 h-3 mr-1" />
-              <span className="text-xs">Arrange</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2"
+                  title="Arrange elements"
+                >
+                  <Grid3X3 className="w-3 h-3 mr-1" />
+                  <span className="text-xs">Arrange</span>
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40 bg-white dark:bg-gray-800 border shadow-lg z-50">
+                <DropdownMenuLabel>Layout Options</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onAutoArrange('grid')}>
+                  <Grid3X3 className="w-3 h-3 mr-2" />
+                  Grid Layout
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onAutoArrange('center')}>
+                  <AlignCenter className="w-3 h-3 mr-2" />
+                  Center All
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onAutoArrange('justify')}>
+                  <AlignJustify className="w-3 h-3 mr-2" />
+                  Justify
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onAutoArrange('stack')}>
+                  <Layers3 className="w-3 h-3 mr-2" />
+                  Stack
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           
           <Button

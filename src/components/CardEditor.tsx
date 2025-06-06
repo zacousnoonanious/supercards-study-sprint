@@ -123,26 +123,66 @@ export const CardEditor: React.FC = () => {
     return await deleteCard(currentCard.id);
   };
 
-  const handleAutoArrange = () => {
-    // Auto-arrange elements in a grid layout
+  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack') => {
     const elementsToArrange = currentElements;
     if (elementsToArrange.length === 0) return;
 
-    const cols = Math.ceil(Math.sqrt(elementsToArrange.length));
-    const cellWidth = 250;
-    const cellHeight = 180;
-    const margin = 20;
-    
-    elementsToArrange.forEach((element, index) => {
-      const row = Math.floor(index / cols);
-      const col = index % cols;
-      updateElement(element.id, {
-        x: col * cellWidth + margin,
-        y: row * cellHeight + margin,
-        width: Math.min(element.width, cellWidth - margin),
-        height: Math.min(element.height, cellHeight - margin),
-      });
-    });
+    switch (type) {
+      case 'grid':
+        const cols = Math.ceil(Math.sqrt(elementsToArrange.length));
+        const cellWidth = 250;
+        const cellHeight = 180;
+        const margin = 20;
+        
+        elementsToArrange.forEach((element, index) => {
+          const row = Math.floor(index / cols);
+          const col = index % cols;
+          updateElement(element.id, {
+            x: col * cellWidth + margin,
+            y: row * cellHeight + margin,
+            width: Math.min(element.width, cellWidth - margin),
+            height: Math.min(element.height, cellHeight - margin),
+          });
+        });
+        break;
+
+      case 'center':
+        const canvasWidth = 900;
+        const canvasHeight = 600;
+        const centerX = canvasWidth / 2;
+        const centerY = canvasHeight / 2;
+        
+        elementsToArrange.forEach((element) => {
+          updateElement(element.id, {
+            x: centerX - element.width / 2,
+            y: centerY - element.height / 2,
+          });
+        });
+        break;
+
+      case 'justify':
+        const totalWidth = 900 - 40; // Canvas width minus margins
+        const elementSpacing = totalWidth / (elementsToArrange.length + 1);
+        
+        elementsToArrange.forEach((element, index) => {
+          updateElement(element.id, {
+            x: elementSpacing * (index + 1) - element.width / 2,
+            y: 100,
+          });
+        });
+        break;
+
+      case 'stack':
+        const stackSpacing = 20;
+        
+        elementsToArrange.forEach((element, index) => {
+          updateElement(element.id, {
+            x: 50,
+            y: 50 + index * (element.height + stackSpacing),
+          });
+        });
+        break;
+    }
   };
 
   return (
@@ -151,7 +191,7 @@ export const CardEditor: React.FC = () => {
 
       <main className="h-[calc(100vh-80px)] relative">
         {/* Compact Overlay Toolbar - positioned with proper spacing */}
-        <div className="absolute top-2 left-2 right-2 z-20">
+        <div className="absolute top-4 left-4 right-4 z-20">
           <CanvasOverlayToolbar
             set={set}
             currentCard={currentCard}
@@ -170,8 +210,8 @@ export const CardEditor: React.FC = () => {
           />
         </div>
 
-        {/* Canvas takes up the full remaining space with proper top padding */}
-        <div className="h-full flex items-center justify-center pt-20 pb-4">
+        {/* Canvas takes up the full remaining space with more padding */}
+        <div className="h-full flex items-center justify-center pt-24 pb-8 px-8">
           <CardCanvas
             elements={currentElements}
             selectedElement={selectedElement}
@@ -181,7 +221,7 @@ export const CardEditor: React.FC = () => {
             cardSide={currentSide}
             cardType={currentCard?.card_type}
             onAddElement={addElement}
-            onAutoArrange={handleAutoArrange}
+            onAutoArrange={() => handleAutoArrange('grid')}
           />
         </div>
       </main>
