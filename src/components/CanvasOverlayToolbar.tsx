@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil, Settings } from 'lucide-react';
 import { CardSideToggle } from './CardSideToggle';
 import { FlashcardSet, Flashcard } from '@/types/flashcard';
 import { AIFlashcardGenerator } from './AIFlashcardGenerator';
@@ -12,6 +12,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface CanvasOverlayToolbarProps {
   set: FlashcardSet;
@@ -52,6 +60,24 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
       return await onDeleteCard();
     }
     return false;
+  };
+
+  const handleCardTypeChange = (cardType: Flashcard['card_type']) => {
+    onUpdateCard(currentCard.id, { card_type: cardType });
+  };
+
+  const getCardTypeLabel = (cardType: Flashcard['card_type']) => {
+    switch (cardType) {
+      case 'standard': return 'Standard';
+      case 'cloze': return 'Cloze';
+      case 'multiple-choice': return 'Multiple Choice';
+      case 'true-false': return 'True/False';
+      case 'image-based': return 'Image';
+      case 'timed': return 'Timed';
+      case 'protected': return 'Protected';
+      case 'quiz-only': return 'Quiz Only';
+      default: return 'Standard';
+    }
   };
 
   return (
@@ -167,7 +193,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
             </Dialog>
           </div>
 
-          {/* Center section - Navigation */}
+          {/* Center section - Navigation and Card Type */}
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -198,6 +224,48 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
               onSideChange={onSideChange}
               size="sm"
             />
+
+            {/* Card Type Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2"
+                >
+                  <Settings className="w-3 h-3 mr-1" />
+                  <span className="text-xs">{getCardTypeLabel(currentCard?.card_type || 'standard')}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-48 bg-white dark:bg-gray-800 border shadow-lg">
+                <DropdownMenuLabel>Card Type</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleCardTypeChange('standard')}>
+                  Standard Card
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCardTypeChange('cloze')}>
+                  Cloze Deletion
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCardTypeChange('multiple-choice')}>
+                  Multiple Choice
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCardTypeChange('true-false')}>
+                  True/False
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCardTypeChange('image-based')}>
+                  Image Based
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCardTypeChange('timed')}>
+                  Timed Card
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCardTypeChange('protected')}>
+                  Protected Card
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCardTypeChange('quiz-only')}>
+                  Quiz Only
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Right section - Actions */}

@@ -4,7 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CardCanvas } from './CardCanvas';
 import { EditorHeader } from './EditorHeader';
 import { CanvasOverlayToolbar } from './CanvasOverlayToolbar';
-import { CardTypePanel } from './CardTypePanel';
 import { useCardEditor } from '@/hooks/useCardEditor';
 
 export const CardEditor: React.FC = () => {
@@ -129,7 +128,7 @@ export const CardEditor: React.FC = () => {
       <EditorHeader set={set} onSave={saveCard} />
 
       <main className="h-[calc(100vh-80px)] relative">
-        {/* Compact Overlay Toolbar */}
+        {/* Compact Overlay Toolbar with Card Type Dropdown */}
         <CanvasOverlayToolbar
           set={set}
           currentCard={currentCard}
@@ -144,12 +143,6 @@ export const CardEditor: React.FC = () => {
           onCreateNewCardWithLayout={createNewCardWithLayout}
           onDeleteCard={handleDeleteCard}
           onSave={saveCard}
-        />
-
-        {/* Card Type Panel - Floating on the right */}
-        <CardTypePanel
-          currentCard={currentCard}
-          onUpdateCard={(updates) => updateCard(currentCard.id, updates)}
         />
 
         {/* Canvas takes up the full remaining space */}
