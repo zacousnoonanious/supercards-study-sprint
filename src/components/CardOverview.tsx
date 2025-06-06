@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,9 +35,10 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [isShuffling, setIsShuffling] = useState(false);
-  const [gridScale, setGridScale] = useState(1); // 1 = normal, 0.75 = smaller, 1.25 = larger
+  const [gridScale, setGridScale] = useState(1);
   const [shuffleDialogOpen, setShuffleDialogOpen] = useState(false);
-  const [shuffleOffsets, setShuffleOffsets] = useState<{[key: string]: {x: number, y: number, rotation: number, scale: number, delay: number}}>({});
+  const [shufflePhase, setShufflePhase] = useState<'mixing' | 'settling' | 'complete'>('complete');
+  const [mixingOffsets, setMixingOffsets] = useState<{[key: string]: {x: number, y: number, rotation: number, scale: number}}>({});
 
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
     setDraggedCard(cardId);
@@ -91,33 +91,44 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const handleShuffle = () => {
     setIsShuffling(true);
     setShuffleDialogOpen(false);
+    setShufflePhase('mixing');
     
-    // Generate unique random offsets for each card
-    const newShuffleOffsets: {[key: string]: {x: number, y: number, rotation: number, scale: number, delay: number}} = {};
-    cards.forEach((card, index) => {
-      newShuffleOffsets[card.id] = {
-        x: (Math.random() - 0.5) * 1200, // Larger range for more dramatic movement
-        y: (Math.random() - 0.5) * 800,
-        rotation: (Math.random() - 0.5) * 1080, // Up to 3 full rotations
-        scale: 0.6 + Math.random() * 0.8, // Scale between 0.6 and 1.4
-        delay: Math.random() * 2000 // Random delay up to 2 seconds
-      };
-    });
-    setShuffleOffsets(newShuffleOffsets);
-    
-    // Create a shuffled array
+    // Create a shuffled array first
     const shuffledCards = [...cards];
     for (let i = shuffledCards.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffledCards[i], shuffledCards[j]] = [shuffledCards[j], shuffledCards[i]];
     }
     
-    // Apply shuffle animation and update after delay
+    // Start the mixing phase with continuous random movements
+    const mixingInterval = setInterval(() => {
+      const newMixingOffsets: {[key: string]: {x: number, y: number, rotation: number, scale: number}} = {};
+      cards.forEach((card) => {
+        newMixingOffsets[card.id] = {
+          x: (Math.random() - 0.5) * 1000,
+          y: (Math.random() - 0.5) * 600,
+          rotation: (Math.random() - 0.5) * 720,
+          scale: 0.7 + Math.random() * 0.6,
+        };
+      });
+      setMixingOffsets(newMixingOffsets);
+    }, 400);
+    
+    // After 3 seconds of mixing, start settling phase
     setTimeout(() => {
+      clearInterval(mixingInterval);
+      setShufflePhase('settling');
+      setMixingOffsets({});
+      
+      // Update the card order during settling
       onReorderCards(shuffledCards);
-      setIsShuffling(false);
-      setShuffleOffsets({});
-    }, 5000);
+      
+      // Complete the animation after settling
+      setTimeout(() => {
+        setShufflePhase('complete');
+        setIsShuffling(false);
+      }, 1500);
+    }, 3000);
   };
 
   const adjustGridScale = (direction: 'up' | 'down') => {
@@ -228,25 +239,37 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
                 }
               }
 
-              const shuffleOffset = shuffleOffsets[card.id];
+              const mixingOffset = mixingOffsets[card.id];
+              
+              // Calculate transforms based on shuffle phase
+              let transform = '';
+              let transition = '';
+              
+              if (shufflePhase === 'mixing' && mixingOffset) {
+                transform = `translate(${mixingOffset.x}px, ${mixingOffset.y}px) rotate(${mixingOffset.rotation}deg) scale(${mixingOffset.scale})`;
+                transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+              } else if (shufflePhase === 'settling') {
+                transform = `translate(${x + repositionOffset}px, ${y + (isHovered && !isDragged ? -40 : isDragged ? -20 : 0)}px) rotate(${angleFromCenter + (isDragged ? 12 : 0)}deg)`;
+                transition = 'all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+              } else {
+                transform = isDragged 
+                  ? `translate(${x + repositionOffset}px, ${y - 20}px) rotate(${angleFromCenter + 12}deg) scale(1.1)`
+                  : `translate(${x + repositionOffset}px, ${y + (isHovered ? -40 : 0)}px) rotate(${angleFromCenter}deg)`;
+                transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+              }
               
               return (
                 <div
                   key={card.id}
-                  className={`absolute cursor-move transition-all duration-300 ${
-                    isDragged ? 'opacity-60 scale-110 z-50 rotate-12' : ''
+                  className={`absolute cursor-move ${
+                    isDragged ? 'opacity-60 z-50' : ''
                   } ${isHovered && !isDragged ? 'scale-105 z-20' : ''} ${
                     isDragOver && !isDragged ? 'scale-105' : ''
                   } ${isSelected && !isDragged ? 'animate-pulse' : ''}`}
                   style={{
-                    transform: isShuffling && shuffleOffset
-                      ? `translate(${shuffleOffset.x}px, ${shuffleOffset.y}px) rotate(${shuffleOffset.rotation}deg) scale(${shuffleOffset.scale})`
-                      : `translate(${x + repositionOffset}px, ${y + (isHovered && !isDragged ? -40 : isDragged ? -20 : 0)}px) rotate(${angleFromCenter + (isDragged ? 12 : 0)}deg)`,
+                    transform,
+                    transition,
                     zIndex: isDragged ? 50 : isHovered ? 20 : 10 + index,
-                    transition: isShuffling 
-                      ? `all ${3000 + Math.random() * 2000}ms cubic-bezier(${0.25 + Math.random() * 0.5}, ${0.46 + Math.random() * 0.3}, ${0.45 + Math.random() * 0.3}, ${0.94 + Math.random() * 0.06})` 
-                      : 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    transitionDelay: isShuffling && shuffleOffset ? `${shuffleOffset.delay}ms` : '0ms',
                   }}
                   draggable={!isShuffling}
                   onDragStart={(e) => !isShuffling && handleDragStart(e, card.id)}
@@ -295,7 +318,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           {isShuffling && (
             <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
               <div className="text-white text-2xl font-bold animate-pulse">
-                Shuffling cards...
+                {shufflePhase === 'mixing' ? 'Mixing cards...' : 'Cards settling into position...'}
               </div>
             </div>
           )}
@@ -303,7 +326,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
 
         <div className="mt-8 text-center text-sm text-gray-600">
           {isShuffling 
-            ? "Cards are being shuffled..." 
+            ? shufflePhase === 'mixing' ? "Cards are being mixed..." : "Cards are settling back into formation..."
             : "Hover over cards to lift them up • Drag and drop to reorder • Cards spread out for better visibility"
           }
         </div>
@@ -391,14 +414,33 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           const isDragOver = dragOverCard === card.id;
           
           const cardHeight = `${Math.round(256 * gridScale)}px`;
-          const shuffleOffset = shuffleOffsets[card.id];
+          const mixingOffset = mixingOffsets[card.id];
+          
+          // Calculate transforms based on shuffle phase
+          let transform = '';
+          let transition = '';
+          
+          if (shufflePhase === 'mixing' && mixingOffset) {
+            transform = `translate(${mixingOffset.x}px, ${mixingOffset.y}px) rotate(${mixingOffset.rotation}deg) scale(${mixingOffset.scale})`;
+            transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+          } else if (shufflePhase === 'settling') {
+            transform = 'translate(0px, 0px) rotate(0deg) scale(1)';
+            transition = 'all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+          } else {
+            if (isDragged) {
+              transform = 'scale(0.95) rotate(3deg)';
+            } else if (isDragOver) {
+              transform = 'scale(1.05) translateX(10px)';
+            }
+            transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+          }
           
           return (
             <div
               key={card.id}
-              className={`cursor-move transition-all duration-300 ease-out ${
+              className={`cursor-move ${
                 isDragged 
-                  ? 'opacity-30 scale-95 rotate-3 z-50' 
+                  ? 'opacity-30 z-50' 
                   : 'hover:scale-105 hover:-translate-y-2 hover:shadow-lg'
               } ${
                 isDragOver && !isDragged 
@@ -406,15 +448,8 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
                   : ''
               }`}
               style={{
-                transform: isShuffling && shuffleOffset
-                  ? `translate(${shuffleOffset.x}px, ${shuffleOffset.y}px) rotate(${shuffleOffset.rotation}deg) scale(${shuffleOffset.scale})`
-                  : isDragOver && !isDragged 
-                    ? 'scale(1.05) translateX(10px)' 
-                    : undefined,
-                transition: isShuffling 
-                  ? `all ${3000 + Math.random() * 2000}ms cubic-bezier(${0.25 + Math.random() * 0.5}, ${0.46 + Math.random() * 0.3}, ${0.45 + Math.random() * 0.3}, ${0.94 + Math.random() * 0.06})`
-                  : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transitionDelay: isShuffling && shuffleOffset ? `${shuffleOffset.delay}ms` : '0ms',
+                transform,
+                transition,
                 height: cardHeight,
               }}
               draggable={!isShuffling}
@@ -464,7 +499,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
 
       <div className="mt-8 text-center text-sm text-gray-600">
         {isShuffling 
-          ? "Cards are being shuffled..." 
+          ? shufflePhase === 'mixing' ? "Cards are being mixed..." : "Cards are settling back into their positions..."
           : "Drag and drop cards to reorder them • Hover for preview • Use zoom controls to adjust card size"
         }
       </div>
