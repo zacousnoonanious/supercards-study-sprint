@@ -132,12 +132,31 @@ const StudyMode = () => {
   };
 
   const handleTimeUp = () => {
-    toast({
-      title: "Time's up!",
-      description: "The timer for this card has expired.",
-      variant: "destructive",
-    });
-    setShowAnswer(true);
+    const currentCard = cards[currentIndex];
+    const behavior = currentCard.countdown_behavior || (currentCard.card_type === 'single-sided' ? 'next' : 'flip');
+    
+    if (behavior === 'next') {
+      toast({
+        title: "Time's up!",
+        description: "Moving to next card.",
+        variant: "destructive",
+      });
+      
+      if (currentIndex < cards.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+        setShowAnswer(false);
+        setShowHint(false);
+      } else {
+        setStudyComplete(true);
+      }
+    } else {
+      toast({
+        title: "Time's up!",
+        description: "Revealing answer.",
+        variant: "destructive",
+      });
+      setShowAnswer(true);
+    }
   };
 
   const resetStudy = () => {

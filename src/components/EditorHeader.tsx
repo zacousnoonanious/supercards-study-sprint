@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Save, Check, X, Edit } from 'lucide-react';
+import { ArrowLeft, Save, Check, X, Edit, Grid3x3 } from 'lucide-react';
 import { FlashcardSet } from '@/types/flashcard';
 
 interface EditorHeaderProps {
@@ -15,6 +15,7 @@ interface EditorHeaderProps {
   onStartEdit: () => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
+  onShowCardOverview?: () => void;
 }
 
 export const EditorHeader: React.FC<EditorHeaderProps> = ({ 
@@ -25,7 +26,8 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   onDeckNameChange,
   onStartEdit,
   onSaveEdit,
-  onCancelEdit
+  onCancelEdit,
+  onShowCardOverview
 }) => {
   const navigate = useNavigate();
 
@@ -90,6 +92,12 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            {onShowCardOverview && (
+              <Button onClick={onShowCardOverview} variant="outline">
+                <Grid3x3 className="w-4 h-4 mr-2" />
+                Card Overview
+              </Button>
+            )}
             <Button onClick={onSave} variant="outline">
               <Save className="w-4 h-4 mr-2" />
               Save

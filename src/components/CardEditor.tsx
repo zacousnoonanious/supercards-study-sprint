@@ -7,6 +7,7 @@ import { Check, X, Edit } from 'lucide-react';
 import { CardCanvas } from './CardCanvas';
 import { EditorHeader } from './EditorHeader';
 import { LockableToolbar } from './LockableToolbar';
+import { CardOverview } from './CardOverview';
 import { useCardEditor } from '@/hooks/useCardEditor';
 import { supabase } from '@/integrations/supabase/client';
 

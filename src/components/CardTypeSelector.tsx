@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { CountdownBehaviorSelector } from '@/components/CountdownBehaviorSelector';
 import { Flashcard } from '@/types/flashcard';
 
 interface CardTypeSelectorProps {
@@ -20,8 +21,6 @@ export const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({
     { value: 'standard', label: 'Standard', description: 'Regular flashcard with front and back' },
     { value: 'informational', label: 'Informational', description: 'Single-sided card with lots of content' },
     { value: 'single-sided', label: 'Single-sided', description: 'Only shows the front side' },
-    { value: 'quiz-only', label: 'Quiz Only', description: 'Interactive quiz elements only' },
-    { value: 'password-protected', label: 'Password Protected', description: 'Requires password to view' },
   ];
 
   const selectedType = cardTypes.find(type => type.value === card.card_type) || cardTypes[0];
@@ -61,21 +60,15 @@ export const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({
           className="w-full"
         />
         <p className="text-xs text-gray-500 mt-1">
-          0 means no countdown. When timer expires, elements will be disabled or card will advance.
+          0 means no countdown. When timer expires, card will either flip or advance based on setting below.
         </p>
       </div>
 
-      {card.card_type === 'password-protected' && (
-        <div>
-          <Label className="text-sm font-medium">Password</Label>
-          <Input
-            type="password"
-            value={card.password || ''}
-            onChange={(e) => onUpdateCard({ password: e.target.value })}
-            placeholder="Enter password"
-            className="w-full"
-          />
-        </div>
+      {card.countdown_timer && card.countdown_timer > 0 && (
+        <CountdownBehaviorSelector
+          card={card}
+          onUpdateCard={onUpdateCard}
+        />
       )}
 
       <div>

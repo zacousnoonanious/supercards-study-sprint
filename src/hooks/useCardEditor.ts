@@ -370,6 +370,25 @@ export const useCardEditor = () => {
     }
   };
 
+  const reorderCards = async (reorderedCards: Flashcard[]) => {
+    setCards(reorderedCards);
+    
+    // Update the order in the database by updating each card with a new position or timestamp
+    try {
+      const updates = reorderedCards.map((card, index) => 
+        supabase
+          .from('flashcards')
+          .update({ updated_at: new Date(Date.now() + index).toISOString() })
+          .eq('id', card.id)
+      );
+      
+      await Promise.all(updates);
+      console.log('Cards reordered successfully');
+    } catch (error) {
+      console.error('Error reordering cards:', error);
+    }
+  };
+
   return {
     set,
     cards,
@@ -388,5 +407,6 @@ export const useCardEditor = () => {
     createNewCard,
     createNewCardWithLayout,
     deleteCard,
+    reorderCards,
   };
 };
