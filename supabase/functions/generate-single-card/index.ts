@@ -2,11 +2,57 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// Input validation constants
+const MAX_PROMPT_LENGTH = 500;
+const ALLOWED_STYLES = ['basic', 'detailed', 'quiz', 'definitions'];
+
+const validateInput = (data: any): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+
+  if (!data.prompt || typeof data.prompt !== 'string') {
+    errors.push('Prompt is required and must be a string');
+  } else if (data.prompt.length > MAX_PROMPT_LENGTH) {
+    errors.push(`Prompt must be ${MAX_PROMPT_LENGTH} characters or less`);
+  } else if (data.prompt.trim().length === 0) {
+    errors.push('Prompt cannot be empty');
+  }
+
+  if (!data.style || !ALLOWED_STYLES.includes(data.style)) {
+    errors.push(`Style must be one of: ${ALLOWED_STYLES.join(', ')}`);
+  }
+
+  // Check for potentially malicious content
+  const suspiciousPatterns = [
+    /ignore\s+previous\s+instructions/i,
+    /forget\s+everything/i,
+    /system\s+prompt/i,
+    /jailbreak/i
+  ];
+
+  for (const pattern of suspiciousPatterns) {
+    if (pattern.test(data.prompt)) {
+      errors.push('Prompt contains potentially unsafe content');
+      break;
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+const sanitizeContent = (content: string): string => {
+  return content
+    .replace(/[<>]/g, '') // Remove angle brackets
+    .replace(/javascript:/gi, '')
+    .replace(/data:/gi, '')
+    .trim();
 };
 
 serve(async (req) => {
@@ -15,78 +61,122 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, cardType, interactiveType } = await req.json();
+    const { prompt, style } = await req.json();
 
-    console.log('Generating single card with prompt:', prompt, 'cardType:', cardType, 'interactiveType:', interactiveType);
-
-    let systemPrompt = '';
-    let userPrompt = prompt;
-
-    if (interactiveType === 'multiple-choice') {
-      systemPrompt = 'You are an educational assistant. Create a multiple choice question based on the given prompt. Return the response as a valid JSON object with this structure: {"question": "Question text", "answer": "Correct answer", "mcOptions": ["Option 1", "Option 2", "Option 3", "Option 4"], "correctAnswer": 0}. Make sure one of the options is the correct answer and set correctAnswer to its index.';
-    } else if (interactiveType === 'true-false') {
-      systemPrompt = 'You are an educational assistant. Create a true/false question based on the given prompt. Return the response as a valid JSON object with this structure: {"question": "True or false statement", "answer": "true or false", "explanation": "Brief explanation"}';
-    } else if (interactiveType === 'fill-blank') {
-      systemPrompt = 'You are an educational assistant. Create a fill-in-the-blank question based on the given prompt. Return the response as a valid JSON object with this structure: {"question": "Statement with _____ for the blank", "answer": "Correct word/phrase for the blank"}';
-    } else {
-      systemPrompt = 'You are an educational assistant. Create a flashcard question and answer based on the given prompt. Return the response as a valid JSON object with this structure: {"question": "Front side question", "answer": "Back side answer"}';
+    // Validate input
+    const validation = validateInput({ prompt, style });
+    if (!validation.isValid) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid input', details: validation.errors }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    if (cardType === 'informational') {
-      systemPrompt += ' The card is informational, so provide more detailed content suitable for extended reading.';
-    } else if (cardType === 'no-back') {
-      systemPrompt += ' This is a no-back card, so focus on making the question/statement comprehensive and self-contained.';
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
+
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      return new Response(
+        JSON.stringify({ error: 'OpenAI API key not configured' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const sanitizedPrompt = sanitizeContent(prompt);
+
+    const systemPrompt = `You are a helpful assistant that creates educational flashcards. Generate exactly 1 flashcard based on the user's prompt. Format your response as a JSON object with "question" and "answer" properties. Make the content educational and appropriate. Keep the question concise (under 200 characters) and answer informative but not too long (under 500 characters).`;
+
+    const userPrompt = `Create 1 flashcard about: ${sanitizedPrompt}. Style: ${style}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
+        max_tokens: 1000,
         temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      const errorData = await response.text();
+      console.error('OpenAI API error:', errorData);
+      return new Response(
+        JSON.stringify({ error: 'Failed to generate flashcard', details: errorData }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     const data = await response.json();
-    const generatedContent = data.choices[0].message.content;
+    const content = data.choices[0]?.message?.content;
 
-    console.log('Generated content:', generatedContent);
-
-    let card;
-    try {
-      card = JSON.parse(generatedContent);
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      throw new Error('Failed to parse AI response as JSON');
+    if (!content) {
+      return new Response(
+        JSON.stringify({ error: 'No content generated' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        card
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    try {
+      let flashcard = JSON.parse(content);
+      
+      // Sanitize the generated content
+      if (flashcard && typeof flashcard === 'object') {
+        flashcard = {
+          question: flashcard.question ? sanitizeContent(flashcard.question).substring(0, 200) : '',
+          answer: flashcard.answer ? sanitizeContent(flashcard.answer).substring(0, 500) : ''
+        };
+      }
+
+      return new Response(
+        JSON.stringify({ flashcard }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to parse AI response', details: content }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
   } catch (error) {
     console.error('Error in generate-single-card function:', error);
-    
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
-      }),
+      JSON.stringify({ error: 'Internal server error' }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

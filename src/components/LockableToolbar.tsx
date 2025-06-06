@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +24,7 @@ import {
   ImageIcon,
   LayoutDashboard,
   ListOrdered,
-  ListUnordered,
+  List,
   Text,
   Copy,
   Save,
@@ -117,7 +118,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
                 Multiple Choice
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onAddElement('true-false')}>
-                <ListUnordered className="w-4 h-4 mr-2" />
+                <List className="w-4 h-4 mr-2" />
                 True / False
               </DropdownMenuItem>
               <DropdownMenuSeparator />
