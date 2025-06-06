@@ -72,18 +72,7 @@ const Decks = () => {
     try {
       console.log('Deleting set:', id);
       
-      // First, delete AI generation records that reference this set
-      const { error: aiGenError } = await supabase
-        .from('ai_flashcard_generations')
-        .delete()
-        .eq('set_id', id);
-
-      if (aiGenError) {
-        console.error('Error deleting AI generation records:', aiGenError);
-        throw aiGenError;
-      }
-
-      // Delete all flashcards in the set
+      // Delete all flashcards in the set first
       const { error: cardsError } = await supabase
         .from('flashcards')
         .delete()
@@ -94,7 +83,7 @@ const Decks = () => {
         throw cardsError;
       }
 
-      // Finally delete the set itself
+      // Delete the set (AI generation records will be automatically deleted via CASCADE)
       const { error: setError } = await supabase
         .from('flashcard_sets')
         .delete()
