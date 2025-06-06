@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,6 +30,7 @@ export const CardEditor: React.FC = () => {
     createNewCardWithLayout,
     deleteCard,
     reorderCards,
+    setCurrentCardIndex,
   } = useCardEditor();
 
   const [isEditingDeckName, setIsEditingDeckName] = useState(false);
@@ -87,6 +87,13 @@ export const CardEditor: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedElement, deleteElement, setSelectedElement, navigateCard, saveCard]);
+
+  const handleEditCard = (cardIndex: number) => {
+    setCurrentCardIndex(cardIndex);
+    setShowCardOverview(false);
+    setSelectedElement(null);
+    setCurrentSide('front');
+  };
 
   const handleSaveDeckName = async () => {
     if (!set) return;
@@ -145,6 +152,7 @@ export const CardEditor: React.FC = () => {
         cards={cards}
         onReorderCards={reorderCards}
         onBackToEditor={() => setShowCardOverview(false)}
+        onEditCard={handleEditCard}
       />
     );
   }

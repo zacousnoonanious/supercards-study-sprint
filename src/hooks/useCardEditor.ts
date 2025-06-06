@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -398,6 +399,7 @@ export const useCardEditor = () => {
     loading,
     setCurrentSide,
     setSelectedElement,
+    setCurrentCardIndex,
     saveCard,
     addElement,
     updateElement,

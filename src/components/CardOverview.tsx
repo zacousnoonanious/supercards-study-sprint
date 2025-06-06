@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Grid3x3, List, ArrowLeft, Shuffle, ZoomIn, ZoomOut } from 'lucide-react';
+import { Grid3x3, List, ArrowLeft, Shuffle, ZoomIn, ZoomOut, Edit } from 'lucide-react';
 import { StudyCardRenderer } from '@/components/StudyCardRenderer';
 import { Flashcard } from '@/types/flashcard';
 import {
@@ -20,6 +20,7 @@ interface CardOverviewProps {
   cards: Flashcard[];
   onReorderCards: (reorderedCards: Flashcard[]) => void;
   onBackToEditor: () => void;
+  onEditCard?: (cardIndex: number) => void;
 }
 
 type ViewMode = 'fan' | 'grid';
@@ -28,6 +29,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   cards,
   onReorderCards,
   onBackToEditor,
+  onEditCard,
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [draggedCard, setDraggedCard] = useState<string | null>(null);
@@ -39,6 +41,18 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const [shuffleDialogOpen, setShuffleDialogOpen] = useState(false);
   const [shufflePhase, setShufflePhase] = useState<'mixing' | 'settling' | 'complete'>('complete');
   const [mixingOffsets, setMixingOffsets] = useState<{[key: string]: {x: number, y: number, rotation: number, scale: number}}>({});
+
+  const handleCardClick = (cardIndex: number, event: React.MouseEvent) => {
+    // Prevent click during drag operations
+    if (draggedCard || isShuffling) return;
+    
+    // Don't trigger on drag handles or when dragging
+    if ((event.target as HTMLElement).closest('[draggable="true"]') && selectedCard) return;
+    
+    if (onEditCard) {
+      onEditCard(cardIndex);
+    }
+  };
 
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
     setDraggedCard(cardId);
@@ -261,7 +275,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
               return (
                 <div
                   key={card.id}
-                  className={`absolute cursor-move ${
+                  className={`absolute cursor-pointer group ${
                     isDragged ? 'opacity-60 z-50' : ''
                   } ${isHovered && !isDragged ? 'scale-105 z-20' : ''} ${
                     isDragOver && !isDragged ? 'scale-105' : ''
@@ -279,13 +293,22 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
                   onDragEnd={handleDragEnd}
                   onMouseEnter={() => !isShuffling && setHoveredCard(card.id)}
                   onMouseLeave={() => setHoveredCard(null)}
+                  onClick={(e) => handleCardClick(index, e)}
                 >
                   <Card className={`w-72 h-44 shadow-lg border-2 transition-all duration-300 ${
                     isDragged ? 'shadow-2xl border-primary/60 bg-primary/5' : 
                     isDragOver ? 'shadow-xl border-primary/40 bg-primary/10' :
-                    isHovered ? 'shadow-xl border-primary/30' : 'hover:shadow-xl'
+                    isHovered ? 'shadow-xl border-primary/30' : 'hover:shadow-xl hover:border-primary/20'
                   }`}>
-                    <CardContent className="p-3 h-full">
+                    <CardContent className="p-3 h-full relative">
+                      {/* Edit overlay on hover */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 rounded flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div className="bg-white/90 px-3 py-1 rounded-full text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <Edit className="w-3 h-3" />
+                          Click to Edit
+                        </div>
+                      </div>
+                      
                       <div className="text-xs font-medium mb-1 text-gray-700">Card {index + 1}</div>
                       <div className="text-xs text-gray-500 mb-2">
                         Type: {card.card_type || 'standard'}
@@ -438,7 +461,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           return (
             <div
               key={card.id}
-              className={`cursor-move ${
+              className={`cursor-pointer group ${
                 isDragged 
                   ? 'opacity-30 z-50' 
                   : 'hover:scale-105 hover:-translate-y-2 hover:shadow-lg'
@@ -458,12 +481,21 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
               onDragLeave={handleDragLeave}
               onDrop={(e) => !isShuffling && handleDrop(e, card.id)}
               onDragEnd={handleDragEnd}
+              onClick={(e) => handleCardClick(index, e)}
             >
-              <Card className={`h-full shadow-md border-2 transition-all duration-300 ${
+              <Card className={`h-full shadow-md border-2 transition-all duration-300 relative ${
                 isDragOver && !isDragged 
                   ? 'border-primary/50 shadow-xl' 
                   : 'hover:border-primary/30'
               }`}>
+                {/* Edit overlay on hover */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 z-10">
+                  <div className="bg-white/90 px-3 py-1 rounded-full text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <Edit className="w-3 h-3" />
+                    Click to Edit
+                  </div>
+                </div>
+                
                 <CardContent className="p-4 h-full flex flex-col" style={{ transform: `scale(${gridScale})`, transformOrigin: 'top left' }}>
                   <div className="flex justify-between items-center mb-2">
                     <div className="text-sm font-medium">Card {index + 1}</div>

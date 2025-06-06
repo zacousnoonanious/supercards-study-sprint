@@ -24,8 +24,8 @@ interface LockableToolbarProps {
 }
 
 export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {
-  const [isLocked, setIsLocked] = useState(false);
-  const [dockPosition, setDockPosition] = useState<'top' | 'left'>('top');
+  const [isLocked, setIsLocked] = useState(true); // Default to locked
+  const [dockPosition, setDockPosition] = useState<'top' | 'left'>('top'); // Default to top
   const [position, setPosition] = useState({ x: 20, y: 80 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -126,9 +126,9 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {
         className={getToolbarClasses()}
         style={getToolbarStyle()}
       >
-        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2 max-w-full overflow-hidden">
-          <div className="flex items-center justify-between gap-1 mb-2">
-            <div className="flex items-center gap-1">
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 max-w-full overflow-hidden">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
               {!isLocked && (
                 <div 
                   className="cursor-move p-1"
@@ -143,7 +143,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {
                 variant="ghost"
                 size="sm"
                 onClick={toggleLock}
-                className="h-6 w-6 p-0"
+                className="h-7 w-7 p-0"
                 title={isLocked ? "Unlock toolbar" : "Lock toolbar"}
               >
                 {isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
@@ -154,7 +154,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {
                   variant="ghost"
                   size="sm"
                   onClick={toggleDockPosition}
-                  className="h-6 w-6 p-0"
+                  className="h-7 w-7 p-0"
                   title={`Dock to ${dockPosition === 'top' ? 'left' : 'top'}`}
                 >
                   {dockPosition === 'top' ? <Pin className="w-3 h-3" /> : <PinOff className="w-3 h-3" />}
