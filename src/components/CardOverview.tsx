@@ -1,29 +1,16 @@
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Grid3x3, List, ArrowLeft, Shuffle, ZoomIn, ZoomOut, Edit } from 'lucide-react';
-import { StudyCardRenderer } from '@/components/StudyCardRenderer';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Grid, Layers, Shuffle } from 'lucide-react';
 import { Flashcard } from '@/types/flashcard';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { BulkCardOperations } from './BulkCardOperations';
 
 interface CardOverviewProps {
   cards: Flashcard[];
-  onReorderCards: (reorderedCards: Flashcard[]) => void;
+  onReorderCards: (cards: Flashcard[]) => void;
   onBackToEditor: () => void;
-  onEditCard?: (cardIndex: number) => void;
+  onEditCard: (cardIndex: number) => void;
 }
-
-type ViewMode = 'fan' | 'grid';
 
 export const CardOverview: React.FC<CardOverviewProps> = ({
   cards,
@@ -31,510 +18,249 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   onBackToEditor,
   onEditCard,
 }) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [draggedCard, setDraggedCard] = useState<string | null>(null);
-  const [dragOverCard, setDragOverCard] = useState<string | null>(null);
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'fan'>('grid');
   const [isShuffling, setIsShuffling] = useState(false);
-  const [gridScale, setGridScale] = useState(1);
-  const [shuffleDialogOpen, setShuffleDialogOpen] = useState(false);
-  const [shufflePhase, setShufflePhase] = useState<'mixing' | 'settling' | 'complete'>('complete');
-  const [mixingOffsets, setMixingOffsets] = useState<{[key: string]: {x: number, y: number, rotation: number, scale: number}}>({});
+  const [selectedCards, setSelectedCards] = useState<string[]>([]);
+
+  const shuffleCards = useCallback(async () => {
+    setIsShuffling(true);
+    // Fisher-Yates shuffle algorithm
+    const shuffled = [...cards];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    // Optimistically update the UI
+    onReorderCards(shuffled);
+    
+    // Simulate shuffle animation
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setIsShuffling(false);
+  }, [cards, onReorderCards]);
+
+  const getCardClassName = (index: number, viewMode: string) => {
+    if (viewMode === 'grid') {
+      return 'relative rounded-lg border shadow-md transition-all duration-300 hover:shadow-lg cursor-pointer';
+    } else {
+      const fanAngle = 20;
+      const fanOffset = (cards.length - 1) * fanAngle / 2;
+      const rotate = index * fanAngle - fanOffset;
+      const translateZ = 10 * index;
+      return `absolute top-1/2 left-1/2 w-64 h-48 -mt-24 -ml-32 rounded-lg border shadow-md transition-all duration-300 hover:shadow-lg cursor-pointer transform origin-center rotate-[-${rotate}deg] translate-z-[${translateZ}px]`;
+    }
+  };
+
+  const renderCard = (card: Flashcard, index: number) => {
+    return (
+      <div className="p-4">
+        <h3 className="text-lg font-semibold mb-2">{card.question}</h3>
+        <p className="text-sm text-gray-500">Card {index + 1}</p>
+      </div>
+    );
+  };
 
   const handleCardClick = (cardIndex: number, event: React.MouseEvent) => {
-    // Prevent click during drag operations
-    if (draggedCard || isShuffling) return;
-    
-    // Don't trigger on drag handles or when dragging
-    if ((event.target as HTMLElement).closest('[draggable="true"]') && selectedCard) return;
-    
-    if (onEditCard) {
+    if (event.ctrlKey || event.metaKey) {
+      // Multi-select with Ctrl/Cmd
+      const cardId = cards[cardIndex].id;
+      setSelectedCards(prev => 
+        prev.includes(cardId) 
+          ? prev.filter(id => id !== cardId)
+          : [...prev, cardId]
+      );
+    } else if (event.shiftKey && selectedCards.length > 0) {
+      // Range select with Shift
+      const lastSelectedIndex = cards.findIndex(card => 
+        card.id === selectedCards[selectedCards.length - 1]
+      );
+      const start = Math.min(lastSelectedIndex, cardIndex);
+      const end = Math.max(lastSelectedIndex, cardIndex);
+      const rangeIds = cards.slice(start, end + 1).map(card => card.id);
+      setSelectedCards(prev => [...new Set([...prev, ...rangeIds])]);
+    } else if (selectedCards.length > 0) {
+      // Clear selection and potentially edit card
+      setSelectedCards([]);
+      if (!selectedCards.includes(cards[cardIndex].id)) {
+        onEditCard(cardIndex);
+      }
+    } else {
+      // Single click to edit
       onEditCard(cardIndex);
     }
   };
 
-  const handleDragStart = (e: React.DragEvent, cardId: string) => {
-    setDraggedCard(cardId);
-    setSelectedCard(cardId);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', '');
-  };
-
-  const handleDragOver = (e: React.DragEvent, cardId: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverCard(cardId);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverCard(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, targetCardId: string) => {
-    e.preventDefault();
+  const handleBulkUpdate = async (cardIds: string[], updates: any) => {
+    // Apply updates to all selected cards
+    console.log('Bulk updating cards:', cardIds, updates);
     
-    if (!draggedCard || draggedCard === targetCardId) {
-      setDraggedCard(null);
-      setDragOverCard(null);
-      setSelectedCard(null);
-      return;
-    }
-
-    const draggedIndex = cards.findIndex(card => card.id === draggedCard);
-    const targetIndex = cards.findIndex(card => card.id === targetCardId);
-    
-    if (draggedIndex === -1 || targetIndex === -1) return;
-
-    const newCards = [...cards];
-    const [draggedCardObj] = newCards.splice(draggedIndex, 1);
-    newCards.splice(targetIndex, 0, draggedCardObj);
-
-    onReorderCards(newCards);
-    setDraggedCard(null);
-    setDragOverCard(null);
-    setSelectedCard(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedCard(null);
-    setDragOverCard(null);
-    setSelectedCard(null);
-  };
-
-  const handleShuffle = () => {
-    setIsShuffling(true);
-    setShuffleDialogOpen(false);
-    setShufflePhase('mixing');
-    
-    // Create a shuffled array first
-    const shuffledCards = [...cards];
-    for (let i = shuffledCards.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffledCards[i], shuffledCards[j]] = [shuffledCards[j], shuffledCards[i]];
-    }
-    
-    // Start the mixing phase with continuous random movements
-    const mixingInterval = setInterval(() => {
-      const newMixingOffsets: {[key: string]: {x: number, y: number, rotation: number, scale: number}} = {};
-      cards.forEach((card) => {
-        newMixingOffsets[card.id] = {
-          x: (Math.random() - 0.5) * 1000,
-          y: (Math.random() - 0.5) * 600,
-          rotation: (Math.random() - 0.5) * 720,
-          scale: 0.7 + Math.random() * 0.6,
-        };
+    if (updates.updateElements && updates.elementUpdates) {
+      // Update specific element properties
+      cardIds.forEach(cardId => {
+        const card = cards.find(c => c.id === cardId);
+        if (card) {
+          // Update front elements
+          card.front_elements.forEach(element => {
+            if (!updates.elementType || element.type === updates.elementType) {
+              Object.assign(element, updates.elementUpdates);
+            }
+          });
+          
+          // Update back elements
+          card.back_elements.forEach(element => {
+            if (!updates.elementType || element.type === updates.elementType) {
+              Object.assign(element, updates.elementUpdates);
+            }
+          });
+        }
       });
-      setMixingOffsets(newMixingOffsets);
-    }, 400);
-    
-    // After 3 seconds of mixing, start settling phase
-    setTimeout(() => {
-      clearInterval(mixingInterval);
-      setShufflePhase('settling');
-      setMixingOffsets({});
       
-      // Update the card order during settling
-      onReorderCards(shuffledCards);
-      
-      // Complete the animation after settling
-      setTimeout(() => {
-        setShufflePhase('complete');
-        setIsShuffling(false);
-      }, 1500);
-    }, 3000);
+      // Trigger reorder to update the cards in the parent
+      onReorderCards([...cards]);
+    }
   };
 
-  const adjustGridScale = (direction: 'up' | 'down') => {
-    setGridScale(prev => {
-      if (direction === 'up') {
-        return Math.min(prev + 0.25, 1.5);
-      } else {
-        return Math.max(prev - 0.25, 0.5);
+  const handleAutoArrange = (cardIds: string[], arrangeType: string) => {
+    cardIds.forEach(cardId => {
+      const card = cards.find(c => c.id === cardId);
+      if (card) {
+        const arrangeElements = (elements: any[]) => {
+          switch (arrangeType) {
+            case 'grid':
+              const cols = Math.ceil(Math.sqrt(elements.length));
+              elements.forEach((element, index) => {
+                const row = Math.floor(index / cols);
+                const col = index % cols;
+                element.x = col * 250 + 20;
+                element.y = row * 180 + 20;
+              });
+              break;
+            case 'center':
+              elements.forEach(element => {
+                element.x = 450 - element.width / 2;
+                element.y = 300 - element.height / 2;
+              });
+              break;
+            case 'stack':
+              elements.forEach((element, index) => {
+                element.x = 50;
+                element.y = 50 + index * (element.height + 20);
+              });
+              break;
+            case 'justify':
+              const spacing = 900 / (elements.length + 1);
+              elements.forEach((element, index) => {
+                element.x = spacing * (index + 1) - element.width / 2;
+                element.y = 100;
+              });
+              break;
+          }
+        };
+
+        arrangeElements(card.front_elements);
+        arrangeElements(card.back_elements);
       }
     });
-  };
-
-  const getGridColumns = () => {
-    const baseColumns = {
-      'grid-cols-1': true,
-      'md:grid-cols-2': gridScale >= 1,
-      'lg:grid-cols-3': gridScale >= 0.75,
-      'xl:grid-cols-4': gridScale >= 0.75,
-      'xl:grid-cols-5': gridScale <= 0.75,
-      'xl:grid-cols-6': gridScale <= 0.5,
-    };
     
-    return Object.entries(baseColumns)
-      .filter(([_, active]) => active)
-      .map(([className]) => className)
-      .join(' ');
+    // Trigger reorder to update the cards in the parent
+    onReorderCards([...cards]);
   };
 
-  if (viewMode === 'fan') {
-    return (
-      <div className="min-h-screen bg-background p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={onBackToEditor}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Editor
-            </Button>
-            <h2 className="text-2xl font-bold">Card Overview</h2>
-          </div>
-          <div className="flex gap-2">
-            <AlertDialog open={shuffleDialogOpen} onOpenChange={setShuffleDialogOpen}>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" disabled={isShuffling}>
-                  <Shuffle className="w-4 h-4 mr-2" />
-                  Shuffle
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Shuffle Cards?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently shuffle the card positions and cannot be reorganized automatically. 
-                    If you want random cards shown every time while preserving original positions, 
-                    use the deck's randomizer feature instead.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleShuffle}>Shuffle Cards</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setViewMode('fan')}
-            >
-              Fan View
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setViewMode('grid')}
-            >
-              <Grid3x3 className="w-4 h-4 mr-2" />
-              Grid View
-            </Button>
-          </div>
-        </div>
-
-        <div className="relative w-full h-[700px] overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center">
-            {cards.map((card, index) => {
-              const totalCards = cards.length;
-              const centerIndex = (totalCards - 1) / 2;
-              const angleFromCenter = (index - centerIndex) * 18;
-              const radius = Math.min(500, totalCards * 25);
-              
-              const angleRad = (angleFromCenter * Math.PI) / 180;
-              const x = Math.sin(angleRad) * radius;
-              const y = Math.cos(angleRad) * (radius * 0.3);
-              
-              const isHovered = hoveredCard === card.id;
-              const isDragged = draggedCard === card.id;
-              const isDragOver = dragOverCard === card.id;
-              const isSelected = selectedCard === card.id;
-              
-              let repositionOffset = 0;
-              if (draggedCard && dragOverCard && draggedCard !== card.id) {
-                const draggedIndex = cards.findIndex(c => c.id === draggedCard);
-                const dragOverIndex = cards.findIndex(c => c.id === dragOverCard);
-                const currentIndex = index;
-                
-                if (draggedIndex < dragOverIndex && currentIndex > draggedIndex && currentIndex <= dragOverIndex) {
-                  repositionOffset = -20;
-                } else if (draggedIndex > dragOverIndex && currentIndex >= dragOverIndex && currentIndex < draggedIndex) {
-                  repositionOffset = 20;
-                }
-              }
-
-              const mixingOffset = mixingOffsets[card.id];
-              
-              // Calculate transforms based on shuffle phase
-              let transform = '';
-              let transition = '';
-              
-              if (shufflePhase === 'mixing' && mixingOffset) {
-                transform = `translate(${mixingOffset.x}px, ${mixingOffset.y}px) rotate(${mixingOffset.rotation}deg) scale(${mixingOffset.scale})`;
-                transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-              } else if (shufflePhase === 'settling') {
-                transform = `translate(${x + repositionOffset}px, ${y + (isHovered && !isDragged ? -40 : isDragged ? -20 : 0)}px) rotate(${angleFromCenter + (isDragged ? 12 : 0)}deg)`;
-                transition = 'all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
-              } else {
-                transform = isDragged 
-                  ? `translate(${x + repositionOffset}px, ${y - 20}px) rotate(${angleFromCenter + 12}deg) scale(1.1)`
-                  : `translate(${x + repositionOffset}px, ${y + (isHovered ? -40 : 0)}px) rotate(${angleFromCenter}deg)`;
-                transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
-              }
-              
-              return (
-                <div
-                  key={card.id}
-                  className={`absolute cursor-pointer group ${
-                    isDragged ? 'opacity-60 z-50' : ''
-                  } ${isHovered && !isDragged ? 'scale-105 z-20' : ''} ${
-                    isDragOver && !isDragged ? 'scale-105' : ''
-                  } ${isSelected && !isDragged ? 'animate-pulse' : ''}`}
-                  style={{
-                    transform,
-                    transition,
-                    zIndex: isDragged ? 50 : isHovered ? 20 : 10 + index,
-                  }}
-                  draggable={!isShuffling}
-                  onDragStart={(e) => !isShuffling && handleDragStart(e, card.id)}
-                  onDragOver={(e) => !isShuffling && handleDragOver(e, card.id)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => !isShuffling && handleDrop(e, card.id)}
-                  onDragEnd={handleDragEnd}
-                  onMouseEnter={() => !isShuffling && setHoveredCard(card.id)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                  onClick={(e) => handleCardClick(index, e)}
-                >
-                  <Card className={`w-72 h-44 shadow-lg border-2 transition-all duration-300 ${
-                    isDragged ? 'shadow-2xl border-primary/60 bg-primary/5' : 
-                    isDragOver ? 'shadow-xl border-primary/40 bg-primary/10' :
-                    isHovered ? 'shadow-xl border-primary/30' : 'hover:shadow-xl hover:border-primary/20'
-                  }`}>
-                    <CardContent className="p-3 h-full relative">
-                      {/* Edit overlay on hover */}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 rounded flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <div className="bg-white/90 px-3 py-1 rounded-full text-sm font-medium text-gray-700 flex items-center gap-2">
-                          <Edit className="w-3 h-3" />
-                          Click to Edit
-                        </div>
-                      </div>
-                      
-                      <div className="text-xs font-medium mb-1 text-gray-700">Card {index + 1}</div>
-                      <div className="text-xs text-gray-500 mb-2">
-                        Type: {card.card_type || 'standard'}
-                      </div>
-                      <div className="h-28 overflow-hidden bg-white rounded border">
-                        <StudyCardRenderer
-                          elements={card.front_elements}
-                          className="scale-[0.4] origin-top-left transform"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  {isDragOver && draggedCard && draggedCard !== card.id && !isShuffling && (
-                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-1 h-8 bg-primary rounded-full animate-pulse" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          
-          {draggedCard && !isShuffling && (
-            <div className="absolute inset-0 bg-primary/5 border-2 border-dashed border-primary/30 rounded-lg flex items-center justify-center pointer-events-none">
-              <div className="text-primary/60 text-lg font-medium">
-                Drop to reposition card
-              </div>
-            </div>
-          )}
-
-          {isShuffling && (
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
-              <div className="text-white text-2xl font-bold animate-pulse">
-                {shufflePhase === 'mixing' ? 'Mixing cards...' : 'Cards settling into position...'}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-8 text-center text-sm text-gray-600">
-          {isShuffling 
-            ? shufflePhase === 'mixing' ? "Cards are being mixed..." : "Cards are settling back into formation..."
-            : "Hover over cards to lift them up • Drag and drop to reorder • Cards spread out for better visibility"
-          }
-        </div>
-      </div>
-    );
-  }
+  const clearSelection = () => {
+    setSelectedCards([]);
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBackToEditor}>
+          <Button variant="outline" onClick={onBackToEditor}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Editor
           </Button>
-          <h2 className="text-2xl font-bold">Card Overview</h2>
+          <h1 className="text-2xl font-bold">Card Overview</h1>
+          {selectedCards.length > 0 && (
+            <Badge variant="secondary" className="ml-2">
+              {selectedCards.length} selected
+            </Badge>
+          )}
         </div>
-        <div className="flex gap-2">
-          <AlertDialog open={shuffleDialogOpen} onOpenChange={setShuffleDialogOpen}>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" disabled={isShuffling}>
-                <Shuffle className="w-4 h-4 mr-2" />
-                Shuffle
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Shuffle Cards?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently shuffle the card positions and cannot be reorganized automatically. 
-                  If you want random cards shown every time while preserving original positions, 
-                  use the deck's randomizer feature instead.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleShuffle}>Shuffle Cards</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <div className="flex items-center gap-1 border rounded-md">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => adjustGridScale('down')}
-              disabled={gridScale <= 0.5}
-              className="h-8 w-8 p-0"
-            >
-              <ZoomOut className="w-3 h-3" />
-            </Button>
-            <span className="text-xs px-2 text-gray-600">
-              {Math.round(gridScale * 100)}%
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => adjustGridScale('up')}
-              disabled={gridScale >= 1.5}
-              className="h-8 w-8 p-0"
-            >
-              <ZoomIn className="w-3 h-3" />
-            </Button>
-          </div>
+        
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setViewMode('fan')}
+            onClick={shuffleCards}
+            disabled={isShuffling}
+            className="flex items-center gap-2"
           >
-            Fan View
+            <Shuffle className="w-4 h-4" />
+            {isShuffling ? 'Shuffling...' : 'Shuffle'}
           </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => setViewMode('grid')}
-          >
-            <Grid3x3 className="w-4 h-4 mr-2" />
-            Grid View
-          </Button>
+          
+          <div className="flex bg-muted rounded-lg p-1">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="flex items-center gap-2"
+            >
+              <Grid className="w-4 h-4" />
+              Grid
+            </Button>
+            <Button
+              variant={viewMode === 'fan' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('fan')}
+              className="flex items-center gap-2"
+            >
+              <Layers className="w-4 h-4" />
+              Fan
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className={`grid gap-6 ${getGridColumns()}`}>
+      {/* Instructions */}
+      <div className="mb-4 text-sm text-muted-foreground">
+        Click to edit • Ctrl+Click to select multiple • Shift+Click to select range
+      </div>
+
+      {/* Cards Container */}
+      <div 
+        className={`transition-all duration-500 ${
+          viewMode === 'grid' 
+            ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' 
+            : 'relative h-96 flex items-center justify-center'
+        }`}
+      >
         {cards.map((card, index) => {
-          const isDragged = draggedCard === card.id;
-          const isDragOver = dragOverCard === card.id;
-          
-          const cardHeight = `${Math.round(256 * gridScale)}px`;
-          const mixingOffset = mixingOffsets[card.id];
-          
-          // Calculate transforms based on shuffle phase
-          let transform = '';
-          let transition = '';
-          
-          if (shufflePhase === 'mixing' && mixingOffset) {
-            transform = `translate(${mixingOffset.x}px, ${mixingOffset.y}px) rotate(${mixingOffset.rotation}deg) scale(${mixingOffset.scale})`;
-            transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-          } else if (shufflePhase === 'settling') {
-            transform = 'translate(0px, 0px) rotate(0deg) scale(1)';
-            transition = 'all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
-          } else {
-            if (isDragged) {
-              transform = 'scale(0.95) rotate(3deg)';
-            } else if (isDragOver) {
-              transform = 'scale(1.05) translateX(10px)';
-            }
-            transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-          }
-          
+          const isSelected = selectedCards.includes(card.id);
           return (
             <div
               key={card.id}
-              className={`cursor-pointer group ${
-                isDragged 
-                  ? 'opacity-30 z-50' 
-                  : 'hover:scale-105 hover:-translate-y-2 hover:shadow-lg'
-              } ${
-                isDragOver && !isDragged 
-                  ? 'scale-105 shadow-lg ring-2 ring-primary/50' 
-                  : ''
+              className={`${getCardClassName(index, viewMode)} ${
+                isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
               }`}
-              style={{
-                transform,
-                transition,
-                height: cardHeight,
-              }}
-              draggable={!isShuffling}
-              onDragStart={(e) => !isShuffling && handleDragStart(e, card.id)}
-              onDragOver={(e) => !isShuffling && handleDragOver(e, card.id)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => !isShuffling && handleDrop(e, card.id)}
-              onDragEnd={handleDragEnd}
               onClick={(e) => handleCardClick(index, e)}
             >
-              <Card className={`h-full shadow-md border-2 transition-all duration-300 relative ${
-                isDragOver && !isDragged 
-                  ? 'border-primary/50 shadow-xl' 
-                  : 'hover:border-primary/30'
-              }`}>
-                {/* Edit overlay on hover */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 z-10">
-                  <div className="bg-white/90 px-3 py-1 rounded-full text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <Edit className="w-3 h-3" />
-                    Click to Edit
-                  </div>
-                </div>
-                
-                <CardContent className="p-4 h-full flex flex-col" style={{ transform: `scale(${gridScale})`, transformOrigin: 'top left' }}>
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="text-sm font-medium">Card {index + 1}</div>
-                    <div className="text-xs text-gray-500">
-                      {card.card_type || 'standard'}
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1 overflow-hidden border rounded p-2 bg-gray-50">
-                    <StudyCardRenderer
-                      elements={card.front_elements}
-                      className="scale-75 origin-top-left"
-                    />
-                  </div>
-                  
-                  {card.countdown_timer && card.countdown_timer > 0 && (
-                    <div className="text-xs text-blue-600 mt-2">
-                      Timer: {card.countdown_timer}s → {card.countdown_behavior === 'flip' ? 'Flip' : 'Next'}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              {renderCard(card, index)}
             </div>
           );
         })}
       </div>
 
-      {cards.length === 0 && (
-        <div className="text-center text-gray-500 mt-12">
-          <p>No cards to display</p>
-        </div>
+      {/* Bulk Operations Panel */}
+      {selectedCards.length > 0 && (
+        <BulkCardOperations
+          selectedCards={selectedCards}
+          cards={cards}
+          onClearSelection={clearSelection}
+          onBulkUpdate={handleBulkUpdate}
+          onAutoArrange={handleAutoArrange}
+        />
       )}
-
-      <div className="mt-8 text-center text-sm text-gray-600">
-        {isShuffling 
-          ? shufflePhase === 'mixing' ? "Cards are being mixed..." : "Cards are settling back into their positions..."
-          : "Drag and drop cards to reorder them • Hover for preview • Use zoom controls to adjust card size"
-        }
-      </div>
     </div>
   );
 };

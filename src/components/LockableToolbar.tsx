@@ -1,12 +1,48 @@
-
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Lock, Unlock, Pin, PinOff, GripVertical } from 'lucide-react';
-import { CanvasOverlayToolbar } from './CanvasOverlayToolbar';
-import { FlashcardSet, Flashcard } from '@/types/flashcard';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Slider } from "@/components/ui/slider"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { Card } from "@/components/ui/card"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
+import {
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  ImageIcon,
+  LayoutDashboard,
+  ListOrdered,
+  ListUnordered,
+  Text,
+  Copy,
+  Save,
+  Plus,
+  ArrowLeft,
+  ArrowRight,
+  Trash,
+  Settings,
+  Download,
+  Upload,
+  HelpCircle,
+  ChevronDown,
+  Grid,
+  Layers,
+} from "lucide-react";
+import { Flashcard, CanvasElement } from '@/types/flashcard';
 
 interface LockableToolbarProps {
-  set: FlashcardSet;
+  set: any;
   currentCard: Flashcard;
   currentCardIndex: number;
   totalCards: number;
@@ -19,163 +55,209 @@ interface LockableToolbarProps {
   onCreateNewCardWithLayout: () => void;
   onDeleteCard: () => Promise<boolean>;
   onSave: () => void;
-  onAutoArrange?: (type: 'grid' | 'center' | 'justify' | 'stack') => void;
+  onAutoArrange?: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right') => void;
   isBackSideDisabled?: boolean;
 }
 
-export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {
-  const [isLocked, setIsLocked] = useState(true); // Default to locked
-  const [dockPosition, setDockPosition] = useState<'top' | 'left'>('top'); // Default to top
-  const [position, setPosition] = useState({ x: 20, y: 80 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const toolbarRef = useRef<HTMLDivElement>(null);
-
-  const toggleLock = () => {
-    setIsLocked(!isLocked);
-  };
-
-  const toggleDockPosition = () => {
-    setDockPosition(dockPosition === 'top' ? 'left' : 'top');
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (isLocked) return;
-    
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
-    });
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging || isLocked) return;
-    
-    // Get viewport dimensions and toolbar dimensions
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const toolbarElement = toolbarRef.current;
-    
-    if (toolbarElement) {
-      const toolbarRect = toolbarElement.getBoundingClientRect();
-      
-      // Calculate new position with constraints
-      let newX = e.clientX - dragStart.x;
-      let newY = e.clientY - dragStart.y;
-      
-      // Constrain to viewport bounds
-      newX = Math.max(0, Math.min(newX, viewportWidth - toolbarRect.width));
-      newY = Math.max(80, Math.min(newY, viewportHeight - toolbarRect.height - 20)); // Account for header
-      
-      setPosition({ x: newX, y: newY });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  React.useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging]);
-
-  const getToolbarClasses = () => {
-    if (!isLocked) {
-      return "absolute z-20 max-w-[90vw]"; // Add max width constraint
-    }
-
-    if (dockPosition === 'top') {
-      return "fixed top-20 left-0 right-0 z-50 shadow-lg px-4";
-    } else {
-      return "fixed top-20 left-0 bottom-0 z-50 w-20 shadow-lg";
-    }
-  };
-
-  const getToolbarStyle = () => {
-    if (!isLocked) {
-      return {
-        left: position.x,
-        top: position.y,
-      };
-    }
-    return {};
-  };
-
-  const getContentClasses = () => {
-    if (!isLocked) return "";
-    
-    if (dockPosition === 'top') {
-      return "pt-20"; // Add padding to account for fixed top toolbar
-    } else {
-      return "pl-20"; // Add padding to account for fixed left toolbar
-    }
-  };
-
+export const LockableToolbar: React.FC<LockableToolbarProps> = ({
+  set,
+  currentCard,
+  currentCardIndex,
+  totalCards,
+  currentSide,
+  onAddElement,
+  onUpdateCard,
+  onNavigateCard,
+  onSideChange,
+  onCreateNewCard,
+  onCreateNewCardWithLayout,
+  onDeleteCard,
+  onSave,
+  onAutoArrange,
+  isBackSideDisabled = false,
+}) => {
   return (
-    <>
-      <div 
-        ref={toolbarRef}
-        className={getToolbarClasses()}
-        style={getToolbarStyle()}
-      >
-        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 max-w-full overflow-hidden">
-          <div className="flex items-center justify-between gap-2 mb-3">
-            <div className="flex items-center gap-2">
-              {!isLocked && (
-                <div 
-                  className="cursor-move p-1"
-                  onMouseDown={handleMouseDown}
-                  title="Drag to move toolbar"
-                >
-                  <GripVertical className="w-3 h-3 text-gray-500" />
-                </div>
-              )}
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleLock}
-                className="h-7 w-7 p-0"
-                title={isLocked ? "Unlock toolbar" : "Lock toolbar"}
-              >
-                {isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-              </Button>
-              
-              {isLocked && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleDockPosition}
-                  className="h-7 w-7 p-0"
-                  title={`Dock to ${dockPosition === 'top' ? 'left' : 'top'}`}
-                >
-                  {dockPosition === 'top' ? <Pin className="w-3 h-3" /> : <PinOff className="w-3 h-3" />}
-                </Button>
-              )}
-            </div>
+    <div className="fixed top-0 left-0 w-full h-20 bg-background/90 backdrop-blur-sm z-40 border-b border-border">
+      <div className="container max-w-5xl h-full flex items-center justify-between">
+        {/* Left Side - Set Info and Navigation */}
+        <div className="flex items-center gap-4">
+          <h1 className="text-lg font-semibold">{set.title}</h1>
+          <div className="text-sm text-muted-foreground">
+            Card {currentCardIndex + 1} of {totalCards}
           </div>
-          
-          <CanvasOverlayToolbar
-            {...props}
-            isCompact={isLocked && dockPosition === 'left'}
-            orientation={
-              !isLocked ? 'vertical' : 
-              dockPosition === 'left' ? 'vertical' : 'horizontal'
+        </div>
+
+        {/* Center - Card Editing Options */}
+        <div className="flex items-center gap-2">
+          {/* Add Element Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <Plus className="w-4 h-4" />
+                Add Element
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Add to Card</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => onAddElement('text')}>
+                <Text className="w-4 h-4 mr-2" />
+                Text
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddElement('image')}>
+                <ImageIcon className="w-4 h-4 mr-2" />
+                Image
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddElement('drawing')}>
+                <ImageIcon className="w-4 h-4 mr-2" />
+                Drawing
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddElement('multiple-choice')}>
+                <ListOrdered className="w-4 h-4 mr-2" />
+                Multiple Choice
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddElement('true-false')}>
+                <ListUnordered className="w-4 h-4 mr-2" />
+                True / False
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onAddElement('youtube')}>
+                <ImageIcon className="w-4 h-4 mr-2" />
+                YouTube Embed
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddElement('deck-embed')}>
+                <LayoutDashboard className="w-4 h-4 mr-2" />
+                Deck Embed
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Auto Arrange Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <Grid className="w-4 h-4" />
+                Auto Arrange
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Layout</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => onAutoArrange?.('grid')}>
+                <Grid className="w-4 h-4 mr-2" />
+                Grid Layout
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAutoArrange?.('center')}>
+                <AlignCenter className="w-4 h-4 mr-2" />
+                Center All
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAutoArrange?.('justify')}>
+                <AlignJustify className="w-4 h-4 mr-2" />
+                Justify Horizontally
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAutoArrange?.('stack')}>
+                <Layers className="w-4 h-4 mr-2" />
+                Stack Vertically
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Text Alignment</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => onAutoArrange?.('align-left')}>
+                <AlignLeft className="w-4 h-4 mr-2" />
+                Align Text Left
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAutoArrange?.('align-center')}>
+                <AlignCenter className="w-4 h-4 mr-2" />
+                Align Text Center
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAutoArrange?.('align-right')}>
+                <AlignRight className="w-4 h-4 mr-2" />
+                Align Text Right
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Card Type Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Card Type: {currentCard.card_type || 'Standard'}
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Select Card Type</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => onUpdateCard(currentCard.id, { card_type: 'standard' })}>
+                Standard Card
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onUpdateCard(currentCard.id, { card_type: 'informational' })}>
+                Informational Card
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onUpdateCard(currentCard.id, { card_type: 'single-sided' })}>
+                Single-Sided Card
+              </DropdownMenuItem>
+              {/* Add more card types here as needed */}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Side Toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onSideChange(currentSide === 'front' ? 'back' : 'front')}
+            disabled={isBackSideDisabled}
+          >
+            Show {currentSide === 'front' ? 'Back' : 'Front'}
+          </Button>
+        </div>
+
+        {/* Right Side - Card Management and Actions */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onNavigateCard('prev')}
+            disabled={currentCardIndex === 0}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Prev
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onNavigateCard('next')}
+            disabled={currentCardIndex === totalCards - 1}
+          >
+            Next
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+
+          <Button variant="ghost" size="sm" onClick={onCreateNewCard}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Card
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onCreateNewCardWithLayout}>
+            <Copy className="w-4 h-4 mr-2" />
+            Clone Card
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onSave}>
+            <Save className="w-4 h-4 mr-2" />
+            Save
+          </Button>
+          <Button variant="destructive" size="sm" onClick={async () => {
+            const confirmDelete = window.confirm("Are you sure you want to delete this card?");
+            if (confirmDelete) {
+              const success = await onDeleteCard();
+              if (!success) {
+                alert("Cannot delete the last card in the set.");
+              }
             }
-          />
+          }}>
+            <Trash className="w-4 h-4 mr-2" />
+            Delete
+          </Button>
         </div>
       </div>
-      
-      {/* Spacer div to push content down/right when toolbar is locked */}
-      {isLocked && <div className={getContentClasses()} />}
-    </>
+    </div>
   );
 };

@@ -207,7 +207,7 @@ export const CardEditor: React.FC = () => {
     return await deleteCard(currentCard.id);
   };
 
-  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack') => {
+  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right') => {
     const elementsToArrange = currentElements;
     if (elementsToArrange.length === 0) return;
 
@@ -264,6 +264,30 @@ export const CardEditor: React.FC = () => {
             x: 50,
             y: 50 + index * (element.height + stackSpacing),
           });
+        });
+        break;
+
+      case 'align-left':
+        elementsToArrange.forEach((element) => {
+          if (element.type === 'text') {
+            updateElement(element.id, { textAlign: 'left' });
+          }
+        });
+        break;
+
+      case 'align-center':
+        elementsToArrange.forEach((element) => {
+          if (element.type === 'text') {
+            updateElement(element.id, { textAlign: 'center' });
+          }
+        });
+        break;
+
+      case 'align-right':
+        elementsToArrange.forEach((element) => {
+          if (element.type === 'text') {
+            updateElement(element.id, { textAlign: 'right' });
+          }
         });
         break;
     }
