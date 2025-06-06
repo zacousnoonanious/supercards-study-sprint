@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Lock, Unlock, Pin, PinOff } from 'lucide-react';
+import { Lock, Unlock, Pin, PinOff, GripVertical } from 'lucide-react';
 import { CanvasOverlayToolbar } from './CanvasOverlayToolbar';
 import { FlashcardSet, Flashcard } from '@/types/flashcard';
 
@@ -25,6 +25,10 @@ interface LockableToolbarProps {
 export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {
   const [isLocked, setIsLocked] = useState(false);
   const [dockPosition, setDockPosition] = useState<'top' | 'left'>('top');
+  const [position, setPosition] = useState({ x: 20, y: 80 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const toolbarRef = useRef<HTMLDivElement>(null);
 
   const toggleLock = () => {
     setIsLocked(!isLocked);
@@ -34,34 +38,92 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {
     setDockPosition(dockPosition === 'top' ? 'left' : 'top');
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isLocked) return;
+    
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    });
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging || isLocked) return;
+    
+    setPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  React.useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging]);
+
   const getToolbarClasses = () => {
     if (!isLocked) {
-      return "absolute top-4 left-4 right-4 z-20";
+      return "absolute z-20";
     }
 
     if (dockPosition === 'top') {
-      return "fixed top-0 left-0 right-0 z-50 shadow-lg";
+      return "fixed top-20 left-0 right-0 z-50 shadow-lg px-4";
     } else {
-      return "fixed top-0 left-0 bottom-0 z-50 w-16 shadow-lg";
+      return "fixed top-20 left-0 bottom-0 z-50 w-20 shadow-lg";
     }
+  };
+
+  const getToolbarStyle = () => {
+    if (!isLocked) {
+      return {
+        left: position.x,
+        top: position.y,
+      };
+    }
+    return {};
   };
 
   const getContentClasses = () => {
     if (!isLocked) return "";
     
     if (dockPosition === 'top') {
-      return "pt-16"; // Add padding to account for fixed top toolbar
+      return "pt-20"; // Add padding to account for fixed top toolbar
     } else {
-      return "pl-16"; // Add padding to account for fixed left toolbar
+      return "pl-20"; // Add padding to account for fixed left toolbar
     }
   };
 
   return (
     <>
-      <div className={getToolbarClasses()}>
+      <div 
+        ref={toolbarRef}
+        className={getToolbarClasses()}
+        style={getToolbarStyle()}
+      >
         <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2">
           <div className="flex items-center justify-between gap-1 mb-2">
             <div className="flex items-center gap-1">
+              {!isLocked && (
+                <div 
+                  className="cursor-move p-1"
+                  onMouseDown={handleMouseDown}
+                  title="Drag to move toolbar"
+                >
+                  <GripVertical className="w-3 h-3 text-gray-500" />
+                </div>
+              )}
+              
               <Button
                 variant="ghost"
                 size="sm"
@@ -89,7 +151,10 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {
           <CanvasOverlayToolbar
             {...props}
             isCompact={isLocked && dockPosition === 'left'}
-            orientation={dockPosition === 'left' ? 'vertical' : 'horizontal'}
+            orientation={
+              !isLocked ? 'vertical' : 
+              dockPosition === 'left' ? 'vertical' : 'horizontal'
+            }
           />
         </div>
       </div>

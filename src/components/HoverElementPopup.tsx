@@ -10,7 +10,7 @@ interface HoverElementPopupProps {
   position: { x: number; y: number };
   onUpdate: (updates: Partial<CanvasElement>) => void;
   onDelete: () => void;
-  isHovered: boolean;
+  isSelected: boolean;
 }
 
 export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
@@ -18,11 +18,11 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
   position,
   onUpdate,
   onDelete,
-  isHovered,
+  isSelected,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  if (!isHovered) return null;
+  if (!isSelected) return null;
 
   return (
     <div
