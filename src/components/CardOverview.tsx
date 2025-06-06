@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const [viewMode, setViewMode] = useState<'grid' | 'fan'>('grid');
   const [isShuffling, setIsShuffling] = useState(false);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
+  const [draggedCard, setDraggedCard] = useState<number | null>(null);
 
   const shuffleCards = useCallback(async () => {
     setIsShuffling(true);
@@ -43,12 +45,38 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     if (viewMode === 'grid') {
       return 'relative rounded-lg border shadow-md transition-all duration-300 hover:shadow-lg cursor-pointer';
     } else {
-      const fanAngle = 20;
-      const fanOffset = (cards.length - 1) * fanAngle / 2;
-      const rotate = index * fanAngle - fanOffset;
-      const translateZ = 10 * index;
-      return `absolute top-1/2 left-1/2 w-64 h-48 -mt-24 -ml-32 rounded-lg border shadow-md transition-all duration-300 hover:shadow-lg cursor-pointer transform origin-center rotate-[-${rotate}deg] translate-z-[${translateZ}px]`;
+      // Fan view with proper transforms
+      const totalCards = cards.length;
+      const maxAngle = 60; // Maximum spread angle
+      const angleStep = totalCards > 1 ? maxAngle / (totalCards - 1) : 0;
+      const rotate = index * angleStep - maxAngle / 2;
+      const translateX = index * 5; // Slight horizontal offset
+      const translateY = Math.abs(rotate) * 2; // Slight vertical curve
+      const zIndex = totalCards - Math.abs(index - totalCards / 2); // Center cards on top
+      
+      return `absolute w-64 h-48 rounded-lg border shadow-md transition-all duration-300 hover:shadow-lg cursor-pointer`;
     }
+  };
+
+  const getCardStyle = (index: number, viewMode: string) => {
+    if (viewMode === 'fan') {
+      const totalCards = cards.length;
+      const maxAngle = 60;
+      const angleStep = totalCards > 1 ? maxAngle / (totalCards - 1) : 0;
+      const rotate = index * angleStep - maxAngle / 2;
+      const translateX = index * 5;
+      const translateY = Math.abs(rotate) * 2;
+      const zIndex = totalCards - Math.abs(index - totalCards / 2);
+      
+      return {
+        transform: `translate(-50%, -50%) rotate(${rotate}deg) translateX(${translateX}px) translateY(${translateY}px)`,
+        transformOrigin: 'center bottom',
+        zIndex: zIndex,
+        top: '50%',
+        left: '50%',
+      };
+    }
+    return {};
   };
 
   const renderCard = (card: Flashcard, index: number) => {
@@ -70,14 +98,19 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           : [...prev, cardId]
       );
     } else if (event.shiftKey && selectedCards.length > 0) {
-      // Range select with Shift
-      const lastSelectedIndex = cards.findIndex(card => 
-        card.id === selectedCards[selectedCards.length - 1]
-      );
-      const start = Math.min(lastSelectedIndex, cardIndex);
-      const end = Math.max(lastSelectedIndex, cardIndex);
-      const rangeIds = cards.slice(start, end + 1).map(card => card.id);
-      setSelectedCards(prev => [...new Set([...prev, ...rangeIds])]);
+      // Range select with Shift - Fixed logic
+      const lastSelectedCardId = selectedCards[selectedCards.length - 1];
+      const lastSelectedIndex = cards.findIndex(card => card.id === lastSelectedCardId);
+      
+      if (lastSelectedIndex !== -1) {
+        const start = Math.min(lastSelectedIndex, cardIndex);
+        const end = Math.max(lastSelectedIndex, cardIndex);
+        const rangeIds = cards.slice(start, end + 1).map(card => card.id);
+        setSelectedCards(prev => {
+          const newSelection = new Set([...prev, ...rangeIds]);
+          return Array.from(newSelection);
+        });
+      }
     } else if (selectedCards.length > 0) {
       // Clear selection and potentially edit card
       setSelectedCards([]);
@@ -90,26 +123,63 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     }
   };
 
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedCard(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    if (draggedCard === null || draggedCard === dropIndex) {
+      setDraggedCard(null);
+      return;
+    }
+
+    const newCards = [...cards];
+    const draggedItem = newCards[draggedCard];
+    
+    // Remove the dragged item
+    newCards.splice(draggedCard, 1);
+    
+    // Insert at new position
+    const insertIndex = draggedCard < dropIndex ? dropIndex - 1 : dropIndex;
+    newCards.splice(insertIndex, 0, draggedItem);
+    
+    onReorderCards(newCards);
+    setDraggedCard(null);
+  };
+
   const handleBulkUpdate = async (cardIds: string[], updates: any) => {
-    // Apply updates to all selected cards
     console.log('Bulk updating cards:', cardIds, updates);
     
     if (updates.updateElements && updates.elementUpdates) {
-      // Update specific element properties
+      // Update specific element properties - Fixed to preserve existing properties
       cardIds.forEach(cardId => {
         const card = cards.find(c => c.id === cardId);
         if (card) {
           // Update front elements
           card.front_elements.forEach(element => {
             if (!updates.elementType || element.type === updates.elementType) {
-              Object.assign(element, updates.elementUpdates);
+              // Merge updates instead of replacing
+              Object.keys(updates.elementUpdates).forEach(key => {
+                element[key] = updates.elementUpdates[key];
+              });
             }
           });
           
           // Update back elements
           card.back_elements.forEach(element => {
             if (!updates.elementType || element.type === updates.elementType) {
-              Object.assign(element, updates.elementUpdates);
+              // Merge updates instead of replacing
+              Object.keys(updates.elementUpdates).forEach(key => {
+                element[key] = updates.elementUpdates[key];
+              });
             }
           });
         }
@@ -224,7 +294,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
 
       {/* Instructions */}
       <div className="mb-4 text-sm text-muted-foreground">
-        Click to edit • Ctrl+Click to select multiple • Shift+Click to select range
+        Click to edit • Ctrl+Click to select multiple • Shift+Click to select range • Drag to reorder
       </div>
 
       {/* Cards Container */}
@@ -237,13 +307,20 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       >
         {cards.map((card, index) => {
           const isSelected = selectedCards.includes(card.id);
+          const isDragging = draggedCard === index;
+          
           return (
             <div
               key={card.id}
               className={`${getCardClassName(index, viewMode)} ${
                 isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
-              }`}
+              } ${isDragging ? 'opacity-50' : ''}`}
+              style={getCardStyle(index, viewMode)}
               onClick={(e) => handleCardClick(index, e)}
+              draggable
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, index)}
             >
               {renderCard(card, index)}
             </div>
