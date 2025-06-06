@@ -242,13 +242,22 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       const updatedCards = cards.map(card => {
         if (!cardIds.includes(card.id)) return card;
         
-        // Create updated card with only the specified properties changed
+        // Create updated card with proper typing
         const updatedCard = { ...card };
-        Object.keys(updates).forEach(key => {
-          if (updates[key] !== undefined && key !== 'updateElements' && key !== 'elementUpdates' && key !== 'elementType') {
-            updatedCard[key as keyof Flashcard] = updates[key];
-          }
-        });
+        
+        // Only update specific known properties to avoid type issues
+        if (updates.question !== undefined) {
+          updatedCard.question = updates.question;
+        }
+        if (updates.answer !== undefined) {
+          updatedCard.answer = updates.answer;
+        }
+        if (updates.difficulty !== undefined) {
+          updatedCard.difficulty = updates.difficulty;
+        }
+        if (updates.tags !== undefined) {
+          updatedCard.tags = updates.tags;
+        }
         
         return updatedCard;
       });
