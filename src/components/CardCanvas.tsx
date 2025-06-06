@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
@@ -20,6 +21,7 @@ interface CardCanvasProps {
   onAddElement?: (type: string, position?: number) => void;
   quizTitle?: string;
   onQuizTitleChange?: (title: string) => void;
+  onAutoArrange?: () => void;
 }
 
 interface DragState {
@@ -42,6 +44,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   onAddElement,
   quizTitle = '',
   onQuizTitleChange,
+  onAutoArrange,
 }) => {
   const { theme } = useTheme();
   const [editingElement, setEditingElement] = useState<string | null>(null);
@@ -281,7 +284,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         snapToGrid={snapToGrid}
         gridSize={gridSize}
         onSnapToGridToggle={() => setSnapToGrid(!snapToGrid)}
-        onAutoArrange={() => {}}
+        onAutoArrange={onAutoArrange || (() => {})}
       />
       
       {/* Render elements */}

@@ -89,7 +89,7 @@ export const CardEditor: React.FC = () => {
         <EditorHeader set={set} onSave={saveCard} />
         <main className="h-[calc(100vh-80px)] p-1">
           <div className="relative h-full">
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full pt-16">
               <div className="text-center">
                 <h2 className="text-lg sm:text-xl font-semibold mb-4">No cards in this set</h2>
                 <p className="text-gray-600 text-sm sm:text-base">Create your first card to get started!</p>
@@ -123,30 +123,55 @@ export const CardEditor: React.FC = () => {
     return await deleteCard(currentCard.id);
   };
 
+  const handleAutoArrange = () => {
+    // Auto-arrange elements in a grid layout
+    const elementsToArrange = currentElements;
+    if (elementsToArrange.length === 0) return;
+
+    const cols = Math.ceil(Math.sqrt(elementsToArrange.length));
+    const cellWidth = 250;
+    const cellHeight = 180;
+    const margin = 20;
+    
+    elementsToArrange.forEach((element, index) => {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      updateElement(element.id, {
+        x: col * cellWidth + margin,
+        y: row * cellHeight + margin,
+        width: Math.min(element.width, cellWidth - margin),
+        height: Math.min(element.height, cellHeight - margin),
+      });
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <EditorHeader set={set} onSave={saveCard} />
 
       <main className="h-[calc(100vh-80px)] relative">
-        {/* Compact Overlay Toolbar with Card Type Dropdown */}
-        <CanvasOverlayToolbar
-          set={set}
-          currentCard={currentCard}
-          currentCardIndex={currentCardIndex}
-          totalCards={cards.length}
-          currentSide={currentSide}
-          onAddElement={addElement}
-          onUpdateCard={updateCard}
-          onNavigateCard={navigateCard}
-          onSideChange={setCurrentSide}
-          onCreateNewCard={createNewCard}
-          onCreateNewCardWithLayout={createNewCardWithLayout}
-          onDeleteCard={handleDeleteCard}
-          onSave={saveCard}
-        />
+        {/* Compact Overlay Toolbar - positioned with proper spacing */}
+        <div className="absolute top-2 left-2 right-2 z-20">
+          <CanvasOverlayToolbar
+            set={set}
+            currentCard={currentCard}
+            currentCardIndex={currentCardIndex}
+            totalCards={cards.length}
+            currentSide={currentSide}
+            onAddElement={addElement}
+            onUpdateCard={updateCard}
+            onNavigateCard={navigateCard}
+            onSideChange={setCurrentSide}
+            onCreateNewCard={createNewCard}
+            onCreateNewCardWithLayout={createNewCardWithLayout}
+            onDeleteCard={handleDeleteCard}
+            onSave={saveCard}
+            onAutoArrange={handleAutoArrange}
+          />
+        </div>
 
-        {/* Canvas takes up the full remaining space */}
-        <div className="h-full flex items-center justify-center pt-10 pb-4">
+        {/* Canvas takes up the full remaining space with proper top padding */}
+        <div className="h-full flex items-center justify-center pt-20 pb-4">
           <CardCanvas
             elements={currentElements}
             selectedElement={selectedElement}
@@ -156,6 +181,7 @@ export const CardEditor: React.FC = () => {
             cardSide={currentSide}
             cardType={currentCard?.card_type}
             onAddElement={addElement}
+            onAutoArrange={handleAutoArrange}
           />
         </div>
       </main>

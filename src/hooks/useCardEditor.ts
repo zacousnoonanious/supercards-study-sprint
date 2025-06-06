@@ -275,20 +275,26 @@ export const useCardEditor = () => {
     if (!setId || cards.length === 0) return;
 
     const currentCard = cards[currentCardIndex];
+    
+    // Copy all elements from both front and back sides with new IDs
+    const newFrontElements = currentCard.front_elements.map(el => ({
+      ...el,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      content: el.type === 'text' ? 'Double-click to edit' : el.content,
+    }));
+    
+    const newBackElements = currentCard.back_elements.map(el => ({
+      ...el,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      content: el.type === 'text' ? 'Double-click to edit' : el.content,
+    }));
+    
     const newCard = {
       question: 'New Card',
       answer: 'Answer', 
       hint: '',
-      front_elements: currentCard.front_elements.map(el => ({
-        ...el,
-        id: Date.now().toString() + Math.random(),
-        content: el.type === 'text' ? 'Double-click to edit' : el.content,
-      })) as any,
-      back_elements: currentCard.back_elements.map(el => ({
-        ...el,
-        id: Date.now().toString() + Math.random(),
-        content: el.type === 'text' ? 'Double-click to edit' : el.content,
-      })) as any,
+      front_elements: newFrontElements as any,
+      back_elements: newBackElements as any,
       set_id: setId,
       card_type: currentCard.card_type,
       countdown_timer: currentCard.countdown_timer,
