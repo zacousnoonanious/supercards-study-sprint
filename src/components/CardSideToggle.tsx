@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 interface CardSideToggleProps {
   currentSide: 'front' | 'back';
   onSideChange: (side: 'front' | 'back') => void;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'default' | 'lg';
   isBackDisabled?: boolean;
 }
 
 export const CardSideToggle: React.FC<CardSideToggleProps> = ({
   currentSide,
   onSideChange,
-  size = 'md',
+  size = 'default',
   isBackDisabled = false,
 }) => {
   const buttonClass = size === 'sm' ? 'h-7 px-3 text-xs' : size === 'lg' ? 'h-10 px-4' : 'h-8 px-3 text-sm';

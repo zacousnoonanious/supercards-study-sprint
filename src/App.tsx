@@ -21,7 +21,15 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import CardEditorPage from "./pages/CardEditorPage";
 
-const queryClient = new QueryClient();
+// Initialize QueryClient outside of component to prevent recreation
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
