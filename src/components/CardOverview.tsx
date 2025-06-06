@@ -55,7 +55,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       return `${baseClasses} hover:scale-105`;
     } else {
       // Fan view positioning
-      return `${baseClasses} absolute hover:scale-110 hover:z-50`;
+      return `${baseClasses} absolute hover:scale-110 hover:z-50 transform-gpu`;
     }
   };
 
@@ -63,8 +63,8 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     if (viewMode === 'fan') {
       const totalCards = cards.length;
       const centerIndex = (totalCards - 1) / 2;
-      const maxAngle = Math.min(60, totalCards * 8); // Dynamic max angle based on card count
-      const maxOffset = Math.min(200, totalCards * 15); // Dynamic horizontal spread
+      const maxAngle = Math.min(45, totalCards * 6); // Reduced angle for better fan effect
+      const maxOffset = Math.min(150, totalCards * 12); // Reduced horizontal spread
       
       // Calculate angle and position for each card
       const angleStep = totalCards > 1 ? maxAngle / (totalCards - 1) : 0;
@@ -72,7 +72,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       
       const angle = (index - centerIndex) * angleStep;
       const horizontalOffset = (index - centerIndex) * offsetStep;
-      const verticalOffset = Math.abs(angle) * 1.5; // Slight arc effect
+      const verticalOffset = Math.abs(angle) * 2; // More pronounced arc
       
       // Z-index: center cards should be on top
       const zIndex = 100 - Math.abs(index - centerIndex);
@@ -82,9 +82,9 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
         transformOrigin: 'center bottom',
         zIndex: zIndex,
         left: '50%',
-        top: '60%',
-        width: '200px',
-        height: '280px',
+        top: '50%',
+        width: '180px',
+        height: '250px',
       };
     }
     return {
@@ -118,7 +118,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           : [...prev, cardId]
       );
     } else if (event.shiftKey && selectedCards.length > 0) {
-      // Range select with Shift - Fixed logic
+      // Range select with Shift
       const lastSelectedCardId = selectedCards[selectedCards.length - 1];
       const lastSelectedIndex = cards.findIndex(card => card.id === lastSelectedCardId);
       
@@ -152,7 +152,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedCard(index);
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', ''); // For Firefox compatibility
+    e.dataTransfer.setData('text/html', '');
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -200,26 +200,32 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
         // Deep clone the card to avoid mutations
         const updatedCard = JSON.parse(JSON.stringify(card));
         
-        // Update front elements
+        // Update front elements with proper merging
         updatedCard.front_elements = updatedCard.front_elements.map((element: any) => {
           if (!updates.elementType || element.type === updates.elementType) {
-            // Merge updates while preserving existing properties
-            return {
-              ...element,
-              ...updates.elementUpdates
-            };
+            // Only update specified properties, preserve others
+            const updatedElement = { ...element };
+            Object.keys(updates.elementUpdates).forEach(key => {
+              if (updates.elementUpdates[key] !== undefined) {
+                updatedElement[key] = updates.elementUpdates[key];
+              }
+            });
+            return updatedElement;
           }
           return element;
         });
         
-        // Update back elements
+        // Update back elements with proper merging
         updatedCard.back_elements = updatedCard.back_elements.map((element: any) => {
           if (!updates.elementType || element.type === updates.elementType) {
-            // Merge updates while preserving existing properties
-            return {
-              ...element,
-              ...updates.elementUpdates
-            };
+            // Only update specified properties, preserve others
+            const updatedElement = { ...element };
+            Object.keys(updates.elementUpdates).forEach(key => {
+              if (updates.elementUpdates[key] !== undefined) {
+                updatedElement[key] = updates.elementUpdates[key];
+              }
+            });
+            return updatedElement;
           }
           return element;
         });
@@ -228,6 +234,23 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       });
       
       // Trigger reorder to update the cards in the parent
+      onReorderCards(updatedCards);
+    } else {
+      // Handle direct card property updates (question, answer, etc.)
+      const updatedCards = cards.map(card => {
+        if (!cardIds.includes(card.id)) return card;
+        
+        // Create updated card with only the specified properties changed
+        const updatedCard = { ...card };
+        Object.keys(updates).forEach(key => {
+          if (updates[key] !== undefined && key !== 'updateElements' && key !== 'elementUpdates' && key !== 'elementType') {
+            updatedCard[key as keyof Flashcard] = updates[key];
+          }
+        });
+        
+        return updatedCard;
+      });
+      
       onReorderCards(updatedCards);
     }
   };
@@ -289,23 +312,29 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   return (
     <div className="min-h-screen bg-background p-6">
       {/* CSS for shuffle animations */}
-      <style jsx>{`
-        .shuffling {
-          animation: shuffle 0.6s ease-in-out;
-        }
-        
-        @keyframes shuffle {
-          0% { transform: translateY(0) rotate(0deg) scale(1); }
-          25% { transform: translateY(-10px) rotate(-5deg) scale(1.05); }
-          50% { transform: translateY(-5px) rotate(5deg) scale(1.02); }
-          75% { transform: translateY(-8px) rotate(-3deg) scale(1.03); }
-          100% { transform: translateY(0) rotate(0deg) scale(1); }
-        }
-        
-        .card-shuffle {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-      `}</style>
+      <style>
+        {`
+          .shuffling {
+            animation: shuffle 0.6s ease-in-out;
+          }
+          
+          @keyframes shuffle {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            25% { transform: translateY(-10px) rotate(-5deg) scale(1.05); }
+            50% { transform: translateY(-5px) rotate(5deg) scale(1.02); }
+            75% { transform: translateY(-8px) rotate(-3deg) scale(1.03); }
+            100% { transform: translateY(0) rotate(0deg) scale(1); }
+          }
+          
+          .card-shuffle {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          
+          .card-shuffle:hover {
+            z-index: 1000 !important;
+          }
+        `}
+      </style>
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -367,7 +396,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
         className={`transition-all duration-500 ${
           viewMode === 'grid' 
             ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' 
-            : 'relative min-h-96 flex items-center justify-center'
+            : 'relative min-h-[600px] flex items-center justify-center'
         }`}
       >
         {cards.map((card, index) => {
