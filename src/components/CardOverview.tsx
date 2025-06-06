@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,14 +70,14 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           </div>
           <div className="flex gap-2">
             <Button
-              variant={viewMode === 'fan' ? 'default' : 'outline'}
+              variant="default"
               size="sm"
               onClick={() => setViewMode('fan')}
             >
               Fan View
             </Button>
             <Button
-              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              variant="outline"
               size="sm"
               onClick={() => setViewMode('grid')}
             >
@@ -148,14 +149,14 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
         </div>
         <div className="flex gap-2">
           <Button
-            variant={viewMode === 'fan' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setViewMode('fan')}
           >
             Fan View
           </Button>
           <Button
-            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            variant="default"
             size="sm"
             onClick={() => setViewMode('grid')}
           >
