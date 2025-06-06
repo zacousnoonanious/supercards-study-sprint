@@ -23,9 +23,15 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const [isShuffling, setIsShuffling] = useState(false);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [draggedCard, setDraggedCard] = useState<number | null>(null);
+  const [dragOverCard, setDragOverCard] = useState<number | null>(null);
 
   const shuffleCards = useCallback(async () => {
     setIsShuffling(true);
+    
+    // Add shuffle animation class to trigger CSS animations
+    const cardElements = document.querySelectorAll('.card-shuffle');
+    cardElements.forEach(el => el.classList.add('shuffling'));
+    
     // Fisher-Yates shuffle algorithm
     const shuffled = [...cards];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -33,65 +39,79 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     
-    // Optimistically update the UI
+    // Simulate shuffle animation with staggered updates
+    await new Promise(resolve => setTimeout(resolve, 300));
     onReorderCards(shuffled);
     
-    // Simulate shuffle animation
     await new Promise(resolve => setTimeout(resolve, 500));
+    cardElements.forEach(el => el.classList.remove('shuffling'));
     setIsShuffling(false);
   }, [cards, onReorderCards]);
 
   const getCardClassName = (index: number, viewMode: string) => {
+    const baseClasses = 'card-shuffle relative rounded-lg border shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer bg-white';
+    
     if (viewMode === 'grid') {
-      return 'relative rounded-lg border shadow-md transition-all duration-300 hover:shadow-lg cursor-pointer';
+      return `${baseClasses} hover:scale-105`;
     } else {
-      // Fan view with proper transforms
-      const totalCards = cards.length;
-      const maxAngle = 60; // Maximum spread angle
-      const angleStep = totalCards > 1 ? maxAngle / (totalCards - 1) : 0;
-      const rotate = index * angleStep - maxAngle / 2;
-      const translateX = index * 5; // Slight horizontal offset
-      const translateY = Math.abs(rotate) * 2; // Slight vertical curve
-      const zIndex = totalCards - Math.abs(index - totalCards / 2); // Center cards on top
-      
-      return `absolute w-64 h-48 rounded-lg border shadow-md transition-all duration-300 hover:shadow-lg cursor-pointer`;
+      // Fan view positioning
+      return `${baseClasses} absolute hover:scale-110 hover:z-50`;
     }
   };
 
   const getCardStyle = (index: number, viewMode: string) => {
     if (viewMode === 'fan') {
       const totalCards = cards.length;
-      const maxAngle = 60;
+      const centerIndex = (totalCards - 1) / 2;
+      const maxAngle = Math.min(60, totalCards * 8); // Dynamic max angle based on card count
+      const maxOffset = Math.min(200, totalCards * 15); // Dynamic horizontal spread
+      
+      // Calculate angle and position for each card
       const angleStep = totalCards > 1 ? maxAngle / (totalCards - 1) : 0;
-      const rotate = index * angleStep - maxAngle / 2;
-      const translateX = index * 5;
-      const translateY = Math.abs(rotate) * 2;
-      const zIndex = totalCards - Math.abs(index - totalCards / 2);
+      const offsetStep = totalCards > 1 ? maxOffset / (totalCards - 1) : 0;
+      
+      const angle = (index - centerIndex) * angleStep;
+      const horizontalOffset = (index - centerIndex) * offsetStep;
+      const verticalOffset = Math.abs(angle) * 1.5; // Slight arc effect
+      
+      // Z-index: center cards should be on top
+      const zIndex = 100 - Math.abs(index - centerIndex);
       
       return {
-        transform: `translate(-50%, -50%) rotate(${rotate}deg) translateX(${translateX}px) translateY(${translateY}px)`,
+        transform: `translate(-50%, -50%) translateX(${horizontalOffset}px) translateY(${verticalOffset}px) rotate(${angle}deg)`,
         transformOrigin: 'center bottom',
         zIndex: zIndex,
-        top: '50%',
         left: '50%',
+        top: '60%',
+        width: '200px',
+        height: '280px',
       };
     }
-    return {};
+    return {
+      width: '100%',
+      height: '200px',
+    };
   };
 
   const renderCard = (card: Flashcard, index: number) => {
     return (
-      <div className="p-4">
-        <h3 className="text-lg font-semibold mb-2">{card.question}</h3>
-        <p className="text-sm text-gray-500">Card {index + 1}</p>
+      <div className="p-4 h-full flex flex-col justify-between">
+        <div>
+          <h3 className="text-lg font-semibold mb-2 line-clamp-3">{card.question}</h3>
+          {card.front_elements.length > 0 && (
+            <p className="text-xs text-gray-400 mb-1">{card.front_elements.length} elements</p>
+          )}
+        </div>
+        <p className="text-sm text-gray-500 mt-auto">Card {index + 1}</p>
       </div>
     );
   };
 
   const handleCardClick = (cardIndex: number, event: React.MouseEvent) => {
+    const cardId = cards[cardIndex].id;
+    
     if (event.ctrlKey || event.metaKey) {
       // Multi-select with Ctrl/Cmd
-      const cardId = cards[cardIndex].id;
       setSelectedCards(prev => 
         prev.includes(cardId) 
           ? prev.filter(id => id !== cardId)
@@ -105,18 +125,24 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       if (lastSelectedIndex !== -1) {
         const start = Math.min(lastSelectedIndex, cardIndex);
         const end = Math.max(lastSelectedIndex, cardIndex);
-        const rangeIds = cards.slice(start, end + 1).map(card => card.id);
+        const rangeIds = [];
+        
+        // Get all card IDs in the range
+        for (let i = start; i <= end; i++) {
+          rangeIds.push(cards[i].id);
+        }
+        
         setSelectedCards(prev => {
           const newSelection = new Set([...prev, ...rangeIds]);
           return Array.from(newSelection);
         });
       }
     } else if (selectedCards.length > 0) {
-      // Clear selection and potentially edit card
-      setSelectedCards([]);
-      if (!selectedCards.includes(cards[cardIndex].id)) {
+      // Clear selection if clicking on unselected card, or edit if clicking on selected card
+      if (selectedCards.includes(cardId)) {
         onEditCard(cardIndex);
       }
+      setSelectedCards([]);
     } else {
       // Single click to edit
       onEditCard(cardIndex);
@@ -126,11 +152,17 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedCard(index);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', ''); // For Firefox compatibility
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    setDragOverCard(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverCard(null);
   };
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
@@ -138,6 +170,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     
     if (draggedCard === null || draggedCard === dropIndex) {
       setDraggedCard(null);
+      setDragOverCard(null);
       return;
     }
 
@@ -153,87 +186,100 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     
     onReorderCards(newCards);
     setDraggedCard(null);
+    setDragOverCard(null);
   };
 
   const handleBulkUpdate = async (cardIds: string[], updates: any) => {
     console.log('Bulk updating cards:', cardIds, updates);
     
     if (updates.updateElements && updates.elementUpdates) {
-      // Update specific element properties - Fixed to preserve existing properties
-      cardIds.forEach(cardId => {
-        const card = cards.find(c => c.id === cardId);
-        if (card) {
-          // Update front elements
-          card.front_elements.forEach(element => {
-            if (!updates.elementType || element.type === updates.elementType) {
-              // Merge updates instead of replacing
-              Object.keys(updates.elementUpdates).forEach(key => {
-                element[key] = updates.elementUpdates[key];
-              });
-            }
-          });
-          
-          // Update back elements
-          card.back_elements.forEach(element => {
-            if (!updates.elementType || element.type === updates.elementType) {
-              // Merge updates instead of replacing
-              Object.keys(updates.elementUpdates).forEach(key => {
-                element[key] = updates.elementUpdates[key];
-              });
-            }
-          });
-        }
+      // Create a copy of cards to modify
+      const updatedCards = cards.map(card => {
+        if (!cardIds.includes(card.id)) return card;
+        
+        // Deep clone the card to avoid mutations
+        const updatedCard = JSON.parse(JSON.stringify(card));
+        
+        // Update front elements
+        updatedCard.front_elements = updatedCard.front_elements.map((element: any) => {
+          if (!updates.elementType || element.type === updates.elementType) {
+            // Merge updates while preserving existing properties
+            return {
+              ...element,
+              ...updates.elementUpdates
+            };
+          }
+          return element;
+        });
+        
+        // Update back elements
+        updatedCard.back_elements = updatedCard.back_elements.map((element: any) => {
+          if (!updates.elementType || element.type === updates.elementType) {
+            // Merge updates while preserving existing properties
+            return {
+              ...element,
+              ...updates.elementUpdates
+            };
+          }
+          return element;
+        });
+        
+        return updatedCard;
       });
       
       // Trigger reorder to update the cards in the parent
-      onReorderCards([...cards]);
+      onReorderCards(updatedCards);
     }
   };
 
   const handleAutoArrange = (cardIds: string[], arrangeType: string) => {
-    cardIds.forEach(cardId => {
-      const card = cards.find(c => c.id === cardId);
-      if (card) {
-        const arrangeElements = (elements: any[]) => {
-          switch (arrangeType) {
-            case 'grid':
-              const cols = Math.ceil(Math.sqrt(elements.length));
-              elements.forEach((element, index) => {
-                const row = Math.floor(index / cols);
-                const col = index % cols;
-                element.x = col * 250 + 20;
-                element.y = row * 180 + 20;
-              });
-              break;
-            case 'center':
-              elements.forEach(element => {
-                element.x = 450 - element.width / 2;
-                element.y = 300 - element.height / 2;
-              });
-              break;
-            case 'stack':
-              elements.forEach((element, index) => {
-                element.x = 50;
-                element.y = 50 + index * (element.height + 20);
-              });
-              break;
-            case 'justify':
-              const spacing = 900 / (elements.length + 1);
-              elements.forEach((element, index) => {
-                element.x = spacing * (index + 1) - element.width / 2;
-                element.y = 100;
-              });
-              break;
-          }
-        };
+    const updatedCards = cards.map(card => {
+      if (!cardIds.includes(card.id)) return card;
+      
+      // Deep clone the card
+      const updatedCard = JSON.parse(JSON.stringify(card));
+      
+      const arrangeElements = (elements: any[]) => {
+        switch (arrangeType) {
+          case 'grid':
+            const cols = Math.ceil(Math.sqrt(elements.length));
+            elements.forEach((element, index) => {
+              const row = Math.floor(index / cols);
+              const col = index % cols;
+              element.x = col * 250 + 20;
+              element.y = row * 180 + 20;
+            });
+            break;
+          case 'center':
+            elements.forEach(element => {
+              element.x = 450 - (element.width || 200) / 2;
+              element.y = 300 - (element.height || 100) / 2;
+            });
+            break;
+          case 'stack':
+            elements.forEach((element, index) => {
+              element.x = 50;
+              element.y = 50 + index * ((element.height || 100) + 20);
+            });
+            break;
+          case 'justify':
+            const spacing = 900 / (elements.length + 1);
+            elements.forEach((element, index) => {
+              element.x = spacing * (index + 1) - (element.width || 200) / 2;
+              element.y = 100;
+            });
+            break;
+        }
+      };
 
-        arrangeElements(card.front_elements);
-        arrangeElements(card.back_elements);
-      }
+      arrangeElements(updatedCard.front_elements);
+      arrangeElements(updatedCard.back_elements);
+      
+      return updatedCard;
     });
     
     // Trigger reorder to update the cards in the parent
-    onReorderCards([...cards]);
+    onReorderCards(updatedCards);
   };
 
   const clearSelection = () => {
@@ -242,6 +288,25 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
 
   return (
     <div className="min-h-screen bg-background p-6">
+      {/* CSS for shuffle animations */}
+      <style jsx>{`
+        .shuffling {
+          animation: shuffle 0.6s ease-in-out;
+        }
+        
+        @keyframes shuffle {
+          0% { transform: translateY(0) rotate(0deg) scale(1); }
+          25% { transform: translateY(-10px) rotate(-5deg) scale(1.05); }
+          50% { transform: translateY(-5px) rotate(5deg) scale(1.02); }
+          75% { transform: translateY(-8px) rotate(-3deg) scale(1.03); }
+          100% { transform: translateY(0) rotate(0deg) scale(1); }
+        }
+        
+        .card-shuffle {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+      `}</style>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -265,7 +330,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
             disabled={isShuffling}
             className="flex items-center gap-2"
           >
-            <Shuffle className="w-4 h-4" />
+            <Shuffle className={`w-4 h-4 ${isShuffling ? 'animate-spin' : ''}`} />
             {isShuffling ? 'Shuffling...' : 'Shuffle'}
           </Button>
           
@@ -302,24 +367,28 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
         className={`transition-all duration-500 ${
           viewMode === 'grid' 
             ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' 
-            : 'relative h-96 flex items-center justify-center'
+            : 'relative min-h-96 flex items-center justify-center'
         }`}
       >
         {cards.map((card, index) => {
           const isSelected = selectedCards.includes(card.id);
           const isDragging = draggedCard === index;
+          const isDragOver = dragOverCard === index;
           
           return (
             <div
               key={card.id}
               className={`${getCardClassName(index, viewMode)} ${
                 isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
-              } ${isDragging ? 'opacity-50' : ''}`}
+              } ${isDragging ? 'opacity-50 scale-95' : ''} ${
+                isDragOver ? 'ring-2 ring-green-400 ring-offset-2' : ''
+              }`}
               style={getCardStyle(index, viewMode)}
               onClick={(e) => handleCardClick(index, e)}
               draggable
               onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={handleDragOver}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
             >
               {renderCard(card, index)}
@@ -327,6 +396,13 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           );
         })}
       </div>
+
+      {/* Empty State */}
+      {cards.length === 0 && (
+        <div className="text-center py-12 text-muted-foreground">
+          <p>No cards to display</p>
+        </div>
+      )}
 
       {/* Bulk Operations Panel */}
       {selectedCards.length > 0 && (
