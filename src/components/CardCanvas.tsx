@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
@@ -52,6 +51,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [gridSize] = useState(20);
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [hoveredElement, setHoveredElement] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
@@ -304,6 +304,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             zIndex: element.zIndex || 0,
           }}
           onMouseDown={(e) => handleMouseDown(e, element.id, 'drag')}
+          onMouseEnter={() => setHoveredElement(element.id)}
+          onMouseLeave={() => setHoveredElement(null)}
           onClick={(e) => {
             e.stopPropagation();
             onSelectElement(element.id);
@@ -335,6 +337,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             position={getElementPopupPosition(selectedElementData)}
             onUpdate={(updates) => selectedElement && onUpdateElement(selectedElement, updates)}
             onDelete={() => selectedElement && onDeleteElement(selectedElement)}
+            isHovered={hoveredElement === selectedElement}
           />
         </>
       )}

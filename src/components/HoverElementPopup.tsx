@@ -14,6 +14,7 @@ interface HoverElementPopupProps {
   position: { x: number; y: number };
   onUpdate: (updates: Partial<CanvasElement>) => void;
   onDelete: () => void;
+  isHovered: boolean;
 }
 
 export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
@@ -21,6 +22,7 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
   position,
   onUpdate,
   onDelete,
+  isHovered,
 }) => {
   const [opacity, setOpacity] = useState(1);
   const [isVisible, setIsVisible] = useState(true);
@@ -28,16 +30,15 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    const handleMouseEnter = () => {
+    if (isHovered) {
+      // Show popup when element is hovered
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
       setOpacity(1);
       setIsVisible(true);
-    };
-
-    const handleMouseLeave = () => {
-      // Start fade out after a brief delay
+    } else {
+      // Start fade out after a brief delay when not hovering
       timeoutRef.current = setTimeout(() => {
         setOpacity(0.3);
         // Hide completely after fade
@@ -45,24 +46,33 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
           setIsVisible(false);
         }, 500);
       }, 200);
-    };
-
-    const popup = popupRef.current;
-    if (popup) {
-      popup.addEventListener('mouseenter', handleMouseEnter);
-      popup.addEventListener('mouseleave', handleMouseLeave);
     }
 
     return () => {
-      if (popup) {
-        popup.removeEventListener('mouseenter', handleMouseEnter);
-        popup.removeEventListener('mouseleave', handleMouseLeave);
-      }
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, []);
+  }, [isHovered]);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setOpacity(1);
+    setIsVisible(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (!isHovered) {
+      timeoutRef.current = setTimeout(() => {
+        setOpacity(0.3);
+        setTimeout(() => {
+          setIsVisible(false);
+        }, 500);
+      }, 200);
+    }
+  };
 
   if (!isVisible) return null;
 
@@ -128,6 +138,8 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
         opacity,
         zIndex: 100,
       }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium capitalize">

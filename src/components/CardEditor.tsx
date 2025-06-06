@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CardCanvas } from './CardCanvas';
 import { EditorHeader } from './EditorHeader';
-import { CanvasOverlayToolbar } from './CanvasOverlayToolbar';
+import { LockableToolbar } from './LockableToolbar';
 import { useCardEditor } from '@/hooks/useCardEditor';
 
 export const CardEditor: React.FC = () => {
@@ -94,7 +94,7 @@ export const CardEditor: React.FC = () => {
                 <p className="text-gray-600 text-sm sm:text-base">Create your first card to get started!</p>
               </div>
             </div>
-            <CanvasOverlayToolbar
+            <LockableToolbar
               set={set}
               currentCard={{} as any}
               currentCardIndex={0}
@@ -184,48 +184,31 @@ export const CardEditor: React.FC = () => {
     }
   };
 
-  // Calculate dynamic spacing based on card type - informational cards need more space
-  const getCardSpacing = () => {
-    const cardType = currentCard?.card_type || 'standard';
-    switch (cardType) {
-      case 'informational':
-        return { top: 'pt-32', bottom: 'pb-16', horizontal: 'px-12' };
-      case 'quiz-only':
-        return { top: 'pt-28', bottom: 'pb-12', horizontal: 'px-10' };
-      default:
-        return { top: 'pt-24', bottom: 'pb-12', horizontal: 'px-8' };
-    }
-  };
-
-  const spacing = getCardSpacing();
-
   return (
     <div className="min-h-screen bg-background">
       <EditorHeader set={set} onSave={saveCard} />
 
       <main className="h-[calc(100vh-80px)] relative">
-        {/* Compact Overlay Toolbar - positioned with proper spacing */}
-        <div className="absolute top-4 left-4 right-4 z-20">
-          <CanvasOverlayToolbar
-            set={set}
-            currentCard={currentCard}
-            currentCardIndex={currentCardIndex}
-            totalCards={cards.length}
-            currentSide={currentSide}
-            onAddElement={addElement}
-            onUpdateCard={updateCard}
-            onNavigateCard={navigateCard}
-            onSideChange={setCurrentSide}
-            onCreateNewCard={createNewCard}
-            onCreateNewCardWithLayout={createNewCardWithLayout}
-            onDeleteCard={handleDeleteCard}
-            onSave={saveCard}
-            onAutoArrange={handleAutoArrange}
-          />
-        </div>
+        {/* Lockable Toolbar */}
+        <LockableToolbar
+          set={set}
+          currentCard={currentCard}
+          currentCardIndex={currentCardIndex}
+          totalCards={cards.length}
+          currentSide={currentSide}
+          onAddElement={addElement}
+          onUpdateCard={updateCard}
+          onNavigateCard={navigateCard}
+          onSideChange={setCurrentSide}
+          onCreateNewCard={createNewCard}
+          onCreateNewCardWithLayout={createNewCardWithLayout}
+          onDeleteCard={handleDeleteCard}
+          onSave={saveCard}
+          onAutoArrange={handleAutoArrange}
+        />
 
-        {/* Canvas with dynamic spacing based on card type */}
-        <div className={`h-full flex items-center justify-center ${spacing.top} ${spacing.bottom} ${spacing.horizontal}`}>
+        {/* Canvas with enhanced spacing to never be covered */}
+        <div className="h-full flex items-center justify-center pt-32 pb-16 px-12">
           <CardCanvas
             elements={currentElements}
             selectedElement={selectedElement}
