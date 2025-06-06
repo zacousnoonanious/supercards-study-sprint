@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
@@ -302,7 +303,14 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             transformOrigin: 'center',
             zIndex: element.zIndex || 0,
           }}
-          onMouseDown={(e) => handleMouseDown(e, element.id, 'drag')}
+          onMouseDown={(e) => {
+            // Only allow dragging from specific areas for drawing elements
+            if (element.type === 'drawing') {
+              // For drawing elements, only allow dragging from the top drag handle
+              return;
+            }
+            handleMouseDown(e, element.id, 'drag');
+          }}
           onClick={(e) => {
             e.stopPropagation();
             onSelectElement(element.id);
@@ -313,6 +321,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             editingElement={editingElement}
             onUpdateElement={onUpdateElement}
             onEditingChange={setEditingElement}
+            onElementDragStart={(e, elementId) => handleMouseDown(e, elementId, 'drag')}
+            isDragging={dragState?.isDragging && selectedElement === element.id}
           />
         </div>
       ))}

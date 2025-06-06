@@ -13,6 +13,8 @@ interface CanvasElementRendererProps {
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
   onEditingChange: (id: string | null) => void;
   textScale?: number;
+  onElementDragStart?: (e: React.MouseEvent, elementId: string) => void;
+  isDragging?: boolean;
 }
 
 export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
@@ -21,6 +23,8 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   onUpdateElement,
   onEditingChange,
   textScale = 1,
+  onElementDragStart,
+  isDragging = false,
 }) => {
   const { theme } = useTheme();
 
@@ -104,14 +108,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
       );
     case 'drawing':
       return (
-        <div className="w-full h-full relative group">
-          <div className="absolute top-0 left-0 right-0 h-6 bg-gray-200 dark:bg-gray-700 flex items-center justify-center cursor-move z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="text-gray-600 dark:text-gray-300">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M13 7h8v2h-8V7zM13 15h8v2h-8v-2zM3 7h8v2H3V7zM3 15h8v2H3v-2z"/>
-              </svg>
-            </div>
-          </div>
+        <div className="w-full h-full">
           <DrawingCanvas
             width={element.width}
             height={element.height}
@@ -123,6 +120,8 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
             initialDrawing={element.drawingData}
             strokeColor={element.strokeColor}
             strokeWidth={element.strokeWidth}
+            onDragStart={(e) => onElementDragStart?.(e, element.id)}
+            isDragging={isDragging}
           />
         </div>
       );
@@ -140,9 +139,9 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
     case 'text':
       return (
         <div
-          className={`w-full h-full flex items-center justify-center border rounded overflow-hidden cursor-text ${
+          className={`w-full h-full flex items-center justify-center border rounded overflow-hidden ${
             theme === 'dark' ? 'bg-gray-800 text-white border-gray-600' : 'bg-white border-gray-300'
-          }`}
+          } ${editingElement === element.id ? 'cursor-text' : 'cursor-text'}`}
           style={{
             fontSize: (element.fontSize || 16) * textScale,
             color: element.color,
@@ -150,7 +149,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
             fontStyle: element.fontStyle,
             textDecoration: element.textDecoration,
             textAlign: element.textAlign as React.CSSProperties['textAlign'],
-            padding: '4px 8px', // Minimal padding
+            padding: '4px 8px',
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -202,10 +201,11 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
                 padding: '4px 8px',
               }}
               autoFocus
+              onSelect={(e) => e.stopPropagation()}
             />
           ) : (
             <span 
-              className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words leading-tight"
+              className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words leading-tight select-text"
               style={{ 
                 textAlign: element.textAlign || 'center',
                 fontSize: `${Math.min((element.fontSize || 16) * textScale, element.height / 2)}px`,

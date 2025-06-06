@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { CanvasElement } from '@/types/flashcard';
 
 interface FillInBlankEditorProps {
@@ -30,16 +31,16 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
 
   const handleTextChange = (text: string) => {
     setOriginalText(text);
-    // Reset blanks when text changes
+    // Reset blanks when text changes significantly
     setBlanks([]);
   };
 
-  const handleWordClick = (word: string, position: number) => {
+  const handleWordDoubleClick = (word: string, position: number) => {
     const blankId = `blank_${Date.now()}`;
     const existingBlankIndex = blanks.findIndex(blank => blank.position === position);
     
     if (existingBlankIndex >= 0) {
-      // Remove blank if clicking on an already blanked word
+      // Remove blank if double-clicking on an already blanked word
       setBlanks(blanks.filter((_, index) => index !== existingBlankIndex));
     } else {
       // Add new blank
@@ -61,13 +62,14 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
         return (
           <span
             key={index}
-            className={`cursor-pointer px-1 py-0.5 rounded ${
+            className={`cursor-pointer px-1 py-0.5 rounded transition-colors ${
               isBlank 
-                ? 'bg-blue-200 text-blue-800 font-medium' 
-                : 'hover:bg-gray-100'
+                ? 'bg-blue-200 text-blue-800 font-medium border border-blue-300' 
+                : 'hover:bg-gray-100 border border-transparent'
             }`}
-            onClick={() => handleWordClick(segment.trim(), currentWordIndex)}
+            onDoubleClick={() => handleWordDoubleClick(segment.trim(), currentWordIndex)}
             style={{ fontSize: `${12 * textScale}px` }}
+            title="Double-click to toggle blank"
           >
             {segment}
           </span>
@@ -82,23 +84,26 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
       <CardContent className="p-3 space-y-3">
         <div>
           <Label className="text-xs font-medium">Enter your sentence:</Label>
-          <Input
+          <Textarea
             value={originalText}
             onChange={(e) => handleTextChange(e.target.value)}
-            placeholder="Type a sentence and click words to make them blanks"
-            className="h-8 text-xs"
+            placeholder="Type a sentence and double-click words to turn them into blanks"
+            className="h-20 text-xs resize-none"
           />
         </div>
 
         {originalText && (
           <div>
-            <Label className="text-xs font-medium">Click words to turn into blanks:</Label>
+            <Label className="text-xs font-medium">Double-click words to turn into blanks:</Label>
             <div 
-              className="p-2 border rounded min-h-[60px] text-xs leading-relaxed"
+              className="p-2 border rounded min-h-[60px] text-xs leading-relaxed bg-gray-50 dark:bg-gray-900"
               style={{ fontSize: `${10 * textScale}px` }}
             >
               {renderTextWithBlanks()}
             </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Tip: Double-click any word to toggle it as a blank
+            </p>
           </div>
         )}
 
