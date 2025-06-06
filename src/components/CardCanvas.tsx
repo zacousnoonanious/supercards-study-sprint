@@ -3,7 +3,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
 import { QuizOnlyLayout } from './QuizOnlyLayout';
-import { ElementPopupToolbar } from './ElementPopupToolbar';
+import { HoverElementPopup } from './HoverElementPopup';
 import { CanvasContextMenu } from './CanvasContextMenu';
 import { CanvasInteractionHandler } from './CanvasInteractionHandler';
 import { CanvasBackground } from './CanvasBackground';
@@ -329,12 +329,12 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             isDrawingMode={false}
           />
 
-          {/* Element Popup Toolbar - follows the element */}
-          <ElementPopupToolbar
+          {/* Hover Element Popup - with transparency animation */}
+          <HoverElementPopup
             element={selectedElementData}
+            position={getElementPopupPosition(selectedElementData)}
             onUpdate={(updates) => selectedElement && onUpdateElement(selectedElement, updates)}
             onDelete={() => selectedElement && onDeleteElement(selectedElement)}
-            position={getElementPopupPosition(selectedElementData)}
           />
         </>
       )}

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CardCanvas } from './CardCanvas';
@@ -89,7 +88,7 @@ export const CardEditor: React.FC = () => {
         <EditorHeader set={set} onSave={saveCard} />
         <main className="h-[calc(100vh-80px)] p-1">
           <div className="relative h-full">
-            <div className="flex items-center justify-center h-full pt-16">
+            <div className="flex items-center justify-center h-full pt-20">
               <div className="text-center">
                 <h2 className="text-lg sm:text-xl font-semibold mb-4">No cards in this set</h2>
                 <p className="text-gray-600 text-sm sm:text-base">Create your first card to get started!</p>
@@ -185,6 +184,21 @@ export const CardEditor: React.FC = () => {
     }
   };
 
+  // Calculate dynamic spacing based on card type - informational cards need more space
+  const getCardSpacing = () => {
+    const cardType = currentCard?.card_type || 'standard';
+    switch (cardType) {
+      case 'informational':
+        return { top: 'pt-32', bottom: 'pb-16', horizontal: 'px-12' };
+      case 'quiz-only':
+        return { top: 'pt-28', bottom: 'pb-12', horizontal: 'px-10' };
+      default:
+        return { top: 'pt-24', bottom: 'pb-12', horizontal: 'px-8' };
+    }
+  };
+
+  const spacing = getCardSpacing();
+
   return (
     <div className="min-h-screen bg-background">
       <EditorHeader set={set} onSave={saveCard} />
@@ -210,8 +224,8 @@ export const CardEditor: React.FC = () => {
           />
         </div>
 
-        {/* Canvas takes up the full remaining space with more padding */}
-        <div className="h-full flex items-center justify-center pt-24 pb-8 px-8">
+        {/* Canvas with dynamic spacing based on card type */}
+        <div className={`h-full flex items-center justify-center ${spacing.top} ${spacing.bottom} ${spacing.horizontal}`}>
           <CardCanvas
             elements={currentElements}
             selectedElement={selectedElement}
