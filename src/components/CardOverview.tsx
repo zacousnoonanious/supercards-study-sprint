@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const [isShuffling, setIsShuffling] = useState(false);
   const [gridScale, setGridScale] = useState(1); // 1 = normal, 0.75 = smaller, 1.25 = larger
   const [shuffleDialogOpen, setShuffleDialogOpen] = useState(false);
+  const [shuffleOffsets, setShuffleOffsets] = useState<{[key: string]: {x: number, y: number, rotation: number, scale: number, delay: number}}>({});
 
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
     setDraggedCard(cardId);
@@ -90,6 +92,19 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     setIsShuffling(true);
     setShuffleDialogOpen(false);
     
+    // Generate unique random offsets for each card
+    const newShuffleOffsets: {[key: string]: {x: number, y: number, rotation: number, scale: number, delay: number}} = {};
+    cards.forEach((card, index) => {
+      newShuffleOffsets[card.id] = {
+        x: (Math.random() - 0.5) * 1200, // Larger range for more dramatic movement
+        y: (Math.random() - 0.5) * 800,
+        rotation: (Math.random() - 0.5) * 1080, // Up to 3 full rotations
+        scale: 0.6 + Math.random() * 0.8, // Scale between 0.6 and 1.4
+        delay: Math.random() * 2000 // Random delay up to 2 seconds
+      };
+    });
+    setShuffleOffsets(newShuffleOffsets);
+    
     // Create a shuffled array
     const shuffledCards = [...cards];
     for (let i = shuffledCards.length - 1; i > 0; i--) {
@@ -101,6 +116,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     setTimeout(() => {
       onReorderCards(shuffledCards);
       setIsShuffling(false);
+      setShuffleOffsets({});
     }, 5000);
   };
 
@@ -187,12 +203,12 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
             {cards.map((card, index) => {
               const totalCards = cards.length;
               const centerIndex = (totalCards - 1) / 2;
-              const angleFromCenter = (index - centerIndex) * 12;
-              const radius = Math.min(500, totalCards * 20);
+              const angleFromCenter = (index - centerIndex) * 18;
+              const radius = Math.min(500, totalCards * 25);
               
               const angleRad = (angleFromCenter * Math.PI) / 180;
               const x = Math.sin(angleRad) * radius;
-              const y = Math.cos(angleRad) * (radius * 0.2);
+              const y = Math.cos(angleRad) * (radius * 0.3);
               
               const isHovered = hoveredCard === card.id;
               const isDragged = draggedCard === card.id;
@@ -206,28 +222,31 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
                 const currentIndex = index;
                 
                 if (draggedIndex < dragOverIndex && currentIndex > draggedIndex && currentIndex <= dragOverIndex) {
-                  repositionOffset = -15;
+                  repositionOffset = -20;
                 } else if (draggedIndex > dragOverIndex && currentIndex >= dragOverIndex && currentIndex < draggedIndex) {
-                  repositionOffset = 15;
+                  repositionOffset = 20;
                 }
               }
+
+              const shuffleOffset = shuffleOffsets[card.id];
               
               return (
                 <div
                   key={card.id}
                   className={`absolute cursor-move transition-all duration-300 ${
-                    isShuffling ? 'animate-spin' : ''
-                  } ${
                     isDragged ? 'opacity-60 scale-110 z-50 rotate-12' : ''
                   } ${isHovered && !isDragged ? 'scale-105 z-20' : ''} ${
                     isDragOver && !isDragged ? 'scale-105' : ''
                   } ${isSelected && !isDragged ? 'animate-pulse' : ''}`}
                   style={{
-                    transform: isShuffling 
-                      ? `translate(${Math.random() * 800 - 400}px, ${Math.random() * 400 - 200}px) rotate(${Math.random() * 720}deg) scale(${0.8 + Math.random() * 0.4})`
+                    transform: isShuffling && shuffleOffset
+                      ? `translate(${shuffleOffset.x}px, ${shuffleOffset.y}px) rotate(${shuffleOffset.rotation}deg) scale(${shuffleOffset.scale})`
                       : `translate(${x + repositionOffset}px, ${y + (isHovered && !isDragged ? -40 : isDragged ? -20 : 0)}px) rotate(${angleFromCenter + (isDragged ? 12 : 0)}deg)`,
                     zIndex: isDragged ? 50 : isHovered ? 20 : 10 + index,
-                    transition: isShuffling ? 'all 5s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    transition: isShuffling 
+                      ? `all ${3000 + Math.random() * 2000}ms cubic-bezier(${0.25 + Math.random() * 0.5}, ${0.46 + Math.random() * 0.3}, ${0.45 + Math.random() * 0.3}, ${0.94 + Math.random() * 0.06})` 
+                      : 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    transitionDelay: isShuffling && shuffleOffset ? `${shuffleOffset.delay}ms` : '0ms',
                   }}
                   draggable={!isShuffling}
                   onDragStart={(e) => !isShuffling && handleDragStart(e, card.id)}
@@ -372,28 +391,30 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           const isDragOver = dragOverCard === card.id;
           
           const cardHeight = `${Math.round(256 * gridScale)}px`;
+          const shuffleOffset = shuffleOffsets[card.id];
           
           return (
             <div
               key={card.id}
               className={`cursor-move transition-all duration-300 ease-out ${
-                isShuffling 
-                  ? 'animate-bounce' 
-                  : isDragged 
-                    ? 'opacity-30 scale-95 rotate-3 z-50' 
-                    : 'hover:scale-105 hover:-translate-y-2 hover:shadow-lg'
+                isDragged 
+                  ? 'opacity-30 scale-95 rotate-3 z-50' 
+                  : 'hover:scale-105 hover:-translate-y-2 hover:shadow-lg'
               } ${
                 isDragOver && !isDragged 
                   ? 'scale-105 shadow-lg ring-2 ring-primary/50' 
                   : ''
               }`}
               style={{
-                transform: isShuffling 
-                  ? `translateX(${Math.sin(Date.now() * 0.01 + index) * 20}px) translateY(${Math.cos(Date.now() * 0.01 + index) * 20}px) rotate(${Math.sin(Date.now() * 0.005 + index) * 10}deg)`
+                transform: isShuffling && shuffleOffset
+                  ? `translate(${shuffleOffset.x}px, ${shuffleOffset.y}px) rotate(${shuffleOffset.rotation}deg) scale(${shuffleOffset.scale})`
                   : isDragOver && !isDragged 
                     ? 'scale(1.05) translateX(10px)' 
                     : undefined,
-                transition: isShuffling ? 'all 5s ease-in-out' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: isShuffling 
+                  ? `all ${3000 + Math.random() * 2000}ms cubic-bezier(${0.25 + Math.random() * 0.5}, ${0.46 + Math.random() * 0.3}, ${0.45 + Math.random() * 0.3}, ${0.94 + Math.random() * 0.06})`
+                  : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transitionDelay: isShuffling && shuffleOffset ? `${shuffleOffset.delay}ms` : '0ms',
                 height: cardHeight,
               }}
               draggable={!isShuffling}
