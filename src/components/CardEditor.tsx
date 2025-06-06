@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,13 +32,13 @@ export const CardEditor: React.FC = () => {
   } = useCardEditor();
 
   const [isEditingDeckName, setIsEditingDeckName] = useState(false);
-  const [deckName, setDeckName] = useState(set?.name || '');
+  const [deckName, setDeckName] = useState(set?.title || '');
 
   useEffect(() => {
-    if (set?.name) {
-      setDeckName(set.name);
+    if (set?.title) {
+      setDeckName(set.title);
     }
-  }, [set?.name]);
+  }, [set?.title]);
 
   const handleSaveDeckName = async () => {
     if (!set) return;
@@ -45,7 +46,7 @@ export const CardEditor: React.FC = () => {
     try {
       const { error } = await supabase
         .from('flashcard_sets')
-        .update({ name: deckName })
+        .update({ title: deckName })
         .eq('id', set.id);
 
       if (error) throw error;
@@ -58,7 +59,7 @@ export const CardEditor: React.FC = () => {
   };
 
   const handleCancelEdit = () => {
-    setDeckName(set?.name || '');
+    setDeckName(set?.title || '');
     setIsEditingDeckName(false);
   };
 
