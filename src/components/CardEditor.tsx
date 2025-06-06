@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Check, X, Edit } from 'lucide-react';
+import { Check, X, Edit, LayoutGrid } from 'lucide-react';
 import { CardCanvas } from './CardCanvas';
 import { EditorHeader } from './EditorHeader';
 import { LockableToolbar } from './LockableToolbar';
@@ -30,10 +30,12 @@ export const CardEditor: React.FC = () => {
     createNewCard,
     createNewCardWithLayout,
     deleteCard,
+    reorderCards,
   } = useCardEditor();
 
   const [isEditingDeckName, setIsEditingDeckName] = useState(false);
   const [deckName, setDeckName] = useState(set?.title || '');
+  const [showCardOverview, setShowCardOverview] = useState(false);
 
   useEffect(() => {
     if (set?.title) {
@@ -133,6 +135,17 @@ export const CardEditor: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Set not found</div>
       </div>
+    );
+  }
+
+  // Show card overview if requested
+  if (showCardOverview) {
+    return (
+      <CardOverview
+        cards={cards}
+        onReorderCards={reorderCards}
+        onBackToEditor={() => setShowCardOverview(false)}
+      />
     );
   }
 
@@ -260,6 +273,20 @@ export const CardEditor: React.FC = () => {
         onSaveEdit={handleSaveDeckName}
         onCancelEdit={handleCancelEdit}
       />
+
+      {/* Card Overview Button */}
+      <div className="fixed top-24 right-4 z-30">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowCardOverview(true)}
+          className="bg-white/90 backdrop-blur-sm shadow-md"
+          title="View all cards"
+        >
+          <LayoutGrid className="w-4 h-4 mr-2" />
+          Card Overview
+        </Button>
+      </div>
 
       <main className="h-[calc(100vh-80px)] relative">
         {/* Lockable Toolbar */}

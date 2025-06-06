@@ -1,15 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { FlashcardSet, Flashcard, CanvasElement } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
-import { Play, Edit, Plus, MoreVertical, Trash2, Brain } from 'lucide-react';
+import { Play, Edit, Plus, MoreVertical, Trash2, Brain, LayoutGrid } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Navigation } from '@/components/Navigation';
 import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
 import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
+import { CardOverview } from '@/components/CardOverview';
 
 const SetView = () => {
   const { setId } = useParams();
@@ -20,6 +22,7 @@ const SetView = () => {
   const [loading, setLoading] = useState(true);
   const [showCardCreator, setShowCardCreator] = useState(false);
   const [showQuizGenerator, setShowQuizGenerator] = useState(false);
+  const [showCardOverview, setShowCardOverview] = useState(false);
 
   useEffect(() => {
     if (!user || !setId) return;
@@ -66,6 +69,25 @@ const SetView = () => {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const reorderCards = async (reorderedCards: Flashcard[]) => {
+    setCards(reorderedCards);
+    
+    // Update the order in the database by updating each card with a new position or timestamp
+    try {
+      const updates = reorderedCards.map((card, index) => 
+        supabase
+          .from('flashcards')
+          .update({ updated_at: new Date(Date.now() + index).toISOString() })
+          .eq('id', card.id)
+      );
+      
+      await Promise.all(updates);
+      console.log('Cards reordered successfully');
+    } catch (error) {
+      console.error('Error reordering cards:', error);
     }
   };
 
@@ -158,6 +180,20 @@ const SetView = () => {
     );
   }
 
+  // Show card overview if requested
+  if (showCardOverview) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Navigation />
+        <CardOverview
+          cards={cards}
+          onReorderCards={reorderCards}
+          onBackToEditor={() => setShowCardOverview(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navigation />
@@ -180,6 +216,12 @@ const SetView = () => {
               <Edit className="mr-1 sm:mr-2 h-4 w-4 flex-shrink-0" />
               <span className="hidden sm:inline">Visual Editor</span>
               <span className="sm:hidden">Editor</span>
+            </Button>
+            
+            <Button onClick={() => setShowCardOverview(true)} variant="outline" className="flex-1 sm:flex-none min-w-0">
+              <LayoutGrid className="mr-1 sm:mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Card Overview</span>
+              <span className="sm:hidden">Overview</span>
             </Button>
             
             <Button onClick={handleAddCard} variant="outline" className="flex-1 sm:flex-none min-w-0">

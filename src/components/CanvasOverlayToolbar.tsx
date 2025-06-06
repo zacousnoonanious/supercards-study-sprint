@@ -98,9 +98,9 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
 
   const containerClass = orientation === 'vertical' 
     ? isCompact 
-      ? "flex flex-col items-center gap-1 w-full"
-      : "grid grid-cols-2 gap-1 w-full max-w-[200px]"
-    : "flex items-center justify-between gap-1 flex-wrap min-h-[36px]";
+      ? "flex flex-col items-center gap-1 w-full max-w-[180px]"
+      : "grid grid-cols-2 gap-1 w-full max-w-[220px]"
+    : "flex items-center justify-between gap-1 flex-wrap min-h-[36px] max-w-[90vw]";
 
   const sectionClass = orientation === 'vertical'
     ? isCompact
@@ -108,8 +108,9 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
       : "grid grid-cols-2 gap-1 w-full"
     : "flex items-center gap-1 flex-wrap";
 
-  const buttonSize = isCompact ? "h-6 w-6 p-0" : "h-8 px-2";
+  const buttonSize = isCompact ? "h-6 w-6 p-0" : "h-7 px-1.5";
   const iconSize = isCompact ? "w-3 h-3" : "w-3 h-3";
+  const textSize = isCompact ? "text-[10px]" : "text-xs";
 
   return (
     <div className={containerClass}>
@@ -125,26 +126,12 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           {isCompact ? <FileText className={iconSize} /> : (
             <>
               <FileText className={`${iconSize} mr-1`} />
-              <span className="text-xs">Text</span>
-            </>
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddElement('image')}
-          className={buttonSize}
-          title="Add Image"
-        >
-          {isCompact ? <img className={iconSize} /> : (
-            <>
-              <img className={`${iconSize} mr-1`} />
-              <span className="text-xs">Image</span>
+              <span className={textSize}>Text</span>
             </>
           )}
         </Button>
         
-        {/* Quiz Elements Dropdown */}
+        {/* Quiz Elements Dropdown - More compact */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -158,14 +145,13 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
               ) : (
                 <>
                   <CheckSquare className={`${iconSize} mr-1`} />
-                  <span className="text-xs">Quiz</span>
-                  <ChevronDown className={`${iconSize} ml-1`} />
+                  <span className={textSize}>Quiz</span>
                 </>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48 bg-white dark:bg-gray-800 border shadow-lg z-50">
-            <DropdownMenuLabel>Quiz Elements</DropdownMenuLabel>
+          <DropdownMenuContent align="start" className="w-40 bg-white dark:bg-gray-800 border shadow-lg z-50">
+            <DropdownMenuLabel>Quiz</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onAddElement('multiple-choice')}>
               <CheckSquare className="w-3 h-3 mr-2" />
@@ -182,63 +168,6 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
         
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddElement('youtube')}
-          className={buttonSize}
-          title="Add Video"
-        >
-          {isCompact ? <Youtube className={iconSize} /> : (
-            <>
-              <Youtube className={`${iconSize} mr-1`} />
-              <span className="text-xs">Video</span>
-            </>
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddElement('deck-embed')}
-          className={buttonSize}
-          title="Embed Deck"
-        >
-          {isCompact ? <Layers className={iconSize} /> : (
-            <>
-              <Layers className={`${iconSize} mr-1`} />
-              <span className="text-xs">Deck</span>
-            </>
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddElement('audio')}
-          className={buttonSize}
-          title="Add Audio"
-        >
-          {isCompact ? <Volume2 className={iconSize} /> : (
-            <>
-              <Volume2 className={`${iconSize} mr-1`} />
-              <span className="text-xs">Audio</span>
-            </>
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddElement('drawing')}
-          className={buttonSize}
-          title="Add Drawing"
-        >
-          {isCompact ? <Pencil className={iconSize} /> : (
-            <>
-              <Pencil className={`${iconSize} mr-1`} />
-              <span className="text-xs">Draw</span>
-            </>
-          )}
-        </Button>
-        
         <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
           <DialogTrigger asChild>
             <Button
@@ -250,7 +179,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
               {isCompact ? <Sparkles className={iconSize} /> : (
                 <>
                   <Sparkles className={`${iconSize} mr-1`} />
-                  <span className="text-xs">AI</span>
+                  <span className={textSize}>AI</span>
                 </>
               )}
             </Button>
@@ -284,7 +213,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           <ChevronLeft className="w-4 h-4" />
         </Button>
         
-        <span className={`text-xs text-muted-foreground px-2 whitespace-nowrap ${isCompact ? 'text-[10px]' : ''}`}>
+        <span className={`${textSize} text-muted-foreground px-1 whitespace-nowrap`}>
           {currentCardIndex + 1}/{totalCards}
         </span>
         
@@ -345,12 +274,12 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
               ) : (
                 <>
                   <Settings className={`${iconSize} mr-1`} />
-                  <span className="text-xs">{getCardTypeLabel(currentCard?.card_type || 'standard')}</span>
+                  <span className={textSize}>{getCardTypeLabel(currentCard?.card_type || 'standard')}</span>
                 </>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="w-48 bg-white dark:bg-gray-800 border shadow-lg z-50">
+          <DropdownMenuContent align="center" className="w-40 bg-white dark:bg-gray-800 border shadow-lg z-50">
             <DropdownMenuLabel>Card Type</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => handleCardTypeChange('standard')}>
@@ -364,85 +293,10 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Countdown Timer */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={buttonSize}
-              title="Countdown Timer"
-            >
-              {isCompact ? <Clock className={iconSize} /> : (
-                <>
-                  <Clock className={`${iconSize} mr-1`} />
-                  <span className="text-xs">{countdownTimer}s</span>
-                </>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64 bg-white dark:bg-gray-800 border shadow-lg z-50">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Countdown Timer (seconds)</Label>
-              <Input
-                type="number"
-                value={countdownTimer}
-                onChange={(e) => handleCountdownTimerChange(parseInt(e.target.value) || 0)}
-                min="0"
-                max="300"
-                className="w-full"
-              />
-              <p className="text-xs text-gray-500">Set to 0 to disable timer</p>
-            </div>
-          </PopoverContent>
-        </Popover>
       </div>
 
       {/* Right section - Actions */}
       <div className={sectionClass}>
-        {/* Arrange Dropdown */}
-        {onAutoArrange && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={buttonSize}
-                title="Arrange elements"
-              >
-                {isCompact ? <Grid3X3 className={iconSize} /> : (
-                  <>
-                    <Grid3X3 className={`${iconSize} mr-1`} />
-                    <span className="text-xs">Arrange</span>
-                    <ChevronDown className={`${iconSize} ml-1`} />
-                  </>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40 bg-white dark:bg-gray-800 border shadow-lg z-50">
-              <DropdownMenuLabel>Layout Options</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onAutoArrange('grid')}>
-                <Grid3X3 className="w-3 h-3 mr-2" />
-                Grid Layout
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAutoArrange('center')}>
-                <AlignCenter className="w-3 h-3 mr-2" />
-                Center All
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAutoArrange('justify')}>
-                <AlignJustify className="w-3 h-3 mr-2" />
-                Justify
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAutoArrange('stack')}>
-                <Layers3 className="w-3 h-3 mr-2" />
-                Stack
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-        
         <Button
           variant="ghost"
           size="sm"
@@ -453,22 +307,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           {isCompact ? <Plus className={iconSize} /> : (
             <>
               <Plus className={`${iconSize} mr-1`} />
-              <span className="text-xs">New</span>
-            </>
-          )}
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onCreateNewCardWithLayout}
-          className={buttonSize}
-          title="Copy all elements to new card"
-        >
-          {isCompact ? <Copy className={iconSize} /> : (
-            <>
-              <Copy className={`${iconSize} mr-1`} />
-              <span className="text-xs">Copy</span>
+              <span className={textSize}>New</span>
             </>
           )}
         </Button>
@@ -483,7 +322,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           {isCompact ? <Trash2 className={iconSize} /> : (
             <>
               <Trash2 className={`${iconSize} mr-1`} />
-              <span className="text-xs">Delete</span>
+              <span className={textSize}>Delete</span>
             </>
           )}
         </Button>
@@ -498,7 +337,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           {isCompact ? <Save className={iconSize} /> : (
             <>
               <Save className={`${iconSize} mr-1`} />
-              <span className="text-xs">Save</span>
+              <span className={textSize}>Save</span>
             </>
           )}
         </Button>

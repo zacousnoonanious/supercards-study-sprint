@@ -52,10 +52,24 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging || isLocked) return;
     
-    setPosition({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    });
+    // Get viewport dimensions and toolbar dimensions
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const toolbarElement = toolbarRef.current;
+    
+    if (toolbarElement) {
+      const toolbarRect = toolbarElement.getBoundingClientRect();
+      
+      // Calculate new position with constraints
+      let newX = e.clientX - dragStart.x;
+      let newY = e.clientY - dragStart.y;
+      
+      // Constrain to viewport bounds
+      newX = Math.max(0, Math.min(newX, viewportWidth - toolbarRect.width));
+      newY = Math.max(80, Math.min(newY, viewportHeight - toolbarRect.height - 20)); // Account for header
+      
+      setPosition({ x: newX, y: newY });
+    }
   };
 
   const handleMouseUp = () => {
@@ -75,7 +89,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {
 
   const getToolbarClasses = () => {
     if (!isLocked) {
-      return "absolute z-20";
+      return "absolute z-20 max-w-[90vw]"; // Add max width constraint
     }
 
     if (dockPosition === 'top') {
@@ -112,7 +126,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = (props) => {
         className={getToolbarClasses()}
         style={getToolbarStyle()}
       >
-        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2">
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2 max-w-full overflow-hidden">
           <div className="flex items-center justify-between gap-1 mb-2">
             <div className="flex items-center gap-1">
               {!isLocked && (
