@@ -1,7 +1,8 @@
+
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Grid, Layers, Shuffle } from 'lucide-react';
+import { ArrowLeft, Shuffle } from 'lucide-react';
 import { Flashcard } from '@/types/flashcard';
 import { BulkCardOperations } from './BulkCardOperations';
 import {
@@ -26,7 +27,6 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   onBackToEditor,
   onEditCard,
 }) => {
-  const [viewMode, setViewMode] = useState<'grid' | 'fan'>('grid');
   const [isShuffling, setIsShuffling] = useState(false);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [draggedCard, setDraggedCard] = useState<number | null>(null);
@@ -56,53 +56,6 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     cardElements.forEach(el => el.classList.remove('shuffling'));
     setIsShuffling(false);
   }, [cards, onReorderCards]);
-
-  const getCardClassName = (index: number, viewMode: string) => {
-    const baseClasses = 'card-shuffle relative rounded-lg border shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer bg-white';
-    
-    if (viewMode === 'grid') {
-      return `${baseClasses} hover:scale-105`;
-    } else {
-      // Fan view positioning
-      return `${baseClasses} absolute hover:scale-110 hover:z-50 transform-gpu`;
-    }
-  };
-
-  const getCardStyle = (index: number, viewMode: string) => {
-    if (viewMode === 'fan') {
-      const totalCards = cards.length;
-      const centerIndex = (totalCards - 1) / 2;
-      
-      // Reduced spread for better centering
-      const maxAngle = Math.min(45, totalCards * 6);
-      const maxOffset = Math.min(150, totalCards * 12);
-      
-      // Calculate angle and position for each card
-      const angleStep = totalCards > 1 ? maxAngle / (totalCards - 1) : 0;
-      const offsetStep = totalCards > 1 ? maxOffset / (totalCards - 1) : 0;
-      
-      const angle = (index - centerIndex) * angleStep;
-      const horizontalOffset = (index - centerIndex) * offsetStep;
-      const verticalOffset = Math.abs(angle) * 2;
-      
-      // Z-index: center cards should be on top
-      const zIndex = 100 - Math.abs(index - centerIndex);
-      
-      return {
-        transform: `translate(-50%, -50%) translateX(${horizontalOffset}px) translateY(${verticalOffset}px) rotate(${angle}deg)`,
-        transformOrigin: 'center bottom',
-        zIndex: zIndex,
-        left: '50%',
-        top: '50%',
-        width: '180px',
-        height: '250px',
-      };
-    }
-    return {
-      width: '100%',
-      height: '200px',
-    };
-  };
 
   const renderCard = (card: Flashcard, index: number) => {
     return (
@@ -381,27 +334,6 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
             <Shuffle className={`w-4 h-4 ${isShuffling ? 'animate-spin' : ''}`} />
             {isShuffling ? 'Shuffling...' : 'Shuffle'}
           </Button>
-          
-          <div className="flex bg-muted rounded-lg p-1">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="flex items-center gap-2"
-            >
-              <Grid className="w-4 h-4" />
-              Grid
-            </Button>
-            <Button
-              variant={viewMode === 'fan' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('fan')}
-              className="flex items-center gap-2"
-            >
-              <Layers className="w-4 h-4" />
-              Fan
-            </Button>
-          </div>
         </div>
       </div>
 
@@ -410,14 +342,8 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
         Click to edit • Ctrl+Click to select multiple • Shift+Click to select range • Drag to reorder
       </div>
 
-      {/* Cards Container */}
-      <div 
-        className={`transition-all duration-500 ${
-          viewMode === 'grid' 
-            ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' 
-            : 'relative min-h-[600px] flex items-center justify-center overflow-hidden'
-        }`}
-      >
+      {/* Cards Container - Grid View Only */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {cards.map((card, index) => {
           const isSelected = selectedCards.includes(card.id);
           const isDragging = draggedCard === index;
@@ -426,12 +352,12 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           return (
             <div
               key={card.id}
-              className={`${getCardClassName(index, viewMode)} ${
+              className={`card-shuffle relative rounded-lg border shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer bg-white hover:scale-105 ${
                 isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
               } ${isDragging ? 'opacity-50 scale-95' : ''} ${
                 isDragOver ? 'ring-2 ring-green-400 ring-offset-2' : ''
               }`}
-              style={getCardStyle(index, viewMode)}
+              style={{ width: '100%', height: '200px' }}
               onClick={(e) => handleCardClick(index, e)}
               draggable
               onDragStart={(e) => handleDragStart(e, index)}
