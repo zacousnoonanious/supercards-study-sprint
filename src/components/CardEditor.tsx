@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -103,12 +102,38 @@ export const CardEditor = () => {
 
   useEffect(() => {
     if (cardData) {
-      setCurrentCard(cardData as Flashcard);
-      const parsedElements = JSON.parse(cardData.elements_json || '[]') as CanvasElement[];
-      setElements(parsedElements);
-      saveHistory(parsedElements);
+      // Convert the raw database data to our Flashcard interface
+      const convertedCard: Flashcard = {
+        ...cardData,
+        front_elements: Array.isArray(cardData.front_elements) 
+          ? cardData.front_elements as CanvasElement[]
+          : [],
+        back_elements: Array.isArray(cardData.back_elements) 
+          ? cardData.back_elements as CanvasElement[]
+          : [],
+        canvas_width: cardData.canvas_width || 600,
+        canvas_height: cardData.canvas_height || 400,
+        hint: cardData.hint || '',
+        last_reviewed_at: cardData.last_reviewed_at || null,
+        card_type: cardData.card_type || 'standard',
+        interactive_type: cardData.interactive_type || null,
+        countdown_timer: cardData.countdown_timer || 30,
+        countdown_seconds: cardData.countdown_seconds || 30,
+        countdown_behavior: cardData.countdown_behavior || 'flip',
+        password: cardData.password || null,
+        elements_json: JSON.stringify(cardData.front_elements || []),
+      };
+      
+      setCurrentCard(convertedCard);
+      
+      // Use front_elements directly instead of parsing elements_json
+      const currentElements = currentSide === 'front' 
+        ? convertedCard.front_elements 
+        : convertedCard.back_elements;
+      setElements(currentElements);
+      saveHistory(currentElements);
     }
-  }, [cardData]);
+  }, [cardData, currentSide]);
 
   const { mutate: updateCardMutation } = useMutation({
     mutationFn: updateFlashcard,
@@ -239,9 +264,11 @@ export const CardEditor = () => {
     if (!setId) return;
     createCardMutation({
       set_id: setId,
-      front_elements_json: '[]',
-      back_elements_json: '[]',
+      front_elements: [],
+      back_elements: [],
       card_type: 'standard',
+      question: 'New Card',
+      answer: 'Answer',
     });
   };
 
@@ -255,9 +282,11 @@ export const CardEditor = () => {
 
     createCardMutation({
       set_id: setId,
-      front_elements_json: JSON.stringify(defaultLayout),
-      back_elements_json: '[]',
+      front_elements: defaultLayout,
+      back_elements: [],
       card_type: 'standard',
+      question: 'New Card',
+      answer: 'Answer',
     });
   };
 
@@ -273,8 +302,13 @@ export const CardEditor = () => {
   };
 
   const handleSave = () => {
-    const elementsJSON = JSON.stringify(elements);
-    handleUpdateCard(currentCard.id, { elements_json: elementsJSON });
+    // Update the current card with the current elements
+    const updatedCard = {
+      ...currentCard,
+      [currentSide === 'front' ? 'front_elements' : 'back_elements']: elements
+    };
+    
+    handleUpdateCard(currentCard.id, updatedCard);
     alert('Card saved!');
   };
 
