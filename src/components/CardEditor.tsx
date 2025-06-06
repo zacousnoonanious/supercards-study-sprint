@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ interface CardCanvasProps {
   textScale?: number;
   isDragging?: boolean;
   onElementDragStart?: (e: React.MouseEvent, elementId: string) => void;
+  onCanvasResize?: (width: number, height: number) => void;
 }
 
 const CardCanvas: React.FC<CardCanvasProps> = ({
@@ -33,14 +35,92 @@ const CardCanvas: React.FC<CardCanvasProps> = ({
   onElementSelect,
   cardWidth,
   cardHeight,
-  onElementDragStart
+  onElementDragStart,
+  onCanvasResize
 }) => {
   const [editingElement, setEditingElement] = useState<string | null>(null);
+  const [dragState, setDragState] = useState<{
+    isDragging: boolean;
+    dragStart: { x: number; y: number };
+    elementStart: { x: number; y: number; width: number; height: number };
+    elementId: string;
+  } | null>(null);
+  const [resizeState, setResizeState] = useState<{
+    isResizing: boolean;
+    resizeStart: { x: number; y: number };
+    canvasStart: { width: number; height: number };
+  } | null>(null);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent, elementId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+
+    onElementSelect(elementId);
+    
+    setDragState({
+      isDragging: true,
+      dragStart: { x: e.clientX, y: e.clientY },
+      elementStart: { x: element.x, y: element.y, width: element.width, height: element.height },
+      elementId
+    });
+  }, [elements, onElementSelect]);
+
+  const handleCanvasResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setResizeState({
+      isResizing: true,
+      resizeStart: { x: e.clientX, y: e.clientY },
+      canvasStart: { width: cardWidth, height: cardHeight }
+    });
+  }, [cardWidth, cardHeight]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (dragState?.isDragging) {
+      const deltaX = e.clientX - dragState.dragStart.x;
+      const deltaY = e.clientY - dragState.dragStart.y;
+      
+      const newX = Math.max(0, Math.min(dragState.elementStart.x + deltaX, cardWidth - dragState.elementStart.width));
+      const newY = Math.max(0, Math.min(dragState.elementStart.y + deltaY, cardHeight - dragState.elementStart.height));
+      
+      onElementUpdate(dragState.elementId, { x: newX, y: newY });
+    }
+    
+    if (resizeState?.isResizing) {
+      const deltaX = e.clientX - resizeState.resizeStart.x;
+      const deltaY = e.clientY - resizeState.resizeStart.y;
+      
+      const newWidth = Math.max(400, resizeState.canvasStart.width + deltaX);
+      const newHeight = Math.max(300, resizeState.canvasStart.height + deltaY);
+      
+      onCanvasResize?.(newWidth, newHeight);
+    }
+  }, [dragState, resizeState, onElementUpdate, cardWidth, cardHeight, onCanvasResize]);
+
+  const handleMouseUp = useCallback(() => {
+    setDragState(null);
+    setResizeState(null);
+  }, []);
+
+  useEffect(() => {
+    if (dragState?.isDragging || resizeState?.isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [dragState, resizeState, handleMouseMove, handleMouseUp]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
       <div 
-        className="relative bg-white shadow-lg"
+        className="relative bg-white shadow-lg border-2 border-gray-300"
         style={{ width: cardWidth, height: cardHeight }}
         onClick={() => onElementSelect(null)}
       >
@@ -59,7 +139,7 @@ const CardCanvas: React.FC<CardCanvasProps> = ({
               e.stopPropagation();
               onElementSelect(element.id);
             }}
-            onMouseDown={(e) => onElementDragStart?.(e, element.id)}
+            onMouseDown={(e) => handleMouseDown(e, element.id)}
           >
             <CanvasElementRenderer
               element={element}
@@ -68,8 +148,51 @@ const CardCanvas: React.FC<CardCanvasProps> = ({
               onEditingChange={setEditingElement}
               onElementDragStart={onElementDragStart}
             />
+            
+            {selectedElementId === element.id && (
+              <>
+                {/* Resize handles for selected element */}
+                <div
+                  className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 cursor-se-resize"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const startX = e.clientX;
+                    const startY = e.clientY;
+                    const startWidth = element.width;
+                    const startHeight = element.height;
+                    
+                    const handleResize = (e: MouseEvent) => {
+                      const deltaX = e.clientX - startX;
+                      const deltaY = e.clientY - startY;
+                      
+                      const newWidth = Math.max(50, startWidth + deltaX);
+                      const newHeight = Math.max(30, startHeight + deltaY);
+                      
+                      onElementUpdate(element.id, { width: newWidth, height: newHeight });
+                    };
+                    
+                    const handleResizeEnd = () => {
+                      document.removeEventListener('mousemove', handleResize);
+                      document.removeEventListener('mouseup', handleResizeEnd);
+                    };
+                    
+                    document.addEventListener('mousemove', handleResize);
+                    document.addEventListener('mouseup', handleResizeEnd);
+                  }}
+                />
+              </>
+            )}
           </div>
         ))}
+        
+        {/* Canvas resize handle */}
+        <div
+          className="absolute bottom-0 right-0 w-4 h-4 bg-gray-400 cursor-se-resize opacity-50 hover:opacity-100"
+          style={{ margin: '-2px' }}
+          onMouseDown={handleCanvasResizeStart}
+        />
       </div>
     </div>
   );
@@ -117,8 +240,8 @@ export const CardEditor = () => {
         last_reviewed_at: cardData.last_reviewed_at || null,
         card_type: (cardData.card_type as Flashcard['card_type']) || 'standard',
         interactive_type: (cardData.interactive_type as Flashcard['interactive_type']) || null,
-        countdown_timer: cardData.countdown_timer || 30,
-        countdown_seconds: 30, // Default value since it doesn't exist in DB
+        countdown_timer: cardData.countdown_timer || 0, // Default to 0 (no countdown)
+        countdown_seconds: 0, // Default value since it doesn't exist in DB
         countdown_behavior: 'flip', // Default value since it doesn't exist in DB
         password: cardData.password || null,
         elements_json: JSON.stringify(cardData.front_elements || []),
@@ -267,7 +390,7 @@ export const CardEditor = () => {
       newIndex = set.flashcards.length - 1;
     }
 
-    if (set.flashcards[newIndex]) {
+    if (set.flashcards[newIndex] && set.flashcards[newIndex].id !== currentCard.id) {
       navigate(`/sets/${setId}/cards/${set.flashcards[newIndex].id}`);
     }
   };
@@ -281,6 +404,7 @@ export const CardEditor = () => {
       card_type: 'standard',
       question: 'New Card',
       answer: 'Answer',
+      countdown_timer: 0, // Default to no countdown
     });
   };
 
@@ -299,6 +423,7 @@ export const CardEditor = () => {
       card_type: 'standard',
       question: 'New Card',
       answer: 'Answer',
+      countdown_timer: 0, // Default to no countdown
     });
   };
 
@@ -440,6 +565,14 @@ export const CardEditor = () => {
     });
   };
 
+  const handleCanvasResize = (width: number, height: number) => {
+    setCurrentCard({
+      ...currentCard,
+      canvas_width: width,
+      canvas_height: height
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <LockableToolbar
@@ -489,6 +622,7 @@ export const CardEditor = () => {
             cardHeight={currentCard.canvas_height || 400}
             isDragging={isDragging}
             onElementDragStart={handleElementDragStart}
+            onCanvasResize={handleCanvasResize}
           />
         </CanvasContextMenu>
       </div>
