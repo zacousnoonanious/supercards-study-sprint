@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,9 +22,11 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const [draggedCard, setDraggedCard] = useState<string | null>(null);
   const [dragOverCard, setDragOverCard] = useState<string | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
     setDraggedCard(cardId);
+    setSelectedCard(cardId);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', '');
   };
@@ -46,6 +47,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     if (!draggedCard || draggedCard === targetCardId) {
       setDraggedCard(null);
       setDragOverCard(null);
+      setSelectedCard(null);
       return;
     }
 
@@ -61,11 +63,13 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     onReorderCards(newCards);
     setDraggedCard(null);
     setDragOverCard(null);
+    setSelectedCard(null);
   };
 
   const handleDragEnd = () => {
     setDraggedCard(null);
     setDragOverCard(null);
+    setSelectedCard(null);
   };
 
   if (viewMode === 'fan') {
@@ -103,32 +107,46 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
             {cards.map((card, index) => {
               const totalCards = cards.length;
               const centerIndex = (totalCards - 1) / 2;
-              const angleFromCenter = (index - centerIndex) * 6; // 6 degrees between cards
-              const radius = Math.min(400, totalCards * 15); // Adjust radius based on card count
+              const angleFromCenter = (index - centerIndex) * 12; // Increased from 6 to 12 degrees for better spread
+              const radius = Math.min(500, totalCards * 20); // Increased radius for better spread
               
               // Calculate position in arc
               const angleRad = (angleFromCenter * Math.PI) / 180;
               const x = Math.sin(angleRad) * radius;
-              const y = Math.cos(angleRad) * (radius * 0.3); // Flatten the arc
+              const y = Math.cos(angleRad) * (radius * 0.2); // Flattened the arc more
               
               const isHovered = hoveredCard === card.id;
               const isDragged = draggedCard === card.id;
               const isDragOver = dragOverCard === card.id;
+              const isSelected = selectedCard === card.id;
+              
+              // Calculate repositioning effect for other cards when dragging
+              let repositionOffset = 0;
+              if (draggedCard && dragOverCard && draggedCard !== card.id) {
+                const draggedIndex = cards.findIndex(c => c.id === draggedCard);
+                const dragOverIndex = cards.findIndex(c => c.id === dragOverCard);
+                const currentIndex = index;
+                
+                // Shift cards to show where the dragged card will be inserted
+                if (draggedIndex < dragOverIndex && currentIndex > draggedIndex && currentIndex <= dragOverIndex) {
+                  repositionOffset = -15; // Move left
+                } else if (draggedIndex > dragOverIndex && currentIndex >= dragOverIndex && currentIndex < draggedIndex) {
+                  repositionOffset = 15; // Move right
+                }
+              }
               
               return (
                 <div
                   key={card.id}
                   className={`absolute cursor-move transition-all duration-300 ${
-                    isDragged ? 'opacity-50 scale-105 z-50' : ''
-                  } ${isHovered && !isDragged ? 'scale-110 z-20 -translate-y-8' : ''} ${
-                    isDragOver ? 'scale-105' : ''
-                  }`}
+                    isDragged ? 'opacity-60 scale-110 z-50 rotate-12' : ''
+                  } ${isHovered && !isDragged ? 'scale-105 z-20' : ''} ${
+                    isDragOver && !isDragged ? 'scale-105' : ''
+                  } ${isSelected && !isDragged ? 'animate-pulse' : ''}`}
                   style={{
-                    transform: `translate(${x}px, ${y}px) rotate(${angleFromCenter}deg) ${
-                      isHovered && !isDragged ? 'translateY(-2rem)' : ''
-                    }`,
+                    transform: `translate(${x + repositionOffset}px, ${y + (isHovered && !isDragged ? -40 : isDragged ? -20 : 0)}px) rotate(${angleFromCenter + (isDragged ? 12 : 0)}deg)`,
                     zIndex: isDragged ? 50 : isHovered ? 20 : 10 + index,
-                    transition: 'all 0.3s ease-out',
+                    transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }}
                   draggable
                   onDragStart={(e) => handleDragStart(e, card.id)}
@@ -139,28 +157,46 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
                   onMouseEnter={() => setHoveredCard(card.id)}
                   onMouseLeave={() => setHoveredCard(null)}
                 >
-                  <Card className="w-64 h-40 shadow-lg border-2 hover:shadow-xl transition-shadow">
+                  <Card className={`w-72 h-44 shadow-lg border-2 transition-all duration-300 ${
+                    isDragged ? 'shadow-2xl border-primary/60 bg-primary/5' : 
+                    isDragOver ? 'shadow-xl border-primary/40 bg-primary/10' :
+                    isHovered ? 'shadow-xl border-primary/30' : 'hover:shadow-xl'
+                  }`}>
                     <CardContent className="p-3 h-full">
-                      <div className="text-xs font-medium mb-1">Card {index + 1}</div>
-                      <div className="text-xs text-gray-600 mb-1">
+                      <div className="text-xs font-medium mb-1 text-gray-700">Card {index + 1}</div>
+                      <div className="text-xs text-gray-500 mb-2">
                         Type: {card.card_type || 'standard'}
                       </div>
-                      <div className="h-24 overflow-hidden">
+                      <div className="h-28 overflow-hidden bg-white rounded border">
                         <StudyCardRenderer
                           elements={card.front_elements}
-                          className="scale-[0.35] origin-top-left"
+                          className="scale-[0.4] origin-top-left transform"
                         />
                       </div>
                     </CardContent>
                   </Card>
+                  
+                  {/* Drop indicator */}
+                  {isDragOver && draggedCard && draggedCard !== card.id && (
+                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-1 h-8 bg-primary rounded-full animate-pulse" />
+                  )}
                 </div>
               );
             })}
           </div>
+          
+          {/* Background drop zone indicator */}
+          {draggedCard && (
+            <div className="absolute inset-0 bg-primary/5 border-2 border-dashed border-primary/30 rounded-lg flex items-center justify-center pointer-events-none">
+              <div className="text-primary/60 text-lg font-medium">
+                Drop to reposition card
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="mt-8 text-center text-sm text-gray-600">
-          Hover over cards to lift them up • Drag and drop to reorder
+          Hover over cards to lift them up • Drag and drop to reorder • Cards spread out for better visibility
         </div>
       </div>
     );
