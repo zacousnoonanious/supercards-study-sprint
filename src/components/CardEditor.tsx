@@ -106,20 +106,20 @@ export const CardEditor = () => {
       const convertedCard: Flashcard = {
         ...cardData,
         front_elements: Array.isArray(cardData.front_elements) 
-          ? cardData.front_elements as CanvasElement[]
+          ? (cardData.front_elements as unknown as CanvasElement[])
           : [],
         back_elements: Array.isArray(cardData.back_elements) 
-          ? cardData.back_elements as CanvasElement[]
+          ? (cardData.back_elements as unknown as CanvasElement[])
           : [],
-        canvas_width: cardData.canvas_width || 600,
-        canvas_height: cardData.canvas_height || 400,
+        canvas_width: 600, // Default value since it doesn't exist in DB
+        canvas_height: 400, // Default value since it doesn't exist in DB
         hint: cardData.hint || '',
         last_reviewed_at: cardData.last_reviewed_at || null,
-        card_type: cardData.card_type || 'standard',
-        interactive_type: cardData.interactive_type || null,
+        card_type: (cardData.card_type as Flashcard['card_type']) || 'standard',
+        interactive_type: (cardData.interactive_type as Flashcard['interactive_type']) || null,
         countdown_timer: cardData.countdown_timer || 30,
-        countdown_seconds: cardData.countdown_seconds || 30,
-        countdown_behavior: cardData.countdown_behavior || 'flip',
+        countdown_seconds: 30, // Default value since it doesn't exist in DB
+        countdown_behavior: 'flip', // Default value since it doesn't exist in DB
         password: cardData.password || null,
         elements_json: JSON.stringify(cardData.front_elements || []),
       };
@@ -239,8 +239,20 @@ export const CardEditor = () => {
   };
 
   const handleUpdateCard = (cardId: string, updates: Partial<Flashcard>) => {
+    // Filter out properties that don't exist in the database
+    const dbUpdates = {
+      ...updates,
+    };
+    
+    // Remove properties that don't exist in the database schema
+    delete (dbUpdates as any).canvas_width;
+    delete (dbUpdates as any).canvas_height;
+    delete (dbUpdates as any).countdown_seconds;
+    delete (dbUpdates as any).countdown_behavior;
+    delete (dbUpdates as any).elements_json;
+    
     setCurrentCard({ ...currentCard, ...updates });
-    updateCardMutation({ id: cardId, ...updates });
+    updateCardMutation({ id: cardId, ...dbUpdates });
   };
 
   const handleNavigateCard = (direction: 'prev' | 'next') => {
@@ -394,7 +406,9 @@ export const CardEditor = () => {
     };
     
     const newDimensions = dimensions[size];
-    handleUpdateCard(currentCard.id, {
+    // Only update local state since these properties don't exist in DB
+    setCurrentCard({
+      ...currentCard,
       canvas_width: newDimensions.width,
       canvas_height: newDimensions.height
     });
@@ -418,7 +432,9 @@ export const CardEditor = () => {
     const newWidth = Math.max(400, bounds.maxX - bounds.minX + padding * 2);
     const newHeight = Math.max(300, bounds.maxY - bounds.minY + padding * 2);
     
-    handleUpdateCard(currentCard.id, {
+    // Only update local state since these properties don't exist in DB
+    setCurrentCard({
+      ...currentCard,
       canvas_width: newWidth,
       canvas_height: newHeight
     });
