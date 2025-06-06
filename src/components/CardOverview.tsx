@@ -4,6 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Grid, Layers, Shuffle } from 'lucide-react';
 import { Flashcard } from '@/types/flashcard';
 import { BulkCardOperations } from './BulkCardOperations';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface CardOverviewProps {
   cards: Flashcard[];
@@ -23,9 +31,11 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [draggedCard, setDraggedCard] = useState<number | null>(null);
   const [dragOverCard, setDragOverCard] = useState<number | null>(null);
+  const [showShuffleDialog, setShowShuffleDialog] = useState(false);
 
   const shuffleCards = useCallback(async () => {
     setIsShuffling(true);
+    setShowShuffleDialog(false);
     
     // Add shuffle animation class to trigger CSS animations
     const cardElements = document.querySelectorAll('.card-shuffle');
@@ -62,8 +72,10 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     if (viewMode === 'fan') {
       const totalCards = cards.length;
       const centerIndex = (totalCards - 1) / 2;
-      const maxAngle = Math.min(60, totalCards * 8);
-      const maxOffset = Math.min(200, totalCards * 15);
+      
+      // Reduced spread for better centering
+      const maxAngle = Math.min(45, totalCards * 6);
+      const maxOffset = Math.min(150, totalCards * 12);
       
       // Calculate angle and position for each card
       const angleStep = totalCards > 1 ? maxAngle / (totalCards - 1) : 0;
@@ -71,7 +83,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       
       const angle = (index - centerIndex) * angleStep;
       const horizontalOffset = (index - centerIndex) * offsetStep;
-      const verticalOffset = Math.abs(angle) * 3;
+      const verticalOffset = Math.abs(angle) * 2;
       
       // Z-index: center cards should be on top
       const zIndex = 100 - Math.abs(index - centerIndex);
@@ -362,7 +374,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={shuffleCards}
+            onClick={() => setShowShuffleDialog(true)}
             disabled={isShuffling}
             className="flex items-center gap-2"
           >
@@ -403,7 +415,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
         className={`transition-all duration-500 ${
           viewMode === 'grid' 
             ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' 
-            : 'relative min-h-[600px] flex items-center justify-center'
+            : 'relative min-h-[600px] flex items-center justify-center overflow-hidden'
         }`}
       >
         {cards.map((card, index) => {
@@ -439,6 +451,27 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           <p>No cards to display</p>
         </div>
       )}
+
+      {/* Shuffle Confirmation Dialog */}
+      <Dialog open={showShuffleDialog} onOpenChange={setShowShuffleDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Permanently Shuffle Cards?</DialogTitle>
+            <DialogDescription>
+              This will permanently reorder the cards in your deck. If you want temporary randomization, 
+              use the randomize feature in study mode instead.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowShuffleDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={shuffleCards}>
+              Permanently Shuffle
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Bulk Operations Panel */}
       {selectedCards.length > 0 && (

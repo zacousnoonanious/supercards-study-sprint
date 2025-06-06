@@ -133,51 +133,6 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Auto Arrange Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
-                <Grid className="w-4 h-4" />
-                Auto Arrange
-                <ChevronDown className="w-3 h-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Layout</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onAutoArrange?.('grid')}>
-                <Grid className="w-4 h-4 mr-2" />
-                Grid Layout
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAutoArrange?.('center')}>
-                <AlignCenter className="w-4 h-4 mr-2" />
-                Center All
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAutoArrange?.('justify')}>
-                <AlignJustify className="w-4 h-4 mr-2" />
-                Justify Horizontally
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAutoArrange?.('stack')}>
-                <Layers className="w-4 h-4 mr-2" />
-                Stack Vertically
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Text Alignment</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onAutoArrange?.('align-left')}>
-                <AlignLeft className="w-4 h-4 mr-2" />
-                Align Text Left
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAutoArrange?.('align-center')}>
-                <AlignCenter className="w-4 h-4 mr-2" />
-                Align Text Center
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAutoArrange?.('align-right')}>
-                <AlignRight className="w-4 h-4 mr-2" />
-                Align Text Right
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
           {/* Card Type Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
