@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Grid3x3, List, ArrowLeft } from 'lucide-react';
+import { Grid3x3, List, ArrowLeft, Shuffle, ZoomIn, ZoomOut } from 'lucide-react';
 import { StudyCardRenderer } from '@/components/StudyCardRenderer';
 import { Flashcard } from '@/types/flashcard';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface CardOverviewProps {
   cards: Flashcard[];
@@ -23,6 +34,9 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const [dragOverCard, setDragOverCard] = useState<string | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [gridScale, setGridScale] = useState(1); // 1 = normal, 0.75 = smaller, 1.25 = larger
+  const [shuffleDialogOpen, setShuffleDialogOpen] = useState(false);
 
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
     setDraggedCard(cardId);
@@ -72,6 +86,50 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
     setSelectedCard(null);
   };
 
+  const handleShuffle = () => {
+    setIsShuffling(true);
+    setShuffleDialogOpen(false);
+    
+    // Create a shuffled array
+    const shuffledCards = [...cards];
+    for (let i = shuffledCards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledCards[i], shuffledCards[j]] = [shuffledCards[j], shuffledCards[i]];
+    }
+    
+    // Apply shuffle animation and update after delay
+    setTimeout(() => {
+      onReorderCards(shuffledCards);
+      setIsShuffling(false);
+    }, 5000);
+  };
+
+  const adjustGridScale = (direction: 'up' | 'down') => {
+    setGridScale(prev => {
+      if (direction === 'up') {
+        return Math.min(prev + 0.25, 1.5);
+      } else {
+        return Math.max(prev - 0.25, 0.5);
+      }
+    });
+  };
+
+  const getGridColumns = () => {
+    const baseColumns = {
+      'grid-cols-1': true,
+      'md:grid-cols-2': gridScale >= 1,
+      'lg:grid-cols-3': gridScale >= 0.75,
+      'xl:grid-cols-4': gridScale >= 0.75,
+      'xl:grid-cols-5': gridScale <= 0.75,
+      'xl:grid-cols-6': gridScale <= 0.5,
+    };
+    
+    return Object.entries(baseColumns)
+      .filter(([_, active]) => active)
+      .map(([className]) => className)
+      .join(' ');
+  };
+
   if (viewMode === 'fan') {
     return (
       <div className="min-h-screen bg-background p-6">
@@ -84,6 +142,28 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
             <h2 className="text-2xl font-bold">Card Overview</h2>
           </div>
           <div className="flex gap-2">
+            <AlertDialog open={shuffleDialogOpen} onOpenChange={setShuffleDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={isShuffling}>
+                  <Shuffle className="w-4 h-4 mr-2" />
+                  Shuffle
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Shuffle Cards?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently shuffle the card positions and cannot be reorganized automatically. 
+                    If you want random cards shown every time while preserving original positions, 
+                    use the deck's randomizer feature instead.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleShuffle}>Shuffle Cards</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button
               variant="default"
               size="sm"
@@ -107,31 +187,28 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
             {cards.map((card, index) => {
               const totalCards = cards.length;
               const centerIndex = (totalCards - 1) / 2;
-              const angleFromCenter = (index - centerIndex) * 12; // Increased from 6 to 12 degrees for better spread
-              const radius = Math.min(500, totalCards * 20); // Increased radius for better spread
+              const angleFromCenter = (index - centerIndex) * 12;
+              const radius = Math.min(500, totalCards * 20);
               
-              // Calculate position in arc
               const angleRad = (angleFromCenter * Math.PI) / 180;
               const x = Math.sin(angleRad) * radius;
-              const y = Math.cos(angleRad) * (radius * 0.2); // Flattened the arc more
+              const y = Math.cos(angleRad) * (radius * 0.2);
               
               const isHovered = hoveredCard === card.id;
               const isDragged = draggedCard === card.id;
               const isDragOver = dragOverCard === card.id;
               const isSelected = selectedCard === card.id;
               
-              // Calculate repositioning effect for other cards when dragging
               let repositionOffset = 0;
               if (draggedCard && dragOverCard && draggedCard !== card.id) {
                 const draggedIndex = cards.findIndex(c => c.id === draggedCard);
                 const dragOverIndex = cards.findIndex(c => c.id === dragOverCard);
                 const currentIndex = index;
                 
-                // Shift cards to show where the dragged card will be inserted
                 if (draggedIndex < dragOverIndex && currentIndex > draggedIndex && currentIndex <= dragOverIndex) {
-                  repositionOffset = -15; // Move left
+                  repositionOffset = -15;
                 } else if (draggedIndex > dragOverIndex && currentIndex >= dragOverIndex && currentIndex < draggedIndex) {
-                  repositionOffset = 15; // Move right
+                  repositionOffset = 15;
                 }
               }
               
@@ -139,22 +216,26 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
                 <div
                   key={card.id}
                   className={`absolute cursor-move transition-all duration-300 ${
+                    isShuffling ? 'animate-spin' : ''
+                  } ${
                     isDragged ? 'opacity-60 scale-110 z-50 rotate-12' : ''
                   } ${isHovered && !isDragged ? 'scale-105 z-20' : ''} ${
                     isDragOver && !isDragged ? 'scale-105' : ''
                   } ${isSelected && !isDragged ? 'animate-pulse' : ''}`}
                   style={{
-                    transform: `translate(${x + repositionOffset}px, ${y + (isHovered && !isDragged ? -40 : isDragged ? -20 : 0)}px) rotate(${angleFromCenter + (isDragged ? 12 : 0)}deg)`,
+                    transform: isShuffling 
+                      ? `translate(${Math.random() * 800 - 400}px, ${Math.random() * 400 - 200}px) rotate(${Math.random() * 720}deg) scale(${0.8 + Math.random() * 0.4})`
+                      : `translate(${x + repositionOffset}px, ${y + (isHovered && !isDragged ? -40 : isDragged ? -20 : 0)}px) rotate(${angleFromCenter + (isDragged ? 12 : 0)}deg)`,
                     zIndex: isDragged ? 50 : isHovered ? 20 : 10 + index,
-                    transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    transition: isShuffling ? 'all 5s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, card.id)}
-                  onDragOver={(e) => handleDragOver(e, card.id)}
+                  draggable={!isShuffling}
+                  onDragStart={(e) => !isShuffling && handleDragStart(e, card.id)}
+                  onDragOver={(e) => !isShuffling && handleDragOver(e, card.id)}
                   onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, card.id)}
+                  onDrop={(e) => !isShuffling && handleDrop(e, card.id)}
                   onDragEnd={handleDragEnd}
-                  onMouseEnter={() => setHoveredCard(card.id)}
+                  onMouseEnter={() => !isShuffling && setHoveredCard(card.id)}
                   onMouseLeave={() => setHoveredCard(null)}
                 >
                   <Card className={`w-72 h-44 shadow-lg border-2 transition-all duration-300 ${
@@ -176,8 +257,7 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
                     </CardContent>
                   </Card>
                   
-                  {/* Drop indicator */}
-                  {isDragOver && draggedCard && draggedCard !== card.id && (
+                  {isDragOver && draggedCard && draggedCard !== card.id && !isShuffling && (
                     <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-1 h-8 bg-primary rounded-full animate-pulse" />
                   )}
                 </div>
@@ -185,18 +265,28 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
             })}
           </div>
           
-          {/* Background drop zone indicator */}
-          {draggedCard && (
+          {draggedCard && !isShuffling && (
             <div className="absolute inset-0 bg-primary/5 border-2 border-dashed border-primary/30 rounded-lg flex items-center justify-center pointer-events-none">
               <div className="text-primary/60 text-lg font-medium">
                 Drop to reposition card
               </div>
             </div>
           )}
+
+          {isShuffling && (
+            <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
+              <div className="text-white text-2xl font-bold animate-pulse">
+                Shuffling cards...
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="mt-8 text-center text-sm text-gray-600">
-          Hover over cards to lift them up • Drag and drop to reorder • Cards spread out for better visibility
+          {isShuffling 
+            ? "Cards are being shuffled..." 
+            : "Hover over cards to lift them up • Drag and drop to reorder • Cards spread out for better visibility"
+          }
         </div>
       </div>
     );
@@ -213,6 +303,51 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
           <h2 className="text-2xl font-bold">Card Overview</h2>
         </div>
         <div className="flex gap-2">
+          <AlertDialog open={shuffleDialogOpen} onOpenChange={setShuffleDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isShuffling}>
+                <Shuffle className="w-4 h-4 mr-2" />
+                Shuffle
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Shuffle Cards?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently shuffle the card positions and cannot be reorganized automatically. 
+                  If you want random cards shown every time while preserving original positions, 
+                  use the deck's randomizer feature instead.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleShuffle}>Shuffle Cards</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <div className="flex items-center gap-1 border rounded-md">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => adjustGridScale('down')}
+              disabled={gridScale <= 0.5}
+              className="h-8 w-8 p-0"
+            >
+              <ZoomOut className="w-3 h-3" />
+            </Button>
+            <span className="text-xs px-2 text-gray-600">
+              {Math.round(gridScale * 100)}%
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => adjustGridScale('up')}
+              disabled={gridScale >= 1.5}
+              className="h-8 w-8 p-0"
+            >
+              <ZoomIn className="w-3 h-3" />
+            </Button>
+          </div>
           <Button
             variant="outline"
             size="sm"
@@ -231,42 +366,49 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className={`grid gap-6 ${getGridColumns()}`}>
         {cards.map((card, index) => {
           const isDragged = draggedCard === card.id;
           const isDragOver = dragOverCard === card.id;
+          
+          const cardHeight = `${Math.round(256 * gridScale)}px`;
           
           return (
             <div
               key={card.id}
               className={`cursor-move transition-all duration-300 ease-out ${
-                isDragged 
-                  ? 'opacity-30 scale-95 rotate-3 z-50' 
-                  : 'hover:scale-105 hover:-translate-y-2 hover:shadow-lg'
+                isShuffling 
+                  ? 'animate-bounce' 
+                  : isDragged 
+                    ? 'opacity-30 scale-95 rotate-3 z-50' 
+                    : 'hover:scale-105 hover:-translate-y-2 hover:shadow-lg'
               } ${
                 isDragOver && !isDragged 
                   ? 'scale-105 shadow-lg ring-2 ring-primary/50' 
                   : ''
               }`}
               style={{
-                transform: isDragOver && !isDragged 
-                  ? 'scale(1.05) translateX(10px)' 
-                  : undefined,
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: isShuffling 
+                  ? `translateX(${Math.sin(Date.now() * 0.01 + index) * 20}px) translateY(${Math.cos(Date.now() * 0.01 + index) * 20}px) rotate(${Math.sin(Date.now() * 0.005 + index) * 10}deg)`
+                  : isDragOver && !isDragged 
+                    ? 'scale(1.05) translateX(10px)' 
+                    : undefined,
+                transition: isShuffling ? 'all 5s ease-in-out' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                height: cardHeight,
               }}
-              draggable
-              onDragStart={(e) => handleDragStart(e, card.id)}
-              onDragOver={(e) => handleDragOver(e, card.id)}
+              draggable={!isShuffling}
+              onDragStart={(e) => !isShuffling && handleDragStart(e, card.id)}
+              onDragOver={(e) => !isShuffling && handleDragOver(e, card.id)}
               onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, card.id)}
+              onDrop={(e) => !isShuffling && handleDrop(e, card.id)}
               onDragEnd={handleDragEnd}
             >
-              <Card className={`h-64 shadow-md border-2 transition-all duration-300 ${
+              <Card className={`h-full shadow-md border-2 transition-all duration-300 ${
                 isDragOver && !isDragged 
                   ? 'border-primary/50 shadow-xl' 
                   : 'hover:border-primary/30'
               }`}>
-                <CardContent className="p-4 h-full flex flex-col">
+                <CardContent className="p-4 h-full flex flex-col" style={{ transform: `scale(${gridScale})`, transformOrigin: 'top left' }}>
                   <div className="flex justify-between items-center mb-2">
                     <div className="text-sm font-medium">Card {index + 1}</div>
                     <div className="text-xs text-gray-500">
@@ -300,7 +442,10 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       )}
 
       <div className="mt-8 text-center text-sm text-gray-600">
-        Drag and drop cards to reorder them • Hover for preview
+        {isShuffling 
+          ? "Cards are being shuffled..." 
+          : "Drag and drop cards to reorder them • Hover for preview • Use zoom controls to adjust card size"
+        }
       </div>
     </div>
   );
