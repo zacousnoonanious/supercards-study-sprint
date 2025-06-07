@@ -20,6 +20,7 @@ import {
   Grid3X3,
   AlignCenter,
   Trash2,
+  Settings,
 } from 'lucide-react';
 import { Flashcard } from '@/types/flashcard';
 
@@ -36,6 +37,8 @@ interface ConsolidatedToolbarProps {
   onCreateNewCardWithLayout: () => void;
   onDeleteCard: () => void;
   onCardTypeChange: (type: string) => void;
+  position?: 'left' | 'top' | 'right' | 'bottom';
+  onPositionChange?: (position: 'left' | 'top' | 'right' | 'bottom') => void;
 }
 
 export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
@@ -51,166 +54,211 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   onCreateNewCardWithLayout,
   onDeleteCard,
   onCardTypeChange,
+  position = 'left',
+  onPositionChange,
 }) => {
+  const isHorizontal = position === 'top' || position === 'bottom';
+  
+  const getPositionStyles = () => {
+    const baseClasses = "bg-background border rounded-lg shadow-lg p-2 gap-2 z-50";
+    
+    switch (position) {
+      case 'left':
+        return `${baseClasses} flex flex-col w-16`;
+      case 'right':
+        return `${baseClasses} flex flex-col w-16`;
+      case 'top':
+        return `${baseClasses} flex flex-row h-16 min-w-max`;
+      case 'bottom':
+        return `${baseClasses} flex flex-row h-16 min-w-max`;
+      default:
+        return `${baseClasses} flex flex-col w-16`;
+    }
+  };
+
+  const buttonSizeClass = isHorizontal ? "w-12 h-12" : "w-12 h-10";
+  const separatorClass = isHorizontal ? "h-full w-px bg-border" : "w-full h-px bg-border";
+
   return (
-    <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50">
-      <div className="bg-background border rounded-lg shadow-lg p-2 flex flex-col gap-2 w-16">
-        {/* Card Navigation */}
-        <div className="flex flex-col gap-1">
+    <div className={getPositionStyles()}>
+      {/* Position Settings */}
+      {onPositionChange && (
+        <>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigateCard('prev')}
-            disabled={currentCardIndex === 0}
-            className="w-12 h-10 p-0"
-            title="Previous Card"
+            onClick={() => {
+              const positions: ('left' | 'top' | 'right' | 'bottom')[] = ['left', 'top', 'right', 'bottom'];
+              const currentIndex = positions.indexOf(position);
+              const nextPosition = positions[(currentIndex + 1) % positions.length];
+              onPositionChange(nextPosition);
+            }}
+            className={`${buttonSizeClass} p-0`}
+            title="Change Position"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <Settings className="w-4 h-4" />
           </Button>
-          
+          <div className={separatorClass} />
+        </>
+      )}
+
+      {/* Card Navigation */}
+      <div className={`flex ${isHorizontal ? 'flex-row' : 'flex-col'} gap-1`}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onNavigateCard('prev')}
+          disabled={currentCardIndex === 0}
+          className={`${buttonSizeClass} p-0`}
+          title="Previous Card"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+        
+        {!isHorizontal && (
           <div className="text-xs text-center py-1 text-muted-foreground">
             {currentCardIndex + 1}/{totalCards}
           </div>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onNavigateCard('next')}
-            disabled={currentCardIndex === totalCards - 1}
-            className="w-12 h-10 p-0"
-            title="Next Card"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
+        )}
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onNavigateCard('next')}
+          disabled={currentCardIndex === totalCards - 1}
+          className={`${buttonSizeClass} p-0`}
+          title="Next Card"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
 
-        <div className="w-full h-px bg-border" />
+      <div className={separatorClass} />
 
-        {/* Side Toggle */}
-        <div className="flex flex-col gap-1">
-          <Button
-            variant={currentSide === 'front' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onSideChange('front')}
-            className="w-12 h-8 p-0 text-xs"
-          >
-            Front
-          </Button>
-          <Button
-            variant={currentSide === 'back' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onSideChange('back')}
-            className="w-12 h-8 p-0 text-xs"
-          >
-            Back
-          </Button>
-        </div>
+      {/* Side Toggle */}
+      <div className={`flex ${isHorizontal ? 'flex-row' : 'flex-col'} gap-1`}>
+        <Button
+          variant={currentSide === 'front' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => onSideChange('front')}
+          className={`${isHorizontal ? 'w-16 h-8' : 'w-12 h-8'} p-0 text-xs`}
+        >
+          Front
+        </Button>
+        <Button
+          variant={currentSide === 'back' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => onSideChange('back')}
+          className={`${isHorizontal ? 'w-16 h-8' : 'w-12 h-8'} p-0 text-xs`}
+        >
+          Back
+        </Button>
+      </div>
 
-        <div className="w-full h-px bg-border" />
+      <div className={separatorClass} />
 
-        {/* Add Elements */}
-        <div className="flex flex-col gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onAddElement('text')}
-            className="w-12 h-10 p-0"
-            title="Add Text"
-          >
-            <Type className="w-4 h-4" />
-          </Button>
+      {/* Add Elements */}
+      <div className={`flex ${isHorizontal ? 'flex-row' : 'flex-col'} gap-1`}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddElement('text')}
+          className={`${buttonSizeClass} p-0`}
+          title="Add Text"
+        >
+          <Type className="w-4 h-4" />
+        </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onAddElement('image')}
-            className="w-12 h-10 p-0"
-            title="Add Image"
-          >
-            <Image className="w-4 h-4" />
-          </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddElement('image')}
+          className={`${buttonSizeClass} p-0`}
+          title="Add Image"
+        >
+          <Image className="w-4 h-4" />
+        </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onAddElement('audio')}
-            className="w-12 h-10 p-0"
-            title="Add Audio"
-          >
-            <Volume2 className="w-4 h-4" />
-          </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddElement('audio')}
+          className={`${buttonSizeClass} p-0`}
+          title="Add Audio"
+        >
+          <Volume2 className="w-4 h-4" />
+        </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onAddElement('multiple-choice')}
-            className="w-12 h-10 p-0"
-            title="Multiple Choice"
-          >
-            <CheckSquare className="w-4 h-4" />
-          </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddElement('multiple-choice')}
+          className={`${buttonSizeClass} p-0`}
+          title="Multiple Choice"
+        >
+          <CheckSquare className="w-4 h-4" />
+        </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onAddElement('youtube')}
-            className="w-12 h-10 p-0"
-            title="Add YouTube Video"
-          >
-            <Youtube className="w-4 h-4" />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddElement('youtube')}
+          className={`${buttonSizeClass} p-0`}
+          title="Add YouTube Video"
+        >
+          <Youtube className="w-4 h-4" />
+        </Button>
+      </div>
 
-        <div className="w-full h-px bg-border" />
+      <div className={separatorClass} />
 
-        {/* Quick Actions */}
-        <div className="flex flex-col gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onAutoArrange('grid')}
-            className="w-12 h-10 p-0"
-            title="Grid Layout"
-          >
-            <Grid3X3 className="w-4 h-4" />
-          </Button>
+      {/* Quick Actions */}
+      <div className={`flex ${isHorizontal ? 'flex-row' : 'flex-col'} gap-1`}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAutoArrange('grid')}
+          className={`${buttonSizeClass} p-0`}
+          title="Grid Layout"
+        >
+          <Grid3X3 className="w-4 h-4" />
+        </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onAutoArrange('center')}
-            className="w-12 h-10 p-0"
-            title="Center Elements"
-          >
-            <AlignCenter className="w-4 h-4" />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAutoArrange('center')}
+          className={`${buttonSizeClass} p-0`}
+          title="Center Elements"
+        >
+          <AlignCenter className="w-4 h-4" />
+        </Button>
+      </div>
 
-        <div className="w-full h-px bg-border" />
+      <div className={separatorClass} />
 
-        {/* Card Actions */}
-        <div className="flex flex-col gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onCreateNewCard}
-            className="w-12 h-10 p-0"
-            title="New Card"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
+      {/* Card Actions */}
+      <div className={`flex ${isHorizontal ? 'flex-row' : 'flex-col'} gap-1`}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCreateNewCard}
+          className={`${buttonSizeClass} p-0`}
+          title="New Card"
+        >
+          <Plus className="w-4 h-4" />
+        </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDeleteCard}
-            className="w-12 h-10 p-0 text-destructive hover:text-destructive"
-            title="Delete Card"
-            disabled={totalCards <= 1}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onDeleteCard}
+          className={`${buttonSizeClass} p-0 text-destructive hover:text-destructive`}
+          title="Delete Card"
+          disabled={totalCards <= 1}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );
