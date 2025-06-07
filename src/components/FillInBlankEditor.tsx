@@ -165,9 +165,13 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
           <Textarea
             value={originalText}
             onChange={(e) => handleTextChange(e.target.value)}
-            placeholder="Type a sentence or paragraph..."
-            className="h-20 text-xs resize-none"
+            placeholder="Type a sentence, paragraph, or multiple paragraphs here. This text area will expand as you type more content..."
+            className="min-h-[120px] max-h-[300px] text-xs resize-y"
+            rows={6}
           />
+          <div className="text-xs text-muted-foreground mt-1">
+            {originalText.length} characters • {originalText.trim().split(/\s+/).filter(w => w.length > 0).length} words
+          </div>
         </div>
 
         <div>
@@ -229,7 +233,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
               {mode === 'manual' ? 'Double-click words to turn into blanks:' : 'Preview:'}
             </Label>
             <div 
-              className="p-2 border rounded min-h-[60px] text-xs leading-relaxed bg-gray-50 dark:bg-gray-900"
+              className="p-2 border rounded min-h-[60px] max-h-[200px] overflow-y-auto text-xs leading-relaxed bg-gray-50 dark:bg-gray-900"
               style={{ fontSize: `${10 * textScale}px` }}
             >
               {renderTextWithBlanks()}
