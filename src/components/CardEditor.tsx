@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +8,19 @@ import { PowerPointEditor } from './PowerPointEditor';
 import { LockableToolbar } from './LockableToolbar';
 import { SimpleEditorFooter } from './SimpleEditorFooter';
 import { useToast } from '@/hooks/use-toast';
+
+// Debounce utility function
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout;
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
 
 export const CardEditor: React.FC = () => {
   const { setId, cardId } = useParams<{ setId: string; cardId: string }>();
@@ -164,6 +178,14 @@ export const CardEditor: React.FC = () => {
     },
   });
 
+  // Debounced update function to prevent excessive database calls
+  const debouncedUpdateCard = useMemo(
+    () => debounce((cardId: string, updates: Partial<Flashcard>) => {
+      updateCardMutation.mutate({ cardId, updates });
+    }, 500),
+    [updateCardMutation]
+  );
+
   // Mutation for creating new cards
   const createCardMutation = useMutation({
     mutationFn: async () => {
@@ -252,8 +274,24 @@ export const CardEditor: React.FC = () => {
 
   const handleUpdateCard = useCallback((cardId: string, updates: Partial<Flashcard>) => {
     console.log('handleUpdateCard called:', { cardId, updates });
-    updateCardMutation.mutate({ cardId, updates });
-  }, [updateCardMutation]);
+    // Use immediate update for non-position changes, debounced for position changes
+    if (updates.front_elements || updates.back_elements) {
+      const hasOnlyPositionChanges = updates.front_elements?.every((el: CanvasElement, index: number) => {
+        const originalEl = currentElements[index];
+        if (!originalEl) return false;
+        const keys = Object.keys(el).filter(key => el[key as keyof CanvasElement] !== originalEl[key as keyof CanvasElement]);
+        return keys.length <= 2 && keys.every(key => ['x', 'y'].includes(key));
+      });
+      
+      if (hasOnlyPositionChanges) {
+        debouncedUpdateCard(cardId, updates);
+      } else {
+        updateCardMutation.mutate({ cardId, updates });
+      }
+    } else {
+      updateCardMutation.mutate({ cardId, updates });
+    }
+  }, [updateCardMutation, debouncedUpdateCard, currentElements]);
 
   const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     if (!currentCard) {

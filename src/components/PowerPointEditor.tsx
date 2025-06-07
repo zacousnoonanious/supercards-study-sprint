@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
@@ -167,30 +166,8 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
       // Add text element at click position
       const rect = canvasRef.current?.getBoundingClientRect();
       if (rect) {
-        const x = e.clientX - rect.left - 100; // Center the text element
-        const y = e.clientY - rect.top - 30;
-        
-        const newElement: CanvasElement = {
-          id: `element_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          type: 'text',
-          x: Math.max(0, Math.min(x, cardWidth - 200)),
-          y: Math.max(0, Math.min(y, cardHeight - 60)),
-          width: 200,
-          height: 60,
-          content: 'New Text',
-          fontSize: 16,
-          color: '#000000',
-          textAlign: 'center',
-          zIndex: elements.length + 1,
-        };
-        
-        // We'll add the element through the parent component
+        // Call onAddElement which will handle creating the element with proper positioning
         onAddElement('text');
-        // Then immediately select it
-        setTimeout(() => {
-          onElementSelect?.(newElement.id);
-          setEditingElementId(newElement.id);
-        }, 100);
       }
     }
   };
