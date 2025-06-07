@@ -12,7 +12,7 @@ import { StudyModeContent } from '@/components/StudyModeContent';
 import { StudyNavigationBar } from '@/components/StudyNavigationBar';
 import { StudyModeSettings } from '@/components/StudyModeSettings';
 import { StudyModeComplete } from '@/components/StudyModeComplete';
-import { Flashcard, FlashcardSet } from '@/types/flashcard';
+import { Flashcard, FlashcardSet, CanvasElement } from '@/types/flashcard';
 
 const StudyMode = () => {
   const { setId } = useParams<{ setId: string }>();
@@ -31,6 +31,7 @@ const StudyMode = () => {
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showPanelView, setShowPanelView] = useState(false);
+  const [allowNavigation, setAllowNavigation] = useState(true);
   const [studyComplete, setStudyComplete] = useState(false);
   const [fillInBlankResults, setFillInBlankResults] = useState<{[elementId: string]: boolean}>({});
 
@@ -70,7 +71,15 @@ const StudyMode = () => {
         .order('created_at', { ascending: true });
 
       if (cardsError) throw cardsError;
-      setCards(cardsData || []);
+      
+      // Type cast the data to match our Flashcard interface
+      const typedCards: Flashcard[] = (cardsData || []).map(card => ({
+        ...card,
+        front_elements: Array.isArray(card.front_elements) ? card.front_elements as CanvasElement[] : [],
+        back_elements: Array.isArray(card.back_elements) ? card.back_elements as CanvasElement[] : [],
+      }));
+      
+      setCards(typedCards);
     } catch (error) {
       console.error('Error fetching set and cards:', error);
       toast({
@@ -138,6 +147,15 @@ const StudyMode = () => {
     }));
   }, []);
 
+  const handleResetStudy = useCallback(() => {
+    setCurrentIndex(0);
+    setSessionStats({ correct: 0, incorrect: 0 });
+    setStudyComplete(false);
+    setShowAnswer(false);
+    setShowHint(false);
+    setFillInBlankResults({});
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -184,18 +202,9 @@ const StudyMode = () => {
           </div>
         </header>
         <StudyModeComplete
-          setTitle={set.title}
+          setId={setId!}
           sessionStats={sessionStats}
-          totalCards={cards.length}
-          onRestart={() => {
-            setCurrentIndex(0);
-            setSessionStats({ correct: 0, incorrect: 0 });
-            setStudyComplete(false);
-            setShowAnswer(false);
-            setShowHint(false);
-            setFillInBlankResults({});
-          }}
-          onBackToSet={handleGoBack}
+          onResetStudy={handleResetStudy}
         />
       </div>
     );
@@ -228,10 +237,10 @@ const StudyMode = () => {
 
       {showSettings && (
         <StudyModeSettings
-          settings={settings}
-          onSettingsChange={setSettings}
           showPanelView={showPanelView}
-          onTogglePanelView={() => setShowPanelView(!showPanelView)}
+          allowNavigation={allowNavigation}
+          onPanelViewChange={setShowPanelView}
+          onNavigationChange={setAllowNavigation}
         />
       )}
 
@@ -258,7 +267,7 @@ const StudyMode = () => {
         showAnswer={showAnswer}
         countdownTimer={settings.countdownTimer}
         onTimeUp={handleRevealAnswer}
-        allowNavigation={true}
+        allowNavigation={allowNavigation}
       />
     </div>
   );
