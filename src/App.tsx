@@ -32,10 +32,10 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider>
-          <I18nProvider>
-            <Router>
+      <ThemeProvider>
+        <I18nProvider>
+          <Router>
+            <AuthProvider>
               <div className="App">
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -55,10 +55,10 @@ function App() {
                 </Routes>
               </div>
               <Toaster />
-            </Router>
-          </I18nProvider>
-        </ThemeProvider>
-      </AuthProvider>
+            </AuthProvider>
+          </Router>
+        </I18nProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
