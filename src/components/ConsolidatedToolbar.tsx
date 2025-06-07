@@ -84,12 +84,12 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           <Button
             variant={variant}
             size="sm"
-            className="w-full justify-start gap-2 h-8 px-2 text-xs"
+            className="w-8 h-8 p-0"
             onClick={onClick}
             disabled={disabled}
+            title={label}
           >
-            <Icon className="w-3.5 h-3.5" />
-            {label}
+            <Icon className="w-4 h-4" />
           </Button>
         </TooltipTrigger>
         <TooltipContent side={position === 'left' ? 'right' : 'left'}>
@@ -100,34 +100,36 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   );
 
   return (
-    <div className={`bg-background border rounded-lg shadow-sm p-3 w-48 max-h-[calc(100vh-120px)] overflow-y-auto ${
+    <div className={`bg-background border rounded-lg shadow-sm p-3 w-16 max-h-[calc(100vh-120px)] overflow-y-auto ${
       position === 'left' ? 'mr-0' : 'ml-0'
     }`}>
       <div className="space-y-4">
         {/* Navigation Section */}
         <ToolbarSection title={t('navigation') || 'Navigation'}>
-          <div className="flex gap-1">
+          <div className="flex flex-col gap-1">
             <Button
               variant="ghost"
               size="sm"
-              className="flex-1 h-8 px-2"
+              className="w-8 h-8 p-0"
               onClick={() => onNavigateCard('prev')}
               disabled={currentCardIndex === 0}
+              title="Previous"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <ChevronLeft className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex-1 h-8 px-2"
+              className="w-8 h-8 p-0"
               onClick={() => onNavigateCard('next')}
               disabled={currentCardIndex >= totalCards - 1}
+              title="Next"
             >
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
           <div className="text-xs text-muted-foreground text-center">
-            {currentCardIndex + 1} / {totalCards}
+            {currentCardIndex + 1}/{totalCards}
           </div>
           
           {onShowCardOverview && (
@@ -143,27 +145,29 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
         {/* Card Management */}
         <ToolbarSection title={t('cards') || 'Cards'}>
-          <ToolbarButton
-            icon={Plus}
-            label={t('newCard') || 'New Card'}
-            onClick={onCreateNewCard}
-          />
-          <ToolbarButton
-            icon={Copy}
-            label={t('copyLayout') || 'Copy Layout'}
-            onClick={onCreateNewCardWithLayout}
-          />
-          <ToolbarButton
-            icon={Shuffle}
-            label={t('templates') || 'Templates'}
-            onClick={() => setShowTemplates(true)}
-          />
-          <ToolbarButton
-            icon={Trash2}
-            label={t('deleteCard') || 'Delete Card'}
-            onClick={onDeleteCard}
-            disabled={totalCards <= 1}
-          />
+          <div className="flex flex-col gap-1">
+            <ToolbarButton
+              icon={Plus}
+              label={t('newCard') || 'New Card'}
+              onClick={onCreateNewCard}
+            />
+            <ToolbarButton
+              icon={Copy}
+              label={t('copyLayout') || 'Copy Layout'}
+              onClick={onCreateNewCardWithLayout}
+            />
+            <ToolbarButton
+              icon={Shuffle}
+              label={t('templates') || 'Templates'}
+              onClick={() => setShowTemplates(true)}
+            />
+            <ToolbarButton
+              icon={Trash2}
+              label={t('deleteCard') || 'Delete Card'}
+              onClick={onDeleteCard}
+              disabled={totalCards <= 1}
+            />
+          </div>
         </ToolbarSection>
 
         <Separator />
@@ -181,73 +185,79 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
         {/* Elements Section */}
         <ToolbarSection title={t('elements') || 'Elements'}>
-          <ToolbarButton
-            icon={Type}
-            label={t('text') || 'Text'}
-            onClick={() => onAddElement('text')}
-          />
-          <ToolbarButton
-            icon={Image}
-            label={t('image') || 'Image'}
-            onClick={() => onAddElement('image')}
-          />
-          <ToolbarButton
-            icon={Volume2}
-            label={t('audio') || 'Audio'}
-            onClick={() => onAddElement('audio')}
-          />
-          <ToolbarButton
-            icon={Video}
-            label={t('youtube') || 'YouTube'}
-            onClick={() => onAddElement('youtube')}
-          />
-          <ToolbarButton
-            icon={Palette}
-            label={t('drawing') || 'Drawing'}
-            onClick={() => onAddElement('drawing')}
-          />
+          <div className="flex flex-col gap-1">
+            <ToolbarButton
+              icon={Type}
+              label={t('text') || 'Text'}
+              onClick={() => onAddElement('text')}
+            />
+            <ToolbarButton
+              icon={Image}
+              label={t('image') || 'Image'}
+              onClick={() => onAddElement('image')}
+            />
+            <ToolbarButton
+              icon={Volume2}
+              label={t('audio') || 'Audio'}
+              onClick={() => onAddElement('audio')}
+            />
+            <ToolbarButton
+              icon={Video}
+              label={t('youtube') || 'YouTube'}
+              onClick={() => onAddElement('youtube')}
+            />
+            <ToolbarButton
+              icon={Palette}
+              label={t('drawing') || 'Drawing'}
+              onClick={() => onAddElement('drawing')}
+            />
+          </div>
         </ToolbarSection>
 
         <Separator />
 
         {/* Interactive Elements */}
         <ToolbarSection title={t('interactive') || 'Interactive'}>
-          <ToolbarButton
-            icon={CheckSquare}
-            label={t('multipleChoice') || 'Multiple Choice'}
-            onClick={() => onAddElement('multiple-choice')}
-          />
-          <ToolbarButton
-            icon={HelpCircle}
-            label={t('trueFalse') || 'True/False'}
-            onClick={() => onAddElement('true-false')}
-          />
+          <div className="flex flex-col gap-1">
+            <ToolbarButton
+              icon={CheckSquare}
+              label={t('multipleChoice') || 'Multiple Choice'}
+              onClick={() => onAddElement('multiple-choice')}
+            />
+            <ToolbarButton
+              icon={HelpCircle}
+              label={t('trueFalse') || 'True/False'}
+              onClick={() => onAddElement('true-false')}
+            />
+          </div>
         </ToolbarSection>
 
         <Separator />
 
         {/* Auto Arrange */}
         <ToolbarSection title={t('arrange') || 'Arrange'}>
-          <ToolbarButton
-            icon={Grid3X3}
-            label={t('grid') || 'Grid'}
-            onClick={() => onAutoArrange('grid')}
-          />
-          <ToolbarButton
-            icon={AlignCenter}
-            label={t('center') || 'Center'}
-            onClick={() => onAutoArrange('center')}
-          />
-          <ToolbarButton
-            icon={Layers}
-            label={t('stack') || 'Stack'}
-            onClick={() => onAutoArrange('stack')}
-          />
-          <ToolbarButton
-            icon={AlignJustify}
-            label={t('justify') || 'Justify'}
-            onClick={() => onAutoArrange('justify')}
-          />
+          <div className="flex flex-col gap-1">
+            <ToolbarButton
+              icon={Grid3X3}
+              label={t('grid') || 'Grid'}}
+              onClick={() => onAutoArrange('grid')}
+            />
+            <ToolbarButton
+              icon={AlignCenter}
+              label={t('center') || 'Center'}
+              onClick={() => onAutoArrange('center')}
+            />
+            <ToolbarButton
+              icon={Layers}
+              label={t('stack') || 'Stack'}
+              onClick={() => onAutoArrange('stack')}
+            />
+            <ToolbarButton
+              icon={AlignJustify}
+              label={t('justify') || 'Justify'}
+              onClick={() => onAutoArrange('justify')}
+            />
+          </div>
         </ToolbarSection>
 
         <Separator />
