@@ -16,11 +16,11 @@ const AddCard = () => {
   }, [user, navigate]);
 
   const handleCardCreated = () => {
-    navigate(`/set/${setId}`);
+    navigate(`/sets/${setId}`);
   };
 
   const handleClose = () => {
-    navigate(`/set/${setId}`);
+    navigate(`/sets/${setId}`);
   };
 
   return (

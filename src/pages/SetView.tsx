@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,11 +12,13 @@ import { Navigation } from '@/components/Navigation';
 import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
 import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
 import { CardOverview } from '@/components/CardOverview';
+import { useToast } from '@/hooks/use-toast';
 
 const SetView = () => {
   const { setId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [set, setSet] = useState<FlashcardSet | null>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +74,51 @@ const SetView = () => {
     }
   };
 
+  const createNewCard = async () => {
+    if (!setId) {
+      console.error('No setId available for creating new card');
+      return null;
+    }
+
+    console.log('Creating new card for setId:', setId);
+
+    const newCard = {
+      question: 'New Card',
+      answer: 'Answer',
+      hint: '',
+      front_elements: [] as any,
+      back_elements: [] as any,
+      set_id: setId,
+      card_type: 'standard' as const,
+      countdown_timer: 0,
+    };
+
+    try {
+      const { data, error } = await supabase
+        .from('flashcards')
+        .insert(newCard)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Card created successfully:', data);
+      await fetchSetAndCards(); // Refresh the cards list
+      return data;
+    } catch (error) {
+      console.error('Error creating new card:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create new card",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   const reorderCards = async (reorderedCards: Flashcard[]) => {
     setCards(reorderedCards);
     
@@ -91,6 +139,14 @@ const SetView = () => {
   };
 
   const handleStudy = () => {
+    if (cards.length === 0) {
+      toast({
+        title: "No cards to study",
+        description: "Create some cards first before studying",
+        variant: "destructive",
+      });
+      return;
+    }
     navigate(`/sets/${setId}/study`);
   };
 
@@ -107,8 +163,17 @@ const SetView = () => {
     navigate(`/edit-set/${setId}`);
   };
 
-  const handleVisualEditor = () => {
-    navigate(`/sets/${setId}/cards/${cards[0]?.id || ''}`);
+  const handleVisualEditor = async () => {
+    if (cards.length === 0) {
+      // Create a new card first if none exist
+      const newCard = await createNewCard();
+      if (newCard) {
+        navigate(`/sets/${setId}/cards/${newCard.id}`);
+      }
+    } else {
+      // Navigate to the first card for editing
+      navigate(`/sets/${setId}/cards/${cards[0].id}`);
+    }
   };
 
   const handleDeleteSet = async () => {

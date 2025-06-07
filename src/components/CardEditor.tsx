@@ -55,6 +55,52 @@ export const CardEditor: React.FC = () => {
     enabled: !!setId,
   });
 
+  // Create new card if none exist and we're trying to edit
+  const createFirstCard = useCallback(async () => {
+    if (!setId) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('flashcards')
+        .insert({
+          set_id: setId,
+          question: 'New Card',
+          answer: '',
+          front_elements: [],
+          back_elements: [],
+          canvas_width: cardDimensions.width,
+          canvas_height: cardDimensions.height,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Refresh the query to get the new card
+      await queryClient.invalidateQueries({ queryKey: ['flashcard-set', setId] });
+      
+      return data;
+    } catch (error) {
+      console.error('Error creating first card:', error);
+      return null;
+    }
+  }, [setId, cardDimensions, queryClient]);
+
+  // Handle case where there are no cards or no specific cardId
+  useEffect(() => {
+    if (set && (!set.flashcards || set.flashcards.length === 0)) {
+      // No cards exist, create one
+      createFirstCard().then((newCard) => {
+        if (newCard) {
+          navigate(`/sets/${setId}/cards/${newCard.id}`, { replace: true });
+        }
+      });
+    } else if (set?.flashcards && !cardId) {
+      // No specific card selected, navigate to first card
+      navigate(`/sets/${setId}/cards/${set.flashcards[0].id}`, { replace: true });
+    }
+  }, [set, cardId, setId, navigate, createFirstCard]);
+
   // Update card dimensions when set data changes
   useEffect(() => {
     if (set?.flashcards?.[currentCardIndex]) {
@@ -393,10 +439,19 @@ export const CardEditor: React.FC = () => {
     );
   }
 
-  if (!set || !currentCard) {
+  if (!set) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Card not found</div>
+        <div className="text-lg">Set not found</div>
+      </div>
+    );
+  }
+
+  // Don't render editor until we have a current card
+  if (!currentCard) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-lg">Loading card...</div>
       </div>
     );
   }
@@ -409,7 +464,7 @@ export const CardEditor: React.FC = () => {
         set={set}
         currentCard={currentCard}
         currentCardIndex={currentCardIndex}
-        totalCards={set.flashcards.length}
+        totalCards={set.flashcards?.length || 0}
         currentSide={currentSide}
         onAddElement={handleAddElement}
         onUpdateCard={handleUpdateCard}
