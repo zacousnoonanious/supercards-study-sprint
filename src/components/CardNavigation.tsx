@@ -61,6 +61,17 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
     }
   };
 
+  const handleNavigate = (direction: 'prev' | 'next') => {
+    // Prevent navigation if already at the boundaries
+    if (direction === 'prev' && currentIndex <= 0) return;
+    if (direction === 'next' && currentIndex >= totalCards - 1) return;
+    
+    // Use requestAnimationFrame to ensure smooth navigation
+    requestAnimationFrame(() => {
+      onNavigate(direction);
+    });
+  };
+
   const showBackSide = cardType !== 'single-sided' && cardType !== 'informational';
 
   return (
@@ -69,7 +80,7 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onNavigate('prev')}
+          onClick={() => handleNavigate('prev')}
           disabled={currentIndex === 0}
           className="flex items-center gap-1"
         >
@@ -84,7 +95,7 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onNavigate('next')}
+          onClick={() => handleNavigate('next')}
           disabled={currentIndex === totalCards - 1}
           className="flex items-center gap-1"
         >
