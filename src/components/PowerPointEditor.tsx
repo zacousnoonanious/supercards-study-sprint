@@ -315,13 +315,25 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
                   draggable={false}
                 />
               ) : element.type === 'multiple-choice' ? (
-                <MultipleChoiceRenderer element={element} />
+                <MultipleChoiceRenderer 
+                  element={element} 
+                  isEditing={true}
+                  onUpdate={(updates) => updateLocalElement(element.id, updates)}
+                />
               ) : element.type === 'true-false' ? (
-                <TrueFalseRenderer element={element} />
+                <TrueFalseRenderer 
+                  element={element} 
+                  isEditing={true}
+                  onUpdate={(updates) => updateLocalElement(element.id, updates)}
+                />
               ) : element.type === 'youtube' ? (
                 <YouTubeRenderer element={element} />
               ) : element.type === 'deck-embed' ? (
-                <DeckEmbedRenderer element={element} />
+                <DeckEmbedRenderer 
+                  element={element}
+                  isEditing={true}
+                  onUpdate={(updates) => updateLocalElement(element.id, updates)}
+                />
               ) : null}
 
               {selectedElementId === element.id && (
