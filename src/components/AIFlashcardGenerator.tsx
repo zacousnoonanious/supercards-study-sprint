@@ -97,7 +97,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
           .from('flashcard_sets')
           .insert({
             title: deckTitle,
-            description: deckDescription || `AI-generated deck about ${topic}`,
+            description: deckDescription || `AI-generated educational content about ${topic}`,
             user_id: user.id,
           })
           .select()
@@ -131,11 +131,11 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
       if (data.success) {
         const totalCards = data.cardCount || cardCount[0];
         const quizCards = data.quizCards || 0;
-        const regularCards = data.regularCards || 0;
+        const informationalCards = data.informationalCards || 0;
         
         toast({
           title: "Success",
-          description: `Generated ${totalCards} flashcards successfully! (${regularCards} regular, ${quizCards} quiz cards)`,
+          description: `Generated ${totalCards} cards successfully! (${informationalCards} informational, ${quizCards} quiz)`,
         });
 
         if (mode === 'create-new-deck' && onDeckCreated) {
@@ -169,7 +169,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-indigo-600" />
-          AI Flashcard Generator
+          AI Educational Content Generator
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -181,7 +181,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                 id="deck-title"
                 value={deckTitle}
                 onChange={(e) => setDeckTitle(e.target.value)}
-                placeholder="e.g., Spanish Vocabulary, Biology Chapter 5"
+                placeholder="e.g., History of Castles, Introduction to Physics"
               />
             </div>
             <div className="space-y-2">
@@ -190,21 +190,24 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                 id="deck-description"
                 value={deckDescription}
                 onChange={(e) => setDeckDescription(e.target.value)}
-                placeholder="Brief description of this deck..."
+                placeholder="Brief description of this educational content..."
               />
             </div>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="topic">Topic or Subject</Label>
+          <Label htmlFor="topic">Educational Topic</Label>
           <Textarea
             id="topic"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="e.g., 'Spanish verb conjugations', 'World War 2 battles', 'Photosynthesis process'"
+            placeholder="e.g., 'History of Medieval Castles', 'Introduction to Photosynthesis', 'Roman Empire Timeline'"
             className="min-h-[80px]"
           />
+          <p className="text-xs text-muted-foreground">
+            The AI will create informational slides with images and quiz questions throughout the content.
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -213,18 +216,18 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
             value={cardCount}
             onValueChange={setCardCount}
             max={20}
-            min={1}
+            min={3}
             step={1}
             className="w-full"
           />
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>1</span>
+            <span>3</span>
             <span>20</span>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label>Style</Label>
+          <Label>Content Style</Label>
           <Select value={style} onValueChange={setStyle}>
             <SelectTrigger>
               <SelectValue />
@@ -233,7 +236,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
               <SelectItem value="standard">Standard</SelectItem>
               <SelectItem value="concise">Concise</SelectItem>
               <SelectItem value="detailed">Detailed</SelectItem>
-              <SelectItem value="funny">Funny</SelectItem>
+              <SelectItem value="funny">Engaging & Fun</SelectItem>
               <SelectItem value="creative">Creative</SelectItem>
             </SelectContent>
           </Select>
@@ -260,16 +263,16 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                   value={quizPercentage}
                   onValueChange={setQuizPercentage}
                   max={50}
-                  min={10}
+                  min={20}
                   step={5}
                   className="w-full"
                 />
                 <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>10%</span>
+                  <span>20%</span>
                   <span>50%</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Percentage of cards that will be interactive quiz questions
+                  Percentage of cards that will be quiz questions (mixed throughout the content)
                 </p>
               </div>
 
@@ -298,7 +301,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Quiz questions will have appropriate distractors and be positioned automatically
+                  Quiz questions will be automatically positioned and include explanations
                 </p>
               </div>
             </div>
@@ -314,12 +317,12 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
           {isGenerating ? (
             <>
               <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-              Generating...
+              Generating Educational Content...
             </>
           ) : (
             <>
               <BookOpen className="w-4 h-4 mr-2" />
-              Generate {cardCount[0]} Card{cardCount[0] !== 1 ? 's' : ''}
+              Generate {cardCount[0]} Educational Card{cardCount[0] !== 1 ? 's' : ''}
               {includeQuiz && ` (${Math.ceil((cardCount[0] * quizPercentage[0]) / 100)} quiz)`}
             </>
           )}

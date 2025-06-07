@@ -83,6 +83,126 @@ const createQuizElement = (type: 'multiple-choice' | 'true-false', question: str
   return baseElement;
 };
 
+const createTextElement = (content: string, position: { x: number, y: number }, size: { width: number, height: number }, fontSize: number = 16) => {
+  return {
+    id: `text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    type: 'text',
+    x: position.x,
+    y: position.y,
+    width: size.width,
+    height: size.height,
+    rotation: 0,
+    zIndex: 1,
+    content,
+    fontSize,
+    color: '#000000',
+    fontWeight: 'normal',
+    fontStyle: 'normal',
+    textDecoration: 'none',
+    textAlign: 'center' as const,
+  };
+};
+
+const createImageElement = (imageUrl: string, position: { x: number, y: number }, size: { width: number, height: number }) => {
+  return {
+    id: `image-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    type: 'image',
+    x: position.x,
+    y: position.y,
+    width: size.width,
+    height: size.height,
+    rotation: 0,
+    zIndex: 1,
+    imageUrl,
+  };
+};
+
+const fetchWikipediaImages = async (topic: string, count: number = 3): Promise<string[]> => {
+  try {
+    // Search for Wikipedia articles related to the topic
+    const searchResponse = await fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/search/title?q=${encodeURIComponent(topic)}&limit=3`
+    );
+    
+    if (!searchResponse.ok) return [];
+    
+    const searchData = await searchResponse.json();
+    const images: string[] = [];
+    
+    // Get images from the top search results
+    for (const page of searchData.pages || []) {
+      try {
+        const pageResponse = await fetch(
+          `https://en.wikipedia.org/api/rest_v1/page/media-list/${encodeURIComponent(page.key)}`
+        );
+        
+        if (pageResponse.ok) {
+          const mediaData = await pageResponse.json();
+          const pageImages = mediaData.items
+            ?.filter((item: any) => 
+              item.type === 'image' && 
+              item.srcset && 
+              !item.title.toLowerCase().includes('commons-logo') &&
+              !item.title.toLowerCase().includes('edit-icon')
+            )
+            .slice(0, 2)
+            .map((item: any) => {
+              // Extract the highest resolution image URL
+              const srcset = item.srcset.find((src: any) => src.scale && src.scale >= 1.5) || item.srcset[0];
+              return srcset?.src;
+            })
+            .filter(Boolean);
+          
+          if (pageImages) {
+            images.push(...pageImages);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching images for page:', page.key, error);
+      }
+      
+      if (images.length >= count) break;
+    }
+    
+    return images.slice(0, count);
+  } catch (error) {
+    console.error('Error fetching Wikipedia images:', error);
+    return [];
+  }
+};
+
+const generateInformationalContent = async (topic: string, style: string, cardCount: number) => {
+  const systemPrompt = `You are an educational content creator. Create ${cardCount} informational slides about: ${topic}. 
+
+Create a logical sequence starting with a title slide, then introductory content, followed by detailed information slides.
+
+Format your response as a JSON array of objects, each with:
+- "type": "title" | "introduction" | "content" 
+- "title": brief title for the slide
+- "content": main text content (keep under 400 characters for readability)
+- "imageQuery": specific search term for finding relevant Wikipedia images (e.g., "medieval castle architecture", "castle siege weapons")
+
+Style: ${style}
+
+Example format:
+[
+  {
+    "type": "title",
+    "title": "History of Castles",
+    "content": "An exploration of medieval fortifications",
+    "imageQuery": "medieval castle"
+  },
+  {
+    "type": "introduction", 
+    "title": "What Are Castles?",
+    "content": "Castles were fortified residences built primarily during the Middle Ages...",
+    "imageQuery": "castle architecture"
+  }
+]`;
+
+  return systemPrompt;
+};
+
 const generateQuizPrompt = (topic: string, quizTypes: any, count: number) => {
   const enabledTypes = [];
   if (quizTypes.multipleChoice) enabledTypes.push('multiple choice');
@@ -107,16 +227,16 @@ Example:
 [
   {
     "type": "multiple-choice",
-    "question": "What is the capital of France?",
-    "options": ["London", "Berlin", "Paris", "Madrid"],
-    "correctAnswer": 2,
-    "explanation": "Paris is the capital and largest city of France."
+    "question": "What was the primary purpose of castle moats?",
+    "options": ["Decoration", "Defense against attackers", "Water storage", "Fish farming"],
+    "correctAnswer": 1,
+    "explanation": "Moats were defensive features designed to prevent attackers from reaching castle walls."
   },
   {
     "type": "true-false", 
-    "question": "The Earth is flat.",
+    "question": "All medieval castles had drawbridges.",
     "correctAnswer": false,
-    "explanation": "The Earth is approximately spherical in shape."
+    "explanation": "Not all castles had drawbridges; some used fixed bridges or other entrance methods."
   }
 ]`;
 };
@@ -170,47 +290,54 @@ serve(async (req) => {
 
     const sanitizedPrompt = sanitizeContent(prompt);
 
-    // Calculate how many cards should be quiz vs regular
+    // Calculate content distribution - favor informational content
     const quizCardCount = includeQuiz ? Math.ceil((cardCount * quizPercentage) / 100) : 0;
-    const regularCardCount = cardCount - quizCardCount;
+    const informationalCardCount = cardCount - quizCardCount;
 
     const cards = [];
 
-    // Generate regular flashcards if needed
-    if (regularCardCount > 0) {
-      const regularSystemPrompt = `You are a helpful assistant that creates educational flashcards. Generate exactly ${regularCardCount} standard flashcards based on the user's prompt. Format your response as a JSON array of objects, each with "question" and "answer" properties. Keep questions concise (under 200 characters) and answers informative but not too long (under 500 characters).`;
+    // Generate informational content slides first
+    if (informationalCardCount > 0) {
+      const infoPrompt = generateInformationalContent(sanitizedPrompt, style, informationalCardCount);
 
-      const regularUserPrompt = `Create ${regularCardCount} flashcards about: ${sanitizedPrompt}. Style: ${style}`;
-
-      const regularResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      const infoResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${openaiApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: regularSystemPrompt },
-            { role: 'user', content: regularUserPrompt }
+            { role: 'system', content: infoPrompt },
+            { role: 'user', content: `Create ${informationalCardCount} informational slides about: ${sanitizedPrompt}` }
           ],
-          max_tokens: 2000,
+          max_tokens: 3000,
           temperature: 0.7,
         }),
       });
 
-      if (regularResponse.ok) {
-        const regularData = await regularResponse.json();
-        const regularContent = regularData.choices[0]?.message?.content;
+      if (infoResponse.ok) {
+        const infoData = await infoResponse.json();
+        const infoContent = infoData.choices[0]?.message?.content;
         
-        if (regularContent) {
+        if (infoContent) {
           try {
-            const regularCards = JSON.parse(regularContent);
-            if (Array.isArray(regularCards)) {
-              cards.push(...regularCards.map(card => ({ ...card, type: 'regular' })));
+            const infoCards = JSON.parse(infoContent);
+            if (Array.isArray(infoCards)) {
+              // Fetch images for informational content
+              const images = await fetchWikipediaImages(sanitizedPrompt, informationalCardCount);
+              
+              // Add images to info cards
+              infoCards.forEach((card, index) => {
+                card.type = 'informational';
+                card.imageUrl = images[index % images.length] || null;
+              });
+              
+              cards.push(...infoCards);
             }
           } catch (e) {
-            console.error('Failed to parse regular cards:', e);
+            console.error('Failed to parse informational cards:', e);
           }
         }
       }
@@ -227,7 +354,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o-mini',
           messages: [
             { role: 'system', content: 'You are an expert quiz creator. Generate educational quiz questions with accurate answers and plausible distractors.' },
             { role: 'user', content: quizPrompt }
@@ -261,10 +388,30 @@ serve(async (req) => {
       );
     }
 
+    // Create an ordered sequence: info -> quiz -> info -> quiz
+    const orderedCards = [];
+    const infoCards = cards.filter(card => card.type === 'informational');
+    const quizCards = cards.filter(card => card.type === 'quiz');
+    
+    let infoIndex = 0;
+    let quizIndex = 0;
+    
+    for (let i = 0; i < cardCount; i++) {
+      if (i % 3 === 2 && quizIndex < quizCards.length) {
+        // Every 3rd card (after 2 info cards), add a quiz
+        orderedCards.push(quizCards[quizIndex++]);
+      } else if (infoIndex < infoCards.length) {
+        orderedCards.push(infoCards[infoIndex++]);
+      } else if (quizIndex < quizCards.length) {
+        // Fill remaining slots with quiz cards
+        orderedCards.push(quizCards[quizIndex++]);
+      }
+    }
+
     // Create flashcards in database
     const createdCards = [];
-    for (let i = 0; i < cards.length; i++) {
-      const card = cards[i];
+    for (let i = 0; i < orderedCards.length; i++) {
+      const card = orderedCards[i];
       let frontElements = [];
       let backElements = [];
 
@@ -275,65 +422,52 @@ serve(async (req) => {
           card.question,
           card.options,
           card.correctAnswer,
-          { x: 200, y: 150 } // Center position for 800x600 canvas
+          { x: 200, y: 150 }
         );
         
         frontElements.push(quizElement);
         
         // Add explanation as back element
         if (card.explanation) {
-          backElements.push({
-            id: `explanation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type: 'text',
-            x: 150,
-            y: 200,
-            width: 500,
-            height: 200,
-            rotation: 0,
-            content: `Explanation: ${card.explanation}`,
-            fontSize: 14,
-            color: '#000000',
-            fontWeight: 'normal',
-            fontStyle: 'normal',
-            textDecoration: 'none',
-            textAlign: 'left' as const,
-          });
+          backElements.push(createTextElement(
+            `Explanation: ${card.explanation}`,
+            { x: 150, y: 200 },
+            { width: 500, height: 200 },
+            14
+          ));
         }
-      } else {
-        // Regular flashcard - create text elements
-        frontElements.push({
-          id: `front-text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          type: 'text',
-          x: 150,
-          y: 250,
-          width: 500,
-          height: 100,
-          rotation: 0,
-          content: card.question,
-          fontSize: 18,
-          color: '#000000',
-          fontWeight: 'normal',
-          fontStyle: 'normal',
-          textDecoration: 'none',
-          textAlign: 'center' as const,
-        });
-
-        backElements.push({
-          id: `back-text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          type: 'text',
-          x: 150,
-          y: 200,
-          width: 500,
-          height: 200,
-          rotation: 0,
-          content: card.answer || '',
-          fontSize: 16,
-          color: '#000000',
-          fontWeight: 'normal',
-          fontStyle: 'normal',
-          textDecoration: 'none',
-          textAlign: 'center' as const,
-        });
+      } else if (card.type === 'informational') {
+        // Create informational slide with title, content, and image
+        
+        // Title element
+        if (card.title) {
+          frontElements.push(createTextElement(
+            card.title,
+            { x: 100, y: 50 },
+            { width: 600, height: 80 },
+            24
+          ));
+        }
+        
+        // Content element
+        if (card.content) {
+          const contentY = card.imageUrl ? 300 : 200;
+          frontElements.push(createTextElement(
+            card.content,
+            { x: 100, y: contentY },
+            { width: 600, height: card.imageUrl ? 150 : 250 },
+            16
+          ));
+        }
+        
+        // Image element
+        if (card.imageUrl) {
+          frontElements.push(createImageElement(
+            card.imageUrl,
+            { x: 200, y: 140 },
+            { width: 400, height: 150 }
+          ));
+        }
       }
 
       // Insert flashcard
@@ -341,12 +475,12 @@ serve(async (req) => {
         .from('flashcards')
         .insert({
           set_id: setId,
-          question: card.question,
-          answer: card.type === 'quiz' ? `Quiz: ${card.question}` : card.answer,
+          question: card.title || card.question || 'Generated Content',
+          answer: card.type === 'quiz' ? `Quiz: ${card.question}` : card.content || '',
           front_elements: frontElements,
           back_elements: backElements,
-          card_type: card.type === 'quiz' ? 'quiz-only' : 'standard',
-          interactive_type: card.type === 'quiz' ? card.type : null,
+          card_type: card.type === 'quiz' ? 'quiz-only' : 'informational',
+          interactive_type: card.type === 'quiz' ? (card.type === 'multiple-choice' ? 'multiple-choice' : 'true-false') : null,
           canvas_width: 800,
           canvas_height: 600,
         })
@@ -365,7 +499,7 @@ serve(async (req) => {
         success: true, 
         cardCount: createdCards.length,
         quizCards: createdCards.filter(c => c.card_type === 'quiz-only').length,
-        regularCards: createdCards.filter(c => c.card_type === 'standard').length
+        informationalCards: createdCards.filter(c => c.card_type === 'informational').length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
