@@ -76,8 +76,7 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
           <ElementPopupToolbar
             element={element}
             onUpdate={onUpdate}
-            onDelete={onDelete}
-            position={{ x: 0, y: 0 }}
+            onClose={() => setIsExpanded(false)}
           />
         </div>
       )}
