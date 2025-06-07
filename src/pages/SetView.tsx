@@ -6,10 +6,14 @@ import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, Edit, Plus, ArrowLeft } from 'lucide-react';
+import { Play, Edit, Plus, ArrowLeft, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserDropdown } from '@/components/UserDropdown';
 import { Navigation } from '@/components/Navigation';
+import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
+import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CanvasElement } from '@/types/flashcard';
 
 interface FlashcardSet {
   id: string;
@@ -24,6 +28,12 @@ interface Flashcard {
   front_content: string;
   back_content: string;
   created_at: string;
+  front_elements: CanvasElement[];
+  back_elements: CanvasElement[];
+  question: string;
+  answer: string;
+  card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
+  interactive_type?: 'multiple-choice' | 'true-false' | 'fill-in-blank' | null;
 }
 
 const SetView = () => {
@@ -35,6 +45,8 @@ const SetView = () => {
   const [set, setSet] = useState<FlashcardSet | null>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const [showCardCreator, setShowCardCreator] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -66,7 +78,19 @@ const SetView = () => {
         .order('created_at', { ascending: true });
 
       if (cardsError) throw cardsError;
-      setCards(cardsData || []);
+      
+      // Transform the data to match our Flashcard interface
+      const transformedCards = (cardsData || []).map(card => ({
+        ...card,
+        front_content: card.question || '',
+        back_content: card.answer || '',
+        front_elements: (card.front_elements as unknown as CanvasElement[]) || [],
+        back_elements: (card.back_elements as unknown as CanvasElement[]) || [],
+        card_type: (card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') || 'normal',
+        interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null
+      }));
+      
+      setCards(transformedCards);
     } catch (error) {
       console.error('Error fetching set and cards:', error);
       toast({
@@ -77,6 +101,20 @@ const SetView = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAIGenerated = () => {
+    setShowAIGenerator(false);
+    fetchSetAndCards();
+    toast({
+      title: "Success",
+      description: "AI-generated cards have been added to your deck!",
+    });
+  };
+
+  const handleCardCreated = () => {
+    setShowCardCreator(false);
+    fetchSetAndCards();
   };
 
   if (loading) {
@@ -148,6 +186,14 @@ const SetView = () => {
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
+              onClick={() => setShowAIGenerator(true)}
+              className="flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              AI Generate
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => navigate(`/edit-cards/${setId}`)}
               className="flex items-center gap-2"
             >
@@ -174,11 +220,11 @@ const SetView = () => {
                 <div className="space-y-2">
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground mb-1">Front:</h4>
-                    <p className="text-sm">{card.front_content}</p>
+                    <p className="text-sm">{card.front_content || card.question}</p>
                   </div>
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground mb-1">Back:</h4>
-                    <p className="text-sm">{card.back_content}</p>
+                    <p className="text-sm">{card.back_content || card.answer}</p>
                   </div>
                 </div>
               </CardContent>
@@ -189,7 +235,7 @@ const SetView = () => {
             <CardContent className="flex items-center justify-center h-full min-h-[200px]">
               <Button
                 variant="ghost"
-                onClick={() => navigate(`/sets/${setId}/add`)}
+                onClick={() => setShowCardCreator(true)}
                 className="flex flex-col items-center gap-2 h-full w-full"
               >
                 <Plus className="w-8 h-8 text-muted-foreground" />
@@ -199,6 +245,34 @@ const SetView = () => {
           </Card>
         </div>
       </main>
+
+      {/* AI Generator Dialog */}
+      <Dialog open={showAIGenerator} onOpenChange={setShowAIGenerator}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>AI Flashcard Generator</DialogTitle>
+          </DialogHeader>
+          <AIFlashcardGenerator
+            setId={setId!}
+            onGenerated={handleAIGenerated}
+            mode="add-to-set"
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Card Creator Dialog */}
+      <Dialog open={showCardCreator} onOpenChange={setShowCardCreator}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Card</DialogTitle>
+          </DialogHeader>
+          <InteractiveCardCreator
+            setId={setId!}
+            onCardCreated={handleCardCreated}
+            onClose={() => setShowCardCreator(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
