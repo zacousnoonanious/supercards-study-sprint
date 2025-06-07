@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -178,11 +177,12 @@ export const CardEditor: React.FC = () => {
     },
   });
 
-  // Debounced update function to prevent excessive database calls
+  // Optimized debounced update function - only for final saves
   const debouncedUpdateCard = useMemo(
     () => debounce((cardId: string, updates: Partial<Flashcard>) => {
+      console.log('Saving to database:', { cardId, updates });
       updateCardMutation.mutate({ cardId, updates });
-    }, 500),
+    }, 300), // Reduced debounce time since we're only calling this on action completion
     [updateCardMutation]
   );
 
@@ -274,24 +274,10 @@ export const CardEditor: React.FC = () => {
 
   const handleUpdateCard = useCallback((cardId: string, updates: Partial<Flashcard>) => {
     console.log('handleUpdateCard called:', { cardId, updates });
-    // Use immediate update for non-position changes, debounced for position changes
-    if (updates.front_elements || updates.back_elements) {
-      const hasOnlyPositionChanges = updates.front_elements?.every((el: CanvasElement, index: number) => {
-        const originalEl = currentElements[index];
-        if (!originalEl) return false;
-        const keys = Object.keys(el).filter(key => el[key as keyof CanvasElement] !== originalEl[key as keyof CanvasElement]);
-        return keys.length <= 2 && keys.every(key => ['x', 'y'].includes(key));
-      });
-      
-      if (hasOnlyPositionChanges) {
-        debouncedUpdateCard(cardId, updates);
-      } else {
-        updateCardMutation.mutate({ cardId, updates });
-      }
-    } else {
-      updateCardMutation.mutate({ cardId, updates });
-    }
-  }, [updateCardMutation, debouncedUpdateCard, currentElements]);
+    
+    // For element updates, use immediate save (since we're only calling this on action completion now)
+    updateCardMutation.mutate({ cardId, updates });
+  }, [updateCardMutation]);
 
   const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     if (!currentCard) {
@@ -319,6 +305,9 @@ export const CardEditor: React.FC = () => {
     }
 
     console.log('Updating elements:', { elementField, updatedElements });
+    
+    // Since PowerPointEditor now handles client-side updates and only calls this on completion,
+    // we can save immediately without debouncing
     handleUpdateCard(currentCard.id, { [elementField]: updatedElements });
   }, [currentCard, currentSide, currentElements, handleUpdateCard]);
 
