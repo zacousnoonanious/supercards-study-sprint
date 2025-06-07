@@ -1,34 +1,50 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
-import { FlashcardSet, Flashcard, CanvasElement } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
-import { Play, Edit, Plus, MoreVertical, Trash2, Brain, LayoutGrid } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Navigation } from '@/components/Navigation';
-import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
-import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
-import { CardOverview } from '@/components/CardOverview';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Play, Edit, Plus, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { UserDropdown } from '@/components/UserDropdown';
+import { Navigation } from '@/components/Navigation';
+
+interface FlashcardSet {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Flashcard {
+  id: string;
+  front_content: string;
+  back_content: string;
+  created_at: string;
+}
 
 const SetView = () => {
-  const { setId } = useParams();
+  const { setId } = useParams<{ setId: string }>();
   const { user } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [set, setSet] = useState<FlashcardSet | null>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCardCreator, setShowCardCreator] = useState(false);
-  const [showQuizGenerator, setShowQuizGenerator] = useState(false);
-  const [showCardOverview, setShowCardOverview] = useState(false);
 
   useEffect(() => {
-    if (!user || !setId) return;
-    fetchSetAndCards();
-  }, [user, setId]);
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    if (setId) {
+      fetchSetAndCards();
+    }
+  }, [user, setId, navigate]);
 
   const fetchSetAndCards = async () => {
     try {
@@ -40,7 +56,6 @@ const SetView = () => {
         .single();
 
       if (setError) throw setError;
-      
       setSet(setData);
 
       // Fetch cards
@@ -51,446 +66,139 @@ const SetView = () => {
         .order('created_at', { ascending: true });
 
       if (cardsError) throw cardsError;
-      
-      // Type cast the data to match our Flashcard interface
-      const typedCards: Flashcard[] = (cardsData || []).map(card => ({
-        ...card,
-        front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
-        back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
-        hint: card.hint || '',
-        last_reviewed_at: card.last_reviewed_at || null,
-        card_type: (card.card_type === 'standard' ? 'normal' : card.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: (card.interactive_type as Flashcard['interactive_type']) || null,
-        countdown_timer: card.countdown_timer || 0,
-        password: card.password || null
-      }));
-      
-      setCards(typedCards);
+      setCards(cardsData || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching set and cards:', error);
+      toast({
+        title: t('error.general'),
+        description: 'Failed to load set details.',
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const createNewCard = async () => {
-    if (!setId) {
-      console.error('No setId available for creating new card');
-      return null;
-    }
-
-    console.log('Creating new card for setId:', setId);
-
-    const newCard = {
-      question: 'New Card',
-      answer: 'Answer',
-      hint: '',
-      front_elements: [] as any,
-      back_elements: [] as any,
-      set_id: setId,
-      card_type: 'normal' as const,
-      countdown_timer: 0,
-    };
-
-    try {
-      const { data, error } = await supabase
-        .from('flashcards')
-        .insert(newCard)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      console.log('Card created successfully:', data);
-      await fetchSetAndCards(); // Refresh the cards list
-      return data;
-    } catch (error) {
-      console.error('Error creating new card:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create new card",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
-  const reorderCards = async (reorderedCards: Flashcard[]) => {
-    setCards(reorderedCards);
-    
-    // Update the order in the database by updating each card with a new position or timestamp
-    try {
-      const updates = reorderedCards.map((card, index) => 
-        supabase
-          .from('flashcards')
-          .update({ updated_at: new Date(Date.now() + index).toISOString() })
-          .eq('id', card.id)
-      );
-      
-      await Promise.all(updates);
-      console.log('Cards reordered successfully');
-    } catch (error) {
-      console.error('Error reordering cards:', error);
-    }
-  };
-
-  const handleStudy = () => {
-    if (cards.length === 0) {
-      toast({
-        title: "No cards to study",
-        description: "Create some cards first before studying",
-        variant: "destructive",
-      });
-      return;
-    }
-    navigate(`/sets/${setId}/study`);
-  };
-
-  const handleAddCard = () => {
-    setShowCardCreator(true);
-  };
-
-  const handleCardCreated = () => {
-    fetchSetAndCards();
-    setShowCardCreator(false);
-  };
-
-  const handleEditSet = () => {
-    navigate(`/edit-set/${setId}`);
-  };
-
-  const handleVisualEditor = async () => {
-    if (cards.length === 0) {
-      // Create a new card first if none exist
-      const newCard = await createNewCard();
-      if (newCard) {
-        navigate(`/sets/${setId}/cards/${newCard.id}`);
-      }
-    } else {
-      // Navigate to the first card for editing
-      navigate(`/sets/${setId}/cards/${cards[0].id}`);
-    }
-  };
-
-  const handleDeleteSet = async () => {
-    if (!setId) return;
-
-    if (window.confirm("Are you sure you want to delete this set? This action cannot be undone.")) {
-      try {
-        const { error } = await supabase
-          .from('flashcard_sets')
-          .delete()
-          .eq('id', setId);
-
-        if (error) throw error;
-
-        navigate('/dashboard');
-      } catch (error) {
-        console.error('Error deleting set:', error);
-      }
-    }
-  };
-
-  const handleCardClick = (index: number) => {
-    const cardId = cards[index]?.id;
-    if (cardId) {
-      navigate(`/sets/${setId}/cards/${cardId}`);
-    }
-  };
-
-  const handleDeleteCard = async (cardId: string) => {
-    if (!setId) return;
-
-    if (window.confirm("Are you sure you want to delete this card? This action cannot be undone.")) {
-      try {
-        const { error } = await supabase
-          .from('flashcards')
-          .delete()
-          .eq('id', cardId);
-
-        if (error) throw error;
-
-        fetchSetAndCards(); // Refresh cards after deletion
-      } catch (error) {
-        console.error('Error deleting card:', error);
-      }
-    }
-  };
-
-  const fetchCards = () => {
-    fetchSetAndCards();
-  }
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading...</div>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-lg text-foreground">{t('loading')}</div>
       </div>
     );
   }
 
   if (!set) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Set not found</div>
-        </div>
+      <div className="min-h-screen bg-background">
+        <header className="shadow-sm border-b bg-card">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-8">
+                <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
+                <Navigation />
+              </div>
+              <UserDropdown />
+            </div>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-foreground">Set not found</h2>
+            <Button onClick={() => navigate('/decks')} className="mt-4">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Decks
+            </Button>
+          </div>
+        </main>
       </div>
     );
   }
-
-  // Show card overview if requested
-  if (showCardOverview) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Navigation />
-        <CardOverview
-          cards={cards}
-          onReorderCards={reorderCards}
-          onBackToEditor={() => setShowCardOverview(false)}
-          onEditCard={handleCardClick}
-        />
-      </div>
-    );
-  }
-
-  const getCardDescription = (card: Flashcard) => {
-    const frontElementsCount = card.front_elements?.length || 0;
-    const backElementsCount = card.back_elements?.length || 0;
-    const totalElements = frontElementsCount + backElementsCount;
-    
-    // Get element types for description
-    const allElements = [...(card.front_elements || []), ...(card.back_elements || [])];
-    const elementTypes = [...new Set(allElements.map(el => el.type))];
-    
-    let description = '';
-    
-    if (elementTypes.length > 0) {
-      const typeDescriptions = elementTypes.map(type => {
-        switch(type) {
-          case 'text': return 'text';
-          case 'image': return 'image';
-          case 'audio': return 'audio';
-          case 'multiple-choice': return 'quiz';
-          case 'youtube': return 'video';
-          default: return type;
-        }
-      }).join(', ');
-      
-      description = `${totalElements} elements: ${typeDescriptions}`;
-    } else {
-      description = 'Text-based card';
-    }
-    
-    return description;
-  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <Navigation />
-      
-      <div className="container mx-auto px-4 py-4 sm:py-8">
-        {/* Set Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 break-words">{set?.title}</h1>
-          {set?.description && (
-            <p className="text-gray-600 mb-4 text-sm sm:text-base">{set.description}</p>
-          )}
+    <div className="min-h-screen bg-background">
+      <header className="shadow-sm border-b bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
+              <Navigation />
+            </div>
+            <UserDropdown />
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/decks')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t('back')}
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">{set.title}</h1>
+              <p className="text-muted-foreground">{set.description}</p>
+            </div>
+          </div>
           
-          <div className="flex flex-wrap gap-2 sm:gap-4">
-            <Button onClick={handleStudy} className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none min-w-0">
-              <Play className="mr-1 sm:mr-2 h-4 w-4 flex-shrink-0" />
-              <span className="truncate">Study ({cards.length})</span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/edit-cards/${setId}`)}
+              className="flex items-center gap-2"
+            >
+              <Edit className="w-4 h-4" />
+              {t('edit')}
             </Button>
-            
-            <Button onClick={handleVisualEditor} variant="outline" className="flex-1 sm:flex-none min-w-0">
-              <Edit className="mr-1 sm:mr-2 h-4 w-4 flex-shrink-0" />
-              <span className="hidden sm:inline">Visual Editor</span>
-              <span className="sm:hidden">Editor</span>
+            <Button
+              onClick={() => navigate(`/study/${setId}`)}
+              className="flex items-center gap-2"
+            >
+              <Play className="w-4 h-4" />
+              {t('decks.study')}
             </Button>
-            
-            <Button onClick={() => setShowCardOverview(true)} variant="outline" className="flex-1 sm:flex-none min-w-0">
-              <LayoutGrid className="mr-1 sm:mr-2 h-4 w-4 flex-shrink-0" />
-              <span className="hidden sm:inline">Card Overview</span>
-              <span className="sm:hidden">Overview</span>
-            </Button>
-            
-            <Button onClick={handleAddCard} variant="outline" className="flex-1 sm:flex-none min-w-0">
-              <Plus className="mr-1 sm:mr-2 h-4 w-4 flex-shrink-0" />
-              <span className="hidden sm:inline">Add Card</span>
-              <span className="sm:hidden">Add</span>
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="flex-shrink-0">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleEditSet}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Set
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowQuizGenerator(true)}>
-                  <Brain className="mr-2 h-4 w-4" />
-                  Generate Quiz
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDeleteSet} className="text-red-600">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Set
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
 
-        {/* Interactive Card Creator Modal */}
-        {showCardCreator && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="w-full max-w-4xl max-h-[90vh] overflow-auto">
-              <InteractiveCardCreator
-                setId={setId!}
-                onCardCreated={handleCardCreated}
-                onClose={() => setShowCardCreator(false)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Quiz Generator Modal */}
-        {showQuizGenerator && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="w-full max-w-2xl max-h-[90vh] overflow-auto bg-white rounded-lg">
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold">Generate Quiz Cards</h2>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowQuizGenerator(false)}
-                  >
-                    ✕
-                  </Button>
-                </div>
-                <AIFlashcardGenerator 
-                  setId={setId!} 
-                  onGenerated={() => {
-                    fetchCards();
-                    setShowQuizGenerator(false);
-                  }}
-                  mode="generate-quiz"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-          {/* AI Flashcard Generator */}
-          <div className="xl:col-span-1 order-2 xl:order-1">
-            <AIFlashcardGenerator setId={setId!} onGenerated={fetchCards} />
-          </div>
-
-          {/* Cards Grid */}
-          <div className="xl:col-span-2 order-1 xl:order-2">
-            {cards.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-8 sm:py-12">
-                  <div className="text-gray-500 mb-4 text-sm sm:text-base">No flashcards yet</div>
-                  <div className="space-y-3">
-                    <Button onClick={handleAddCard} className="w-full sm:w-auto">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create Your First Card
-                    </Button>
-                    <div className="text-xs sm:text-sm text-gray-400">or use the AI generator</div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {cards.map((card, index) => (
+            <Card key={card.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-sm">Card {index + 1}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div>
+                    <h4 className="text-xs font-medium text-muted-foreground mb-1">Front:</h4>
+                    <p className="text-sm">{card.front_content}</p>
                   </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-                {cards.map((card, index) => (
-                  <Card 
-                    key={card.id} 
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => handleCardClick(index)}
-                  >
-                    <CardContent className="p-3 sm:p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <span className="text-xs sm:text-sm text-gray-500">Card {index + 1}</span>
-                          {card.card_type && card.card_type !== 'normal' && (
-                            <span className="text-xs text-blue-600 font-medium capitalize">
-                              {card.card_type.replace('-', ' ')}
-                            </span>
-                          )}
-                          {card.interactive_type && (
-                            <span className="text-xs text-green-600 font-medium capitalize">
-                              {card.interactive_type.replace('-', ' ')}
-                            </span>
-                          )}
-                          <span className="text-xs text-gray-400 mt-1">
-                            {getCardDescription(card)}
-                          </span>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger 
-                            asChild 
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 flex-shrink-0">
-                              <MoreVertical className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={(e) => {
-                              e.stopPropagation();
-                              handleCardClick(index);
-                            }}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit Card
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteCard(card.id);
-                              }}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete Card
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div>
-                          <div className="text-xs text-gray-400 mb-1">Front:</div>
-                          <div className="text-xs sm:text-sm line-clamp-2 break-words">{card.question}</div>
-                        </div>
-                        {card.card_type !== 'single-sided' && (
-                          <div>
-                            <div className="text-xs text-gray-400 mb-1">Back:</div>
-                            <div className="text-xs sm:text-sm text-gray-600 line-clamp-2 break-words">{card.answer}</div>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+                  <div>
+                    <h4 className="text-xs font-medium text-muted-foreground mb-1">Back:</h4>
+                    <p className="text-sm">{card.back_content}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          
+          <Card className="border-dashed border-2 hover:border-primary/50 transition-colors">
+            <CardContent className="flex items-center justify-center h-full min-h-[200px]">
+              <Button
+                variant="ghost"
+                onClick={() => navigate(`/sets/${setId}/add`)}
+                className="flex flex-col items-center gap-2 h-full w-full"
+              >
+                <Plus className="w-8 h-8 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Add New Card</span>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

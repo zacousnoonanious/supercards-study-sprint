@@ -1,28 +1,29 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
 import { UserDropdown } from '@/components/UserDropdown';
 import { Navigation } from '@/components/Navigation';
-import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
 
 const CreateSet = () => {
   const { user } = useAuth();
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!user) {
       navigate('/auth');
     }
@@ -30,42 +31,47 @@ const CreateSet = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!title.trim()) {
+      toast({
+        title: t('error.validation'),
+        description: 'Please enter a title for your set.',
+        variant: "destructive"
+      });
+      return;
+    }
 
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('flashcard_sets')
-        .insert({
-          title,
-          description,
-          user_id: user.id,
-        })
+        .insert([
+          {
+            title: title.trim(),
+            description: description.trim(),
+            user_id: user?.id
+          }
+        ])
         .select()
         .single();
 
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Deck created successfully!",
+        title: t('success.created'),
+        description: 'Flashcard set created successfully!'
       });
-      
-      navigate(`/sets/${data.id}`);
+
+      navigate(`/edit-cards/${data.id}`);
     } catch (error) {
       console.error('Error creating set:', error);
       toast({
-        title: "Error",
-        description: "Failed to create deck.",
-        variant: "destructive",
+        title: t('error.general'),
+        description: 'Failed to create flashcard set.',
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAIDeckCreated = (deckId: string) => {
-    navigate(`/sets/${deckId}`);
   };
 
   return (
@@ -73,93 +79,76 @@ const CreateSet = () => {
       <header className="shadow-sm border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2 sm:space-x-8">
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/decks')}
-                className="p-2 sm:mr-4"
-                size="sm"
-              >
-                <ArrowLeft className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Decks</span>
-              </Button>
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-indigo-600">Create New Deck</h1>
+            <div className="flex items-center space-x-8">
+              <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
+              <Navigation />
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-8">
-              <div className="hidden sm:block">
-                <Navigation />
-              </div>
-              <UserDropdown />
-            </div>
+            <UserDropdown />
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-          {/* AI Generation - Now first and enhanced */}
-          <div className="order-1">
-            <AIFlashcardGenerator
-              mode="create-new-deck"
-              onGenerated={() => {}}
-              onDeckCreated={handleAIDeckCreated}
-            />
-          </div>
-
-          {/* Manual Creation */}
-          <div className="order-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg sm:text-xl">Create Manually</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="title" className="text-sm sm:text-base">Deck Title</Label>
-                    <Input
-                      id="title"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      required
-                      placeholder="e.g., French Verbs, Biology Chapter 3"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="description" className="text-sm sm:text-base">Description (Optional)</Label>
-                    <Input
-                      id="description"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Brief description of this deck..."
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4 pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => navigate('/decks')}
-                      className="flex-1 w-full sm:w-auto"
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={loading} className="flex-1 w-full sm:w-auto">
-                      {loading ? 'Creating...' : 'Create Empty Deck'}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
+      <main className="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center space-x-4 mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/decks')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t('back')}
+          </Button>
+          <h2 className="text-2xl font-bold text-foreground">{t('sets.create')}</h2>
         </div>
 
-        <div className="mt-6 sm:mt-8 text-center">
-          <Separator className="mb-4" />
-          <p className="text-xs sm:text-sm text-muted-foreground px-4">
-            Use AI to generate a complete deck with quiz questions, or create an empty deck and add cards manually.
-          </p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('sets.create')}</CardTitle>
+            <CardDescription>
+              Create a new flashcard set to start building your study materials.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">{t('sets.title')}</Label>
+                <Input
+                  id="title"
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter set title..."
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">{t('sets.description')}</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter set description (optional)..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate('/decks')}
+                >
+                  {t('cancel')}
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  <Save className="w-4 h-4 mr-2" />
+                  {loading ? t('loading') : t('create')}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

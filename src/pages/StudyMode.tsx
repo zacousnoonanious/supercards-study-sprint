@@ -1,22 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { StudyNavigationBar } from '@/components/StudyNavigationBar';
+import { UserDropdown } from '@/components/UserDropdown';
+import { Navigation } from '@/components/Navigation';
 import { StudyModeHeader } from '@/components/StudyModeHeader';
-import { StudyModeSettings } from '@/components/StudyModeSettings';
 import { StudyModeContent } from '@/components/StudyModeContent';
+import { StudyNavigationBar } from '@/components/StudyNavigationBar';
+import { StudyModeSettings } from '@/components/StudyModeSettings';
 import { StudyModeComplete } from '@/components/StudyModeComplete';
-import { Flashcard, FlashcardSet, CanvasElement } from '@/types/flashcard';
+import { Flashcard, FlashcardSet } from '@/types/flashcard';
 
 const StudyMode = () => {
-  const { setId } = useParams();
+  const { setId } = useParams<{ setId: string }>();
   const { user } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
-  const location = useLocation();
+  const { toast } = useToast();
+
+  // State management
   const [set, setSet] = useState<FlashcardSet | null>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -24,19 +29,18 @@ const StudyMode = () => {
   const [showHint, setShowHint] = useState(false);
   const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0 });
   const [loading, setLoading] = useState(true);
-  const [studyComplete, setStudyComplete] = useState(false);
-  const [showPanelView, setShowPanelView] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [allowNavigation, setAllowNavigation] = useState(true);
+  const [showPanelView, setShowPanelView] = useState(false);
+  const [studyComplete, setStudyComplete] = useState(false);
   const [fillInBlankResults, setFillInBlankResults] = useState<{[elementId: string]: boolean}>({});
-  const { toast } = useToast();
 
-  // Get the previous page from navigation state or default to set view
-  const previousPage = location.state?.from || `/sets/${setId}`;
-
-  const handleGoBack = () => {
-    navigate(previousPage);
-  };
+  // Settings
+  const [settings, setSettings] = useState({
+    shuffle: false,
+    autoFlip: false,
+    countdownTimer: 0,
+    mode: 'flashcard' as 'flashcard' | 'quiz' | 'review'
+  });
 
   useEffect(() => {
     if (!user) {
@@ -66,158 +70,100 @@ const StudyMode = () => {
         .order('created_at', { ascending: true });
 
       if (cardsError) throw cardsError;
-      
-      const transformedCards: Flashcard[] = cardsData?.map(card => ({
-        ...card,
-        front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
-        back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
-        hint: card.hint || '',
-        last_reviewed_at: card.last_reviewed_at || null,
-        card_type: (card.card_type === 'standard' ? 'normal' : card.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: (card.interactive_type as Flashcard['interactive_type']) || null,
-        countdown_timer: card.countdown_timer || 0,
-        password: card.password || null
-      })) || [];
-      
-      setCards(transformedCards);
+      setCards(cardsData || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching set and cards:', error);
       toast({
-        title: "Error",
-        description: "Failed to load flashcard set.",
-        variant: "destructive",
+        title: t('error.general'),
+        description: 'Failed to load study set.',
+        variant: "destructive"
       });
-      navigate('/dashboard');
     } finally {
       setLoading(false);
     }
   };
 
-  const updateLastReviewed = async (cardId: string) => {
-    try {
-      await supabase
-        .from('flashcards')
-        .update({ last_reviewed_at: new Date().toISOString() })
-        .eq('id', cardId);
-    } catch (error) {
-      console.error('Error updating last reviewed:', error);
-    }
-  };
+  const currentCard = useMemo(() => {
+    if (cards.length === 0) return null;
+    return cards[currentIndex];
+  }, [cards, currentIndex]);
 
-  const handleAnswer = (correct: boolean) => {
-    const currentCard = cards[currentIndex];
-    updateLastReviewed(currentCard.id);
-
+  const handleAnswer = useCallback((correct: boolean) => {
     setSessionStats(prev => ({
       ...prev,
       [correct ? 'correct' : 'incorrect']: prev[correct ? 'correct' : 'incorrect'] + 1
     }));
-
+    
     if (currentIndex < cards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex(prev => prev + 1);
       setShowAnswer(false);
       setShowHint(false);
-      setFillInBlankResults({}); // Reset fill-in-blank results for next card
+      setFillInBlankResults({});
     } else {
       setStudyComplete(true);
     }
-  };
+  }, [currentIndex, cards.length]);
 
-  const handleFillInBlankAnswer = (elementId: string, correct: boolean) => {
-    setFillInBlankResults(prev => ({ ...prev, [elementId]: correct }));
-    
-    // Auto-advance logic can be added here if needed
-    // For now, just show the results
-  };
-
-  const handleNavigate = (direction: 'prev' | 'next') => {
-    if (!allowNavigation) return;
-    
+  const handleNavigate = useCallback((direction: 'prev' | 'next') => {
     if (direction === 'prev' && currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setShowAnswer(false);
-      setShowHint(false);
+      setCurrentIndex(prev => prev - 1);
     } else if (direction === 'next' && currentIndex < cards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setShowAnswer(false);
-      setShowHint(false);
+      setCurrentIndex(prev => prev + 1);
     }
-  };
-
-  const handleFlipCard = () => {
-    setShowAnswer(!showAnswer);
-  };
-
-  const handleTimeUp = () => {
-    const currentCard = cards[currentIndex];
-    const behavior = currentCard.countdown_behavior || (currentCard.card_type === 'single-sided' ? 'next' : 'flip');
-    
-    if (behavior === 'next') {
-      toast({
-        title: "Time's up!",
-        description: "Moving to next card.",
-        variant: "destructive",
-      });
-      
-      if (currentIndex < cards.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-        setShowAnswer(false);
-        setShowHint(false);
-      } else {
-        setStudyComplete(true);
-      }
-    } else {
-      toast({
-        title: "Time's up!",
-        description: "Revealing answer.",
-        variant: "destructive",
-      });
-      setShowAnswer(true);
-    }
-  };
-
-  const resetStudy = () => {
-    setCurrentIndex(0);
     setShowAnswer(false);
     setShowHint(false);
-    setSessionStats({ correct: 0, incorrect: 0 });
-    setStudyComplete(false);
     setFillInBlankResults({});
-  };
+  }, [currentIndex, cards.length]);
+
+  const handleFlipCard = useCallback(() => {
+    setShowAnswer(prev => !prev);
+  }, []);
+
+  const handleRevealAnswer = useCallback(() => {
+    setShowAnswer(true);
+  }, []);
+
+  const handleToggleHint = useCallback(() => {
+    setShowHint(prev => !prev);
+  }, []);
+
+  const handleGoBack = useCallback(() => {
+    navigate(`/set/${setId}`);
+  }, [navigate, setId]);
+
+  const handleFillInBlankAnswer = useCallback((elementId: string, correct: boolean) => {
+    setFillInBlankResults(prev => ({
+      ...prev,
+      [elementId]: correct
+    }));
+  }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-lg text-foreground">Loading...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-lg text-foreground">{t('loading')}</div>
       </div>
     );
   }
 
-  if (!set || cards.length === 0) {
+  if (!set || !currentCard) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="bg-card shadow-sm border-b border-border">
+        <header className="shadow-sm border-b bg-card">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center h-16">
-              <Button
-                variant="ghost"
-                onClick={handleGoBack}
-                className="mr-2 sm:mr-4 p-2"
-                size="sm"
-              >
-                <ArrowLeft className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Go Back</span>
-              </Button>
-              <h1 className="text-lg sm:text-2xl font-bold text-primary">Study Mode</h1>
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-8">
+                <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
+                <Navigation />
+              </div>
+              <UserDropdown />
             </div>
           </div>
         </header>
-        <main className="max-w-2xl mx-auto py-8 sm:py-12 px-4 text-center">
-          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-foreground">No cards to study</h2>
-          <p className="text-muted-foreground mb-6 text-sm sm:text-base">Create some flashcards in the visual editor first!</p>
-          <Button onClick={() => navigate(`/sets/${setId}/cards/${cards[0]?.id || ''}`)} className="w-full sm:w-auto">
-            Open Visual Editor
-          </Button>
+        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-foreground">No cards found</h2>
+          </div>
         </main>
       </div>
     );
@@ -225,32 +171,50 @@ const StudyMode = () => {
 
   if (studyComplete) {
     return (
-      <StudyModeComplete
-        setId={setId!}
-        sessionStats={sessionStats}
-        onResetStudy={resetStudy}
-      />
+      <div className="min-h-screen bg-background">
+        <header className="shadow-sm border-b bg-card">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-8">
+                <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
+                <Navigation />
+              </div>
+              <UserDropdown />
+            </div>
+          </div>
+        </header>
+        <StudyModeComplete
+          setTitle={set.title}
+          sessionStats={sessionStats}
+          totalCards={cards.length}
+          onRestart={() => {
+            setCurrentIndex(0);
+            setSessionStats({ correct: 0, incorrect: 0 });
+            setStudyComplete(false);
+            setShowAnswer(false);
+            setShowHint(false);
+            setFillInBlankResults({});
+          }}
+          onBackToSet={handleGoBack}
+        />
+      </div>
     );
   }
 
-  const currentCard = cards[currentIndex];
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          .preserve-3d {
-            transform-style: preserve-3d;
-          }
-          .backface-hidden {
-            backface-visibility: hidden;
-          }
-          .rotate-y-180 {
-            transform: rotateY(180deg);
-          }
-        `
-      }} />
-      
+      <header className="shadow-sm border-b bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
+              <Navigation />
+            </div>
+            <UserDropdown />
+          </div>
+        </div>
+      </header>
+
       <StudyModeHeader
         set={set}
         setId={setId!}
@@ -264,28 +228,26 @@ const StudyMode = () => {
 
       {showSettings && (
         <StudyModeSettings
+          settings={settings}
+          onSettingsChange={setSettings}
           showPanelView={showPanelView}
-          allowNavigation={allowNavigation}
-          onPanelViewChange={setShowPanelView}
-          onNavigationChange={setAllowNavigation}
+          onTogglePanelView={() => setShowPanelView(!showPanelView)}
         />
       )}
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 flex items-center justify-center p-4">
-          <StudyModeContent
-            currentCard={currentCard}
-            showPanelView={showPanelView}
-            showAnswer={showAnswer}
-            showHint={showHint}
-            onRevealAnswer={() => setShowAnswer(true)}
-            onToggleHint={() => setShowHint(!showHint)}
-            onAnswer={handleAnswer}
-            onFlipCard={handleFlipCard}
-            onFillInBlankAnswer={handleFillInBlankAnswer}
-            fillInBlankResults={fillInBlankResults}
-          />
-        </div>
+      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
+        <StudyModeContent
+          currentCard={currentCard}
+          showPanelView={showPanelView}
+          showAnswer={showAnswer}
+          showHint={showHint}
+          onRevealAnswer={handleRevealAnswer}
+          onToggleHint={handleToggleHint}
+          onAnswer={handleAnswer}
+          onFlipCard={handleFlipCard}
+          onFillInBlankAnswer={handleFillInBlankAnswer}
+          fillInBlankResults={fillInBlankResults}
+        />
       </main>
 
       <StudyNavigationBar
@@ -294,9 +256,9 @@ const StudyMode = () => {
         onNavigate={handleNavigate}
         onFlipCard={handleFlipCard}
         showAnswer={showAnswer}
-        countdownTimer={currentCard?.countdown_timer || 0}
-        onTimeUp={handleTimeUp}
-        allowNavigation={allowNavigation}
+        countdownTimer={settings.countdownTimer}
+        onTimeUp={handleRevealAnswer}
+        allowNavigation={true}
       />
     </div>
   );
