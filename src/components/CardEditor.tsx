@@ -80,9 +80,18 @@ export const CardEditor: React.FC = () => {
   // Mutation for updating cards
   const updateCardMutation = useMutation({
     mutationFn: async ({ cardId, updates }: { cardId: string; updates: Partial<Flashcard> }) => {
+      // Convert CanvasElement arrays to JSON for database storage
+      const dbUpdates: any = { ...updates };
+      if (updates.front_elements) {
+        dbUpdates.front_elements = updates.front_elements as any;
+      }
+      if (updates.back_elements) {
+        dbUpdates.back_elements = updates.back_elements as any;
+      }
+      
       const { error } = await supabase
         .from('flashcards')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', cardId);
       
       if (error) throw error;
