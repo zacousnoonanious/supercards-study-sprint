@@ -187,7 +187,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
         
         <ToolbarButton
           icon={Video}
-          label={t('youtube') || 'YouTube'
+          label={t('youtube') || 'YouTube'}
           onClick={() => onAddElement('youtube')}
         />
         
