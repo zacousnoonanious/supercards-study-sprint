@@ -245,177 +245,54 @@ IMPORTANT: Return ONLY a valid JSON array of cards, no additional text, no markd
       throw new Error('AI response is not an array of cards');
     }
 
-    // Process cards and create canvas elements
+    // Process cards and insert them into the database
     const processedCards = await Promise.all(cards.map(async (card: any, index: number) => {
-      const cardId = `${Date.now()}_${index}`;
-      let elements: any[] = [];
+      let cardData: any = {
+        set_id: setId,
+        question: card.question || card.front || '',
+        answer: card.answer || card.back || '',
+        user_id: userId,
+        card_type: 'normal',
+        interactive_type: null
+      };
 
+      // Handle different card types
       if (card.type === 'fill-in-blank') {
-        // Process fill-in-blank card with intelligent word selection
-        const originalText = card.fillInBlankText || card.question;
-        
-        let blankIndices: number[] = [];
-        if (fillInBlankSettings.intelligentWordSelection && originalText) {
-          blankIndices = getImportantWords(
-            originalText, 
+        cardData.interactive_type = 'fill-in-blank';
+        cardData.question = card.fillInBlankText || card.question;
+        cardData.answer = JSON.stringify({
+          originalText: card.fillInBlankText,
+          blanks: getImportantWords(
+            card.fillInBlankText || card.question, 
             fillInBlankSettings.blankPercentage, 
             fillInBlankSettings.avoidCommonWords
-          );
-        }
-
-        // Create blank objects
-        const words = originalText.split(/\s+/);
-        const blanks = blankIndices.map(wordIndex => ({
-          word: words[wordIndex]?.replace(/[^\w]/g, '') || '',
-          position: wordIndex,
-          id: `blank_${cardId}_${wordIndex}`
-        }));
-
-        elements.push({
-          id: `element_${cardId}`,
-          type: 'fill-in-blank',
-          x: 50,
-          y: 50,
-          width: 500,
-          height: 300,
-          fillInBlankText: originalText,
-          fillInBlankBlanks: blanks,
-          fillInBlankMode: 'manual',
-          showLetterCount: true,
-          ignoreCase: true,
-          fontSize: 16,
-          fontFamily: 'Inter',
-          color: '#000000',
-          backgroundColor: 'transparent',
-          zIndex: 1
+          ).map(index => ({
+            position: index,
+            word: (card.fillInBlankText || card.question).split(/\s+/)[index]?.replace(/[^\w]/g, '') || ''
+          }))
         });
-
-        // Add explanation if provided
-        if (card.explanation) {
-          elements.push({
-            id: `explanation_${cardId}`,
-            type: 'text',
-            x: 50,
-            y: 370,
-            width: 500,
-            height: 80,
-            content: card.explanation,
-            fontSize: 14,
-            fontFamily: 'Inter',
-            color: '#666666',
-            backgroundColor: 'transparent',
-            zIndex: 1
-          });
-        }
       } else if (card.type === 'multiple-choice') {
-        // Multiple choice question
-        elements.push({
-          id: `question_${cardId}`,
-          type: 'text',
-          x: 50,
-          y: 50,
-          width: 500,
-          height: 100,
-          content: card.question,
-          fontSize: 18,
-          fontFamily: 'Inter',
-          color: '#000000',
-          backgroundColor: 'transparent',
-          zIndex: 1
-        });
-
-        elements.push({
-          id: `quiz_${cardId}`,
-          type: 'multiple-choice',
-          x: 50,
-          y: 170,
-          width: 500,
-          height: 200,
-          question: card.question,
+        cardData.interactive_type = 'multiple-choice';
+        cardData.answer = JSON.stringify({
           options: card.options || [],
-          correctAnswer: 0,
-          fontSize: 14,
-          fontFamily: 'Inter',
-          color: '#000000',
-          backgroundColor: 'transparent',
-          zIndex: 1
+          correctAnswer: 0
         });
       } else if (card.type === 'true-false') {
-        // True/False question
-        elements.push({
-          id: `question_${cardId}`,
-          type: 'text',
-          x: 50,
-          y: 50,
-          width: 500,
-          height: 150,
-          content: card.question,
-          fontSize: 18,
-          fontFamily: 'Inter',
-          color: '#000000',
-          backgroundColor: 'transparent',
-          zIndex: 1
+        cardData.interactive_type = 'true-false';
+        cardData.answer = JSON.stringify({
+          correctAnswer: card.correctAnswer || false
         });
+      }
 
-        elements.push({
-          id: `quiz_${cardId}`,
-          type: 'true-false',
-          x: 50,
-          y: 220,
-          width: 500,
-          height: 150,
-          question: card.question,
-          correctAnswer: card.correctAnswer,
-          fontSize: 14,
-          fontFamily: 'Inter',
-          color: '#000000',
-          backgroundColor: 'transparent',
-          zIndex: 1
-        });
-      } else {
-        // Informational card
-        elements.push({
-          id: `title_${cardId}`,
-          type: 'text',
-          x: 50,
-          y: 50,
-          width: 500,
-          height: 80,
-          content: card.question,
-          fontSize: 20,
-          fontFamily: 'Inter',
-          color: '#000000',
-          backgroundColor: 'transparent',
-          fontWeight: 'bold',
-          zIndex: 1
-        });
-
-        elements.push({
-          id: `content_${cardId}`,
-          type: 'text',
-          x: 50,
-          y: 150,
-          width: 500,
-          height: 250,
-          content: card.answer,
-          fontSize: 16,
-          fontFamily: 'Inter',
-          color: '#000000',
-          backgroundColor: 'transparent',
-          zIndex: 1
-        });
+      // Add explanation if provided
+      if (card.explanation) {
+        cardData.hint = card.explanation;
       }
 
       // Insert card into database
       const { data: insertedCard, error: cardError } = await supabase
         .from('flashcards')
-        .insert({
-          set_id: setId,
-          question: card.question,
-          answer: card.answer || '',
-          user_id: userId,
-          card_elements: elements
-        })
+        .insert(cardData)
         .select()
         .single();
 
