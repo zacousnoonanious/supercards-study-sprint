@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useCardEditor } from '@/hooks/useCardEditor';
 import { EditorHeader } from './EditorHeader';
-import { EditorFooter } from './EditorFooter';
-import { ElementToolbar } from './ElementToolbar';
-import { CardCanvas } from './CardCanvas';
+import { SimpleEditorFooter } from './SimpleEditorFooter';
 import { ElementOptionsPanel } from './ElementOptionsPanel';
+import { CardCanvas } from './CardCanvas';
+import { ConsolidatedToolbar } from './ConsolidatedToolbar';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { CanvasElement } from '@/types/flashcard';
 
@@ -30,14 +30,9 @@ export const CardEditor = () => {
     reorderCards,
   } = useCardEditor();
 
-  const [showGrid, setShowGrid] = useState(false);
-  const [snapToGrid, setSnapToGrid] = useState(false);
-  const [gridSize, setGridSize] = useState(20);
-  const [snapPrecision, setSnapPrecision] = useState<'coarse' | 'medium' | 'fine'>('medium');
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [textScale, setTextScale] = useState(1);
-  const [isEditingDeckName, setIsEditingDeckName] = useState(false);
   const [deckName, setDeckName] = useState(set?.title || '');
+  const [cardWidth] = useState(600);
 
   // Save card when switching cards or sides
   useEffect(() => {
@@ -48,7 +43,7 @@ export const CardEditor = () => {
           updateCard(currentCard.id, currentCard);
         }
       }
-    }, 1000); // Debounce saves by 1 second
+    }, 1000);
 
     return () => clearTimeout(timeoutId);
   }, [cards, currentCardIndex, updateCard]);
@@ -93,26 +88,68 @@ export const CardEditor = () => {
     }
   };
 
-  const handleStartEdit = () => {
-    setIsEditingDeckName(true);
-  };
+  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right') => {
+    const elements = getCurrentElements();
+    if (elements.length === 0) return;
 
-  const handleSaveEdit = () => {
-    setIsEditingDeckName(false);
-    // TODO: Update set title in database
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingDeckName(false);
-    setDeckName(set?.title || '');
-  };
-
-  // Wrapper function for ElementToolbar that matches expected signature
-  const handleToolbarUpdateElement = useCallback((updates: Partial<CanvasElement>) => {
-    if (selectedElement) {
-      handleUpdateElement(selectedElement, updates);
+    const updatedElements = [...elements];
+    
+    switch (type) {
+      case 'grid':
+        const cols = Math.ceil(Math.sqrt(elements.length));
+        const spacing = 120;
+        elements.forEach((element, index) => {
+          const row = Math.floor(index / cols);
+          const col = index % cols;
+          updatedElements[index] = {
+            ...element,
+            x: 50 + col * spacing,
+            y: 50 + row * spacing
+          };
+        });
+        break;
+        
+      case 'center':
+        elements.forEach((element, index) => {
+          updatedElements[index] = {
+            ...element,
+            x: (cardWidth - element.width) / 2,
+            y: element.y
+          };
+        });
+        break;
+        
+      case 'stack':
+        let currentY = 50;
+        elements.forEach((element, index) => {
+          updatedElements[index] = {
+            ...element,
+            x: 50,
+            y: currentY
+          };
+          currentY += element.height + 20;
+        });
+        break;
+        
+      case 'align-left':
+      case 'align-center':
+      case 'align-right':
+        const alignment = type.replace('align-', '') as 'left' | 'center' | 'right';
+        elements.forEach((element, index) => {
+          if (element.type === 'text') {
+            updatedElements[index] = {
+              ...element,
+              textAlign: alignment
+            };
+          }
+        });
+        break;
     }
-  }, [selectedElement, handleUpdateElement]);
+
+    updatedElements.forEach(element => {
+      updateElement(element.id, element);
+    });
+  };
 
   if (loading) {
     return (
@@ -144,58 +181,66 @@ export const CardEditor = () => {
   const currentCard = cards[currentCardIndex];
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* Left Sidebar - Element Toolbar */}
-      <div className="w-80 border-r bg-card">
-        <ElementToolbar
-          onAddElement={addElement}
-          selectedElement={getSelectedElementData()}
-          onUpdateElement={handleToolbarUpdateElement}
-          onDeleteElement={() => selectedElement && handleDeleteElement(selectedElement)}
-          onCreateNewCard={createNewCard}
-          onCreateNewCardWithLayout={createNewCardWithLayout}
-        />
-      </div>
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Header */}
+      <EditorHeader
+        set={set}
+        onSave={handleSave}
+        isEditingDeckName={false}
+        deckName={deckName}
+        onDeckNameChange={setDeckName}
+        onStartEdit={() => {}}
+        onSaveEdit={() => {}}
+        onCancelEdit={() => {}}
+      />
+
+      {/* Element Options Panel */}
+      <ElementOptionsPanel
+        selectedElement={getSelectedElementData()}
+        onUpdateElement={handleUpdateElement}
+        onDeleteElement={(id) => handleDeleteElement(id)}
+      />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        <EditorHeader
-          set={set}
-          onSave={handleSave}
-          isEditingDeckName={isEditingDeckName}
-          deckName={deckName}
-          onDeckNameChange={setDeckName}
-          onStartEdit={handleStartEdit}
-          onSaveEdit={handleSaveEdit}
-          onCancelEdit={handleCancelEdit}
-        />
-
-        {/* Element Options Panel - Below Header */}
-        <ElementOptionsPanel
-          selectedElement={getSelectedElementData()}
-          onUpdateElement={handleUpdateElement}
-          onDeleteElement={() => selectedElement && handleDeleteElement(selectedElement)}
+      <div className="flex-1 flex relative">
+        {/* Consolidated Tool Palette */}
+        <ConsolidatedToolbar
+          onAddElement={addElement}
+          onAutoArrange={handleAutoArrange}
+          currentCard={currentCard}
+          currentCardIndex={currentCardIndex}
+          totalCards={cards.length}
+          currentSide={currentSide}
+          onNavigateCard={navigateCard}
+          onSideChange={setCurrentSide}
+          onCreateNewCard={createNewCard}
+          onCreateNewCardWithLayout={createNewCardWithLayout}
+          onDeleteCard={() => deleteCard(currentCard.id)}
+          onCardTypeChange={(type) => updateCard(currentCard.id, { card_type: type })}
         />
 
         {/* Card Canvas Area */}
-        <div className="flex-1 flex items-center justify-center p-4">
-          <CardCanvas
-            elements={getCurrentElements()}
-            selectedElement={selectedElement}
-            onSelectElement={handleElementSelect}
-            onUpdateElement={handleUpdateElement}
-            onDeleteElement={handleDeleteElement}
-            cardSide={currentSide}
-          />
+        <div className="flex-1 flex items-start justify-center pt-4 pb-20 ml-20">
+          <div className="relative">
+            <CardCanvas
+              elements={getCurrentElements()}
+              selectedElement={selectedElement}
+              onSelectElement={handleElementSelect}
+              onUpdateElement={handleUpdateElement}
+              onDeleteElement={handleDeleteElement}
+              cardSide={currentSide}
+            />
+          </div>
         </div>
-
-        <EditorFooter
-          currentCard={currentCard}
-          selectedElement={getSelectedElementData()}
-          onUpdateElement={handleUpdateElement}
-          onUpdateCard={(cardId, updates) => updateCard(cardId, updates)}
-        />
       </div>
+
+      {/* Simple Footer */}
+      <SimpleEditorFooter
+        currentCard={currentCard}
+        selectedElement={getSelectedElementData()}
+        onUpdateCard={(cardId, updates) => updateCard(cardId, updates)}
+        cardWidth={cardWidth}
+      />
 
       {showShortcuts && (
         <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />
