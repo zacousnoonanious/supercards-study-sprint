@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,21 +26,52 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   const [interval, setInterval] = useState(element.fillInBlankInterval || 3);
   const [percentage, setPercentage] = useState(element.fillInBlankPercentage || 25);
 
-  // Memoize the update function to prevent unnecessary re-renders
-  const updateElement = useCallback((updates: Partial<CanvasElement>) => {
-    onUpdate(updates);
-  }, [onUpdate]);
+  // Use ref to track if we're in the middle of an update to prevent loops
+  const isUpdatingRef = useRef(false);
 
-  // Only update when state actually changes
+  // Only update parent when state actually changes and we're not already updating
   useEffect(() => {
-    updateElement({
-      fillInBlankText: originalText,
-      fillInBlankBlanks: blanks,
-      fillInBlankMode: mode,
-      fillInBlankInterval: interval,
-      fillInBlankPercentage: percentage
-    });
-  }, [originalText, blanks, mode, interval, percentage, updateElement]);
+    if (isUpdatingRef.current) return;
+    
+    // Use a timeout to debounce updates and prevent infinite loops
+    const timeoutId = setTimeout(() => {
+      onUpdate({
+        fillInBlankText: originalText,
+        fillInBlankBlanks: blanks,
+        fillInBlankMode: mode,
+        fillInBlankInterval: interval,
+        fillInBlankPercentage: percentage
+      });
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [originalText, blanks, mode, interval, percentage]);
+
+  // Update local state when element prop changes (but prevent loops)
+  useEffect(() => {
+    isUpdatingRef.current = true;
+    
+    if (element.fillInBlankText !== originalText) {
+      setOriginalText(element.fillInBlankText || '');
+    }
+    if (JSON.stringify(element.fillInBlankBlanks) !== JSON.stringify(blanks)) {
+      setBlanks(element.fillInBlankBlanks || []);
+    }
+    if (element.fillInBlankMode !== mode) {
+      setMode(element.fillInBlankMode || 'manual');
+    }
+    if (element.fillInBlankInterval !== interval) {
+      setInterval(element.fillInBlankInterval || 3);
+    }
+    if (element.fillInBlankPercentage !== percentage) {
+      setPercentage(element.fillInBlankPercentage || 25);
+    }
+    
+    // Reset the flag after a brief delay
+    setTimeout(() => {
+      isUpdatingRef.current = false;
+    }, 50);
+  }, [element.fillInBlankText, element.fillInBlankBlanks, element.fillInBlankMode, element.fillInBlankInterval, element.fillInBlankPercentage]);
 
   const generateBlanks = () => {
     if (!originalText.trim()) return;
