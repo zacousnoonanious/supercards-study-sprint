@@ -271,7 +271,7 @@ export const useCardEditor = () => {
       card_type: 'normal' as const,
       countdown_timer: 0,
       canvas_width: 600,
-      canvas_height: 900,
+      canvas_height: 450,
     };
 
     try {
@@ -340,8 +340,8 @@ export const useCardEditor = () => {
       set_id: setId,
       card_type: template.card_type,
       countdown_timer: 0,
-      canvas_width: template.canvas_width,
-      canvas_height: template.canvas_height,
+      canvas_width: template.canvas_width || 600,
+      canvas_height: template.canvas_height || 450,
     };
 
     try {
@@ -410,7 +410,7 @@ export const useCardEditor = () => {
       card_type: currentCard.card_type,
       countdown_timer: currentCard.countdown_timer,
       canvas_width: currentCard.canvas_width || 600,
-      canvas_height: currentCard.canvas_height || 900,
+      canvas_height: currentCard.canvas_height || 450,
     };
 
     try {

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -36,8 +35,8 @@ export const CardEditor = () => {
 
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [deckName, setDeckName] = useState(set?.title || '');
-  const [cardWidth, setCardWidth] = useState(900);
-  const [cardHeight, setCardHeight] = useState(600);
+  const [cardWidth, setCardWidth] = useState(600);
+  const [cardHeight, setCardHeight] = useState(450);
 
   // Get current card early in the component
   const currentCard = cards[currentCardIndex];
@@ -200,7 +199,7 @@ export const CardEditor = () => {
   useEffect(() => {
     if (currentCard) {
       const width = currentCard.canvas_width || 600;
-      const height = currentCard.canvas_height || 900;
+      const height = currentCard.canvas_height || 450;
       
       setCardWidth(width);
       setCardHeight(height);

@@ -15,8 +15,8 @@ const COMMON_WORDS = new Set([
   'could', 'should', 'may', 'might', 'can', 'must', 'shall', 'do', 'does',
   'did', 'this', 'these', 'those', 'they', 'them', 'their', 'there', 'then',
   'when', 'where', 'who', 'what', 'why', 'how', 'but', 'or', 'so', 'if',
-  'because', 'while', 'during', 'before', 'after', 'above', 'below', 'up',
-  'down', 'out', 'off', 'over', 'under', 'again', 'further', 'then', 'once'
+  'because', 'while', 'during', 'before', 'after', 'above', 'below', 'out',
+  'off', 'over', 'under', 'again', 'further', 'then', 'once'
 ]);
 
 // Function to create visual elements for cards
@@ -28,7 +28,7 @@ function createCardElements(card: any, cardType: string) {
 
   switch (cardType) {
     case 'informational':
-      // Single-sided informational card
+      // Single-sided informational card - use larger dimensions for more content
       elements.front_elements = [
         {
           id: `title_${Date.now()}_1`,
@@ -49,7 +49,7 @@ function createCardElements(card: any, cardType: string) {
           x: 50,
           y: 150,
           width: 500,
-          height: 600,
+          height: 250,
           content: card.answer || card.explanation || card.content || '',
           fontSize: 16,
           color: '#374151',
@@ -67,7 +67,7 @@ function createCardElements(card: any, cardType: string) {
           x: 50,
           y: 50,
           width: 500,
-          height: 120,
+          height: 100,
           content: card.question || '',
           fontSize: 18,
           fontWeight: 'bold',
@@ -78,9 +78,9 @@ function createCardElements(card: any, cardType: string) {
           id: `mc_${Date.now()}_2`,
           type: 'multiple-choice',
           x: 50,
-          y: 200,
+          y: 170,
           width: 500,
-          height: 300,
+          height: 220,
           multipleChoiceOptions: card.options || ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
           correctAnswer: 0,
           showImmediateFeedback: true
@@ -92,9 +92,9 @@ function createCardElements(card: any, cardType: string) {
             id: `explanation_${Date.now()}_3`,
             type: 'text',
             x: 50,
-            y: 50,
+            y: 150,
             width: 500,
-            height: 400,
+            height: 200,
             content: `Correct! ${card.explanation}`,
             fontSize: 16,
             color: '#059669',
@@ -113,7 +113,7 @@ function createCardElements(card: any, cardType: string) {
           x: 50,
           y: 50,
           width: 500,
-          height: 150,
+          height: 120,
           content: card.question || '',
           fontSize: 18,
           fontWeight: 'bold',
@@ -124,9 +124,9 @@ function createCardElements(card: any, cardType: string) {
           id: `tf_${Date.now()}_2`,
           type: 'true-false',
           x: 150,
-          y: 250,
+          y: 200,
           width: 300,
-          height: 200,
+          height: 150,
           correctAnswer: card.correctAnswer || false,
           showImmediateFeedback: true
         }
@@ -137,9 +137,9 @@ function createCardElements(card: any, cardType: string) {
             id: `explanation_${Date.now()}_3`,
             type: 'text',
             x: 50,
-            y: 50,
+            y: 150,
             width: 500,
-            height: 400,
+            height: 200,
             content: card.explanation,
             fontSize: 16,
             color: '#374151',
@@ -158,7 +158,7 @@ function createCardElements(card: any, cardType: string) {
           x: 50,
           y: 100,
           width: 500,
-          height: 400,
+          height: 250,
           fillInBlankText: card.fillInBlankText || card.question || '',
           fillInBlankBlanks: card.blanks || [],
           showLetterCount: true,
@@ -174,9 +174,9 @@ function createCardElements(card: any, cardType: string) {
           id: `question_${Date.now()}_1`,
           type: 'text',
           x: 50,
-          y: 200,
+          y: 150,
           width: 500,
-          height: 200,
+          height: 150,
           content: card.question || card.front || '',
           fontSize: 18,
           color: '#1f2937',
@@ -189,9 +189,9 @@ function createCardElements(card: any, cardType: string) {
           id: `answer_${Date.now()}_2`,
           type: 'text',
           x: 50,
-          y: 200,
+          y: 150,
           width: 500,
-          height: 200,
+          height: 150,
           content: card.answer || card.back || '',
           fontSize: 16,
           color: '#374151',
@@ -496,6 +496,15 @@ Example format:
       // Create visual elements based on card type
       const elements = createCardElements(card, card.type);
 
+      // Set canvas dimensions based on card type
+      let canvasWidth = 600;
+      let canvasHeight = 450;
+      
+      // Informational cards get more height for content
+      if (card.type === 'informational') {
+        canvasHeight = 600;
+      }
+
       let cardData: any = {
         set_id: setId,
         question: card.question || card.title || card.front || '',
@@ -504,8 +513,8 @@ Example format:
         interactive_type: interactiveType,
         front_elements: elements.front_elements,
         back_elements: elements.back_elements,
-        canvas_width: 600,
-        canvas_height: 900
+        canvas_width: canvasWidth,
+        canvas_height: canvasHeight
       };
 
       // Handle fill-in-blank specific processing
