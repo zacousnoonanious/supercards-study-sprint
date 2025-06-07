@@ -1,8 +1,8 @@
-
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
 import { ElementContextMenu } from './ElementContextMenu';
+import { ElementPopupToolbar } from './ElementPopupToolbar';
 
 interface PowerPointEditorProps {
   elements: CanvasElement[];
@@ -16,6 +16,7 @@ interface PowerPointEditorProps {
   showGrid: boolean;
   snapToGrid?: boolean;
   gridSize?: number;
+  snapPrecision?: 'coarse' | 'medium' | 'fine';
 }
 
 export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
@@ -30,6 +31,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
   showGrid,
   snapToGrid = false,
   gridSize = 20,
+  snapPrecision = 'medium',
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -37,6 +39,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [editingElementId, setEditingElementId] = useState<string | null>(null);
   const [copiedElement, setCopiedElement] = useState<CanvasElement | null>(null);
+  const [showPopupToolbar, setShowPopupToolbar] = useState(false);
   
   // Local state for real-time updates during interactions
   const [localElements, setLocalElements] = useState<CanvasElement[]>(elements);
@@ -71,11 +74,24 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
     setPendingUpdates(new Map());
   }, [pendingUpdates, onUpdateElement]);
 
-  // Snap to grid helper
+  // Snap to grid helper with precision levels
   const snapToGridValue = useCallback((value: number) => {
     if (!snapToGrid) return value;
-    return Math.round(value / gridSize) * gridSize;
-  }, [snapToGrid, gridSize]);
+    
+    let effectiveGridSize = gridSize;
+    switch (snapPrecision) {
+      case 'coarse':
+        effectiveGridSize = gridSize * 2;
+        break;
+      case 'fine':
+        effectiveGridSize = gridSize / 2;
+        break;
+      default: // medium
+        effectiveGridSize = gridSize;
+    }
+    
+    return Math.round(value / effectiveGridSize) * effectiveGridSize;
+  }, [snapToGrid, gridSize, snapPrecision]);
 
   // Keyboard event handlers
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -113,7 +129,20 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
       onElementSelect(newElement.id);
       return;
     }
-  }, [selectedElementId, localElements, copiedElement, onDeleteElement, onUpdateElement, onElementSelect]);
+
+    // Show popup toolbar (Space key)
+    if (e.key === ' ' && selectedElementId && !editingElementId) {
+      e.preventDefault();
+      setShowPopupToolbar(true);
+      return;
+    }
+
+    // Hide popup toolbar (Escape key)
+    if (e.key === 'Escape') {
+      setShowPopupToolbar(false);
+      setEditingElementId(null);
+    }
+  }, [selectedElementId, localElements, copiedElement, editingElementId, onDeleteElement, onUpdateElement, onElementSelect]);
 
   // Add keyboard event listeners
   useEffect(() => {
@@ -129,6 +158,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
     
     onElementSelect(elementId);
     setIsDragging(true);
+    setShowPopupToolbar(false);
     
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
@@ -157,7 +187,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
     let newX = Math.max(0, Math.min(element.x + deltaX, cardWidth - element.width));
     let newY = Math.max(0, Math.min(element.y + deltaY, cardHeight - element.height));
     
-    // Apply grid snapping
+    // Apply grid snapping locally (client-side only)
     newX = snapToGridValue(newX);
     newY = snapToGridValue(newY);
     
@@ -180,6 +210,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
     }
   }, [isDragging, isResizing, savePendingUpdates]);
 
+  // Resize handlers
   const handleResizeStart = useCallback((e: React.MouseEvent, elementId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -261,25 +292,34 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
   const handleDoubleClick = useCallback((e: React.MouseEvent, elementId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setEditingElementId(elementId);
-  }, []);
+    if (localElements.find(el => el.id === elementId)?.type === 'text') {
+      setEditingElementId(elementId);
+    } else {
+      setShowPopupToolbar(true);
+    }
+  }, [localElements]);
 
   const handleTextChange = useCallback((elementId: string, newContent: string) => {
-    // Update immediately in local state
     updateLocalElement(elementId, { content: newContent });
   }, [updateLocalElement]);
 
   const handleTextBlur = useCallback(() => {
     setEditingElementId(null);
-    // Save text changes to database
     savePendingUpdates();
   }, [savePendingUpdates]);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     if (e.target === canvasRef.current) {
       onElementSelect(null);
+      setShowPopupToolbar(false);
     }
   }, [onElementSelect]);
+
+  const handleCanvasContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    // Canvas right-click menu could show "Add Element" options
+    console.log('Canvas context menu at:', e.clientX, e.clientY);
+  }, []);
 
   // Context menu handlers for elements
   const handleElementContextMenu = (elementId: string) => ({
@@ -338,6 +378,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
 
   // Use local elements for rendering
   const currentElements = localElements;
+  const selectedElement = selectedElementId ? currentElements.find(el => el.id === selectedElementId) : null;
 
   return (
     <div className="flex-1 flex justify-center items-center p-4">
@@ -347,9 +388,10 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
           className="relative border-2 border-gray-300 bg-white shadow-lg overflow-hidden cursor-default focus:outline-none"
           style={{ width: cardWidth, height: cardHeight }}
           onClick={handleCanvasClick}
+          onContextMenu={handleCanvasContextMenu}
           tabIndex={0}
         >
-          {/* Grid overlay */}
+          {/* Grid overlay with precision-based sizing */}
           {showGrid && (
             <div 
               className="absolute inset-0 opacity-10 pointer-events-none"
@@ -366,7 +408,45 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
           {currentElements.map((element) => (
             <ElementContextMenu
               key={element.id}
-              {...handleElementContextMenu(element.id)}
+              onMoveUp={() => {
+                updateLocalElement(element.id, { zIndex: (element.zIndex || 0) + 1 });
+                savePendingUpdates();
+              }}
+              onMoveDown={() => {
+                if ((element.zIndex || 0) > 0) {
+                  updateLocalElement(element.id, { zIndex: (element.zIndex || 0) - 1 });
+                  savePendingUpdates();
+                }
+              }}
+              onMoveToTop={() => {
+                const maxZ = Math.max(...currentElements.map(el => el.zIndex || 0));
+                updateLocalElement(element.id, { zIndex: maxZ + 1 });
+                savePendingUpdates();
+              }}
+              onMoveToBottom={() => {
+                updateLocalElement(element.id, { zIndex: 0 });
+                savePendingUpdates();
+              }}
+              onDuplicate={() => {
+                const newElement: CanvasElement = {
+                  ...element,
+                  id: `element_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                  x: element.x + 20,
+                  y: element.y + 20,
+                  zIndex: (currentElements.length || 0) + 1,
+                };
+                
+                const updatedElements = [...currentElements, newElement];
+                setLocalElements(updatedElements);
+                onUpdateElement(newElement.id, newElement);
+                onElementSelect(newElement.id);
+              }}
+              onDelete={() => onDeleteElement(element.id)}
+              onRotate={() => {
+                const newRotation = ((element.rotation || 0) + 90) % 360;
+                updateLocalElement(element.id, { rotation: newRotation });
+                savePendingUpdates();
+              }}
             >
               <div
                 className={`absolute select-none cursor-move ${
@@ -388,6 +468,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
                   onElementSelect(element.id);
                 }}
               >
+                {/* Element rendering logic */}
                 {element.type === 'text' ? (
                   editingElementId === element.id ? (
                     <textarea
@@ -417,16 +498,38 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
                         textAlign: element.textAlign || 'left',
                       }}
                     >
-                      {element.content || 'Double-click to edit'}
+                      {element.hyperlink ? (
+                        <a 
+                          href={element.hyperlink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {element.content || 'Double-click to edit'}
+                        </a>
+                      ) : (
+                        element.content || 'Double-click to edit'
+                      )}
                     </div>
                   )
                 ) : element.type === 'image' ? (
-                  <img
-                    src={element.content || '/placeholder.svg'}
-                    alt="Card element"
-                    className="w-full h-full object-cover"
-                    draggable={false}
-                  />
+                  element.hyperlink ? (
+                    <a href={element.hyperlink} target="_blank" rel="noopener noreferrer">
+                      <img
+                        src={element.imageUrl || element.content || '/placeholder.svg'}
+                        alt="Card element"
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                    </a>
+                  ) : (
+                    <img
+                      src={element.imageUrl || element.content || '/placeholder.svg'}
+                      alt="Card element"
+                      className="w-full h-full object-cover"
+                      draggable={false}
+                    />
+                  )
                 ) : element.type === 'multiple-choice' ? (
                   <MultipleChoiceRenderer 
                     element={element} 
@@ -452,7 +555,19 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
                 {selectedElementId === element.id && (
                   <div
                     className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 cursor-se-resize"
-                    onMouseDown={(e) => handleResizeStart(e, element.id)}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onElementSelect(element.id);
+                      setIsResizing(true);
+                      const rect = canvasRef.current?.getBoundingClientRect();
+                      if (rect) {
+                        setDragStart({
+                          x: e.clientX - rect.left,
+                          y: e.clientY - rect.top,
+                        });
+                      }
+                    }}
                   />
                 )}
               </div>
@@ -464,11 +579,29 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
               <div className="text-center">
                 <p>No elements yet</p>
                 <p className="text-sm mt-2">Use the toolbar above to add elements</p>
-                <p className="text-xs mt-1">Press Delete to remove, Ctrl+C to copy, Ctrl+V to paste</p>
+                <p className="text-xs mt-1">Press Delete to remove, Ctrl+C to copy, Ctrl+V to paste, Space for options</p>
               </div>
             </div>
           )}
         </div>
+
+        {/* Element Popup Toolbar */}
+        {showPopupToolbar && selectedElement && (
+          <div className="absolute" style={{ 
+            top: selectedElement.y - 10, 
+            left: selectedElement.x,
+            zIndex: 1000 
+          }}>
+            <ElementPopupToolbar
+              element={selectedElement}
+              onUpdate={(updates) => {
+                updateLocalElement(selectedElement.id, updates);
+                savePendingUpdates();
+              }}
+              onClose={() => setShowPopupToolbar(false)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

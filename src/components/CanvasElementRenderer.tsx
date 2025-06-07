@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
@@ -132,18 +131,29 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
         </div>
       );
     case 'text':
+      const textContent = (
+        <span 
+          className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words leading-tight select-text"
+          style={{ 
+            textAlign: element.textAlign || 'center',
+            fontSize: `${Math.min((element.fontSize || 16) * textScale, element.height / 2)}px`,
+            lineHeight: '1.2',
+            color: element.color || (theme === 'dark' ? '#ffffff' : '#000000'),
+            fontWeight: element.fontWeight || 'normal',
+            fontStyle: element.fontStyle || 'normal',
+            textDecoration: element.textDecoration || 'none',
+          }}
+        >
+          {element.content}
+        </span>
+      );
+
       return (
         <div
           className={`w-full h-full flex items-center justify-center border rounded overflow-hidden ${
             theme === 'dark' ? 'bg-gray-800 text-white border-gray-600' : 'bg-white border-gray-300'
           } ${editingElement === element.id ? 'cursor-text' : 'cursor-text'}`}
           style={{
-            fontSize: (element.fontSize || 16) * textScale,
-            color: element.color,
-            fontWeight: element.fontWeight,
-            fontStyle: element.fontStyle,
-            textDecoration: element.textDecoration,
-            textAlign: element.textAlign as React.CSSProperties['textAlign'],
             padding: '4px 8px',
           }}
           onClick={(e) => {
@@ -205,22 +215,23 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
               autoFocus
               onSelect={(e) => e.stopPropagation()}
             />
-          ) : (
-            <span 
-              className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words leading-tight select-text"
-              style={{ 
-                textAlign: element.textAlign || 'center',
-                fontSize: `${Math.min((element.fontSize || 16) * textScale, element.height / 2)}px`,
-                lineHeight: '1.2'
-              }}
+          ) : element.hyperlink ? (
+            <a 
+              href={element.hyperlink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="w-full h-full flex items-center justify-center text-blue-600 hover:underline"
+              onClick={(e) => e.stopPropagation()}
             >
-              {element.content}
-            </span>
+              {textContent}
+            </a>
+          ) : (
+            textContent
           )}
         </div>
       );
     case 'image':
-      return (
+      const imageElement = (
         <img
           src={element.imageUrl}
           alt="Element"
@@ -229,6 +240,19 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           }`}
           draggable={false}
         />
+      );
+
+      return element.hyperlink ? (
+        <a 
+          href={element.hyperlink} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="w-full h-full block"
+        >
+          {imageElement}
+        </a>
+      ) : (
+        imageElement
       );
     default:
       return null;

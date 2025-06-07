@@ -37,6 +37,7 @@ export const CardEditor: React.FC = () => {
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [gridSize] = useState(20);
   const [cardDimensions, setCardDimensions] = useState({ width: 600, height: 400 });
+  const [snapPrecision, setSnapPrecision] = useState<'coarse' | 'medium' | 'fine'>('medium');
 
   // Fetch set data
   const { data: set, isLoading: setLoading } = useQuery({
@@ -538,6 +539,17 @@ export const CardEditor: React.FC = () => {
           >
             Snap to Grid
           </Button>
+          {snapToGrid && (
+            <select 
+              value={snapPrecision} 
+              onChange={(e) => setSnapPrecision(e.target.value as 'coarse' | 'medium' | 'fine')}
+              className="px-2 py-1 border rounded text-sm"
+            >
+              <option value="coarse">Coarse</option>
+              <option value="medium">Medium</option>
+              <option value="fine">Fine</option>
+            </select>
+          )}
         </div>
       </div>
 
@@ -575,6 +587,7 @@ export const CardEditor: React.FC = () => {
           showGrid={showGrid}
           snapToGrid={snapToGrid}
           gridSize={gridSize}
+          snapPrecision={snapPrecision}
         />
       </div>
 
