@@ -13,6 +13,7 @@ import SetView from "./pages/SetView";
 import StudyMode from "./pages/StudyMode";
 import CreateSet from "./pages/CreateSet";
 import CardEditorPage from "./pages/CardEditorPage";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
               <Sonner />
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/sets/:setId" element={<SetView />} />
                 <Route path="/sets/:setId/study" element={<StudyMode />} />
