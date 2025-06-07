@@ -7,6 +7,7 @@ import { CardCanvas } from './CardCanvas';
 import { ConsolidatedToolbar } from './ConsolidatedToolbar';
 import { SimpleEditorFooter } from './SimpleEditorFooter';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
+import { EditorCardOverview } from './EditorCardOverview';
 import { CanvasElement } from '@/types/flashcard';
 
 export const CardEditor = () => {
@@ -34,6 +35,7 @@ export const CardEditor = () => {
   } = useCardEditor();
 
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showCardOverview, setShowCardOverview] = useState(false);
   const [deckName, setDeckName] = useState(set?.title || '');
   const [cardWidth, setCardWidth] = useState(600);
   const [cardHeight, setCardHeight] = useState(450);
@@ -84,6 +86,11 @@ export const CardEditor = () => {
   const handleElementSelect = useCallback((elementId: string | null) => {
     setSelectedElement(elementId);
   }, [setSelectedElement]);
+
+  const handleNavigateToCard = useCallback((cardIndex: number) => {
+    setCurrentCardIndex(cardIndex);
+    setSelectedElement(null);
+  }, [setCurrentCardIndex, setSelectedElement]);
 
   const getCurrentElements = () => {
     if (!currentCard) return [];
@@ -233,6 +240,19 @@ export const CardEditor = () => {
     );
   }
 
+  // Show card overview if toggled
+  if (showCardOverview) {
+    return (
+      <EditorCardOverview
+        cards={cards}
+        currentCardIndex={currentCardIndex}
+        onReorderCards={reorderCards}
+        onNavigateToCard={handleNavigateToCard}
+        onBackToEditor={() => setShowCardOverview(false)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
@@ -276,6 +296,7 @@ export const CardEditor = () => {
             onCreateNewCardFromTemplate={createNewCardFromTemplate}
             onDeleteCard={() => deleteCard(currentCard.id)}
             onCardTypeChange={(type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
+            onShowCardOverview={() => setShowCardOverview(true)}
             position="left"
           />
 
