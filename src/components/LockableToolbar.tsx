@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -88,7 +87,9 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div className="fixed top-0 left-0 w-full h-14 bg-background/95 backdrop-blur-sm z-40 border-b border-border">
+    <div className={`fixed top-0 left-1/2 transform -translate-x-1/2 z-40 border-b ${
+      theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+    }`} style={{ width: '600px' }}>
       <div className="container max-w-full h-full flex items-center justify-between px-2 gap-1">
         {/* Left Side - Back to Decks */}
         <Button 

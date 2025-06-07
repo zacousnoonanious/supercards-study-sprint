@@ -11,6 +11,8 @@ import { getSet } from '@/lib/api/sets';
 import { v4 as uuidv4 } from 'uuid';
 import { CanvasContextMenu } from './CanvasContextMenu';
 import { EditorFooter } from './EditorFooter';
+import { SimpleEditorFooter } from './SimpleEditorFooter';
+import { ElementSettingsPopup } from './ElementSettingsPopup';
 
 interface CardCanvasProps {
   elements: CanvasElement[];
@@ -98,7 +100,10 @@ const CardCanvas: React.FC<CardCanvasProps> = ({
       const deltaY = e.clientY - dragState.dragStart.y;
       
       const newX = Math.max(0, Math.min(dragState.elementStart.x + deltaX, cardWidth - dragState.elementStart.width));
-      const newY = Math.max(0, Math.min(dragState.elementStart.y + deltaY, cardHeight - dragState.elementStart.height));
+      // Prevent dragging over footer by limiting Y position
+      const footerHeight = 60;
+      const maxY = cardHeight - dragState.elementStart.height - footerHeight;
+      const newY = Math.max(0, Math.min(dragState.elementStart.y + deltaY, maxY));
       
       onElementUpdate(dragState.elementId, { x: newX, y: newY });
     }
@@ -108,7 +113,10 @@ const CardCanvas: React.FC<CardCanvasProps> = ({
       const deltaY = e.clientY - resizeState.resizeStart.y;
       
       const newWidth = Math.max(400, resizeState.canvasStart.width + deltaX);
-      const newHeight = Math.max(300, resizeState.canvasStart.height + deltaY);
+      // Prevent resizing over footer
+      const footerHeight = 60;
+      const maxHeight = window.innerHeight - 200 - footerHeight;
+      const newHeight = Math.max(300, Math.min(resizeState.canvasStart.height + deltaY, maxHeight));
       
       onCanvasResize?.(newWidth, newHeight);
     }
@@ -131,7 +139,7 @@ const CardCanvas: React.FC<CardCanvasProps> = ({
   }, [dragState, resizeState, handleMouseMove, handleMouseUp]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8" style={{ paddingBottom: '120px' }}>
       <div 
         className="relative bg-white shadow-lg border-2 border-gray-300"
         style={{ width: cardWidth, height: cardHeight }}
@@ -223,6 +231,8 @@ export const CardEditor = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [history, setHistory] = useState<CanvasElement[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [selectedElement, setSelectedElement] = useState<CanvasElement | null>(null);
+  const [showElementPopup, setShowElementPopup] = useState(false);
 
   const { data: set } = useQuery({
     queryKey: ['set', setId],
@@ -522,12 +532,25 @@ export const CardEditor = () => {
     setIsDragging(true);
   };
 
-  const [selectedElement, setSelectedElement] = useState<CanvasElement | null>(null);
-
   const handleElementSelect = (elementId: string | null) => {
     const element = elementId ? elements.find(e => e.id === elementId) : null;
     setSelectedElement(element || null);
     setSelectedElementId(elementId);
+    setShowElementPopup(!!element);
+  };
+
+  const getElementPopupPosition = (element: CanvasElement) => {
+    // Position popup to the right of the element, or left if not enough space
+    const elementRight = element.x + element.width;
+    const elementTop = element.y;
+    const popupWidth = 256; // w-64
+    const canvasWidth = currentCard.canvas_width || 600;
+    
+    if (elementRight + popupWidth + 20 <= canvasWidth) {
+      return { x: elementRight + 10, y: elementTop };
+    } else {
+      return { x: Math.max(10, element.x - popupWidth - 10), y: elementTop };
+    }
   };
 
   const handleChangeCardSize = (size: 'small' | 'medium' | 'large' | 'custom') => {
@@ -599,7 +622,7 @@ export const CardEditor = () => {
         isBackSideDisabled={currentCard.card_type === 'single-sided'}
       />
       
-      <div className="pt-14 pb-12">
+      <div className="pt-14">
         <CanvasContextMenu
           onUndo={undo}
           onRedo={redo}
@@ -617,27 +640,52 @@ export const CardEditor = () => {
             }));
           }}
         >
-          <CardCanvas
-            elements={elements}
-            selectedElementId={selectedElementId}
-            onElementUpdate={handleUpdateElement}
-            onElementSelect={handleElementSelect}
-            onCreateElement={handleCreateElement}
-            onDeleteElement={handleDeleteElement}
-            cardWidth={currentCard.canvas_width || 600}
-            cardHeight={currentCard.canvas_height || 400}
-            isDragging={isDragging}
-            onElementDragStart={handleElementDragStart}
-            onCanvasResize={handleCanvasResize}
-          />
+          <div className="relative">
+            <CardCanvas
+              elements={elements}
+              selectedElementId={selectedElementId}
+              onElementUpdate={handleUpdateElement}
+              onElementSelect={handleElementSelect}
+              onCreateElement={handleCreateElement}
+              onDeleteElement={handleDeleteElement}
+              cardWidth={currentCard.canvas_width || 600}
+              cardHeight={currentCard.canvas_height || 400}
+              isDragging={isDragging}
+              onElementDragStart={handleElementDragStart}
+              onCanvasResize={handleCanvasResize}
+            />
+            
+            {/* Element Settings Popup */}
+            {selectedElement && showElementPopup && (
+              <div className="absolute" style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+                <div style={{ 
+                  position: 'relative',
+                  left: getElementPopupPosition(selectedElement).x - (currentCard.canvas_width || 600) / 2,
+                  top: getElementPopupPosition(selectedElement).y - (currentCard.canvas_height || 400) / 2
+                }}>
+                  <ElementSettingsPopup
+                    element={selectedElement}
+                    position={{ x: 0, y: 0 }}
+                    onUpdateElement={handleUpdateElement}
+                    onDeleteElement={handleDeleteElement}
+                    onClose={() => {
+                      setShowElementPopup(false);
+                      setSelectedElement(null);
+                      setSelectedElementId(null);
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </CanvasContextMenu>
       </div>
 
-      <EditorFooter
+      <SimpleEditorFooter
         currentCard={currentCard}
         selectedElement={selectedElement}
-        onUpdateElement={handleUpdateElement}
         onUpdateCard={handleUpdateCard}
+        cardWidth={currentCard.canvas_width || 600}
       />
     </div>
   );
