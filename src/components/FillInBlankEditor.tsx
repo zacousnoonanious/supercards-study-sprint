@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,18 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   const [interval, setInterval] = useState(element.fillInBlankInterval || 3);
   const [percentage, setPercentage] = useState(element.fillInBlankPercentage || 25);
 
+  // Debug logging to check if state updates are working
+  console.log('FillInBlankEditor state:', { originalText, blanks, mode, interval, percentage });
+
   useEffect(() => {
+    console.log('Updating element with:', {
+      fillInBlankText: originalText,
+      fillInBlankBlanks: blanks,
+      fillInBlankMode: mode,
+      fillInBlankInterval: interval,
+      fillInBlankPercentage: percentage
+    });
+    
     onUpdate({
       fillInBlankText: originalText,
       fillInBlankBlanks: blanks,
@@ -106,6 +116,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   };
 
   const handleTextChange = (text: string) => {
+    console.log('Text changing from:', originalText, 'to:', text);
     setOriginalText(text);
     // Reset blanks when text changes significantly
     setBlanks([]);
@@ -164,10 +175,18 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
           <Label className="text-xs font-medium">Enter your text:</Label>
           <Textarea
             value={originalText}
-            onChange={(e) => handleTextChange(e.target.value)}
+            onChange={(e) => {
+              console.log('Textarea onChange triggered with value:', e.target.value);
+              handleTextChange(e.target.value);
+            }}
+            onInput={(e) => {
+              console.log('Textarea onInput triggered with value:', (e.target as HTMLTextAreaElement).value);
+            }}
             placeholder="Type a sentence, paragraph, or multiple paragraphs here. This text area will expand as you type more content..."
             className="min-h-[120px] max-h-[300px] text-xs resize-y"
             rows={6}
+            disabled={false}
+            readOnly={false}
           />
           <div className="text-xs text-muted-foreground mt-1">
             {originalText.length} characters • {originalText.trim().split(/\s+/).filter(w => w.length > 0).length} words
