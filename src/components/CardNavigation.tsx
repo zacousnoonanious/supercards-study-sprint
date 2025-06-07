@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Plus, Copy, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +28,7 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
   onDeleteCard,
   cardType,
 }) => {
+  const { t } = useI18n();
   const { toast } = useToast();
 
   const handleDeleteCard = async () => {
@@ -34,26 +36,26 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
     
     if (totalCards <= 1) {
       toast({
-        title: "Cannot delete card",
-        description: "You must have at least one card in the set.",
+        title: t('error.general'),
+        description: t('error.validation'),
         variant: "destructive",
       });
       return;
     }
 
-    const confirmed = window.confirm('Are you sure you want to delete this card? This action cannot be undone.');
+    const confirmed = window.confirm(t('confirm') + '?');
     if (!confirmed) return;
 
     const success = await onDeleteCard();
     if (success) {
       toast({
-        title: "Card deleted",
-        description: "The card has been successfully deleted.",
+        title: t('success.deleted'),
+        description: t('success.deleted'),
       });
     } else {
       toast({
-        title: "Error",
-        description: "Failed to delete the card. Please try again.",
+        title: t('error.general'),
+        description: t('error.general'),
         variant: "destructive",
       });
     }
@@ -72,7 +74,7 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
           className="flex items-center gap-1"
         >
           <ChevronLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">Previous</span>
+          <span className="hidden sm:inline">{t('previous')}</span>
         </Button>
         
         <span className="text-sm font-medium px-3 py-1 bg-muted rounded">
@@ -86,7 +88,7 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
           disabled={currentIndex === totalCards - 1}
           className="flex items-center gap-1"
         >
-          <span className="hidden sm:inline">Next</span>
+          <span className="hidden sm:inline">{t('next')}</span>
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
@@ -99,7 +101,7 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
             onClick={() => onSideChange('front')}
             className="text-xs"
           >
-            Front
+            {t('editor.frontSide')}
           </Button>
           <Button
             variant={currentSide === 'back' ? 'default' : 'ghost'}
@@ -107,7 +109,7 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
             onClick={() => onSideChange('back')}
             className="text-xs"
           >
-            Back
+            {t('editor.backSide')}
           </Button>
         </div>
       )}
@@ -120,7 +122,7 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
           className="flex items-center gap-1"
         >
           <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">New Card</span>
+          <span className="hidden sm:inline">{t('editor.newCard')}</span>
         </Button>
         
         {onCreateNewCardWithLayout && (
@@ -131,7 +133,7 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
             className="flex items-center gap-1"
           >
             <Copy className="w-4 h-4" />
-            <span className="hidden sm:inline">Duplicate Layout</span>
+            <span className="hidden sm:inline">{t('duplicate')}</span>
           </Button>
         )}
 
@@ -143,7 +145,7 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
             className="flex items-center gap-1 text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
           >
             <Trash2 className="w-4 h-4" />
-            <span className="hidden sm:inline">Delete</span>
+            <span className="hidden sm:inline">{t('delete')}</span>
           </Button>
         )}
       </div>

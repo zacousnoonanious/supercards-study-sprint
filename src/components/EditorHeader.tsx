@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useI18n } from '@/contexts/I18nContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Save, Check, X, Edit, Grid3x3 } from 'lucide-react';
@@ -29,6 +30,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   onCancelEdit,
   onShowCardOverview
 }) => {
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   return (
@@ -42,11 +44,11 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
               className="mr-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Set
+              {t('back')}
             </Button>
             
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Editing:</span>
+              <span className="text-sm text-gray-500">{t('edit')}:</span>
               {isEditingDeckName ? (
                 <div className="flex items-center gap-2">
                   <Input
@@ -64,6 +66,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                     size="sm"
                     onClick={onSaveEdit}
                     className="h-8 w-8 p-0 text-green-600"
+                    title={t('save')}
                   >
                     <Check className="w-4 h-4" />
                   </Button>
@@ -72,6 +75,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                     size="sm"
                     onClick={onCancelEdit}
                     className="h-8 w-8 p-0 text-red-600"
+                    title={t('cancel')}
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -84,6 +88,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                     size="sm"
                     onClick={onStartEdit}
                     className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+                    title={t('edit')}
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -95,12 +100,12 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
             {onShowCardOverview && (
               <Button onClick={onShowCardOverview} variant="outline">
                 <Grid3x3 className="w-4 h-4 mr-2" />
-                Card Overview
+                {t('dashboard.viewCards')}
               </Button>
             )}
             <Button onClick={onSave} variant="outline">
               <Save className="w-4 h-4 mr-2" />
-              Save
+              {t('save')}
             </Button>
           </div>
         </div>

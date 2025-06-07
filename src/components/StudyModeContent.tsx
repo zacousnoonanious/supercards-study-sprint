@@ -1,4 +1,6 @@
+
 import React from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Eye, Lightbulb, CheckCircle, XCircle } from 'lucide-react';
@@ -30,6 +32,8 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   onFillInBlankAnswer,
   fillInBlankResults = {},
 }) => {
+  const { t } = useI18n();
+  
   const hasFillInBlank = currentCard.front_elements?.some(el => el.type === 'fill-in-blank') || 
                         currentCard.back_elements?.some(el => el.type === 'fill-in-blank');
 
@@ -57,7 +61,7 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
     return (
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-center">Front</h3>
+          <h3 className="text-lg font-semibold text-center">{t('editor.frontSide')}</h3>
           <Card className="w-full aspect-[3/2]">
             <CardContent className="p-0 h-full">
               {renderCard(currentCard.front_elements || [], 'front')}
@@ -66,7 +70,7 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
         </div>
         
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-center">Back</h3>
+          <h3 className="text-lg font-semibold text-center">{t('editor.backSide')}</h3>
           <Card className="w-full aspect-[3/2]">
             <CardContent className="p-0 h-full">
               {renderCard(currentCard.back_elements || [], 'back')}
@@ -96,7 +100,7 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
               className="gap-2"
             >
               <Lightbulb className="w-4 h-4" />
-              {showHint ? 'Hide Hint' : 'Show Hint'}
+              {showHint ? t('study.hideHint') : t('study.showHint')}
             </Button>
             {showHint && (
               <Card className="mt-2">
@@ -144,7 +148,7 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
             className="gap-2"
           >
             <Lightbulb className="w-4 h-4" />
-            {showHint ? 'Hide Hint' : 'Show Hint'}
+            {showHint ? t('study.hideHint') : t('study.showHint')}
           </Button>
         )}
         
@@ -159,7 +163,7 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
         {!showAnswer && !hasInteractiveElements && !hasFillInBlank && (
           <Button onClick={onRevealAnswer} className="gap-2">
             <Eye className="w-4 h-4" />
-            Reveal Answer
+            {t('study.revealAnswer')}
           </Button>
         )}
 
@@ -171,14 +175,14 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
               className="gap-2 border-red-200 text-red-700 hover:bg-red-50"
             >
               <XCircle className="w-4 h-4" />
-              Incorrect
+              {t('study.incorrect')}
             </Button>
             <Button
               onClick={() => onAnswer(true)}
               className="gap-2 bg-green-600 hover:bg-green-700"
             >
               <CheckCircle className="w-4 h-4" />
-              Correct
+              {t('study.correct')}
             </Button>
           </div>
         )}

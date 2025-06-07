@@ -1,4 +1,6 @@
+
 import React, { useState } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { Button } from '@/components/ui/button';
 import { Settings, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { ElementPopupToolbar } from './ElementPopupToolbar';
@@ -20,6 +22,7 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
   onDelete,
   isSelected,
 }) => {
+  const { t } = useI18n();
   const [isExpanded, setIsExpanded] = useState(false);
   const isDarkTheme = false; // Example condition for dark theme
 
@@ -45,7 +48,7 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
               size="sm"
               onClick={() => setIsExpanded(true)}
               className="h-6 w-6 p-0 text-gray-600 hover:text-gray-800"
-              title="Expand settings"
+              title={t('tooltip.settings')}
             >
               <Settings className="w-3 h-3" />
             </Button>
@@ -54,7 +57,7 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
               size="sm"
               onClick={onDelete}
               className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
-              title="Delete element"
+              title={t('tooltip.delete')}
             >
               <Trash2 className="w-3 h-3" />
             </Button>
@@ -71,7 +74,7 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
               size="sm"
               onClick={() => setIsExpanded(false)}
               className="h-6 w-6 p-0 text-gray-600 hover:text-gray-800 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded"
-              title="Collapse settings"
+              title={t('close')}
             >
               <ChevronUp className="w-3 h-3" />
             </Button>

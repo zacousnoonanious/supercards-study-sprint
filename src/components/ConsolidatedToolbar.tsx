@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -65,21 +66,22 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   onCardTypeChange,
   position = 'left'
 }) => {
+  const { t } = useI18n();
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const buttonSizeClass = "w-12 h-10";
   const separatorClass = "w-full h-px bg-border";
 
   const elementTypes = [
-    { type: 'text', icon: Type, label: 'Text' },
-    { type: 'image', icon: Image, label: 'Image' },
-    { type: 'audio', icon: Volume2, label: 'Audio' },
-    { type: 'youtube', icon: Video, label: 'YouTube' },
-    { type: 'multiple-choice', icon: CheckSquare, label: 'Quiz' },
-    { type: 'true-false', icon: HelpCircle, label: 'True/False' },
-    { type: 'fill-in-blank', icon: Edit3, label: 'Fill it in' },
-    { type: 'drawing', icon: Paintbrush, label: 'Drawing' },
-    { type: 'deck-embed', icon: Layers, label: 'Embed Deck' },
+    { type: 'text', icon: Type, label: t('editor.elementTypes.text') },
+    { type: 'image', icon: Image, label: t('editor.elementTypes.image') },
+    { type: 'audio', icon: Volume2, label: t('editor.elementTypes.audio') },
+    { type: 'youtube', icon: Video, label: t('editor.elementTypes.video') },
+    { type: 'multiple-choice', icon: CheckSquare, label: t('editor.elementTypes.quiz') },
+    { type: 'true-false', icon: HelpCircle, label: t('editor.elementTypes.trueFalse') },
+    { type: 'fill-in-blank', icon: Edit3, label: t('editor.elementTypes.fillBlank') },
+    { type: 'drawing', icon: Paintbrush, label: t('editor.elementTypes.drawing') },
+    { type: 'deck-embed', icon: Layers, label: t('editor.elementTypes.embed') },
   ];
 
   const handleCreateFromTemplate = (template: CardTemplate) => {
@@ -96,16 +98,18 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           size="sm"
           onClick={() => onSideChange('front')}
           className="w-12 h-8 p-0 text-xs"
+          title={t('editor.frontSide')}
         >
-          Front
+          {t('editor.frontSide')}
         </Button>
         <Button
           variant={currentSide === 'back' ? 'default' : 'outline'}
           size="sm"
           onClick={() => onSideChange('back')}
           className="w-12 h-8 p-0 text-xs"
+          title={t('editor.backSide')}
         >
-          Back
+          {t('editor.backSide')}
         </Button>
       </div>
 
@@ -139,7 +143,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           size="sm"
           onClick={() => onAutoArrange('grid')}
           className={`${buttonSizeClass} p-0`}
-          title="Grid Layout"
+          title={t('editor.tools.grid')}
         >
           <Grid3X3 className="w-4 h-4" />
         </Button>
@@ -149,7 +153,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           size="sm"
           onClick={() => onAutoArrange('center-horizontal')}
           className={`${buttonSizeClass} p-0`}
-          title="Center Horizontally"
+          title={t('editor.tools.center')}
         >
           <AlignCenter className="w-4 h-4 rotate-0" />
         </Button>
@@ -159,7 +163,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           size="sm"
           onClick={() => onAutoArrange('center-vertical')}
           className={`${buttonSizeClass} p-0`}
-          title="Center Vertically"
+          title={t('editor.tools.center')}
         >
           <AlignCenter className="w-4 h-4 rotate-90" />
         </Button>
@@ -174,7 +178,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           size="sm"
           className={`${buttonSizeClass} p-0`}
           onClick={onCreateNewCard}
-          title="New Card"
+          title={t('editor.newCard')}
         >
           <Plus className="w-4 h-4" />
         </Button>
@@ -184,7 +188,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           size="sm"
           className={`${buttonSizeClass} p-0`}
           onClick={onCreateNewCardWithLayout}
-          title="Copy Layout"
+          title={t('editor.duplicateCard')}
         >
           <Copy className="w-4 h-4" />
         </Button>
@@ -194,7 +198,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           size="sm"
           className={`${buttonSizeClass} p-0`}
           onClick={() => setShowTemplateSelector(true)}
-          title="Templates"
+          title={t('tooltip.addText')}
         >
           <FileImage className="w-4 h-4" />
         </Button>
@@ -204,7 +208,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           size="sm"
           onClick={onDeleteCard}
           className={`${buttonSizeClass} p-0 text-destructive hover:text-destructive`}
-          title="Delete Card"
+          title={t('editor.deleteCard')}
           disabled={totalCards <= 1}
         >
           <Trash2 className="w-4 h-4" />

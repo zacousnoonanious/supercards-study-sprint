@@ -1,5 +1,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
 import { EditorHeader } from './EditorHeader';
 import { ElementOptionsPanel } from './ElementOptionsPanel';
@@ -10,6 +11,7 @@ import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { CanvasElement } from '@/types/flashcard';
 
 export const CardEditor = () => {
+  const { t } = useI18n();
   const {
     set,
     cards,
@@ -210,7 +212,7 @@ export const CardEditor = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading flashcard editor...</p>
+          <p>{t('loading')}</p>
         </div>
       </div>
     );
@@ -220,12 +222,12 @@ export const CardEditor = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-lg mb-4">No cards found in this set.</p>
+          <p className="text-lg mb-4">{t('dashboard.noSets')}</p>
           <button 
             onClick={createNewCard}
             className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
           >
-            Create First Card
+            {t('dashboard.createFirst')}
           </button>
         </div>
       </div>
