@@ -183,7 +183,7 @@ const StudyMode = () => {
             <div className="flex items-center h-16">
               <Button
                 variant="ghost"
-                onClick={() => navigate(`/set/${setId}`)}
+                onClick={() => navigate(`/sets/${setId}`)}
                 className="mr-2 sm:mr-4 p-2"
                 size="sm"
               >
@@ -197,7 +197,7 @@ const StudyMode = () => {
         <main className="max-w-2xl mx-auto py-8 sm:py-12 px-4 text-center">
           <h2 className="text-lg sm:text-xl font-semibold mb-4 text-foreground">No cards to study</h2>
           <p className="text-muted-foreground mb-6 text-sm sm:text-base">Create some flashcards in the visual editor first!</p>
-          <Button onClick={() => navigate(`/edit-cards/${setId}`)} className="w-full sm:w-auto">
+          <Button onClick={() => navigate(`/sets/${setId}/cards/${cards[0]?.id || ''}`)} className="w-full sm:w-auto">
             Open Visual Editor
           </Button>
         </main>

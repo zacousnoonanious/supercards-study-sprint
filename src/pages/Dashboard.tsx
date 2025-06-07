@@ -194,11 +194,11 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => navigate(`/set/${set.id}`)} className="flex-1">
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/sets/${set.id}`)} className="flex-1">
                         <Eye className="w-3 h-3 mr-1" />
                         View
                       </Button>
-                      <Button size="sm" onClick={() => navigate(`/study/${set.id}`)} className="flex-1">
+                      <Button size="sm" onClick={() => navigate(`/sets/${set.id}/study`)} className="flex-1">
                         <Play className="w-3 h-3 mr-1" />
                         Study
                       </Button>
