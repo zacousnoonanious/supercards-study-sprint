@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,8 @@ interface FillInBlankEditorProps {
   textScale?: number;
 }
 
+type FillInBlankMode = 'every-nth' | 'random' | 'sentence-start' | 'manual';
+
 export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   element,
   onUpdate,
@@ -23,22 +25,13 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
 }) => {
   const [originalText, setOriginalText] = useState(element.fillInBlankText || '');
   const [blanks, setBlanks] = useState(element.fillInBlankBlanks || []);
-  const [mode, setMode] = useState(element.fillInBlankMode || 'manual');
+  const [mode, setMode] = useState<FillInBlankMode>(element.fillInBlankMode || 'manual');
   const [interval, setInterval] = useState(element.fillInBlankInterval || 3);
   const [percentage, setPercentage] = useState(element.fillInBlankPercentage || 25);
 
-  // Initialize state from element props only once
-  useEffect(() => {
-    setOriginalText(element.fillInBlankText || '');
-    setBlanks(element.fillInBlankBlanks || []);
-    setMode(element.fillInBlankMode || 'manual');
-    setInterval(element.fillInBlankInterval || 3);
-    setPercentage(element.fillInBlankPercentage || 25);
-  }, []); // Empty dependency array - only run once on mount
-
-  const updateParent = (updates: Partial<CanvasElement>) => {
+  const updateParent = useCallback((updates: Partial<CanvasElement>) => {
     onUpdate(updates);
-  };
+  }, [onUpdate]);
 
   const generateBlanks = () => {
     if (!originalText.trim()) return;
@@ -129,11 +122,12 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   };
 
   const handleModeChange = (newMode: string) => {
-    setMode(newMode);
+    const typedMode = newMode as FillInBlankMode;
+    setMode(typedMode);
     updateParent({
       fillInBlankText: originalText,
       fillInBlankBlanks: blanks,
-      fillInBlankMode: newMode,
+      fillInBlankMode: typedMode,
       fillInBlankInterval: interval,
       fillInBlankPercentage: percentage
     });
