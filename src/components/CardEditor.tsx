@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,9 +15,13 @@ import { SimpleEditorFooter } from './SimpleEditorFooter';
 import { ElementSettingsPopup } from './ElementSettingsPopup';
 
 export const CardEditor = () => {
-  const { cardId, setId } = useParams<{ cardId: string; setId: string }>();
+  const params = useParams<{ cardId?: string; setId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Handle both route patterns: /sets/:setId/cards/:cardId and /edit-cards/:setId
+  const setId = params.setId;
+  const cardId = params.cardId;
 
   const [currentCard, setCurrentCard] = useState<Flashcard>({} as Flashcard);
   const [elements, setElements] = useState<CanvasElement[]>([]);
@@ -27,7 +32,7 @@ export const CardEditor = () => {
   const [selectedElement, setSelectedElement] = useState<CanvasElement | null>(null);
   const [showElementPopup, setShowElementPopup] = useState(false);
 
-  const { data: set } = useQuery({
+  const { data: set, refetch: refetchSet } = useQuery({
     queryKey: ['set', setId],
     queryFn: () => getSet(setId!),
     enabled: !!setId,
@@ -38,6 +43,14 @@ export const CardEditor = () => {
     queryFn: () => getFlashcard(cardId!),
     enabled: !!cardId,
   });
+
+  // If no cardId in URL, use the first card from the set
+  useEffect(() => {
+    if (!cardId && set?.flashcards && set.flashcards.length > 0) {
+      const firstCard = set.flashcards[0];
+      navigate(`/sets/${setId}/cards/${firstCard.id}`, { replace: true });
+    }
+  }, [cardId, set, setId, navigate]);
 
   useEffect(() => {
     if (cardData) {
@@ -77,6 +90,7 @@ export const CardEditor = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['card', cardId] });
       queryClient.invalidateQueries({ queryKey: ['set', setId] });
+      refetchSet();
     },
   });
 
@@ -85,6 +99,7 @@ export const CardEditor = () => {
     onSuccess: (newCard) => {
       queryClient.invalidateQueries({ queryKey: ['set', setId] });
       navigate(`/sets/${setId}/cards/${newCard.id}`);
+      refetchSet();
     },
   });
 
@@ -92,7 +107,17 @@ export const CardEditor = () => {
     mutationFn: deleteFlashcard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['set', setId] });
-      navigate(`/sets/${setId}`);
+      refetchSet();
+      // Navigate to the next available card or back to set view
+      if (set?.flashcards && set.flashcards.length > 1) {
+        const currentIndex = set.flashcards.findIndex((card) => card.id === currentCard.id);
+        const nextCard = set.flashcards[currentIndex + 1] || set.flashcards[currentIndex - 1];
+        if (nextCard && nextCard.id !== currentCard.id) {
+          navigate(`/sets/${setId}/cards/${nextCard.id}`);
+        }
+      } else {
+        navigate(`/sets/${setId}`);
+      }
     },
   });
 
@@ -156,6 +181,9 @@ export const CardEditor = () => {
     setElements(newElements);
     setSelectedElementId(newElement.id);
     saveHistory(newElements);
+    
+    // Auto-save the updated elements
+    handleSave();
   };
 
   const handleUpdateElement = (id: string, updates: Partial<CanvasElement>) => {
@@ -164,6 +192,11 @@ export const CardEditor = () => {
     );
     setElements(updatedElements);
     saveHistory(updatedElements);
+    
+    // Auto-save after small delay
+    setTimeout(() => {
+      handleSave();
+    }, 500);
   };
 
   const handleDeleteElement = (id: string) => {
@@ -173,6 +206,9 @@ export const CardEditor = () => {
     setSelectedElement(null);
     setShowElementPopup(false);
     saveHistory(newElements);
+    
+    // Auto-save the updated elements
+    handleSave();
   };
 
   const handleUpdateCard = (cardId: string, updates: Partial<Flashcard>) => {
@@ -251,13 +287,14 @@ export const CardEditor = () => {
   };
 
   const handleSave = () => {
+    if (!currentCard.id) return;
+    
     const updatedCard = {
       ...currentCard,
       [currentSide === 'front' ? 'front_elements' : 'back_elements']: elements
     };
     
     handleUpdateCard(currentCard.id, updatedCard);
-    alert('Card saved!');
   };
 
   const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right') => {
@@ -319,9 +356,7 @@ export const CardEditor = () => {
 
     setElements(arrangedElements);
     saveHistory(arrangedElements);
-  };
-
-  const handleElementDragStart = (e: React.MouseEvent, elementId: string) => {
+    handleSave();
   };
 
   const handleElementSelect = (elementId: string | null) => {
@@ -332,10 +367,9 @@ export const CardEditor = () => {
   };
 
   const getElementPopupPosition = (element: CanvasElement) => {
-    // Position popup to the right of the element, or left if not enough space
     const elementRight = element.x + element.width;
     const elementTop = element.y;
-    const popupWidth = 256; // w-64
+    const popupWidth = 256;
     const canvasWidth = currentCard.canvas_width || 600;
     
     if (elementRight + popupWidth + 20 <= canvasWidth) {
@@ -345,54 +379,25 @@ export const CardEditor = () => {
     }
   };
 
-  const handleChangeCardSize = (size: 'small' | 'medium' | 'large' | 'custom') => {
-    const dimensions = {
-      small: { width: 400, height: 300 },
-      medium: { width: 600, height: 400 },
-      large: { width: 800, height: 600 },
-      custom: { width: 600, height: 400 }
-    };
-    
-    const newDimensions = dimensions[size];
-    setCurrentCard({
-      ...currentCard,
-      canvas_width: newDimensions.width,
-      canvas_height: newDimensions.height
-    });
-  };
+  // Show loading or redirect if no card is available
+  if (!currentCard.id && set?.flashcards && set.flashcards.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-4">No cards in this set</h2>
+          <Button onClick={handleCreateNewCard}>Create your first card</Button>
+        </div>
+      </div>
+    );
+  }
 
-  const handleScaleToElements = () => {
-    if (elements.length === 0) return;
-    
-    const bounds = elements.reduce((acc, element) => {
-      const right = element.x + element.width;
-      const bottom = element.y + element.height;
-      return {
-        minX: Math.min(acc.minX, element.x),
-        minY: Math.min(acc.minY, element.y),
-        maxX: Math.max(acc.maxX, right),
-        maxY: Math.max(acc.maxY, bottom)
-      };
-    }, { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity });
-    
-    const padding = 50;
-    const newWidth = Math.max(400, bounds.maxX - bounds.minX + padding * 2);
-    const newHeight = Math.max(300, bounds.maxY - bounds.minY + padding * 2);
-    
-    setCurrentCard({
-      ...currentCard,
-      canvas_width: newWidth,
-      canvas_height: newHeight
-    });
-  };
-
-  const handleCanvasResize = (width: number, height: number) => {
-    setCurrentCard({
-      ...currentCard,
-      canvas_width: width,
-      canvas_height: height
-    });
-  };
+  if (!currentCard.id) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
