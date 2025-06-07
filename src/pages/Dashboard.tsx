@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -106,7 +105,7 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
+              <h1 className="text-2xl font-bold text-indigo-600">{t('header.brand')}</h1>
               <Navigation />
             </div>
             <UserDropdown />
@@ -116,15 +115,15 @@ const Dashboard = () => {
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Welcome back!</h2>
-          <p className="text-muted-foreground">Here's your learning progress at a glance.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">{t('dashboard.welcome')}</h2>
+          <p className="text-muted-foreground">{t('dashboard.subtitle')}</p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Decks</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.totalDecks')}</CardTitle>
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -134,7 +133,7 @@ const Dashboard = () => {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Cards</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.totalCards')}</CardTitle>
               <Brain className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -144,22 +143,22 @@ const Dashboard = () => {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Study Streak</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.studyStreak')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.studyStreak} days</div>
+              <div className="text-2xl font-bold">{stats.studyStreak} {t('dashboard.stats.days')}</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Cards Reviewed</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.stats.cardsReviewed')}</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.cardsReviewed}</div>
-              <p className="text-xs text-muted-foreground">This week</p>
+              <p className="text-xs text-muted-foreground">{t('dashboard.stats.thisWeek')}</p>
             </CardContent>
           </Card>
         </div>
@@ -167,9 +166,9 @@ const Dashboard = () => {
         {/* Recent Decks Section */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Recently Created Decks</h3>
+            <h3 className="text-lg font-semibold text-foreground">{t('dashboard.recentDecks')}</h3>
             <Button variant="outline" onClick={() => navigate('/decks')}>
-              View All Decks
+              {t('dashboard.viewAllDecks')}
             </Button>
           </div>
           
@@ -177,10 +176,10 @@ const Dashboard = () => {
             <Card className="text-center py-8">
               <CardContent>
                 <BookOpen className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <h4 className="text-md font-medium text-foreground mb-2">No decks yet</h4>
-                <p className="text-muted-foreground mb-4">Create your first deck to start learning!</p>
+                <h4 className="text-md font-medium text-foreground mb-2">{t('dashboard.noDecks')}</h4>
+                <p className="text-muted-foreground mb-4">{t('dashboard.noDecksDesc')}</p>
                 <Button onClick={() => navigate('/create-set')}>
-                  Create Your First Deck
+                  {t('dashboard.createFirstDeck')}
                 </Button>
               </CardContent>
             </Card>
@@ -196,11 +195,11 @@ const Dashboard = () => {
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" onClick={() => navigate(`/sets/${set.id}`)} className="flex-1">
                         <Eye className="w-3 h-3 mr-1" />
-                        View
+                        {t('view')}
                       </Button>
                       <Button size="sm" onClick={() => navigate(`/sets/${set.id}/study`)} className="flex-1">
                         <Play className="w-3 h-3 mr-1" />
-                        Study
+                        {t('decks.study')}
                       </Button>
                     </div>
                   </CardContent>
@@ -213,19 +212,19 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Get started with your learning journey</CardDescription>
+            <CardTitle>{t('dashboard.quickActions')}</CardTitle>
+            <CardDescription>{t('dashboard.quickActions.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button onClick={() => navigate('/create-set')} className="flex-1">
-                Create New Deck
+                {t('dashboard.actions.createDeck')}
               </Button>
               <Button variant="outline" onClick={() => navigate('/decks')} className="flex-1">
-                Browse My Decks
+                {t('dashboard.actions.browseDeck')}
               </Button>
               <Button variant="outline" onClick={() => navigate('/marketplace')} className="flex-1">
-                Explore Marketplace
+                {t('dashboard.actions.marketplace')}
               </Button>
             </div>
           </CardContent>

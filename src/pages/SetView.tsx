@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -66,7 +65,11 @@ const SetView = () => {
         .order('created_at', { ascending: true });
 
       if (cardsError) throw cardsError;
-      setCards(cardsData || []);
+      setCards(cardsData?.map(card => ({
+        ...card,
+        front_content: card.question || '',
+        back_content: card.answer || ''
+      })) || []);
     } catch (error) {
       console.error('Error fetching set and cards:', error);
       toast({
@@ -94,7 +97,7 @@ const SetView = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-8">
-                <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
+                <h1 className="text-2xl font-bold text-indigo-600">{t('header.brand')}</h1>
                 <Navigation />
               </div>
               <UserDropdown />
@@ -120,7 +123,7 @@ const SetView = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
+              <h1 className="text-2xl font-bold text-indigo-600">{t('header.brand')}</h1>
               <Navigation />
             </div>
             <UserDropdown />
