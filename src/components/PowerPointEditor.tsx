@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
@@ -48,7 +49,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
   const [elementPopups, setElementPopups] = useState<{ [key: string]: boolean }>({});
 
   // Handle mouse events for dragging and resizing
-  const handleMouseDown = (e: React.MouseEvent, elementId: string, handle?: string) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent, elementId: string, handle?: string) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -80,7 +81,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
         elementId
       });
     }
-  };
+  }, [elements, onElementSelect]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (dragState?.isDragging) {
@@ -154,6 +155,46 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
     setElementPopups(prev => ({ ...prev, [elementId]: false }));
   };
 
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onElementSelect?.(null);
+      setEditingElementId(null);
+    }
+  };
+
+  const handleCanvasDoubleClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      // Add text element at click position
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (rect) {
+        const x = e.clientX - rect.left - 100; // Center the text element
+        const y = e.clientY - rect.top - 30;
+        
+        const newElement: CanvasElement = {
+          id: `element_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: 'text',
+          x: Math.max(0, Math.min(x, cardWidth - 200)),
+          y: Math.max(0, Math.min(y, cardHeight - 60)),
+          width: 200,
+          height: 60,
+          content: 'New Text',
+          fontSize: 16,
+          color: '#000000',
+          textAlign: 'center',
+          zIndex: elements.length + 1,
+        };
+        
+        // We'll add the element through the parent component
+        onAddElement('text');
+        // Then immediately select it
+        setTimeout(() => {
+          onElementSelect?.(newElement.id);
+          setEditingElementId(newElement.id);
+        }, 100);
+      }
+    }
+  };
+
   useEffect(() => {
     if (dragState?.isDragging || resizeState?.isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -171,6 +212,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
       if (e.key === 'Delete' && selectedElementId) {
         e.preventDefault();
         onDeleteElement(selectedElementId);
+        onElementSelect?.(null);
       }
       if (e.key === 'Escape') {
         setEditingElementId(null);
@@ -239,7 +281,9 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
                       e.preventDefault();
                       handleTextEdit(element.id, e.currentTarget.value);
                     }
+                    e.stopPropagation();
                   }}
+                  onMouseDown={(e) => e.stopPropagation()}
                   autoFocus
                 />
               ) : (
@@ -428,7 +472,8 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
         ref={canvasRef}
         className="relative bg-white"
         style={{ width: cardWidth, height: cardHeight }}
-        onClick={() => onElementSelect?.(null)}
+        onClick={handleCanvasClick}
+        onDoubleClick={handleCanvasDoubleClick}
       >
         {/* Grid background */}
         {showGrid && (
