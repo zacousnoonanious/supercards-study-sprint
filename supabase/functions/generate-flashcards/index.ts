@@ -55,6 +55,41 @@ function getImportantWords(text: string, blankPercentage: number, avoidCommonWor
   return shuffled.slice(0, Math.min(targetBlanks, importantWordIndices.length));
 }
 
+// Function to clean and parse AI response
+function cleanAndParseJSON(content: string): any {
+  try {
+    // First try to parse as-is
+    return JSON.parse(content);
+  } catch (error) {
+    // If that fails, try to extract JSON from markdown code blocks
+    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[1]);
+      } catch (innerError) {
+        console.error('Failed to parse extracted JSON:', innerError);
+        throw new Error('Invalid JSON in markdown code block');
+      }
+    }
+    
+    // If no code blocks found, try to find JSON-like content
+    const jsonStart = content.indexOf('[');
+    const jsonEnd = content.lastIndexOf(']');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      try {
+        const extractedJSON = content.substring(jsonStart, jsonEnd + 1);
+        return JSON.parse(extractedJSON);
+      } catch (innerError) {
+        console.error('Failed to parse extracted JSON array:', innerError);
+        throw new Error('Could not extract valid JSON from response');
+      }
+    }
+    
+    throw new Error('No valid JSON found in AI response');
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -166,7 +201,7 @@ QUALITY GUIDELINES:
 - Ensure factual accuracy
 - Create meaningful fill-in-blank exercises that test comprehension of key concepts
 
-Return a JSON array of cards only, no additional text.`;
+IMPORTANT: Return ONLY a valid JSON array of cards, no additional text, no markdown formatting, no code blocks.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -198,10 +233,12 @@ Return a JSON array of cards only, no additional text.`;
 
     let cards;
     try {
-      cards = JSON.parse(content);
+      // Use the new cleaning and parsing function
+      cards = cleanAndParseJSON(content);
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
-      throw new Error('Invalid JSON response from AI');
+      console.error('Raw AI response:', content);
+      throw new Error(`Invalid JSON response from AI: ${parseError.message}`);
     }
 
     if (!Array.isArray(cards)) {
