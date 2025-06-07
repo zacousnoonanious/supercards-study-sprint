@@ -67,8 +67,8 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
       }}
     >
       {elements.map((element) => {
-        // For quiz elements in study mode, use InteractiveQuizRenderer directly
-        if ((element.type === 'multiple-choice' || element.type === 'true-false') && onQuizAnswer) {
+        // For quiz elements (multiple-choice and true-false), use InteractiveQuizRenderer
+        if ((element.type === 'multiple-choice' || element.type === 'true-false')) {
           return (
             <div
               key={element.id}
@@ -97,8 +97,8 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
           );
         }
 
-        // For fill-in-blank elements in study mode, use FillInBlankRenderer directly
-        if (element.type === 'fill-in-blank' && onFillInBlankAnswer) {
+        // For fill-in-blank elements, use FillInBlankRenderer
+        if (element.type === 'fill-in-blank') {
           return (
             <div
               key={element.id}

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,8 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   fillInBlankResults = {},
 }) => {
   const { t } = useI18n();
+  const [quizAnswers, setQuizAnswers] = useState<{[elementId: string]: number}>({});
+  const [showQuizResults, setShowQuizResults] = useState(false);
   
   const hasFillInBlank = currentCard.front_elements?.some(el => el.type === 'fill-in-blank') || 
                         currentCard.back_elements?.some(el => el.type === 'fill-in-blank');
@@ -43,10 +45,23 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
     el.type === 'multiple-choice' || el.type === 'true-false'
   );
 
+  const handleQuizAnswer = (elementId: string, correct: boolean, answerIndex: number) => {
+    setQuizAnswers(prev => ({ ...prev, [elementId]: answerIndex }));
+    setShowQuizResults(true);
+    
+    // Auto-advance after a delay if configured
+    setTimeout(() => {
+      onAnswer(correct);
+    }, 2000);
+  };
+
   const renderCard = (elements: CanvasElement[], side: 'front' | 'back') => (
     <StudyCardRenderer
       elements={elements}
       className="w-full h-full"
+      onQuizAnswer={handleQuizAnswer}
+      showQuizResults={showQuizResults}
+      quizAnswers={quizAnswers}
       onFillInBlankAnswer={onFillInBlankAnswer}
       fillInBlankResults={fillInBlankResults}
       requireAnswer={false}
