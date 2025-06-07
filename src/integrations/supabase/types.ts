@@ -91,6 +91,7 @@ export type Database = {
           id: string
           interactive_type: string | null
           last_reviewed_at: string | null
+          metadata: Json | null
           password: string | null
           question: string
           set_id: string
@@ -109,6 +110,7 @@ export type Database = {
           id?: string
           interactive_type?: string | null
           last_reviewed_at?: string | null
+          metadata?: Json | null
           password?: string | null
           question: string
           set_id: string
@@ -127,6 +129,7 @@ export type Database = {
           id?: string
           interactive_type?: string | null
           last_reviewed_at?: string | null
+          metadata?: Json | null
           password?: string | null
           question?: string
           set_id?: string

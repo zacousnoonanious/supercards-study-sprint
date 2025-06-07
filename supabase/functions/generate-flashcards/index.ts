@@ -306,11 +306,11 @@ Return ONLY a JSON array with this exact format:
     let quizCards = [];
     if (quizCardCount > 0) {
       const quizTypeDistribution = [];
-      if (config.quizTypes.multipleChoice) {
+      if (config.quizTypes?.multipleChoice) {
         const mcCount = Math.ceil(quizCardCount * (config.mcToTfRatio / 100));
         quizTypeDistribution.push(...Array(mcCount).fill('multiple-choice'));
       }
-      if (config.quizTypes.trueFalse) {
+      if (config.quizTypes?.trueFalse) {
         const tfCount = quizCardCount - quizTypeDistribution.length;
         quizTypeDistribution.push(...Array(Math.max(0, tfCount)).fill('true-false'));
       }
@@ -459,7 +459,7 @@ Return ONLY a JSON array with this exact format:
         canvasHeight = 900;
       } else if (config.contentDensity === 'comprehensive') {
         canvasWidth = 900;
-        canvasHeight = 1800;
+        canvasHeight = 1200;
       } else {
         canvasWidth = 800;
         canvasHeight = 600;
