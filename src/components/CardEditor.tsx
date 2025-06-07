@@ -4,13 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Flashcard, CanvasElement } from '@/types/flashcard';
 import { LockableToolbar } from './LockableToolbar';
-import { CanvasElementRenderer } from './CanvasElementRenderer';
+import { PowerPointEditor } from './PowerPointEditor';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFlashcard, getFlashcard, updateFlashcard, deleteFlashcard } from '@/lib/api/flashcards';
 import { getSet } from '@/lib/api/sets';
 import { v4 as uuidv4 } from 'uuid';
 import { CanvasContextMenu } from './CanvasContextMenu';
-import { EditorFooter } from './EditorFooter';
 import { SimpleEditorFooter } from './SimpleEditorFooter';
 import { ElementSettingsPopup } from './ElementSettingsPopup';
 
@@ -631,52 +630,16 @@ export const CardEditor = () => {
           onChangeBackground={() => {}}
           onToggleGrid={() => {}}
           onSettings={() => {}}
-          onChangeCardSize={handleChangeCardSize}
-          onScaleToElements={handleScaleToElements}
-          onSetDefaultSize={() => {
-            localStorage.setItem('defaultCardSize', JSON.stringify({
-              width: currentCard.canvas_width || 600,
-              height: currentCard.canvas_height || 400
-            }));
-          }}
         >
-          <div className="relative">
-            <CardCanvas
+          <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8" style={{ paddingBottom: '120px' }}>
+            <PowerPointEditor
               elements={elements}
-              selectedElementId={selectedElementId}
-              onElementUpdate={handleUpdateElement}
-              onElementSelect={handleElementSelect}
-              onCreateElement={handleCreateElement}
+              onUpdateElement={handleUpdateElement}
+              onAddElement={handleAddElement}
               onDeleteElement={handleDeleteElement}
               cardWidth={currentCard.canvas_width || 600}
               cardHeight={currentCard.canvas_height || 400}
-              isDragging={isDragging}
-              onElementDragStart={handleElementDragStart}
-              onCanvasResize={handleCanvasResize}
             />
-            
-            {/* Element Settings Popup */}
-            {selectedElement && showElementPopup && (
-              <div className="absolute" style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
-                <div style={{ 
-                  position: 'relative',
-                  left: getElementPopupPosition(selectedElement).x - (currentCard.canvas_width || 600) / 2,
-                  top: getElementPopupPosition(selectedElement).y - (currentCard.canvas_height || 400) / 2
-                }}>
-                  <ElementSettingsPopup
-                    element={selectedElement}
-                    position={{ x: 0, y: 0 }}
-                    onUpdateElement={handleUpdateElement}
-                    onDeleteElement={handleDeleteElement}
-                    onClose={() => {
-                      setShowElementPopup(false);
-                      setSelectedElement(null);
-                      setSelectedElementId(null);
-                    }}
-                  />
-                </div>
-              </div>
-            )}
           </div>
         </CanvasContextMenu>
       </div>

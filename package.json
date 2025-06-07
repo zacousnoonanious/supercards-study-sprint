@@ -52,6 +52,7 @@
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
+    "react-design-editor": "^0.0.69",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.53.0",
     "react-konva": "^18.2.10",

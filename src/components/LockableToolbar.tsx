@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { Flashcard, CanvasElement } from '@/types/flashcard';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface LockableToolbarProps {
   set: any;
@@ -85,6 +86,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
   isBackSideDisabled = false,
 }) => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   return (
     <div className={`fixed top-0 left-1/2 transform -translate-x-1/2 z-40 border-b ${
