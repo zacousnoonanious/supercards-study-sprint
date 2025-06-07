@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Flashcard, CanvasElement } from '@/types/flashcard';
 import { LockableToolbar } from './LockableToolbar';
 import { PowerPointEditor } from './PowerPointEditor';
-import { CanvasElementRenderer } from './CanvasElementRenderer';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFlashcard, getFlashcard, updateFlashcard, deleteFlashcard } from '@/lib/api/flashcards';
 import { getSet } from '@/lib/api/sets';
@@ -445,7 +444,8 @@ export const CardEditor = () => {
       {showElementPopup && selectedElement && (
         <ElementSettingsPopup
           element={selectedElement}
-          onUpdate={(updates) => handleUpdateElement(selectedElement.id, updates)}
+          onUpdateElement={(id, updates) => handleUpdateElement(id, updates)}
+          onDeleteElement={handleDeleteElement}
           onClose={() => setShowElementPopup(false)}
           position={getElementPopupPosition(selectedElement)}
         />

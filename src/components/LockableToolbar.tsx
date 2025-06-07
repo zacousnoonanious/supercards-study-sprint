@@ -66,6 +66,7 @@ interface LockableToolbarProps {
   onSave: () => void;
   onAutoArrange?: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right') => void;
   isBackSideDisabled?: boolean;
+  cardWidth: number;
 }
 
 export const LockableToolbar: React.FC<LockableToolbarProps> = ({
@@ -84,6 +85,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
   onSave,
   onAutoArrange,
   isBackSideDisabled = false,
+  cardWidth,
 }) => {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -91,7 +93,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
   return (
     <div className={`fixed top-0 left-1/2 transform -translate-x-1/2 z-40 border-b ${
       theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
-    }`} style={{ width: '600px' }}>
+    }`} style={{ width: `${cardWidth}px` }}>
       <div className="container max-w-full h-full flex items-center justify-between px-2 gap-1">
         {/* Left Side - Back to Decks */}
         <Button 
