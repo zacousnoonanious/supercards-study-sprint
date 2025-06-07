@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -18,18 +17,18 @@ const validateInput = (data: any): { isValid: boolean; errors: string[] } => {
 
   if (!data.prompt || typeof data.prompt !== 'string') {
     errors.push('Prompt is required and must be a string');
-  } else if (data.prompt.length > MAX_PROMPT_LENGTH) {
-    errors.push(`Prompt must be ${MAX_PROMPT_LENGTH} characters or less`);
+  } else if (data.prompt.length > 500) {
+    errors.push('Prompt must be 500 characters or less');
   } else if (data.prompt.trim().length === 0) {
     errors.push('Prompt cannot be empty');
   }
 
-  if (!data.style || !ALLOWED_STYLES.includes(data.style)) {
-    errors.push(`Style must be one of: ${ALLOWED_STYLES.join(', ')}`);
+  if (!data.style || !['standard', 'concise', 'detailed', 'funny', 'creative'].includes(data.style)) {
+    errors.push('Style must be one of: standard, concise, detailed, funny, creative');
   }
 
-  if (data.cardCount && (typeof data.cardCount !== 'number' || data.cardCount < 1 || data.cardCount > MAX_CARDS_COUNT)) {
-    errors.push(`Count must be a number between 1 and ${MAX_CARDS_COUNT}`);
+  if (data.cardCount && (typeof data.cardCount !== 'number' || data.cardCount < 1 || data.cardCount > 20)) {
+    errors.push('Count must be a number between 1 and 20');
   }
 
   return {
@@ -46,14 +45,14 @@ const sanitizeContent = (content: string): string => {
     .trim();
 };
 
-const createQuizElement = (type: 'multiple-choice' | 'true-false', question: string, options?: string[], correctAnswer?: number | boolean, position: { x: number, y: number }) => {
+const createQuizElement = (type: 'multiple-choice' | 'true-false', question: string, options?: string[], correctAnswer?: number | boolean, explanation?: string) => {
   const baseElement = {
     id: `quiz-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     type,
-    x: position.x,
-    y: position.y,
-    width: 400,
-    height: type === 'multiple-choice' ? 300 : 200,
+    x: 50,
+    y: 100,
+    width: 700,
+    height: type === 'multiple-choice' ? 350 : 250,
     rotation: 0,
     zIndex: 1,
     content: question,
@@ -119,17 +118,20 @@ const createImageElement = (imageUrl: string, position: { x: number, y: number }
 
 const fetchWikipediaImages = async (topic: string, count: number = 3): Promise<string[]> => {
   try {
-    // Search for Wikipedia articles related to the topic
+    console.log(`Fetching Wikipedia images for: ${topic}`);
+    
     const searchResponse = await fetch(
       `https://en.wikipedia.org/api/rest_v1/page/search/title?q=${encodeURIComponent(topic)}&limit=3`
     );
     
-    if (!searchResponse.ok) return [];
+    if (!searchResponse.ok) {
+      console.log('Wikipedia search failed');
+      return [];
+    }
     
     const searchData = await searchResponse.json();
     const images: string[] = [];
     
-    // Get images from the top search results
     for (const page of searchData.pages || []) {
       try {
         const pageResponse = await fetch(
@@ -143,11 +145,11 @@ const fetchWikipediaImages = async (topic: string, count: number = 3): Promise<s
               item.type === 'image' && 
               item.srcset && 
               !item.title.toLowerCase().includes('commons-logo') &&
-              !item.title.toLowerCase().includes('edit-icon')
+              !item.title.toLowerCase().includes('edit-icon') &&
+              !item.title.toLowerCase().includes('wikimedia')
             )
             .slice(0, 2)
             .map((item: any) => {
-              // Extract the highest resolution image URL
               const srcset = item.srcset.find((src: any) => src.scale && src.scale >= 1.5) || item.srcset[0];
               return srcset?.src;
             })
@@ -164,81 +166,12 @@ const fetchWikipediaImages = async (topic: string, count: number = 3): Promise<s
       if (images.length >= count) break;
     }
     
+    console.log(`Found ${images.length} images`);
     return images.slice(0, count);
   } catch (error) {
     console.error('Error fetching Wikipedia images:', error);
     return [];
   }
-};
-
-const generateInformationalContent = async (topic: string, style: string, cardCount: number) => {
-  const systemPrompt = `You are an educational content creator. Create ${cardCount} informational slides about: ${topic}. 
-
-Create a logical sequence starting with a title slide, then introductory content, followed by detailed information slides.
-
-Format your response as a JSON array of objects, each with:
-- "type": "title" | "introduction" | "content" 
-- "title": brief title for the slide
-- "content": main text content (keep under 400 characters for readability)
-- "imageQuery": specific search term for finding relevant Wikipedia images (e.g., "medieval castle architecture", "castle siege weapons")
-
-Style: ${style}
-
-Example format:
-[
-  {
-    "type": "title",
-    "title": "History of Castles",
-    "content": "An exploration of medieval fortifications",
-    "imageQuery": "medieval castle"
-  },
-  {
-    "type": "introduction", 
-    "title": "What Are Castles?",
-    "content": "Castles were fortified residences built primarily during the Middle Ages...",
-    "imageQuery": "castle architecture"
-  }
-]`;
-
-  return systemPrompt;
-};
-
-const generateQuizPrompt = (topic: string, quizTypes: any, count: number) => {
-  const enabledTypes = [];
-  if (quizTypes.multipleChoice) enabledTypes.push('multiple choice');
-  if (quizTypes.trueFalse) enabledTypes.push('true/false');
-  
-  return `Create ${count} quiz questions about: ${topic}. 
-  
-Use these question types: ${enabledTypes.join(' and ')}.
-Mix the types evenly.
-
-For multiple choice questions, provide exactly 4 options with 1 correct answer and 3 plausible distractors.
-For true/false questions, create clear statements that are definitively true or false.
-
-Format your response as a JSON array where each object has:
-- "type": "multiple-choice" or "true-false"
-- "question": the question text
-- "options": array of 4 strings (only for multiple choice)
-- "correctAnswer": number 0-3 for multiple choice (index of correct option), boolean true/false for true/false questions
-- "explanation": brief explanation of why the answer is correct
-
-Example:
-[
-  {
-    "type": "multiple-choice",
-    "question": "What was the primary purpose of castle moats?",
-    "options": ["Decoration", "Defense against attackers", "Water storage", "Fish farming"],
-    "correctAnswer": 1,
-    "explanation": "Moats were defensive features designed to prevent attackers from reaching castle walls."
-  },
-  {
-    "type": "true-false", 
-    "question": "All medieval castles had drawbridges.",
-    "correctAnswer": false,
-    "explanation": "Not all castles had drawbridges; some used fixed bridges or other entrance methods."
-  }
-]`;
 };
 
 serve(async (req) => {
@@ -258,6 +191,8 @@ serve(async (req) => {
       quizTypes = { multipleChoice: true, trueFalse: true },
       mode = 'add-to-set'
     } = await req.json();
+
+    console.log('AI Flashcard generation request:', { prompt, cardCount, includeQuiz, quizPercentage });
 
     const validation = validateInput({ prompt, style, cardCount });
     if (!validation.isValid) {
@@ -290,16 +225,41 @@ serve(async (req) => {
 
     const sanitizedPrompt = sanitizeContent(prompt);
 
-    // Calculate content distribution - favor informational content
+    // Calculate content distribution
     const quizCardCount = includeQuiz ? Math.ceil((cardCount * quizPercentage) / 100) : 0;
     const informationalCardCount = cardCount - quizCardCount;
 
-    const cards = [];
+    console.log(`Generating ${informationalCardCount} info cards and ${quizCardCount} quiz cards`);
 
-    // Generate informational content slides first
+    // Generate informational content first
+    let infoCards = [];
     if (informationalCardCount > 0) {
-      const infoPrompt = generateInformationalContent(sanitizedPrompt, style, informationalCardCount);
+      const infoPrompt = `Create ${informationalCardCount} educational slides about: ${sanitizedPrompt}
 
+Create slides in this order:
+1. Title slide with main topic
+2. Introduction slide explaining what the topic is about
+3. Detailed content slides with specific information
+
+Style: ${style}
+
+Return ONLY a JSON array with this exact format:
+[
+  {
+    "type": "title",
+    "title": "Main Topic Title",
+    "content": "Brief subtitle or description",
+    "imageQuery": "search term for images"
+  },
+  {
+    "type": "content", 
+    "title": "Slide Title",
+    "content": "Educational content (max 300 characters)",
+    "imageQuery": "specific search term"
+  }
+]`;
+
+      console.log('Generating informational content...');
       const infoResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -309,10 +269,10 @@ serve(async (req) => {
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: infoPrompt },
-            { role: 'user', content: `Create ${informationalCardCount} informational slides about: ${sanitizedPrompt}` }
+            { role: 'system', content: 'You are an educational content creator. Return only valid JSON.' },
+            { role: 'user', content: infoPrompt }
           ],
-          max_tokens: 3000,
+          max_tokens: 2000,
           temperature: 0.7,
         }),
       });
@@ -323,30 +283,48 @@ serve(async (req) => {
         
         if (infoContent) {
           try {
-            const infoCards = JSON.parse(infoContent);
-            if (Array.isArray(infoCards)) {
-              // Fetch images for informational content
-              const images = await fetchWikipediaImages(sanitizedPrompt, informationalCardCount);
-              
-              // Add images to info cards
-              infoCards.forEach((card, index) => {
-                card.type = 'informational';
-                card.imageUrl = images[index % images.length] || null;
-              });
-              
-              cards.push(...infoCards);
-            }
+            // Clean the response to extract JSON
+            const jsonMatch = infoContent.match(/\[[\s\S]*\]/);
+            const cleanJson = jsonMatch ? jsonMatch[0] : infoContent;
+            infoCards = JSON.parse(cleanJson);
+            console.log(`Successfully parsed ${infoCards.length} info cards`);
           } catch (e) {
             console.error('Failed to parse informational cards:', e);
+            console.log('Raw content:', infoContent);
           }
         }
       }
     }
 
-    // Generate quiz cards if needed
+    // Generate quiz content
+    let quizCards = [];
     if (quizCardCount > 0) {
-      const quizPrompt = generateQuizPrompt(sanitizedPrompt, quizTypes, quizCardCount);
+      const enabledTypes = [];
+      if (quizTypes.multipleChoice) enabledTypes.push('multiple choice');
+      if (quizTypes.trueFalse) enabledTypes.push('true/false');
+      
+      const quizPrompt = `Create ${quizCardCount} quiz questions about: ${sanitizedPrompt}
 
+Use these question types: ${enabledTypes.join(' and ')}.
+
+Return ONLY a JSON array with this exact format:
+[
+  {
+    "type": "multiple-choice",
+    "question": "Question text?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correctAnswer": 0,
+    "explanation": "Why this answer is correct"
+  },
+  {
+    "type": "true-false",
+    "question": "Statement to evaluate",
+    "correctAnswer": true,
+    "explanation": "Explanation of the answer"
+  }
+]`;
+
+      console.log('Generating quiz content...');
       const quizResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -356,10 +334,10 @@ serve(async (req) => {
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: 'You are an expert quiz creator. Generate educational quiz questions with accurate answers and plausible distractors.' },
+            { role: 'system', content: 'You are a quiz creator. Return only valid JSON.' },
             { role: 'user', content: quizPrompt }
           ],
-          max_tokens: 3000,
+          max_tokens: 2000,
           temperature: 0.7,
         }),
       });
@@ -370,119 +348,127 @@ serve(async (req) => {
         
         if (quizContent) {
           try {
-            const quizCards = JSON.parse(quizContent);
-            if (Array.isArray(quizCards)) {
-              cards.push(...quizCards.map(card => ({ ...card, type: 'quiz' })));
-            }
+            // Clean the response to extract JSON
+            const jsonMatch = quizContent.match(/\[[\s\S]*\]/);
+            const cleanJson = jsonMatch ? jsonMatch[0] : quizContent;
+            quizCards = JSON.parse(cleanJson);
+            console.log(`Successfully parsed ${quizCards.length} quiz cards`);
           } catch (e) {
             console.error('Failed to parse quiz cards:', e);
+            console.log('Raw content:', quizContent);
           }
         }
       }
     }
 
-    if (cards.length === 0) {
+    if (infoCards.length === 0 && quizCards.length === 0) {
       return new Response(
         JSON.stringify({ error: 'No cards generated' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Create an ordered sequence: info -> quiz -> info -> quiz
-    const orderedCards = [];
-    const infoCards = cards.filter(card => card.type === 'informational');
-    const quizCards = cards.filter(card => card.type === 'quiz');
-    
+    // Fetch images for informational content
+    const images = await fetchWikipediaImages(sanitizedPrompt, Math.max(3, infoCards.length));
+
+    // Create flashcards in database with mixed content
+    const createdCards = [];
     let infoIndex = 0;
     let quizIndex = 0;
-    
-    for (let i = 0; i < cardCount; i++) {
-      if (i % 3 === 2 && quizIndex < quizCards.length) {
-        // Every 3rd card (after 2 info cards), add a quiz
-        orderedCards.push(quizCards[quizIndex++]);
-      } else if (infoIndex < infoCards.length) {
-        orderedCards.push(infoCards[infoIndex++]);
-      } else if (quizIndex < quizCards.length) {
-        // Fill remaining slots with quiz cards
-        orderedCards.push(quizCards[quizIndex++]);
-      }
-    }
 
-    // Create flashcards in database
-    const createdCards = [];
-    for (let i = 0; i < orderedCards.length; i++) {
-      const card = orderedCards[i];
+    for (let i = 0; i < cardCount; i++) {
       let frontElements = [];
       let backElements = [];
+      let cardType = 'informational';
+      let interactiveType = null;
 
-      if (card.type === 'quiz') {
-        // Create quiz element positioned in center of card
-        const quizElement = createQuizElement(
-          card.type === 'multiple-choice' ? 'multiple-choice' : 'true-false',
-          card.question,
-          card.options,
-          card.correctAnswer,
-          { x: 200, y: 150 }
-        );
+      // Alternate pattern: 2 info cards, then 1 quiz card
+      if (i > 0 && (i + 1) % 3 === 0 && quizIndex < quizCards.length) {
+        // Quiz card
+        const quizCard = quizCards[quizIndex++];
+        cardType = 'quiz-only';
         
-        frontElements.push(quizElement);
-        
-        // Add explanation as back element
-        if (card.explanation) {
+        if (quizCard.type === 'multiple-choice') {
+          interactiveType = 'multiple-choice';
+          const quizElement = createQuizElement(
+            'multiple-choice',
+            quizCard.question,
+            quizCard.options,
+            quizCard.correctAnswer
+          );
+          frontElements.push(quizElement);
+        } else if (quizCard.type === 'true-false') {
+          interactiveType = 'true-false';
+          const quizElement = createQuizElement(
+            'true-false',
+            quizCard.question,
+            undefined,
+            quizCard.correctAnswer
+          );
+          frontElements.push(quizElement);
+        }
+
+        // Add explanation to back
+        if (quizCard.explanation) {
           backElements.push(createTextElement(
-            `Explanation: ${card.explanation}`,
-            { x: 150, y: 200 },
-            { width: 500, height: 200 },
-            14
+            `Explanation: ${quizCard.explanation}`,
+            { x: 50, y: 200 },
+            { width: 700, height: 200 },
+            16
           ));
         }
-      } else if (card.type === 'informational') {
-        // Create informational slide with title, content, and image
+      } else if (infoIndex < infoCards.length) {
+        // Info card
+        const infoCard = infoCards[infoIndex++];
         
         // Title element
-        if (card.title) {
+        if (infoCard.title) {
           frontElements.push(createTextElement(
-            card.title,
-            { x: 100, y: 50 },
-            { width: 600, height: 80 },
+            infoCard.title,
+            { x: 50, y: 50 },
+            { width: 700, height: 80 },
             24
           ));
         }
         
         // Content element
-        if (card.content) {
-          const contentY = card.imageUrl ? 300 : 200;
+        if (infoCard.content) {
+          const contentY = images.length > 0 ? 350 : 200;
           frontElements.push(createTextElement(
-            card.content,
-            { x: 100, y: contentY },
-            { width: 600, height: card.imageUrl ? 150 : 250 },
+            infoCard.content,
+            { x: 50, y: contentY },
+            { width: 700, height: 150 },
             16
           ));
         }
         
         // Image element
-        if (card.imageUrl) {
-          frontElements.push(createImageElement(
-            card.imageUrl,
-            { x: 200, y: 140 },
-            { width: 400, height: 150 }
-          ));
+        if (images.length > 0 && infoIndex <= images.length) {
+          const imageUrl = images[(infoIndex - 1) % images.length];
+          if (imageUrl) {
+            frontElements.push(createImageElement(
+              imageUrl,
+              { x: 150, y: 150 },
+              { width: 500, height: 180 }
+            ));
+          }
         }
       }
 
-      // Insert flashcard
+      // Insert flashcard into database
+      console.log(`Creating card ${i + 1} of type ${cardType}`);
       const { data: flashcard, error } = await supabase
         .from('flashcards')
         .insert({
           set_id: setId,
-          question: card.title || card.question || 'Generated Content',
-          answer: card.type === 'quiz' ? `Quiz: ${card.question}` : card.content || '',
+          question: frontElements.length > 0 ? 'AI Generated Content' : 'Generated Content',
+          answer: cardType === 'quiz-only' ? 'Quiz Card' : 'Educational Content',
           front_elements: frontElements,
           back_elements: backElements,
-          card_type: card.type === 'quiz' ? 'quiz-only' : 'informational',
-          interactive_type: card.type === 'quiz' ? (card.type === 'multiple-choice' ? 'multiple-choice' : 'true-false') : null,
+          card_type: cardType,
+          interactive_type: interactiveType,
           canvas_width: 800,
-          canvas_height: 600,
+          canvas_height: 533,
         })
         .select()
         .single();
@@ -491,8 +477,11 @@ serve(async (req) => {
         console.error('Error creating flashcard:', error);
       } else {
         createdCards.push(flashcard);
+        console.log(`Successfully created card ${flashcard.id}`);
       }
     }
+
+    console.log(`Generation complete: ${createdCards.length} cards created`);
 
     return new Response(
       JSON.stringify({ 

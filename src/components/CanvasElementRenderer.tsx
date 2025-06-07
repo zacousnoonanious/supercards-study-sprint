@@ -6,6 +6,7 @@ import { FillInBlankEditor } from './FillInBlankEditor';
 import { DrawingCanvas } from './DrawingCanvas';
 import { DeckSelector } from './DeckSelector';
 import { EmbeddedDeckViewer } from './EmbeddedDeckViewer';
+import { RichTextEditor } from './RichTextEditor';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CanvasElementRendererProps {
@@ -221,103 +222,26 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
       );
     case 'text':
       const textContent = (
-        <span 
-          className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words leading-tight select-text"
-          style={{ 
-            textAlign: element.textAlign || 'center',
-            fontSize: `${Math.min((element.fontSize || 16) * textScale, element.height / 2)}px`,
-            lineHeight: '1.2',
-            color: element.color || (theme === 'dark' ? '#ffffff' : '#000000'),
-            fontWeight: element.fontWeight || 'normal',
-            fontStyle: element.fontStyle || 'normal',
-            textDecoration: element.textDecoration || 'none',
-          }}
-        >
-          {element.content}
-        </span>
+        <RichTextEditor
+          element={element}
+          onUpdate={(updates) => onUpdateElement(element.id, updates)}
+          onEditingChange={(editing) => onEditingChange(editing ? element.id : null)}
+          textScale={textScale}
+        />
       );
 
-      return (
-        <div
-          className={`w-full h-full flex items-center justify-center border rounded overflow-hidden ${
-            theme === 'dark' ? 'bg-gray-800 text-white border-gray-600' : 'bg-white border-gray-300'
-          } ${editingElement === element.id ? 'cursor-text' : 'cursor-text'}`}
-          style={{
-            padding: '4px 8px',
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (e.detail === 2) {
-              onEditingChange(element.id);
-            }
-          }}
+      return element.hyperlink ? (
+        <a 
+          href={element.hyperlink} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="w-full h-full block"
+          onClick={(e) => e.stopPropagation()}
         >
-          {editingElement === element.id ? (
-            <textarea
-              value={element.content || ''}
-              onChange={(e) => {
-                e.stopPropagation();
-                const newContent = e.target.value;
-                onUpdateElement(element.id, { content: newContent });
-                
-                // Auto-resize text element based on content with minimal padding
-                const lines = newContent.split('\n').length;
-                const longestLine = Math.max(...newContent.split('\n').map(line => line.length));
-                
-                const fontSize = (element.fontSize || 16) * textScale;
-                const newWidth = Math.max(100, Math.min(600, longestLine * fontSize * 0.6 + 16));
-                const newHeight = Math.max(32, lines * fontSize * 1.2 + 16);
-                
-                if (newWidth !== element.width || newHeight !== element.height) {
-                  onUpdateElement(element.id, { 
-                    width: newWidth, 
-                    height: newHeight 
-                  });
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  onEditingChange(null);
-                }
-                e.stopPropagation();
-              }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-              onBlur={() => onEditingChange(null)}
-              className={`w-full h-full bg-transparent border-none outline-none resize-none ${
-                theme === 'dark' ? 'text-white' : 'text-black'
-              }`}
-              style={{
-                fontSize: (element.fontSize || 16) * textScale,
-                color: element.color,
-                fontWeight: element.fontWeight,
-                fontStyle: element.fontStyle,
-                textDecoration: element.textDecoration,
-                textAlign: element.textAlign as React.CSSProperties['textAlign'],
-                whiteSpace: 'pre-wrap',
-                padding: '4px 8px',
-              }}
-              autoFocus
-              onSelect={(e) => e.stopPropagation()}
-            />
-          ) : element.hyperlink ? (
-            <a 
-              href={element.hyperlink} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-full h-full flex items-center justify-center text-blue-600 hover:underline"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {textContent}
-            </a>
-          ) : (
-            textContent
-          )}
-        </div>
+          {textContent}
+        </a>
+      ) : (
+        textContent
       );
     case 'image':
       const imageElement = element.imageUrl ? (
