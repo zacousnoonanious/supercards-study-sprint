@@ -134,8 +134,8 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
             </>
           )}
 
-          {/* Hyperlink option for text and image elements */}
-          {(element.type === 'text' || element.type === 'image') && (
+          {/* Hyperlink option for image elements only */}
+          {element.type === 'image' && (
             <div>
               <Label className="text-sm font-medium">Hyperlink</Label>
               <div className="flex items-center gap-2 mt-2">
