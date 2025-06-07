@@ -6,6 +6,8 @@ import { FlashcardSet, Flashcard, CanvasElement } from '@/types/flashcard';
 import { PowerPointEditor } from './PowerPointEditor';
 import { LockableToolbar } from './LockableToolbar';
 import { SimpleEditorFooter } from './SimpleEditorFooter';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Grid3x3, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Debounce utility function
@@ -32,6 +34,8 @@ export const CardEditor: React.FC = () => {
   const [currentSide, setCurrentSide] = useState<'front' | 'back'>('front');
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(false);
+  const [gridSize] = useState(20);
   const [cardDimensions, setCardDimensions] = useState({ width: 600, height: 400 });
 
   // Fetch set data
@@ -458,6 +462,15 @@ export const CardEditor: React.FC = () => {
     });
   }, [toast]);
 
+  // Navigation handlers
+  const handleBackToSet = useCallback(() => {
+    navigate(`/sets/${setId}`);
+  }, [navigate, setId]);
+
+  const handleViewCards = useCallback(() => {
+    navigate(`/sets/${setId}`);
+  }, [navigate, setId]);
+
   if (setLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -487,6 +500,47 @@ export const CardEditor: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col">
+      {/* Header with navigation */}
+      <div className="flex items-center justify-between p-4 border-b bg-background">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleBackToSet}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Set
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleViewCards}
+            className="flex items-center gap-2"
+          >
+            <Eye className="w-4 h-4" />
+            View Cards
+          </Button>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            variant={showGrid ? "default" : "outline"}
+            onClick={() => setShowGrid(!showGrid)}
+            className="flex items-center gap-2"
+            size="sm"
+          >
+            <Grid3x3 className="w-4 h-4" />
+            Grid
+          </Button>
+          <Button
+            variant={snapToGrid ? "default" : "outline"}
+            onClick={() => setSnapToGrid(!snapToGrid)}
+            size="sm"
+          >
+            Snap to Grid
+          </Button>
+        </div>
+      </div>
+
       <LockableToolbar
         set={set}
         currentCard={currentCard}
@@ -519,6 +573,8 @@ export const CardEditor: React.FC = () => {
           selectedElementId={selectedElementId}
           onElementSelect={setSelectedElementId}
           showGrid={showGrid}
+          snapToGrid={snapToGrid}
+          gridSize={gridSize}
         />
       </div>
 
