@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,7 +59,7 @@ const SetView = () => {
         back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
         hint: card.hint || '',
         last_reviewed_at: card.last_reviewed_at || null,
-        card_type: (card.card_type as Flashcard['card_type']) || 'standard',
+        card_type: (card.card_type === 'standard' ? 'normal' : card.card_type as Flashcard['card_type']) || 'normal',
         interactive_type: (card.interactive_type as Flashcard['interactive_type']) || null,
         countdown_timer: card.countdown_timer || 0,
         password: card.password || null
@@ -89,7 +88,7 @@ const SetView = () => {
       front_elements: [] as any,
       back_elements: [] as any,
       set_id: setId,
-      card_type: 'standard' as const,
+      card_type: 'normal' as const,
       countdown_timer: 0,
     };
 
@@ -396,7 +395,7 @@ const SetView = () => {
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex flex-col min-w-0 flex-1">
                           <span className="text-xs sm:text-sm text-gray-500">Card {index + 1}</span>
-                          {card.card_type && card.card_type !== 'standard' && (
+                          {card.card_type && card.card_type !== 'normal' && (
                             <span className="text-xs text-blue-600 font-medium capitalize">
                               {card.card_type.replace('-', ' ')}
                             </span>

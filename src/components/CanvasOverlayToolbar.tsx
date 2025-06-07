@@ -89,10 +89,10 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
 
   const getCardTypeLabel = (cardType: Flashcard['card_type']) => {
     switch (cardType) {
-      case 'standard': return isCompact ? 'S' : 'Standard';
+      case 'normal': return isCompact ? 'N' : 'Normal';
       case 'informational': return isCompact ? 'I' : 'Info';
       case 'single-sided': return isCompact ? 'SS' : 'Single';
-      default: return isCompact ? 'S' : 'Standard';
+      default: return isCompact ? 'N' : 'Normal';
     }
   };
 
@@ -349,7 +349,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
               ) : (
                 <>
                   <Settings className={`${iconSize} mr-1`} />
-                  <span className={textSize}>{getCardTypeLabel(currentCard?.card_type || 'standard')}</span>
+                  <span className={textSize}>{getCardTypeLabel(currentCard?.card_type || 'normal')}</span>
                 </>
               )}
             </Button>
@@ -357,8 +357,8 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           <DropdownMenuContent align="center" className="w-40 bg-white dark:bg-gray-800 border shadow-lg z-50">
             <DropdownMenuLabel>Card Type</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleCardTypeChange('standard')}>
-              Standard Card
+            <DropdownMenuItem onClick={() => handleCardTypeChange('normal')}>
+              Normal Card
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleCardTypeChange('informational')}>
               Informational

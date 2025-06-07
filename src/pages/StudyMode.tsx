@@ -72,7 +72,7 @@ const StudyMode = () => {
         back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
         hint: card.hint || '',
         last_reviewed_at: card.last_reviewed_at || null,
-        card_type: (card.card_type as Flashcard['card_type']) || 'standard',
+        card_type: (card.card_type === 'standard' ? 'normal' : card.card_type as Flashcard['card_type']) || 'normal',
         interactive_type: (card.interactive_type as Flashcard['interactive_type']) || null,
         countdown_timer: card.countdown_timer || 0,
         password: card.password || null
