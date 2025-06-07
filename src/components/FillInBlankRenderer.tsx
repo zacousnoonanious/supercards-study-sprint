@@ -40,6 +40,55 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
     return userAnswer.trim() === correctAnswer.trim();
   };
 
+  const isAnswerClose = (userAnswer: string, correctAnswer: string) => {
+    const user = element.ignoreCase ? userAnswer.toLowerCase().trim() : userAnswer.trim();
+    const correct = element.ignoreCase ? correctAnswer.toLowerCase().trim() : correctAnswer.trim();
+    
+    if (user === correct) return false; // Exact match, not close
+    if (user.length === 0) return false; // Empty answer, not close
+    
+    // Check if it's a substring or contains most of the correct answer
+    if (user.includes(correct) || correct.includes(user)) return true;
+    
+    // Simple character similarity check
+    const longer = user.length > correct.length ? user : correct;
+    const shorter = user.length > correct.length ? correct : user;
+    const editDistance = calculateEditDistance(user, correct);
+    const similarity = 1 - (editDistance / longer.length);
+    
+    return similarity >= 0.6; // 60% similarity threshold
+  };
+
+  const calculateEditDistance = (str1: string, str2: string): number => {
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,
+          matrix[j - 1][i] + 1,
+          matrix[j - 1][i - 1] + indicator
+        );
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  };
+
+  const getAnswerFeedback = (userAnswer: string, correctAnswer: string) => {
+    if (checkAnswer(userAnswer, correctAnswer)) {
+      return { type: 'correct', className: 'border-green-500 bg-green-50 text-green-800' };
+    } else if (isAnswerClose(userAnswer, correctAnswer)) {
+      return { type: 'close', className: 'border-yellow-500 bg-yellow-50 text-yellow-800' };
+    } else {
+      return { type: 'incorrect', className: 'border-red-500 bg-red-50 text-red-800' };
+    }
+  };
+
   const handleSubmit = () => {
     setHasSubmitted(true);
     const allCorrect = blanks.every(blank => 
@@ -64,7 +113,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
         
         if (blank) {
           const userAnswer = answers[blank.id] || '';
-          const isCorrect = checkAnswer(userAnswer, blank.word);
+          const feedback = hasSubmitted && showResults ? getAnswerFeedback(userAnswer, blank.word) : null;
           
           return (
             <span key={index} className="inline-block mx-1">
@@ -73,11 +122,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
                 onChange={(e) => handleAnswerChange(blank.id, e.target.value)}
                 disabled={hasSubmitted && showResults}
                 className={`inline-block w-auto min-w-[80px] h-6 text-xs text-center ${
-                  showResults && hasSubmitted
-                    ? isCorrect
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-red-500 bg-red-50'
-                    : ''
+                  feedback ? feedback.className : ''
                 }`}
                 style={{ 
                   width: `${Math.max(80, blank.word.length * 8 + (element.showLetterCount ? 20 : 0))}px`,
@@ -87,8 +132,10 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
               />
               {showResults && hasSubmitted && (
                 <span className="ml-1">
-                  {isCorrect ? (
+                  {feedback?.type === 'correct' ? (
                     <CheckCircle className="w-4 h-4 text-green-600 inline" />
+                  ) : feedback?.type === 'close' ? (
+                    <span className="text-xs text-yellow-600 inline">~</span>
                   ) : (
                     <>
                       <XCircle className="w-4 h-4 text-red-600 inline" />
@@ -147,7 +194,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
             }`}>
               {blanks.every(blank => checkAnswer(answers[blank.id] || '', blank.word))
                 ? 'All correct!' 
-                : 'Some answers are incorrect'}
+                : 'Some answers need improvement'}
             </p>
           </div>
         )}
