@@ -32,7 +32,8 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
   const [showFeedback, setShowFeedback] = useState(false);
 
   const handleAnswer = (answerIndex: number) => {
-    if (hasAnswered && !showResults) return;
+    // In study mode, allow answering even if already answered
+    if (hasAnswered && !isStudyMode && !showResults) return;
     
     setSelectedAnswer(answerIndex);
     setHasAnswered(true);
@@ -114,13 +115,10 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
               variant={getButtonVariant(index)}
               className="w-full justify-between"
               onClick={(e) => {
-                if (!isStudyMode) {
-                  handleAnswer(index);
-                } else {
-                  e.stopPropagation();
-                }
+                e.stopPropagation();
+                handleAnswer(index);
               }}
-              disabled={hasAnswered && !showResults && !element.showImmediateFeedback}
+              disabled={!isStudyMode && hasAnswered && !showResults && !element.showImmediateFeedback}
               style={{ fontSize: `${12 * textScale}px` }}
             >
               <span>{option}</span>
@@ -159,13 +157,10 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
               variant={getButtonVariant(index)}
               className="flex-1 justify-between"
               onClick={(e) => {
-                if (!isStudyMode) {
-                  handleAnswer(index);
-                } else {
-                  e.stopPropagation();
-                }
+                e.stopPropagation();
+                handleAnswer(index);
               }}
-              disabled={hasAnswered && !showResults && !element.showImmediateFeedback}
+              disabled={!isStudyMode && hasAnswered && !showResults && !element.showImmediateFeedback}
               style={{ fontSize: `${12 * textScale}px` }}
             >
               <span>{option}</span>

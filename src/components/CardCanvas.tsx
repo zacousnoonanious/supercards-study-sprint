@@ -356,9 +356,9 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         ...style 
       }}
       onMouseDown={(e) => {
-        // Deselect element when clicking on empty canvas
+        // Deselect element when clicking on empty canvas OR select canvas for options
         if (e.target === e.currentTarget) {
-          onSelectElement(null);
+          onSelectElement('canvas');
         }
       }}
       onContextMenu={handleCanvasContextMenu}
@@ -368,7 +368,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         snapToGrid={snapToGrid}
         gridSize={gridSize}
         onSnapToGridToggle={() => setSnapToGrid(!snapToGrid)}
-        onAutoArrange={onAutoArrange || (() => {})}
       />
       
       {/* Render elements */}
@@ -423,7 +422,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       ))}
 
       {/* Resize handles for selected element */}
-      {selectedElement && selectedElementData && (
+      {selectedElement && selectedElement !== 'canvas' && selectedElementData && (
         <CanvasInteractionHandler
           selectedElement={selectedElement}
           selectedElementData={selectedElementData}
