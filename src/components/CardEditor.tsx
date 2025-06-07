@@ -138,42 +138,58 @@ export const CardEditor = () => {
   const currentCard = cards[currentCardIndex];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <EditorHeader
-        set={set}
-        onSave={handleSave}
-        isEditingDeckName={isEditingDeckName}
-        deckName={deckName}
-        onDeckNameChange={setDeckName}
-        onStartEdit={handleStartEdit}
-        onSaveEdit={handleSaveEdit}
-        onCancelEdit={handleCancelEdit}
-      />
-
-      {/* Element Options Panel */}
-      <ElementOptionsPanel
-        selectedElement={getSelectedElementData()}
-        onUpdateElement={handleUpdateElement}
-        onDeleteElement={handleDeleteElement}
-      />
-
-      <div className="flex-1 flex flex-col">
-        <CardCanvas
-          elements={getCurrentElements()}
-          selectedElement={selectedElement}
-          onSelectElement={handleElementSelect}
+    <div className="min-h-screen flex bg-background">
+      {/* Left Sidebar - Element Toolbar */}
+      <div className="w-80 border-r bg-card">
+        <ElementToolbar
+          onAddElement={addElement}
+          selectedElement={getSelectedElementData()}
           onUpdateElement={handleUpdateElement}
-          onDeleteElement={handleDeleteElement}
-          cardSide={currentSide}
+          onDeleteElement={() => selectedElement && handleDeleteElement(selectedElement)}
+          onCreateNewCard={createNewCard}
+          onCreateNewCardWithLayout={createNewCardWithLayout}
         />
       </div>
 
-      <EditorFooter
-        currentCard={currentCard}
-        selectedElement={getSelectedElementData()}
-        onUpdateElement={handleUpdateElement}
-        onUpdateCard={(cardId, updates) => updateCard(cardId, updates)}
-      />
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        <EditorHeader
+          set={set}
+          onSave={handleSave}
+          isEditingDeckName={isEditingDeckName}
+          deckName={deckName}
+          onDeckNameChange={setDeckName}
+          onStartEdit={handleStartEdit}
+          onSaveEdit={handleSaveEdit}
+          onCancelEdit={handleCancelEdit}
+        />
+
+        {/* Element Options Panel - Below Header */}
+        <ElementOptionsPanel
+          selectedElement={getSelectedElementData()}
+          onUpdateElement={handleUpdateElement}
+          onDeleteElement={() => selectedElement && handleDeleteElement(selectedElement)}
+        />
+
+        {/* Card Canvas Area */}
+        <div className="flex-1 flex items-center justify-center p-4">
+          <CardCanvas
+            elements={getCurrentElements()}
+            selectedElement={selectedElement}
+            onSelectElement={handleElementSelect}
+            onUpdateElement={handleUpdateElement}
+            onDeleteElement={handleDeleteElement}
+            cardSide={currentSide}
+          />
+        </div>
+
+        <EditorFooter
+          currentCard={currentCard}
+          selectedElement={getSelectedElementData()}
+          onUpdateElement={handleUpdateElement}
+          onUpdateCard={(cardId, updates) => updateCard(cardId, updates)}
+        />
+      </div>
 
       {showShortcuts && (
         <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />
