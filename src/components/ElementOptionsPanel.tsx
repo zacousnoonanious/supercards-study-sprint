@@ -220,10 +220,38 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
               )}
 
               {selectedElement.type === 'image' && (
+                <>
+                  {/* Image URL Input */}
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs whitespace-nowrap">Image URL:</Label>
+                    <Input
+                      type="url"
+                      value={selectedElement.imageUrl || ''}
+                      onChange={(e) => handleTextUpdate('imageUrl', e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                      className="w-48 h-7 text-xs"
+                    />
+                  </div>
+
+                  {/* Aspect Ratio Selector */}
+                  <div className="flex items-center gap-2">
+                    <AspectRatioSelector
+                      element={selectedElement}
+                      onUpdateElement={onUpdateElement}
+                    />
+                  </div>
+                </>
+              )}
+
+              {selectedElement.type === 'youtube' && (
                 <div className="flex items-center gap-2">
-                  <AspectRatioSelector
-                    element={selectedElement}
-                    onUpdateElement={onUpdateElement}
+                  <Label className="text-xs whitespace-nowrap">YouTube URL:</Label>
+                  <Input
+                    type="url"
+                    value={selectedElement.youtubeUrl || ''}
+                    onChange={(e) => handleTextUpdate('youtubeUrl', e.target.value)}
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="w-48 h-7 text-xs"
                   />
                 </div>
               )}
