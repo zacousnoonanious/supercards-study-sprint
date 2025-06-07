@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil, Settings, ChevronDown, Grid3X3, AlignCenter, AlignJustify, Layers3, Clock, Image } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Save, Trash2, Copy, Sparkles, CheckSquare, ToggleLeft, FileText, Youtube, Layers, Volume2, Pencil, Settings, ChevronDown, Grid3X3, AlignCenter, AlignJustify, Layers3, Clock, Image, LayoutTemplate } from 'lucide-react';
 import { CardSideToggle } from './CardSideToggle';
-import { FlashcardSet, Flashcard } from '@/types/flashcard';
+import { FlashcardSet, Flashcard, CardTemplate } from '@/types/flashcard';
 import { AIFlashcardGenerator } from './AIFlashcardGenerator';
+import { TemplateSelector } from './TemplateSelector';
 import {
   Dialog,
   DialogContent,

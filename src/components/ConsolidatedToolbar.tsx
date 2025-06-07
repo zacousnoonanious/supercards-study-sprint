@@ -38,6 +38,7 @@ interface ConsolidatedToolbarProps {
   onSideChange: (side: 'front' | 'back') => void;
   onCreateNewCard: () => void;
   onCreateNewCardWithLayout: () => void;
+  onCreateNewCardFromTemplate: (template: CardTemplate) => void;
   onDeleteCard: () => void;
   onCardTypeChange: (type: string) => void;
   position?: 'left' | 'top' | 'right' | 'bottom';
@@ -55,6 +56,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   onSideChange,
   onCreateNewCard,
   onCreateNewCardWithLayout,
+  onCreateNewCardFromTemplate,
   onDeleteCard,
   onCardTypeChange,
   position = "left",
@@ -65,10 +67,8 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   const separatorClass = "w-full h-px bg-border";
 
   const handleCreateFromTemplate = (template: CardTemplate) => {
-    // This would be handled by the parent component
+    onCreateNewCardFromTemplate(template);
     setShowTemplateSelector(false);
-    // For now, just create a new card - the template logic would be implemented in the parent
-    onCreateNewCard();
   };
 
   return (
