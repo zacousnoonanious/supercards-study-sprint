@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { useCardEditor } from '@/hooks/useCardEditor';
 import { EditorHeader } from './EditorHeader';
@@ -56,6 +55,19 @@ export const CardEditor = () => {
       setDeckName(set.title);
     }
   }, [set?.title]);
+
+  // Handle keyboard events for delete functionality
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' && selectedElement) {
+        e.preventDefault();
+        handleDeleteElement(selectedElement);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedElement]);
 
   const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     updateElement(elementId, updates);

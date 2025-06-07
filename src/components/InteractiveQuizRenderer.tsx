@@ -11,7 +11,9 @@ export interface InteractiveQuizRendererProps {
   userAnswer?: number;
   requireAnswer?: boolean;
   textScale?: number;
-  onAutoAdvance?: () => void; // New: callback for auto-advance
+  onAutoAdvance?: () => void;
+  isStudyMode?: boolean;
+  onElementSelect?: (elementId: string) => void;
 }
 
 export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = ({
@@ -21,7 +23,9 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
   userAnswer,
   requireAnswer = false,
   textScale = 1,
-  onAutoAdvance
+  onAutoAdvance,
+  isStudyMode = false,
+  onElementSelect
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(userAnswer ?? null);
   const [hasAnswered, setHasAnswered] = useState(userAnswer !== null);
@@ -49,6 +53,13 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
           onAutoAdvance();
         }, 2000); // Wait 2 seconds to show feedback before advancing
       }
+    }
+  };
+
+  const handleElementClick = (e: React.MouseEvent) => {
+    if (isStudyMode && onElementSelect) {
+      e.stopPropagation();
+      onElementSelect(element.id);
     }
   };
 
@@ -89,7 +100,10 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
 
   if (element.type === 'multiple-choice') {
     return (
-      <div className="p-4 space-y-4">
+      <div 
+        className={`p-4 space-y-4 ${isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
+        onClick={handleElementClick}
+      >
         <h3 className="font-medium text-center" style={{ fontSize: `${14 * textScale}px` }}>
           {element.content}
         </h3>
@@ -99,7 +113,13 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
               key={index}
               variant={getButtonVariant(index)}
               className="w-full justify-between"
-              onClick={() => handleAnswer(index)}
+              onClick={(e) => {
+                if (!isStudyMode) {
+                  handleAnswer(index);
+                } else {
+                  e.stopPropagation();
+                }
+              }}
               disabled={hasAnswered && !showResults && !element.showImmediateFeedback}
               style={{ fontSize: `${12 * textScale}px` }}
             >
@@ -125,7 +145,10 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
     const options = ['True', 'False'];
     
     return (
-      <div className="p-4 space-y-4">
+      <div 
+        className={`p-4 space-y-4 ${isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
+        onClick={handleElementClick}
+      >
         <h3 className="font-medium text-center" style={{ fontSize: `${14 * textScale}px` }}>
           {element.content}
         </h3>
@@ -135,7 +158,13 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
               key={index}
               variant={getButtonVariant(index)}
               className="flex-1 justify-between"
-              onClick={() => handleAnswer(index)}
+              onClick={(e) => {
+                if (!isStudyMode) {
+                  handleAnswer(index);
+                } else {
+                  e.stopPropagation();
+                }
+              }}
               disabled={hasAnswered && !showResults && !element.showImmediateFeedback}
               style={{ fontSize: `${12 * textScale}px` }}
             >

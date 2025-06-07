@@ -17,6 +17,8 @@ interface CanvasElementRendererProps {
   textScale?: number;
   onElementDragStart?: (e: React.MouseEvent, elementId: string) => void;
   isDragging?: boolean;
+  isStudyMode?: boolean;
+  onElementSelect?: (elementId: string) => void;
 }
 
 export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
@@ -27,6 +29,8 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   textScale = 1,
   onElementDragStart,
   isDragging = false,
+  isStudyMode = false,
+  onElementSelect,
 }) => {
   const { theme } = useTheme();
 
@@ -58,13 +62,20 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
     }
   };
 
+  const handleElementClick = (e: React.MouseEvent) => {
+    if (isStudyMode && onElementSelect) {
+      e.stopPropagation();
+      onElementSelect(element.id);
+    }
+  };
+
   switch (element.type) {
     case 'multiple-choice':
       return (
         <div className="w-full h-full">
           <MultipleChoiceRenderer 
             element={element} 
-            isEditing={true} 
+            isEditing={!isStudyMode} 
             onUpdate={handleMultipleChoiceUpdate}
             textScale={textScale}
           />
@@ -75,7 +86,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
         <div className="w-full h-full">
           <TrueFalseRenderer 
             element={element} 
-            isEditing={true} 
+            isEditing={!isStudyMode} 
             onUpdate={(updates) => onUpdateElement(element.id, updates)}
             textScale={textScale}
           />
@@ -83,7 +94,10 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
       );
     case 'fill-in-blank':
       return (
-        <div className="w-full h-full">
+        <div 
+          className={`w-full h-full ${isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
+          onClick={handleElementClick}
+        >
           <FillInBlankEditor
             element={element}
             onUpdate={(updates) => onUpdateElement(element.id, updates)}
@@ -93,7 +107,10 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
       );
     case 'youtube':
       const youtubeContent = (
-        <div className="w-full h-full">
+        <div 
+          className={`w-full h-full ${isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
+          onClick={handleElementClick}
+        >
           <YouTubeRenderer element={element} />
         </div>
       );
@@ -114,7 +131,9 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
       return (
         <div className={`w-full h-full flex items-center justify-center p-2 rounded border ${
           theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
-        }`}>
+        } ${isStudyMode ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+        onClick={handleElementClick}
+        >
           {element.deckId ? (
             element.hyperlink ? (
               <a 
@@ -138,33 +157,40 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
                   height={element.height}
                   textScale={textScale}
                 />
-                <div className="text-center mt-2">
-                  <button 
-                    className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80"
-                    style={{ fontSize: `${10 * textScale}px` }}
-                    onClick={() => onUpdateElement(element.id, { deckId: undefined, deckTitle: undefined })}
-                  >
-                    Change Deck
-                  </button>
-                </div>
+                {!isStudyMode && (
+                  <div className="text-center mt-2">
+                    <button 
+                      className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80"
+                      style={{ fontSize: `${10 * textScale}px` }}
+                      onClick={() => onUpdateElement(element.id, { deckId: undefined, deckTitle: undefined })}
+                    >
+                      Change Deck
+                    </button>
+                  </div>
+                )}
               </div>
             )
           ) : (
-            <div className="w-full h-full">
-              <DeckSelector
-                onDeckSelect={(deckId, deckTitle) => {
-                  onUpdateElement(element.id, { deckId, deckTitle });
-                }}
-                currentDeckId={element.deckId}
-                textScale={textScale}
-              />
-            </div>
+            !isStudyMode && (
+              <div className="w-full h-full">
+                <DeckSelector
+                  onDeckSelect={(deckId, deckTitle) => {
+                    onUpdateElement(element.id, { deckId, deckTitle });
+                  }}
+                  currentDeckId={element.deckId}
+                  textScale={textScale}
+                />
+              </div>
+            )
           )}
         </div>
       );
     case 'drawing':
       return (
-        <div className="w-full h-full">
+        <div 
+          className={`w-full h-full ${isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
+          onClick={handleElementClick}
+        >
           <DrawingCanvas
             width={element.width}
             height={element.height}
@@ -185,25 +211,29 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
       const audioContent = (
         <div className={`w-full h-full flex flex-col items-center justify-center rounded border p-2 ${
           theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
-        }`}>
+        } ${isStudyMode ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+        onClick={handleElementClick}
+        >
           {element.audioUrl ? (
             <audio controls className="w-full max-w-full">
               <source src={element.audioUrl} type="audio/mpeg" />
               Your browser does not support audio playback.
             </audio>
           ) : (
-            <div className="text-center">
-              <div className="text-sm text-gray-500 mb-2" style={{ fontSize: `${12 * textScale}px` }}>
-                No audio file
+            !isStudyMode && (
+              <div className="text-center">
+                <div className="text-sm text-gray-500 mb-2" style={{ fontSize: `${12 * textScale}px` }}>
+                  No audio file
+                </div>
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleAudioUpload}
+                  className="text-xs"
+                  style={{ fontSize: `${10 * textScale}px` }}
+                />
               </div>
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={handleAudioUpload}
-                className="text-xs"
-                style={{ fontSize: `${10 * textScale}px` }}
-              />
-            </div>
+            )
           )}
         </div>
       );
@@ -222,12 +252,17 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
       );
     case 'text':
       const textContent = (
-        <RichTextEditor
-          element={element}
-          onUpdate={(updates) => onUpdateElement(element.id, updates)}
-          onEditingChange={(editing) => onEditingChange(editing ? element.id : null)}
-          textScale={textScale}
-        />
+        <div 
+          className={`w-full h-full ${isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
+          onClick={handleElementClick}
+        >
+          <RichTextEditor
+            element={element}
+            onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            onEditingChange={(editing) => onEditingChange(editing ? element.id : null)}
+            textScale={textScale}
+          />
+        </div>
       );
 
       return element.hyperlink ? (
@@ -250,25 +285,30 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           alt="Element"
           className={`w-full h-full object-cover rounded border ${
             theme === 'dark' ? 'border-gray-600' : 'border-gray-300'
-          }`}
+          } ${isStudyMode ? 'cursor-pointer hover:opacity-80' : ''}`}
           draggable={false}
+          onClick={handleElementClick}
         />
       ) : (
         <div className={`w-full h-full flex flex-col items-center justify-center rounded border ${
           theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
-        }`}>
-          <div className="text-center">
-            <div className="text-sm text-gray-500 mb-2" style={{ fontSize: `${12 * textScale}px` }}>
-              No image
+        } ${isStudyMode ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+        onClick={handleElementClick}
+        >
+          {!isStudyMode && (
+            <div className="text-center">
+              <div className="text-sm text-gray-500 mb-2" style={{ fontSize: `${12 * textScale}px` }}>
+                No image
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="text-xs"
+                style={{ fontSize: `${10 * textScale}px` }}
+              />
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="text-xs"
-              style={{ fontSize: `${10 * textScale}px` }}
-            />
-          </div>
+          )}
         </div>
       );
 

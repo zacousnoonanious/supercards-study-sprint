@@ -2,8 +2,8 @@ import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
 import { QuizOnlyLayout } from './QuizOnlyLayout';
-import { HoverElementPopup } from './HoverElementPopup';
 import { CanvasContextMenu } from './CanvasContextMenu';
+import { ElementContextMenu } from './ElementContextMenu';
 import { CanvasInteractionHandler } from './CanvasInteractionHandler';
 import { CanvasBackground } from './CanvasBackground';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -47,7 +47,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 }) => {
   const { theme } = useTheme();
   const [editingElement, setEditingElement] = useState<string | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [contextMenuElement, setContextMenuElement] = useState<string | null>(null);
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [gridSize] = useState(20);
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -101,6 +102,76 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         y: row * cellHeight + 20,
       });
     });
+  };
+
+  const handleElementContextMenu = (e: React.MouseEvent, elementId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenuElement(elementId);
+    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+    onSelectElement(elementId);
+  };
+
+  const handleCanvasContextMenu = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      e.preventDefault();
+      setContextMenuElement(null);
+      setContextMenuPosition({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleElementLayerChange = (elementId: string, direction: 'up' | 'down' | 'top' | 'bottom') => {
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+
+    let newZIndex = element.zIndex || 0;
+    const allZIndexes = elements.map(el => el.zIndex || 0).sort((a, b) => a - b);
+    
+    switch (direction) {
+      case 'up':
+        newZIndex = Math.min(Math.max(...allZIndexes) + 1, newZIndex + 1);
+        break;
+      case 'down':
+        newZIndex = Math.max(Math.min(...allZIndexes) - 1, newZIndex - 1);
+        break;
+      case 'top':
+        newZIndex = Math.max(...allZIndexes) + 1;
+        break;
+      case 'bottom':
+        newZIndex = Math.min(...allZIndexes) - 1;
+        break;
+    }
+
+    onUpdateElement(elementId, { zIndex: newZIndex });
+    setContextMenuElement(null);
+    setContextMenuPosition(null);
+  };
+
+  const handleDuplicateElement = (elementId: string) => {
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+
+    const newElement = {
+      ...element,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      x: element.x + 20,
+      y: element.y + 20,
+    };
+
+    onUpdateElement(newElement.id, newElement);
+    onSelectElement(newElement.id);
+    setContextMenuElement(null);
+    setContextMenuPosition(null);
+  };
+
+  const handleRotateElement = (elementId: string) => {
+    const element = elements.find(el => el.id === elementId);
+    if (!element) return;
+
+    const newRotation = ((element.rotation || 0) + 90) % 360;
+    onUpdateElement(elementId, { rotation: newRotation });
+    setContextMenuElement(null);
+    setContextMenuPosition(null);
   };
 
   const handleMouseDown = useCallback((e: React.MouseEvent, elementId: string, action: 'drag' | 'resize', resizeHandle?: string) => {
@@ -230,6 +301,19 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     }
   }, [dragState, handleMouseMove, handleMouseUp]);
 
+  // Close context menu when clicking elsewhere
+  React.useEffect(() => {
+    const handleClickOutside = () => {
+      setContextMenuElement(null);
+      setContextMenuPosition(null);
+    };
+
+    if (contextMenuPosition) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [contextMenuPosition]);
+
   // For quiz-only cards, use the specialized layout
   if (cardType === 'quiz-only') {
     return (
@@ -277,6 +361,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           onSelectElement(null);
         }
       }}
+      onContextMenu={handleCanvasContextMenu}
     >
       <CanvasBackground 
         cardSide={cardSide}
@@ -288,42 +373,53 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       
       {/* Render elements */}
       {elements.map((element) => (
-        <div
+        <ElementContextMenu
           key={element.id}
-          className={`absolute cursor-move ${
-            selectedElement === element.id ? 'ring-2 ring-blue-500' : ''
-          }`}
-          style={{
-            left: element.x,
-            top: element.y,
-            width: element.width,
-            height: element.height,
-            transform: `rotate(${element.rotation || 0}deg)`,
-            transformOrigin: 'center',
-            zIndex: element.zIndex || 0,
-          }}
-          onMouseDown={(e) => {
-            // Only allow dragging from specific areas for drawing elements
-            if (element.type === 'drawing') {
-              // For drawing elements, only allow dragging from the top drag handle
-              return;
-            }
-            handleMouseDown(e, element.id, 'drag');
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelectElement(element.id);
-          }}
+          onMoveUp={() => handleElementLayerChange(element.id, 'up')}
+          onMoveDown={() => handleElementLayerChange(element.id, 'down')}
+          onMoveToTop={() => handleElementLayerChange(element.id, 'top')}
+          onMoveToBottom={() => handleElementLayerChange(element.id, 'bottom')}
+          onDuplicate={() => handleDuplicateElement(element.id)}
+          onDelete={() => onDeleteElement(element.id)}
+          onRotate={() => handleRotateElement(element.id)}
         >
-          <CanvasElementRenderer
-            element={element}
-            editingElement={editingElement}
-            onUpdateElement={onUpdateElement}
-            onEditingChange={setEditingElement}
-            onElementDragStart={(e, elementId) => handleMouseDown(e, elementId, 'drag')}
-            isDragging={dragState?.isDragging && selectedElement === element.id}
-          />
-        </div>
+          <div
+            className={`absolute cursor-move ${
+              selectedElement === element.id ? 'ring-2 ring-blue-500' : ''
+            }`}
+            style={{
+              left: element.x,
+              top: element.y,
+              width: element.width,
+              height: element.height,
+              transform: `rotate(${element.rotation || 0}deg)`,
+              transformOrigin: 'center',
+              zIndex: element.zIndex || 0,
+            }}
+            onMouseDown={(e) => {
+              // Only allow dragging from specific areas for drawing elements
+              if (element.type === 'drawing') {
+                // For drawing elements, only allow dragging from the top drag handle
+                return;
+              }
+              handleMouseDown(e, element.id, 'drag');
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectElement(element.id);
+            }}
+            onContextMenu={(e) => handleElementContextMenu(e, element.id)}
+          >
+            <CanvasElementRenderer
+              element={element}
+              editingElement={editingElement}
+              onUpdateElement={onUpdateElement}
+              onEditingChange={setEditingElement}
+              onElementDragStart={(e, elementId) => handleMouseDown(e, elementId, 'drag')}
+              isDragging={dragState?.isDragging && selectedElement === element.id}
+            />
+          </div>
+        </ElementContextMenu>
       ))}
 
       {/* Resize handles for selected element */}
@@ -337,19 +433,28 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         />
       )}
 
-      {/* Context Menu */}
-      {contextMenu && (
-        <CanvasContextMenu
-          onUndo={() => {}}
-          onRedo={() => {}}
-          canUndo={false}
-          canRedo={false}
-          onChangeBackground={() => {}}
-          onToggleGrid={() => setSnapToGrid(!snapToGrid)}
-          onSettings={() => {}}
+      {/* Canvas Context Menu */}
+      {contextMenuPosition && !contextMenuElement && (
+        <div
+          style={{
+            position: 'fixed',
+            left: contextMenuPosition.x,
+            top: contextMenuPosition.y,
+            zIndex: 1000,
+          }}
         >
-          <div />
-        </CanvasContextMenu>
+          <CanvasContextMenu
+            onUndo={() => {}}
+            onRedo={() => {}}
+            canUndo={false}
+            canRedo={false}
+            onChangeBackground={() => {}}
+            onToggleGrid={() => setSnapToGrid(!snapToGrid)}
+            onSettings={() => {}}
+          >
+            <div />
+          </CanvasContextMenu>
+        </div>
       )}
     </div>
   );
