@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { CardTemplate } from '@/types/flashcard';
 import { cardTemplates } from '@/data/cardTemplates';
+import { Type, Image, CheckSquare, ToggleLeft, FileText, Youtube, Layers } from 'lucide-react';
 
 interface TemplateSelectorProps {
   onSelectTemplate: (template: CardTemplate) => void;
@@ -42,18 +43,84 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     }
   };
 
+  const getElementIcon = (elementType: string) => {
+    switch (elementType) {
+      case 'text': return <Type className="w-3 h-3" />;
+      case 'image': return <Image className="w-3 h-3" />;
+      case 'multiple-choice': return <CheckSquare className="w-3 h-3" />;
+      case 'true-false': return <ToggleLeft className="w-3 h-3" />;
+      case 'fill-in-blank': return <FileText className="w-3 h-3" />;
+      case 'youtube': return <Youtube className="w-3 h-3" />;
+      case 'deck-embed': return <Layers className="w-3 h-3" />;
+      default: return <Type className="w-3 h-3" />;
+    }
+  };
+
+  const renderTemplatePreview = (template: CardTemplate) => {
+    const frontElements = template.front_elements;
+    const elementTypes = [...new Set(frontElements.map(el => el.type))];
+    
+    return (
+      <div className="aspect-[2/3] bg-gray-50 rounded border-2 border-dashed border-gray-200 p-2 flex flex-col justify-between">
+        {/* Header with element count */}
+        <div className="flex justify-between items-start text-xs text-gray-600">
+          <span className="font-medium">Front</span>
+          <span>{frontElements.length} elements</span>
+        </div>
+        
+        {/* Visual layout representation */}
+        <div className="flex-1 flex flex-col justify-center space-y-1">
+          {frontElements.slice(0, 4).map((element, index) => (
+            <div 
+              key={index}
+              className="flex items-center gap-1 text-xs text-gray-700 bg-white/80 rounded px-1 py-0.5"
+            >
+              {getElementIcon(element.type)}
+              <span className="truncate">
+                {element.type === 'text' ? (element.content?.substring(0, 15) + '...' || 'Text') 
+                 : element.type === 'image' ? 'Image'
+                 : element.type === 'multiple-choice' ? 'Quiz'
+                 : element.type}
+              </span>
+            </div>
+          ))}
+          {frontElements.length > 4 && (
+            <div className="text-xs text-gray-500 text-center">
+              +{frontElements.length - 4} more
+            </div>
+          )}
+        </div>
+        
+        {/* Bottom with element types */}
+        <div className="flex flex-wrap gap-1 mt-1">
+          {elementTypes.slice(0, 3).map((type, index) => (
+            <div key={index} className="flex items-center gap-0.5 text-xs bg-blue-50 text-blue-700 rounded px-1">
+              {getElementIcon(type)}
+            </div>
+          ))}
+          {elementTypes.length > 3 && (
+            <div className="text-xs text-gray-500">+{elementTypes.length - 3}</div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-4xl max-h-[80vh] mx-4">
+      <Card className="w-full max-w-6xl max-h-[85vh] mx-4">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Choose a Template</h2>
+            <div>
+              <h2 className="text-2xl font-bold">Choose a Template</h2>
+              <p className="text-gray-600 mt-1">Select a pre-designed layout for your flashcard</p>
+            </div>
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
           </div>
           
-          <ScrollArea className="h-[60vh]">
+          <ScrollArea className="h-[65vh]">
             <div className="space-y-8">
               {Object.entries(groupedTemplates).map(([cardType, templates]) => (
                 <div key={cardType}>
@@ -64,45 +131,34 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                     </Badge>
                   </h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {templates.map((template) => (
                       <Card 
                         key={template.id} 
-                        className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
+                        className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-primary group"
                         onClick={() => onSelectTemplate(template)}
                       >
                         <CardContent className="p-4">
-                          <div className="aspect-[2/3] bg-gray-100 rounded mb-3 flex items-center justify-center relative overflow-hidden">
-                            {template.thumbnail ? (
-                              <img 
-                                src={template.thumbnail} 
-                                alt={template.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="text-center p-2">
-                                <div className="text-xs text-gray-500">
-                                  {template.canvas_width} × {template.canvas_height}
-                                </div>
-                                <div className="text-xs text-gray-400 mt-1">
-                                  {template.front_elements.length} element{template.front_elements.length !== 1 ? 's' : ''}
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                          {/* Template Preview */}
+                          {renderTemplatePreview(template)}
                           
-                          <h4 className="font-medium text-sm mb-1">{template.name}</h4>
-                          <p className="text-xs text-gray-600 line-clamp-2">
-                            {template.description}
-                          </p>
-                          
-                          <div className="mt-2 flex justify-between items-center">
-                            <Badge variant="outline" className="text-xs">
-                              {template.card_type}
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              {template.canvas_width}×{template.canvas_height}
-                            </span>
+                          {/* Template Info */}
+                          <div className="mt-3">
+                            <h4 className="font-medium text-sm mb-1 group-hover:text-primary transition-colors">
+                              {template.name}
+                            </h4>
+                            <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed">
+                              {template.description}
+                            </p>
+                            
+                            <div className="mt-3 flex justify-between items-center">
+                              <Badge variant="outline" className="text-xs">
+                                {template.card_type}
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {template.canvas_width}×{template.canvas_height}
+                              </span>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
