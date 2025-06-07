@@ -1,4 +1,3 @@
-
 export interface CanvasElement {
   id: string;
   type: 'text' | 'image' | 'audio' | 'drawing' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed' | 'fill-in-blank';
@@ -50,6 +49,9 @@ export interface CanvasElement {
   // Deck embed properties
   deckId?: string;
   deckTitle?: string;
+  
+  // Hyperlink property for text and image elements
+  hyperlink?: string;
 }
 
 export interface Flashcard {
