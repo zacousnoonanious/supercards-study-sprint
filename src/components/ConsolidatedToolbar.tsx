@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -94,7 +95,8 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
         <TooltipContent side={position === 'left' ? 'right' : 'left'}>
           {label}
         </TooltipContent>
-      </TooltipProvider>
+      </Tooltip>
+    </TooltipProvider>
   );
 
   return (
