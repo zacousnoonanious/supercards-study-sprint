@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FlashcardSet } from '@/types/flashcard';
 
@@ -13,20 +14,20 @@ interface DeckSelectorProps {
   textScale?: number;
 }
 
-export const DeckSelector: React.FC<DeckSelectorProps> = ({ 
-  onDeckSelect, 
+export const DeckSelector: React.FC<DeckSelectorProps> = ({
+  onDeckSelect,
   currentDeckId,
   textScale = 1
 }) => {
   const { user } = useAuth();
-  const { setId } = useParams();
-  const [decks, setDecks] = useState<FlashcardSet[]>([]);
+  const [userSets, setUserSets] = useState<FlashcardSet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [customDeckId, setCustomDeckId] = useState('');
 
   useEffect(() => {
     if (!user) return;
 
-    const fetchDecks = async () => {
+    const fetchUserSets = async () => {
       try {
         const { data, error } = await supabase
           .from('flashcard_sets')
@@ -35,66 +36,97 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        
-        // Filter out the current deck to prevent self-embedding
-        const filteredDecks = (data || []).filter(deck => deck.id !== setId);
-        setDecks(filteredDecks);
+        setUserSets(data || []);
       } catch (error) {
-        console.error('Error fetching decks:', error);
+        console.error('Error fetching user sets:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDecks();
-  }, [user, setId]);
+    fetchUserSets();
+  }, [user]);
+
+  const handleSelectDeck = (setId: string) => {
+    const selectedSet = userSets.find(set => set.id === setId);
+    if (selectedSet) {
+      onDeckSelect(selectedSet.id, selectedSet.title);
+    }
+  };
+
+  const handleCustomDeckSelect = () => {
+    if (customDeckId.trim()) {
+      onDeckSelect(customDeckId.trim(), `Custom Deck (${customDeckId.trim()})`);
+    }
+  };
 
   if (loading) {
     return (
-      <div 
-        className="text-sm text-muted-foreground"
-        style={{ fontSize: `${12 * textScale}px` }}
-      >
-        Loading decks...
+      <div className="flex items-center justify-center p-4">
+        <div className="text-sm text-gray-500" style={{ fontSize: `${12 * textScale}px` }}>
+          Loading your decks...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <h3 
-        className="font-medium text-sm"
-        style={{ fontSize: `${14 * textScale}px` }}
-      >
-        Select a deck to embed:
-      </h3>
-      <Select value={currentDeckId} onValueChange={(value) => {
-        const selectedDeck = decks.find(deck => deck.id === value);
-        if (selectedDeck) {
-          onDeckSelect(selectedDeck.id, selectedDeck.title);
-        }
-      }}>
-        <SelectTrigger 
-          className="w-full h-8 text-xs"
-          style={{ fontSize: `${12 * textScale}px` }}
-        >
-          <SelectValue placeholder="Choose a deck..." />
-        </SelectTrigger>
-        <SelectContent>
-          {decks.map((deck) => (
-            <SelectItem key={deck.id} value={deck.id}>
-              {deck.title}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {decks.length === 0 && (
-        <p 
-          className="text-xs text-muted-foreground"
-          style={{ fontSize: `${10 * textScale}px` }}
-        >
-          No other decks available to embed.
-        </p>
+    <div className="p-4 space-y-4">
+      <div>
+        <Label className="text-sm font-medium" style={{ fontSize: `${12 * textScale}px` }}>
+          Select from your decks:
+        </Label>
+        <Select onValueChange={handleSelectDeck} value={currentDeckId}>
+          <SelectTrigger className="w-full mt-1">
+            <SelectValue 
+              placeholder="Choose a deck to embed..." 
+              style={{ fontSize: `${12 * textScale}px` }}
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {userSets.map((set) => (
+              <SelectItem key={set.id} value={set.id}>
+                <div style={{ fontSize: `${12 * textScale}px` }}>
+                  <div className="font-medium">{set.title}</div>
+                  {set.description && (
+                    <div className="text-xs text-gray-500">{set.description}</div>
+                  )}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="border-t pt-4">
+        <Label className="text-sm font-medium" style={{ fontSize: `${12 * textScale}px` }}>
+          Or enter a custom deck ID:
+        </Label>
+        <div className="flex gap-2 mt-1">
+          <Input
+            placeholder="Enter deck ID"
+            value={customDeckId}
+            onChange={(e) => setCustomDeckId(e.target.value)}
+            className="flex-1"
+            style={{ fontSize: `${12 * textScale}px` }}
+          />
+          <Button
+            onClick={handleCustomDeckSelect}
+            disabled={!customDeckId.trim()}
+            size="sm"
+            style={{ fontSize: `${10 * textScale}px` }}
+          >
+            Use
+          </Button>
+        </div>
+      </div>
+
+      {userSets.length === 0 && (
+        <div className="text-center py-4">
+          <p className="text-sm text-gray-500" style={{ fontSize: `${12 * textScale}px` }}>
+            You don't have any decks yet. Create a deck first to embed it.
+          </p>
+        </div>
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ import { Flashcard, FlashcardSet, CanvasElement } from '@/types/flashcard';
 const StudyMode = () => {
   const { setId } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [set, setSet] = useState<FlashcardSet | null>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -26,8 +28,14 @@ const StudyMode = () => {
   const [showPanelView, setShowPanelView] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [allowNavigation, setAllowNavigation] = useState(true);
-  const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Get the previous page from navigation state or default to set view
+  const previousPage = location.state?.from || `/sets/${setId}`;
+
+  const handleGoBack = () => {
+    navigate(previousPage);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -183,12 +191,12 @@ const StudyMode = () => {
             <div className="flex items-center h-16">
               <Button
                 variant="ghost"
-                onClick={() => navigate(`/sets/${setId}`)}
+                onClick={handleGoBack}
                 className="mr-2 sm:mr-4 p-2"
                 size="sm"
               >
                 <ArrowLeft className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Set</span>
+                <span className="hidden sm:inline">Go Back</span>
               </Button>
               <h1 className="text-lg sm:text-2xl font-bold text-primary">Study Mode</h1>
             </div>
@@ -241,6 +249,7 @@ const StudyMode = () => {
         sessionStats={sessionStats}
         showSettings={showSettings}
         onToggleSettings={() => setShowSettings(!showSettings)}
+        onGoBack={handleGoBack}
       />
 
       {showSettings && (

@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
 import { FillInBlankEditor } from './FillInBlankEditor';
 import { DrawingCanvas } from './DrawingCanvas';
 import { DeckSelector } from './DeckSelector';
+import { EmbeddedDeckViewer } from './EmbeddedDeckViewer';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CanvasElementRendererProps {
@@ -29,6 +31,30 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
 
   const handleMultipleChoiceUpdate = (updates: Partial<CanvasElement>) => {
     onUpdateElement(element.id, updates);
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        onUpdateElement(element.id, { imageUrl: result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        onUpdateElement(element.id, { audioUrl: result });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   switch (element.type) {
@@ -65,10 +91,23 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
         </div>
       );
     case 'youtube':
-      return (
+      const youtubeContent = (
         <div className="w-full h-full">
           <YouTubeRenderer element={element} />
         </div>
+      );
+
+      return element.hyperlink ? (
+        <a 
+          href={element.hyperlink} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="w-full h-full block"
+        >
+          {youtubeContent}
+        </a>
+      ) : (
+        youtubeContent
       );
     case 'deck-embed':
       return (
@@ -76,17 +115,39 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
         }`}>
           {element.deckId ? (
-            <div className="text-center w-full h-full">
-              <h3 className="font-medium mb-2 text-sm" style={{ fontSize: `${12 * textScale}px` }}>Embedded Deck</h3>
-              <p className="text-xs text-muted-foreground mb-3" style={{ fontSize: `${10 * textScale}px` }}>{element.deckTitle}</p>
-              <button 
-                className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80"
-                style={{ fontSize: `${10 * textScale}px` }}
-                onClick={() => onUpdateElement(element.id, { deckId: undefined, deckTitle: undefined })}
+            element.hyperlink ? (
+              <a 
+                href={element.hyperlink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full h-full block"
               >
-                Change Deck
-              </button>
-            </div>
+                <EmbeddedDeckViewer
+                  deckId={element.deckId}
+                  width={element.width}
+                  height={element.height}
+                  textScale={textScale}
+                />
+              </a>
+            ) : (
+              <div className="w-full h-full">
+                <EmbeddedDeckViewer
+                  deckId={element.deckId}
+                  width={element.width}
+                  height={element.height}
+                  textScale={textScale}
+                />
+                <div className="text-center mt-2">
+                  <button 
+                    className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80"
+                    style={{ fontSize: `${10 * textScale}px` }}
+                    onClick={() => onUpdateElement(element.id, { deckId: undefined, deckTitle: undefined })}
+                  >
+                    Change Deck
+                  </button>
+                </div>
+              </div>
+            )
           ) : (
             <div className="w-full h-full">
               <DeckSelector
@@ -120,15 +181,43 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
         </div>
       );
     case 'audio':
-      return (
-        <div className={`w-full h-full flex items-center justify-center rounded border ${
+      const audioContent = (
+        <div className={`w-full h-full flex flex-col items-center justify-center rounded border p-2 ${
           theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
         }`}>
-          <audio controls className="w-full h-full max-w-full max-h-full">
-            <source src={element.audioUrl} type="audio/mpeg" />
-            Your browser does not support audio playback.
-          </audio>
+          {element.audioUrl ? (
+            <audio controls className="w-full max-w-full">
+              <source src={element.audioUrl} type="audio/mpeg" />
+              Your browser does not support audio playback.
+            </audio>
+          ) : (
+            <div className="text-center">
+              <div className="text-sm text-gray-500 mb-2" style={{ fontSize: `${12 * textScale}px` }}>
+                No audio file
+              </div>
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={handleAudioUpload}
+                className="text-xs"
+                style={{ fontSize: `${10 * textScale}px` }}
+              />
+            </div>
+          )}
         </div>
+      );
+
+      return element.hyperlink ? (
+        <a 
+          href={element.hyperlink} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="w-full h-full block"
+        >
+          {audioContent}
+        </a>
+      ) : (
+        audioContent
       );
     case 'text':
       const textContent = (
@@ -231,7 +320,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
         </div>
       );
     case 'image':
-      const imageElement = (
+      const imageElement = element.imageUrl ? (
         <img
           src={element.imageUrl}
           alt="Element"
@@ -240,6 +329,23 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           }`}
           draggable={false}
         />
+      ) : (
+        <div className={`w-full h-full flex flex-col items-center justify-center rounded border ${
+          theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+        }`}>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 mb-2" style={{ fontSize: `${12 * textScale}px` }}>
+              No image
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="text-xs"
+              style={{ fontSize: `${10 * textScale}px` }}
+            />
+          </div>
+        </div>
       );
 
       return element.hyperlink ? (
