@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -58,8 +59,8 @@ const Decks = () => {
     } catch (error) {
       console.error('Error fetching sets:', error);
       toast({
-        title: "Error",
-        description: "Failed to load your flashcard decks.",
+        title: t('error.general'),
+        description: t('decks.loadError'),
         variant: "destructive"
       });
     } finally {
@@ -96,14 +97,14 @@ const Decks = () => {
 
       setSets(sets.filter(set => set.id !== id));
       toast({
-        title: "Success",
-        description: `Deck "${title}" deleted successfully.`
+        title: t('success.deleted'),
+        description: t('decks.deleteSuccess').replace('{title}', title)
       });
     } catch (error) {
       console.error('Error deleting set:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete deck. Please try again.",
+        title: t('error.general'),
+        description: t('decks.deleteError'),
         variant: "destructive"
       });
     } finally {
@@ -135,10 +136,10 @@ const Decks = () => {
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h2 className="text-xl font-semibold text-foreground">My Decks</h2>
+          <h2 className="text-xl font-semibold text-foreground">{t('decks.title')}</h2>
           <Button onClick={() => navigate('/create-set')} className="flex items-center gap-2 w-full sm:w-auto">
             <Plus className="w-4 h-4" />
-            Create New Deck
+            {t('decks.createNew')}
           </Button>
         </div>
 
@@ -146,11 +147,11 @@ const Decks = () => {
           <Card className="text-center py-12">
             <CardContent>
               <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">No decks yet</h3>
-              <p className="text-muted-foreground mb-4">Create your first flashcard deck to get started!</p>
+              <h3 className="text-lg font-medium text-foreground mb-2">{t('decks.noDecks')}</h3>
+              <p className="text-muted-foreground mb-4">{t('decks.noDecksDesc')}</p>
               <Button onClick={() => navigate('/create-set')}>
                 <Plus className="w-4 h-4 mr-2" />
-                Create Your First Deck
+                {t('decks.createFirst')}
               </Button>
             </CardContent>
           </Card>
@@ -178,18 +179,18 @@ const Decks = () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Deck</AlertDialogTitle>
+                            <AlertDialogTitle>{t('decks.deleteConfirm')}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete "{set.title}"? This action cannot be undone and will permanently delete all cards in this deck.
+                              {t('decks.deleteMessage').replace('{title}', set.title)}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => deleteSet(set.id, set.title)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                              Delete
+                              {t('delete')}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -201,11 +202,11 @@ const Decks = () => {
                 <CardContent>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Button variant="outline" onClick={() => navigate(`/set/${set.id}`)} className="flex-1">
-                      View Cards
+                      {t('decks.viewCards')}
                     </Button>
                     <Button onClick={() => navigate(`/study/${set.id}`)} className="flex-1">
                       <Play className="w-4 h-4 mr-2" />
-                      Study
+                      {t('decks.study')}
                     </Button>
                   </div>
                 </CardContent>
