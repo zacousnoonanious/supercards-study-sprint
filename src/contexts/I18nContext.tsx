@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface I18nContextType {
@@ -128,6 +129,7 @@ const translations = {
     'error.general': 'An error occurred. Please try again.',
     'success.created': 'Created successfully!',
     'success.saved': 'Saved successfully!',
+    'success.updated': 'Updated successfully!',
     'profile.title': 'Profile Settings',
     'profile.personalInfo': 'Personal Information',
     'profile.firstName': 'First Name',
@@ -135,8 +137,13 @@ const translations = {
     'profile.email': 'Email Address',
     'profile.avatar': 'Profile Picture',
     'profile.language': 'Language',
+    'profile.changeAvatar': 'Change Avatar',
     'profile.updateSuccess': 'Profile updated successfully!',
-    'profile.updateError': 'Failed to update profile.'
+    'profile.updateError': 'Failed to update profile.',
+    'lang.en': 'English',
+    'lang.es': 'Español',
+    'lang.fr': 'Français',
+    'lang.zh': '中文'
   },
   es: {
     // Header/Navigation
@@ -220,7 +227,11 @@ const translations = {
     'marketplace.title': 'Marketplace',
     'editor.deckName': 'Nombre del Mazo',
     'editor.editDeckName': 'Editar Nombre del Mazo',
-    'editor.saveDeckName': 'Guardar Nombre del Mazo'
+    'editor.saveDeckName': 'Guardar Nombre del Mazo',
+    'lang.en': 'English',
+    'lang.es': 'Español',
+    'lang.fr': 'Français',
+    'lang.zh': '中文'
   },
   fr: {
     // Header/Navigation
@@ -274,7 +285,11 @@ const translations = {
     'edit': 'Éditer',
     'editor.deckName': 'Nom du Jeu',
     'editor.editDeckName': 'Éditer le Nom du Jeu',
-    'editor.saveDeckName': 'Sauvegarder le Nom du Jeu'
+    'editor.saveDeckName': 'Sauvegarder le Nom du Jeu',
+    'lang.en': 'English',
+    'lang.es': 'Español',
+    'lang.fr': 'Français',
+    'lang.zh': '中文'
   },
   zh: {
     // Header/Navigation
@@ -328,7 +343,11 @@ const translations = {
     'edit': '编辑',
     'editor.deckName': '卡组名称',
     'editor.editDeckName': '编辑卡组名称',
-    'editor.saveDeckName': '保存卡组名称'
+    'editor.saveDeckName': '保存卡组名称',
+    'lang.en': 'English',
+    'lang.es': 'Español',
+    'lang.fr': 'Français',
+    'lang.zh': '中文'
   }
 };
 
@@ -349,8 +368,8 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [language]);
 
   const t = (key: string): string => {
-    const lang = translations[language as keyof typeof translations] || translations.en;
-    return lang[key as keyof lang] || key;
+    const currentTranslations = translations[language as keyof typeof translations] || translations.en;
+    return (currentTranslations as any)[key] || key;
   };
 
   const value = {
