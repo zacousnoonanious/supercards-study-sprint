@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -75,8 +74,12 @@ const StudyMode = () => {
       // Type cast the data to match our Flashcard interface
       const typedCards: Flashcard[] = (cardsData || []).map(card => ({
         ...card,
-        front_elements: Array.isArray(card.front_elements) ? card.front_elements as CanvasElement[] : [],
-        back_elements: Array.isArray(card.back_elements) ? card.back_elements as CanvasElement[] : [],
+        front_elements: Array.isArray(card.front_elements) ? (card.front_elements as unknown as CanvasElement[]) : [],
+        back_elements: Array.isArray(card.back_elements) ? (card.back_elements as unknown as CanvasElement[]) : [],
+        card_type: (card.card_type || 'normal') as Flashcard['card_type'],
+        canvas_width: card.canvas_width || 600,
+        canvas_height: card.canvas_height || 400,
+        countdown_timer: card.countdown_timer || 0,
       }));
       
       setCards(typedCards);
