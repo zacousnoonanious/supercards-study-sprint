@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,16 +55,23 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
   const [includeIntroOutro, setIncludeIntroOutro] = useState(true);
   const [includeSummary, setIncludeSummary] = useState(true);
 
-  // Quiz Configuration
+  // Quiz Configuration - Updated defaults for fill-in-blank
   const [includeQuiz, setIncludeQuiz] = useState(true);
   const [quizPercentage, setQuizPercentage] = useState([25]);
   const [quizTypes, setQuizTypes] = useState({
     multipleChoice: true,
     trueFalse: true,
-    fillInBlank: false,
+    fillInBlank: true, // Now enabled by default
   });
   const [mcToTfRatio, setMcToTfRatio] = useState([60]); // % MC vs TF
   const [quizDifficulty, setQuizDifficulty] = useState<'easy' | 'medium' | 'hard' | 'mixed'>('mixed');
+
+  // Fill-in-blank specific settings
+  const [fillInBlankSettings, setFillInBlankSettings] = useState({
+    intelligentWordSelection: true,
+    blankPercentage: 25, // Percentage of words to blank in each sentence
+    avoidCommonWords: true,
+  });
 
   // Visual & Media Integration
   const [autoIncludeImages, setAutoIncludeImages] = useState(true);
@@ -178,6 +184,9 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
         mcToTfRatio: mcToTfRatio[0],
         quizDifficulty,
         
+        // Fill-in-blank Configuration
+        fillInBlankSettings,
+        
         // Visual & Media
         autoIncludeImages,
         imageSearchTerms: imageSearchTerms || topic,
@@ -209,10 +218,11 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
         const quizCards = data.quizCards || 0;
         const informationalCards = data.informationalCards || 0;
         const imagesGenerated = data.imagesGenerated || 0;
+        const fillInBlankCards = data.fillInBlankCards || 0;
         
         toast({
           title: "Success",
-          description: `Generated ${totalCards} cards successfully! (${informationalCards} informational, ${quizCards} quiz, ${imagesGenerated} with images)`,
+          description: `Generated ${totalCards} cards successfully! (${informationalCards} informational, ${quizCards} quiz, ${fillInBlankCards} fill-in-blank, ${imagesGenerated} with images)`,
         });
 
         if (mode === 'create-new-deck' && onDeckCreated) {
@@ -585,6 +595,52 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                 </div>
               </div>
 
+              {/* Fill-in-blank specific settings */}
+              {quizTypes.fillInBlank && (
+                <div className="space-y-4 p-3 bg-muted rounded-lg">
+                  <Label className="text-sm font-medium">Fill-in-Blank Settings</Label>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="intelligent-words"
+                      checked={fillInBlankSettings.intelligentWordSelection}
+                      onCheckedChange={(checked) =>
+                        setFillInBlankSettings(prev => ({ ...prev, intelligentWordSelection: checked as boolean }))
+                      }
+                    />
+                    <Label htmlFor="intelligent-words" className="text-sm">Smart Word Selection (avoids common words)</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="avoid-common"
+                      checked={fillInBlankSettings.avoidCommonWords}
+                      onCheckedChange={(checked) =>
+                        setFillInBlankSettings(prev => ({ ...prev, avoidCommonWords: checked as boolean }))
+                      }
+                    />
+                    <Label htmlFor="avoid-common" className="text-sm">Avoid blanking articles, prepositions, etc.</Label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Blank Percentage: {fillInBlankSettings.blankPercentage}%</Label>
+                    <Slider
+                      value={[fillInBlankSettings.blankPercentage]}
+                      onValueChange={(values) =>
+                        setFillInBlankSettings(prev => ({ ...prev, blankPercentage: values[0] }))
+                      }
+                      max={50}
+                      min={15}
+                      step={5}
+                      className="w-full"
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      Percentage of important words to blank out in each sentence
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {(quizTypes.multipleChoice && quizTypes.trueFalse) && (
                 <div className="space-y-2">
                   <Label>Multiple Choice vs True/False Ratio: {mcToTfRatio[0]}% MC</Label>
@@ -730,6 +786,9 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
               )}
               {includeQuiz && (
                 <Badge variant="outline" className="text-xs">{quizPercentage[0]}% Quiz</Badge>
+              )}
+              {quizTypes.fillInBlank && (
+                <Badge variant="outline" className="text-xs">Smart Fill-in-Blank</Badge>
               )}
               {adaptiveContent && (
                 <Badge variant="outline" className="text-xs">Adaptive Flow</Badge>

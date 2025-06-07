@@ -1,181 +1,59 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Input validation constants
-const MAX_PROMPT_LENGTH = 1000;
-const MAX_CARDS_COUNT = 25;
+// Common words to avoid in fill-in-blank exercises
+const COMMON_WORDS = new Set([
+  'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
+  'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
+  'to', 'was', 'will', 'with', 'have', 'had', 'been', 'were', 'would',
+  'could', 'should', 'may', 'might', 'can', 'must', 'shall', 'do', 'does',
+  'did', 'this', 'these', 'those', 'they', 'them', 'their', 'there', 'then',
+  'when', 'where', 'who', 'what', 'why', 'how', 'but', 'or', 'so', 'if',
+  'because', 'while', 'during', 'before', 'after', 'above', 'below', 'up',
+  'down', 'out', 'off', 'over', 'under', 'again', 'further', 'then', 'once'
+]);
 
-const validateInput = (data: any): { isValid: boolean; errors: string[] } => {
-  const errors: string[] = [];
-
-  if (!data.prompt || typeof data.prompt !== 'string') {
-    errors.push('Prompt is required and must be a string');
-  } else if (data.prompt.length > MAX_PROMPT_LENGTH) {
-    errors.push(`Prompt must be ${MAX_PROMPT_LENGTH} characters or less`);
-  } else if (data.prompt.trim().length === 0) {
-    errors.push('Prompt cannot be empty');
-  }
-
-  if (data.cardCount && (typeof data.cardCount !== 'number' || data.cardCount < 1 || data.cardCount > MAX_CARDS_COUNT)) {
-    errors.push(`Count must be a number between 1 and ${MAX_CARDS_COUNT}`);
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-};
-
-const sanitizeContent = (content: string): string => {
-  return content
-    .replace(/[<>]/g, '')
-    .replace(/javascript:/gi, '')
-    .replace(/data:/gi, '')
-    .trim();
-};
-
-// Template mapping for AI selection
-const getTemplateForContent = (contentType: string, templateMode: string, allowedTemplates: string[]) => {
-  const templateMap: Record<string, string> = {
-    'title': 'info-article',
-    'overview': 'normal-basic',
-    'detailed': 'info-study-guide',
-    'comparison': 'normal-two-column',
-    'timeline': 'info-timeline',
-    'quiz-mc': 'normal-quiz',
-    'quiz-tf': 'quiz-true-false',
-    'definition': 'normal-vocab',
-    'example': 'normal-image-text',
-    'summary': 'info-article'
-  };
-
-  if (templateMode === 'auto') {
-    return templateMap[contentType] || 'normal-basic';
-  } else if (templateMode === 'mixed' && allowedTemplates.length > 0) {
-    return allowedTemplates[Math.floor(Math.random() * allowedTemplates.length)];
-  }
+// Function to identify important words for blanking
+function getImportantWords(text: string, blankPercentage: number, avoidCommonWords: boolean): number[] {
+  const words = text.split(/\s+/);
+  const importantWordIndices: number[] = [];
   
-  return 'normal-basic';
-};
-
-const createElement = (type: string, content: string, position: any, size: any, additionalProps: any = {}) => {
-  return {
-    id: `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    type,
-    x: position.x,
-    y: position.y,
-    width: size.width,
-    height: size.height,
-    rotation: 0,
-    zIndex: 1,
-    content,
-    fontSize: additionalProps.fontSize || 16,
-    color: additionalProps.color || '#000000',
-    fontWeight: additionalProps.fontWeight || 'normal',
-    fontStyle: additionalProps.fontStyle || 'normal',
-    textDecoration: additionalProps.textDecoration || 'none',
-    textAlign: additionalProps.textAlign || 'left',
-    ...additionalProps
-  };
-};
-
-const createQuizElement = (type: 'multiple-choice' | 'true-false', question: string, options?: string[], correctAnswer?: number | boolean) => {
-  const baseElement = createElement(
-    type,
-    question,
-    { x: 50, y: 100 },
-    { width: 700, height: type === 'multiple-choice' ? 350 : 250 },
-    {
-      showImmediateFeedback: true,
-      autoAdvanceOnAnswer: false,
-      textAlign: 'center',
-      fontSize: 18
-    }
-  );
-
-  if (type === 'multiple-choice' && options) {
-    return {
-      ...baseElement,
-      multipleChoiceOptions: options,
-      correctAnswer: correctAnswer as number,
-    };
-  } else if (type === 'true-false') {
-    return {
-      ...baseElement,
-      correctAnswer: correctAnswer === true ? 0 : 1,
-    };
-  }
-
-  return baseElement;
-};
-
-const fetchWikipediaImages = async (searchTerms: string, count: number = 3): Promise<string[]> => {
-  try {
-    console.log(`Fetching Wikipedia images for: ${searchTerms}`);
+  words.forEach((word, index) => {
+    const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
     
-    const searches = searchTerms.split(',').map(term => term.trim()).slice(0, 3);
-    const images: string[] = [];
-    
-    for (const term of searches) {
-      const searchResponse = await fetch(
-        `https://en.wikipedia.org/api/rest_v1/page/search/title?q=${encodeURIComponent(term)}&limit=2`
-      );
-      
-      if (!searchResponse.ok) continue;
-      
-      const searchData = await searchResponse.json();
-      
-      for (const page of searchData.pages || []) {
-        try {
-          const pageResponse = await fetch(
-            `https://en.wikipedia.org/api/rest_v1/page/media-list/${encodeURIComponent(page.key)}`
-          );
-          
-          if (pageResponse.ok) {
-            const mediaData = await pageResponse.json();
-            const pageImages = mediaData.items
-              ?.filter((item: any) => 
-                item.type === 'image' && 
-                item.srcset && 
-                !item.title.toLowerCase().includes('commons-logo') &&
-                !item.title.toLowerCase().includes('edit-icon') &&
-                !item.title.toLowerCase().includes('wikimedia')
-              )
-              .slice(0, 1)
-              .map((item: any) => {
-                const srcset = item.srcset.find((src: any) => src.scale && src.scale >= 1.5) || item.srcset[0];
-                return srcset?.src;
-              })
-              .filter(Boolean);
-            
-            if (pageImages) {
-              images.push(...pageImages);
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching images for page:', page.key, error);
-        }
-        
-        if (images.length >= count) break;
-      }
-      
-      if (images.length >= count) break;
+    // Skip if it's a common word and we're avoiding them
+    if (avoidCommonWords && COMMON_WORDS.has(cleanWord)) {
+      return;
     }
     
-    console.log(`Found ${images.length} images`);
-    return images.slice(0, count);
-  } catch (error) {
-    console.error('Error fetching Wikipedia images:', error);
-    return [];
-  }
-};
+    // Skip very short words unless they're significant
+    if (cleanWord.length < 3 && !['AI', 'IT', 'ID', 'TV'].includes(cleanWord.toUpperCase())) {
+      return;
+    }
+    
+    // Prioritize nouns, verbs, adjectives, and proper nouns
+    const isCapitalized = word[0] === word[0].toUpperCase();
+    const isLikelyImportant = cleanWord.length >= 4 || isCapitalized;
+    
+    if (isLikelyImportant) {
+      importantWordIndices.push(index);
+    }
+  });
+  
+  // Calculate how many words to blank based on percentage
+  const targetBlanks = Math.ceil((importantWordIndices.length * blankPercentage) / 100);
+  
+  // Randomly select from important words
+  const shuffled = importantWordIndices.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(targetBlanks, importantWordIndices.length));
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -183,16 +61,40 @@ serve(async (req) => {
   }
 
   try {
-    const config = await req.json();
-    console.log('Enhanced AI generation request:', config);
-
-    const validation = validateInput({ prompt: config.prompt, cardCount: config.cardCount });
-    if (!validation.isValid) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid input', details: validation.errors }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const {
+      prompt,
+      style = 'standard',
+      setId,
+      userId,
+      cardCount = 8,
+      templateMode = 'auto',
+      selectedTemplate,
+      allowedTemplates = [],
+      contentDensity = 'detailed',
+      informationDepth = 70,
+      includeIntroOutro = true,
+      includeSummary = true,
+      targetAudience = 'intermediate',
+      includeQuiz = true,
+      quizPercentage = 25,
+      quizTypes = { multipleChoice: true, trueFalse: true, fillInBlank: true },
+      mcToTfRatio = 60,
+      quizDifficulty = 'mixed',
+      fillInBlankSettings = {
+        intelligentWordSelection: true,
+        blankPercentage: 25,
+        avoidCommonWords: true
+      },
+      autoIncludeImages = true,
+      imageSearchTerms = '',
+      imagePercentage = 40,
+      preferredImageStyle = 'mixed',
+      generateRelatedTopics = false,
+      includeDefinitions = true,
+      includeExamples = true,
+      adaptiveContent = true,
+      mode = 'add-to-set'
+    } = await req.json();
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -210,405 +112,309 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const sanitizedPrompt = sanitizeContent(config.prompt);
+    // Calculate card distribution
+    const totalQuizCards = Math.ceil((cardCount * quizPercentage) / 100);
+    const informationalCards = cardCount - totalQuizCards;
     
-    // Calculate distribution
-    const quizCardCount = config.includeQuiz ? Math.ceil((config.cardCount * config.quizPercentage) / 100) : 0;
-    const informationalCardCount = config.cardCount - quizCardCount;
-    const imageCardCount = config.autoIncludeImages ? Math.ceil((config.cardCount * config.imagePercentage) / 100) : 0;
+    // Calculate quiz type distribution
+    const enabledQuizTypes = Object.entries(quizTypes).filter(([_, enabled]) => enabled);
+    const fillInBlankCards = quizTypes.fillInBlank ? Math.ceil(totalQuizCards / enabledQuizTypes.length) : 0;
+    const multipleChoiceCards = quizTypes.multipleChoice ? Math.ceil((totalQuizCards - fillInBlankCards) * (mcToTfRatio / 100)) : 0;
+    const trueFalseCards = totalQuizCards - fillInBlankCards - multipleChoiceCards;
 
-    console.log(`Generating ${informationalCardCount} info cards, ${quizCardCount} quiz cards, ${imageCardCount} with images`);
+    console.log(`Generating ${cardCount} cards: ${informationalCards} informational, ${multipleChoiceCards} MC, ${trueFalseCards} TF, ${fillInBlankCards} fill-in-blank`);
 
-    // Enhanced content generation with advanced prompting
-    let infoCards = [];
-    if (informationalCardCount > 0) {
-      const densityInstruction = {
-        'key-points': 'Focus on essential key points only, bullet format',
-        'detailed': 'Provide detailed explanations with examples',
-        'comprehensive': 'Create comprehensive coverage with multiple perspectives'
-      }[config.contentDensity];
+    // Enhanced system prompt for comprehensive educational content
+    const systemPrompt = `You are an expert educational content creator specializing in comprehensive, engaging learning materials. Create ${cardCount} flashcards about "${prompt}" with the following specifications:
 
-      const audienceInstruction = {
-        'beginner': 'Use simple language, define technical terms',
-        'intermediate': 'Assume basic knowledge, moderate complexity',
-        'advanced': 'Use technical language, advanced concepts',
-        'mixed': 'Vary complexity levels throughout content'
-      }[config.targetAudience];
+CONTENT REQUIREMENTS:
+- Style: ${style}
+- Density: ${contentDensity}
+- Target Audience: ${targetAudience}
+- Information Depth: ${informationDepth}%
 
-      const infoPrompt = `Create ${informationalCardCount} educational slides about: ${sanitizedPrompt}
+CARD DISTRIBUTION:
+- ${informationalCards} informational cards
+- ${multipleChoiceCards} multiple choice questions
+- ${trueFalseCards} true/false questions
+- ${fillInBlankCards} fill-in-blank exercises
 
-Content Requirements:
-- Density: ${densityInstruction}
-- Audience: ${audienceInstruction}
-- Information Depth: ${config.informationDepth}% (scale from basic overview to expert level)
-- Style: ${config.style}
-${config.includeIntroOutro ? '- Include introduction and conclusion slides' : ''}
-${config.includeSummary ? '- Include summary/recap content' : ''}
-${config.includeDefinitions ? '- Auto-generate definitions for key terms' : ''}
-${config.includeExamples ? '- Include relevant examples and case studies' : ''}
-${config.generateRelatedTopics ? '- Include related topic connections' : ''}
+FILL-IN-BLANK SPECIFICATIONS:
+- Use intelligent word selection: ${fillInBlankSettings.intelligentWordSelection}
+- Avoid common words (a, the, is, etc.): ${fillInBlankSettings.avoidCommonWords}
+- Target ${fillInBlankSettings.blankPercentage}% of important words per sentence
+- Focus on key terms, concepts, names, numbers, and significant descriptors
+- Avoid blanking articles, prepositions, conjunctions, and auxiliary verbs
 
-Return ONLY a JSON array with this exact format:
-[
-  {
-    "type": "title|content|definition|example|summary|comparison|timeline",
-    "title": "Slide Title (max 50 chars)",
-    "content": "Educational content (adapt length to density setting)",
-    "imageQuery": "specific search term for relevant image",
-    "layoutHint": "single-column|two-column|image-focus|text-heavy"
-  }
-]`;
+Format each card as a JSON object with these properties:
+- type: "informational", "multiple-choice", "true-false", or "fill-in-blank"
+- question: The main question or topic
+- answer: For informational cards, the detailed explanation
+- options: For multiple choice, array of 4 options with correct answer first
+- correctAnswer: For true-false, boolean value
+- fillInBlankText: For fill-in-blank, the complete text with important words to be blanked
+- explanation: Additional context or explanation
 
-      console.log('Generating enhanced informational content...');
-      const infoResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { 
-              role: 'system', 
-              content: `You are an expert educational content creator. Create engaging, accurate educational materials. Always return valid JSON. Adapt content complexity to the specified audience and density requirements.` 
-            },
-            { role: 'user', content: infoPrompt }
-          ],
-          max_tokens: 3000,
-          temperature: config.style === 'creative' ? 0.8 : 0.6,
-        }),
-      });
+QUALITY GUIDELINES:
+- Make content educational and engaging
+- Use clear, age-appropriate language for ${targetAudience} level
+- Include specific examples and practical applications
+- Ensure factual accuracy
+- Create meaningful fill-in-blank exercises that test comprehension of key concepts
 
-      if (infoResponse.ok) {
-        const infoData = await infoResponse.json();
-        const infoContent = infoData.choices[0]?.message?.content;
+Return a JSON array of cards only, no additional text.`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Generate ${cardCount} educational flashcards about: ${prompt}` }
+        ],
+        max_tokens: 4000,
+        temperature: 0.8,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate content from OpenAI');
+    }
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content;
+
+    if (!content) {
+      throw new Error('No content generated from OpenAI');
+    }
+
+    let cards;
+    try {
+      cards = JSON.parse(content);
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', parseError);
+      throw new Error('Invalid JSON response from AI');
+    }
+
+    if (!Array.isArray(cards)) {
+      throw new Error('AI response is not an array of cards');
+    }
+
+    // Process cards and create canvas elements
+    const processedCards = await Promise.all(cards.map(async (card: any, index: number) => {
+      const cardId = `${Date.now()}_${index}`;
+      let elements: any[] = [];
+
+      if (card.type === 'fill-in-blank') {
+        // Process fill-in-blank card with intelligent word selection
+        const originalText = card.fillInBlankText || card.question;
         
-        if (infoContent) {
-          try {
-            const jsonMatch = infoContent.match(/\[[\s\S]*\]/);
-            const cleanJson = jsonMatch ? jsonMatch[0] : infoContent;
-            infoCards = JSON.parse(cleanJson);
-            console.log(`Successfully parsed ${infoCards.length} info cards`);
-          } catch (e) {
-            console.error('Failed to parse informational cards:', e);
-          }
-        }
-      }
-    }
-
-    // Enhanced quiz generation
-    let quizCards = [];
-    if (quizCardCount > 0) {
-      const quizTypeDistribution = [];
-      if (config.quizTypes?.multipleChoice) {
-        const mcCount = Math.ceil(quizCardCount * (config.mcToTfRatio / 100));
-        quizTypeDistribution.push(...Array(mcCount).fill('multiple-choice'));
-      }
-      if (config.quizTypes?.trueFalse) {
-        const tfCount = quizCardCount - quizTypeDistribution.length;
-        quizTypeDistribution.push(...Array(Math.max(0, tfCount)).fill('true-false'));
-      }
-
-      const difficultyInstruction = {
-        'easy': 'Create straightforward questions with obvious answers',
-        'medium': 'Create moderately challenging questions requiring understanding',
-        'hard': 'Create complex questions requiring deep analysis',
-        'mixed': 'Vary difficulty levels from easy to hard'
-      }[config.quizDifficulty];
-
-      const quizPrompt = `Create ${quizCardCount} quiz questions about: ${sanitizedPrompt}
-
-Quiz Requirements:
-- Question types: ${quizTypeDistribution.join(', ')}
-- Difficulty: ${difficultyInstruction}
-- Audience: ${config.targetAudience}
-- Focus on testing understanding, not just memorization
-
-Return ONLY a JSON array with this exact format:
-[
-  {
-    "type": "multiple-choice",
-    "question": "Clear, specific question?",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correctAnswer": 0,
-    "explanation": "Detailed explanation why this is correct",
-    "difficulty": "easy|medium|hard"
-  },
-  {
-    "type": "true-false",
-    "question": "Clear statement to evaluate",
-    "correctAnswer": true,
-    "explanation": "Explanation of why true/false",
-    "difficulty": "easy|medium|hard"
-  }
-]`;
-
-      console.log('Generating enhanced quiz content...');
-      const quizResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { 
-              role: 'system', 
-              content: 'You are an expert quiz creator. Create challenging but fair questions that test understanding. Always return valid JSON.' 
-            },
-            { role: 'user', content: quizPrompt }
-          ],
-          max_tokens: 2500,
-          temperature: 0.5,
-        }),
-      });
-
-      if (quizResponse.ok) {
-        const quizData = await quizResponse.json();
-        const quizContent = quizData.choices[0]?.message?.content;
-        
-        if (quizContent) {
-          try {
-            const jsonMatch = quizContent.match(/\[[\s\S]*\]/);
-            const cleanJson = jsonMatch ? jsonMatch[0] : quizContent;
-            quizCards = JSON.parse(cleanJson);
-            console.log(`Successfully parsed ${quizCards.length} quiz cards`);
-          } catch (e) {
-            console.error('Failed to parse quiz cards:', e);
-          }
-        }
-      }
-    }
-
-    if (infoCards.length === 0 && quizCards.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'No cards generated' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Fetch images if enabled
-    let images: string[] = [];
-    if (config.autoIncludeImages) {
-      const searchTerms = config.imageSearchTerms || sanitizedPrompt;
-      images = await fetchWikipediaImages(searchTerms, imageCardCount);
-    }
-
-    // Create enhanced flashcards with template selection
-    const createdCards = [];
-    let infoIndex = 0;
-    let quizIndex = 0;
-    let imageIndex = 0;
-    let imagesUsed = 0;
-
-    for (let i = 0; i < config.cardCount; i++) {
-      let frontElements = [];
-      let backElements = [];
-      let cardType = 'informational';
-      let interactiveType = null;
-      let canvasWidth = 800;
-      let canvasHeight = 600;
-
-      // Determine content type and template
-      let contentType = 'content';
-      let template = config.selectedTemplate;
-
-      // Smart card distribution using adaptive content flow
-      if (config.adaptiveContent) {
-        // Intro cards
-        if (i === 0 && config.includeIntroOutro) {
-          contentType = 'title';
-        }
-        // Quiz cards strategically placed
-        else if (i > 0 && (i + 1) % 4 === 0 && quizIndex < quizCards.length) {
-          contentType = 'quiz';
-        }
-        // Summary cards
-        else if (i === config.cardCount - 1 && config.includeSummary) {
-          contentType = 'summary';
-        }
-        // Regular content
-        else if (infoIndex < infoCards.length) {
-          const infoCard = infoCards[infoIndex];
-          contentType = infoCard.type || 'content';
-        }
-      } else {
-        // Simple alternating pattern
-        if (i > 0 && (i + 1) % 3 === 0 && quizIndex < quizCards.length) {
-          contentType = 'quiz';
-        } else if (infoIndex < infoCards.length) {
-          contentType = 'content';
-        }
-      }
-
-      // Select appropriate template
-      if (config.templateMode !== 'fixed') {
-        template = getTemplateForContent(contentType, config.templateMode, config.allowedTemplates);
-      }
-
-      // Set canvas dimensions based on template or content type
-      if (contentType === 'quiz') {
-        canvasWidth = 600;
-        canvasHeight = 900;
-      } else if (config.contentDensity === 'comprehensive') {
-        canvasWidth = 900;
-        canvasHeight = 1200;
-      } else {
-        canvasWidth = 800;
-        canvasHeight = 600;
-      }
-
-      if (contentType === 'quiz' && quizIndex < quizCards.length) {
-        // Quiz card
-        const quizCard = quizCards[quizIndex++];
-        cardType = 'quiz-only';
-        
-        if (quizCard.type === 'multiple-choice') {
-          interactiveType = 'multiple-choice';
-          const quizElement = createQuizElement(
-            'multiple-choice',
-            quizCard.question,
-            quizCard.options,
-            quizCard.correctAnswer
+        let blankIndices: number[] = [];
+        if (fillInBlankSettings.intelligentWordSelection && originalText) {
+          blankIndices = getImportantWords(
+            originalText, 
+            fillInBlankSettings.blankPercentage, 
+            fillInBlankSettings.avoidCommonWords
           );
-          frontElements.push(quizElement);
-        } else if (quizCard.type === 'true-false') {
-          interactiveType = 'true-false';
-          const quizElement = createQuizElement(
-            'true-false',
-            quizCard.question,
-            undefined,
-            quizCard.correctAnswer
-          );
-          frontElements.push(quizElement);
         }
 
-        // Add explanation to back
-        if (quizCard.explanation) {
-          backElements.push(createElement(
-            'text',
-            `Explanation: ${quizCard.explanation}`,
-            { x: 50, y: 200 },
-            { width: canvasWidth - 100, height: 200 },
-            { fontSize: 16, textAlign: 'center' }
-          ));
+        // Create blank objects
+        const words = originalText.split(/\s+/);
+        const blanks = blankIndices.map(wordIndex => ({
+          word: words[wordIndex]?.replace(/[^\w]/g, '') || '',
+          position: wordIndex,
+          id: `blank_${cardId}_${wordIndex}`
+        }));
+
+        elements.push({
+          id: `element_${cardId}`,
+          type: 'fill-in-blank',
+          x: 50,
+          y: 50,
+          width: 500,
+          height: 300,
+          fillInBlankText: originalText,
+          fillInBlankBlanks: blanks,
+          fillInBlankMode: 'manual',
+          showLetterCount: true,
+          ignoreCase: true,
+          fontSize: 16,
+          fontFamily: 'Inter',
+          color: '#000000',
+          backgroundColor: 'transparent',
+          zIndex: 1
+        });
+
+        // Add explanation if provided
+        if (card.explanation) {
+          elements.push({
+            id: `explanation_${cardId}`,
+            type: 'text',
+            x: 50,
+            y: 370,
+            width: 500,
+            height: 80,
+            content: card.explanation,
+            fontSize: 14,
+            fontFamily: 'Inter',
+            color: '#666666',
+            backgroundColor: 'transparent',
+            zIndex: 1
+          });
         }
-      } else if (infoIndex < infoCards.length) {
-        // Info card
-        const infoCard = infoCards[infoIndex++];
-        cardType = config.contentDensity === 'comprehensive' ? 'informational' : 'normal';
-        
-        let currentY = 50;
-        
-        // Title element
-        if (infoCard.title) {
-          frontElements.push(createElement(
-            'text',
-            infoCard.title,
-            { x: 50, y: currentY },
-            { width: canvasWidth - 100, height: 80 },
-            { fontSize: contentType === 'title' ? 28 : 24, fontWeight: 'bold', textAlign: 'center' }
-          ));
-          currentY += 100;
-        }
-        
-        // Image element (if enabled and available)
-        const shouldIncludeImage = config.autoIncludeImages && 
-                                 images.length > 0 && 
-                                 imageIndex < imageCardCount &&
-                                 imagesUsed < images.length;
-        
-        if (shouldIncludeImage) {
-          const imageUrl = images[imageIndex % images.length];
-          frontElements.push(createElement(
-            'image',
-            '',
-            { x: (canvasWidth - 400) / 2, y: currentY },
-            { width: 400, height: 250 },
-            { imageUrl }
-          ));
-          currentY += 270;
-          imageIndex++;
-          imagesUsed++;
-        }
-        
-        // Content element with adaptive positioning
-        if (infoCard.content) {
-          const contentHeight = config.contentDensity === 'comprehensive' ? 300 : 
-                               config.contentDensity === 'detailed' ? 200 : 150;
-          
-          frontElements.push(createElement(
-            'text',
-            infoCard.content,
-            { x: 50, y: currentY },
-            { width: canvasWidth - 100, height: contentHeight },
-            { 
-              fontSize: config.contentDensity === 'comprehensive' ? 14 : 16,
-              textAlign: infoCard.layoutHint === 'image-focus' ? 'center' : 'left'
-            }
-          ));
-        }
+      } else if (card.type === 'multiple-choice') {
+        // Multiple choice question
+        elements.push({
+          id: `question_${cardId}`,
+          type: 'text',
+          x: 50,
+          y: 50,
+          width: 500,
+          height: 100,
+          content: card.question,
+          fontSize: 18,
+          fontFamily: 'Inter',
+          color: '#000000',
+          backgroundColor: 'transparent',
+          zIndex: 1
+        });
+
+        elements.push({
+          id: `quiz_${cardId}`,
+          type: 'multiple-choice',
+          x: 50,
+          y: 170,
+          width: 500,
+          height: 200,
+          question: card.question,
+          options: card.options || [],
+          correctAnswer: 0,
+          fontSize: 14,
+          fontFamily: 'Inter',
+          color: '#000000',
+          backgroundColor: 'transparent',
+          zIndex: 1
+        });
+      } else if (card.type === 'true-false') {
+        // True/False question
+        elements.push({
+          id: `question_${cardId}`,
+          type: 'text',
+          x: 50,
+          y: 50,
+          width: 500,
+          height: 150,
+          content: card.question,
+          fontSize: 18,
+          fontFamily: 'Inter',
+          color: '#000000',
+          backgroundColor: 'transparent',
+          zIndex: 1
+        });
+
+        elements.push({
+          id: `quiz_${cardId}`,
+          type: 'true-false',
+          x: 50,
+          y: 220,
+          width: 500,
+          height: 150,
+          question: card.question,
+          correctAnswer: card.correctAnswer,
+          fontSize: 14,
+          fontFamily: 'Inter',
+          color: '#000000',
+          backgroundColor: 'transparent',
+          zIndex: 1
+        });
+      } else {
+        // Informational card
+        elements.push({
+          id: `title_${cardId}`,
+          type: 'text',
+          x: 50,
+          y: 50,
+          width: 500,
+          height: 80,
+          content: card.question,
+          fontSize: 20,
+          fontFamily: 'Inter',
+          color: '#000000',
+          backgroundColor: 'transparent',
+          fontWeight: 'bold',
+          zIndex: 1
+        });
+
+        elements.push({
+          id: `content_${cardId}`,
+          type: 'text',
+          x: 50,
+          y: 150,
+          width: 500,
+          height: 250,
+          content: card.answer,
+          fontSize: 16,
+          fontFamily: 'Inter',
+          color: '#000000',
+          backgroundColor: 'transparent',
+          zIndex: 1
+        });
       }
 
-      // Insert flashcard into database
-      console.log(`Creating enhanced card ${i + 1} of type ${cardType} with template ${template}`);
-      const { data: flashcard, error } = await supabase
+      // Insert card into database
+      const { data: insertedCard, error: cardError } = await supabase
         .from('flashcards')
         .insert({
-          set_id: config.setId,
-          question: contentType === 'quiz' ? 'Quiz Question' : 'Educational Content',
-          answer: contentType === 'quiz' ? 'Quiz Answer' : 'Educational Information',
-          front_elements: frontElements,
-          back_elements: backElements,
-          card_type: cardType,
-          interactive_type: interactiveType,
-          canvas_width: canvasWidth,
-          canvas_height: canvasHeight,
-          metadata: {
-            template: template,
-            contentType: contentType,
-            aiGenerated: true,
-            difficulty: quizIndex > 0 ? quizCards[quizIndex - 1]?.difficulty : undefined
-          }
+          set_id: setId,
+          question: card.question,
+          answer: card.answer || '',
+          user_id: userId,
+          card_elements: elements
         })
         .select()
         .single();
 
-      if (error) {
-        console.error('Error creating flashcard:', error);
-      } else {
-        createdCards.push(flashcard);
-        console.log(`Successfully created enhanced card ${flashcard.id}`);
+      if (cardError) {
+        console.error('Error inserting card:', cardError);
+        throw cardError;
       }
-    }
 
-    console.log(`Enhanced generation complete: ${createdCards.length} cards created with ${imagesUsed} images`);
+      return insertedCard;
+    }));
+
+    console.log(`Successfully created ${processedCards.length} cards`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        cardCount: createdCards.length,
-        quizCards: createdCards.filter(c => c.card_type === 'quiz-only').length,
-        informationalCards: createdCards.filter(c => c.card_type !== 'quiz-only').length,
-        imagesGenerated: imagesUsed,
-        templateMode: config.templateMode,
-        contentDensity: config.contentDensity
+      JSON.stringify({
+        success: true,
+        cardCount: processedCards.length,
+        quizCards: multipleChoiceCards + trueFalseCards,
+        fillInBlankCards,
+        informationalCards,
+        imagesGenerated: 0 // Will be implemented in future updates
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error in enhanced generate-flashcards function:', error);
+    console.error('Error in generate-flashcards function:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        success: false, 
+        error: error.message || 'Internal server error' 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });
