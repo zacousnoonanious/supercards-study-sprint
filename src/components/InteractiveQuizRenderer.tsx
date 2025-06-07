@@ -32,9 +32,6 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
   const [showFeedback, setShowFeedback] = useState(false);
 
   const handleAnswer = (answerIndex: number) => {
-    // In study mode, allow answering even if already answered
-    if (hasAnswered && !isStudyMode && !showResults) return;
-    
     setSelectedAnswer(answerIndex);
     setHasAnswered(true);
     
@@ -99,6 +96,15 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
     return (showResults || (element.showImmediateFeedback && showFeedback)) && hasAnswered;
   };
 
+  // Determine if buttons should be disabled
+  const areButtonsDisabled = () => {
+    // Never disable in study mode - always allow interaction
+    if (isStudyMode) return false;
+    
+    // In editor mode, disable after answering if not showing results and no immediate feedback
+    return hasAnswered && !showResults && !element.showImmediateFeedback;
+  };
+
   if (element.type === 'multiple-choice') {
     return (
       <div 
@@ -118,7 +124,7 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
                 e.stopPropagation();
                 handleAnswer(index);
               }}
-              disabled={!isStudyMode && hasAnswered && !showResults && !element.showImmediateFeedback}
+              disabled={areButtonsDisabled()}
               style={{ fontSize: `${12 * textScale}px` }}
             >
               <span>{option}</span>
@@ -160,7 +166,7 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
                 e.stopPropagation();
                 handleAnswer(index);
               }}
-              disabled={!isStudyMode && hasAnswered && !showResults && !element.showImmediateFeedback}
+              disabled={areButtonsDisabled()}
               style={{ fontSize: `${12 * textScale}px` }}
             >
               <span>{option}</span>
