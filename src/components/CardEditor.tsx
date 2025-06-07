@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -8,12 +9,9 @@ import { ConsolidatedToolbar } from './ConsolidatedToolbar';
 import { SimpleEditorFooter } from './SimpleEditorFooter';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { CanvasElement } from '@/types/flashcard';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 export const CardEditor = () => {
   const { t } = useI18n();
-  const { toast } = useToast();
   const {
     set,
     cards,
@@ -38,8 +36,6 @@ export const CardEditor = () => {
 
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [deckName, setDeckName] = useState(set?.title || '');
-  const [isEditingDeckName, setIsEditingDeckName] = useState(false);
-  const [originalDeckName, setOriginalDeckName] = useState(set?.title || '');
   const [cardWidth, setCardWidth] = useState(900);
   const [cardHeight, setCardHeight] = useState(600);
 
@@ -61,7 +57,6 @@ export const CardEditor = () => {
   useEffect(() => {
     if (set?.title) {
       setDeckName(set.title);
-      setOriginalDeckName(set.title);
     }
   }, [set?.title]);
 
@@ -105,51 +100,6 @@ export const CardEditor = () => {
     if (cards.length > 0 && currentCard) {
       await updateCard(currentCard.id, currentCard);
     }
-  };
-
-  // Deck name editing functions
-  const handleStartEditDeckName = () => {
-    setIsEditingDeckName(true);
-    setOriginalDeckName(deckName);
-  };
-
-  const handleSaveDeckName = async () => {
-    if (!set || deckName.trim() === '') {
-      setDeckName(originalDeckName);
-      setIsEditingDeckName(false);
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('flashcard_sets')
-        .update({ title: deckName.trim() })
-        .eq('id', set.id);
-
-      if (error) throw error;
-
-      toast({
-        title: t('success.saved'),
-        description: t('editor.saveDeckName')
-      });
-      
-      setIsEditingDeckName(false);
-      setOriginalDeckName(deckName.trim());
-    } catch (error) {
-      console.error('Error updating deck name:', error);
-      toast({
-        title: t('error.general'),
-        description: 'Failed to update deck name.',
-        variant: "destructive"
-      });
-      setDeckName(originalDeckName);
-      setIsEditingDeckName(false);
-    }
-  };
-
-  const handleCancelEditDeckName = () => {
-    setDeckName(originalDeckName);
-    setIsEditingDeckName(false);
   };
 
   const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => {
@@ -290,12 +240,12 @@ export const CardEditor = () => {
       <EditorHeader
         set={set}
         onSave={handleSave}
-        isEditingDeckName={isEditingDeckName}
+        isEditingDeckName={false}
         deckName={deckName}
         onDeckNameChange={setDeckName}
-        onStartEdit={handleStartEditDeckName}
-        onSaveEdit={handleSaveDeckName}
-        onCancelEdit={handleCancelEditDeckName}
+        onStartEdit={() => {}}
+        onSaveEdit={() => {}}
+        onCancelEdit={() => {}}
       />
 
       {/* Element Options Panel */}

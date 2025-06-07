@@ -12,12 +12,10 @@ import {
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
 import { Home, BookOpen, ShoppingCart } from 'lucide-react';
-import { useI18n } from '@/contexts/I18nContext';
 
 export const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useI18n();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -33,7 +31,7 @@ export const Navigation = () => {
             onClick={() => navigate('/')}
           >
             <Home className="w-4 h-4 mr-2" />
-            {t('nav.home')}
+            Home
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
@@ -44,7 +42,7 @@ export const Navigation = () => {
             )}
             onClick={() => navigate('/dashboard')}
           >
-            {t('nav.dashboard')}
+            Dashboard
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
@@ -56,7 +54,7 @@ export const Navigation = () => {
             onClick={() => navigate('/decks')}
           >
             <BookOpen className="w-4 h-4 mr-2" />
-            {t('nav.decks')}
+            Decks
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
@@ -68,7 +66,7 @@ export const Navigation = () => {
             onClick={() => navigate('/marketplace')}
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
-            {t('nav.marketplace')}
+            Marketplace
           </NavigationMenuLink>
         </NavigationMenuItem>
       </NavigationMenuList>
