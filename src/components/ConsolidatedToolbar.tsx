@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Type, Image, Volume2, Palette, Video, 
-  ChevronLeft, ChevronRight, RotateCcw, RotateLeft,
+  ChevronLeft, ChevronRight, RotateCcw,
   Plus, Copy, Trash2, Grid3X3, AlignCenter, AlignJustify, 
   AlignLeft, AlignRight, Layers, FlipHorizontal, FlipVertical,
   CheckSquare, HelpCircle, Shuffle, List, Grid, Eye
@@ -173,7 +173,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           <CardSideToggle
             currentSide={currentSide}
             onSideChange={onSideChange}
-            cardType={currentCard?.card_type}
+            isBackDisabled={currentCard?.card_type === 'single-sided'}
           />
         </ToolbarSection>
 
@@ -255,8 +255,12 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
         {/* Card Type */}
         <ToolbarSection title={t('cardType') || 'Card Type'}>
           <CardTypeSelector
-            cardType={currentCard?.card_type || 'normal'}
-            onCardTypeChange={onCardTypeChange}
+            card={currentCard}
+            onUpdateCard={(updates) => {
+              if (updates.card_type && updates.card_type !== currentCard.card_type) {
+                onCardTypeChange(updates.card_type);
+              }
+            }}
           />
         </ToolbarSection>
       </div>
