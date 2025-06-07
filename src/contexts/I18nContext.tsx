@@ -50,6 +50,7 @@ const translations = {
     'profile.selectAvatar': 'Select Avatar',
     'profile.updateSuccess': 'Profile updated successfully!',
     'profile.updateError': 'Failed to update profile.',
+    'profile.changeAvatar': 'Change Avatar',
     
     // Languages
     'lang.en': 'English',
@@ -57,6 +58,12 @@ const translations = {
     'lang.fr': 'Français',
     'lang.de': 'Deutsch',
     'lang.it': 'Italiano',
+    'lang.zh': '中文',
+    
+    // Theme Settings
+    'theme.settings': 'Theme Settings',
+    'theme.colorTheme': 'Color Theme',
+    'theme.interfaceSize': 'Interface Size',
   },
   es: {
     // Navigation & General
@@ -90,6 +97,7 @@ const translations = {
     'profile.selectAvatar': 'Seleccionar Avatar',
     'profile.updateSuccess': '¡Perfil actualizado exitosamente!',
     'profile.updateError': 'Error al actualizar el perfil.',
+    'profile.changeAvatar': 'Cambiar Avatar',
     
     // Languages
     'lang.en': 'English',
@@ -97,6 +105,12 @@ const translations = {
     'lang.fr': 'Français',
     'lang.de': 'Deutsch',
     'lang.it': 'Italiano',
+    'lang.zh': '中文',
+    
+    // Theme Settings
+    'theme.settings': 'Configuración del Tema',
+    'theme.colorTheme': 'Tema de Color',
+    'theme.interfaceSize': 'Tamaño de Interfaz',
   },
   fr: {
     // Navigation & General
@@ -130,6 +144,7 @@ const translations = {
     'profile.selectAvatar': 'Sélectionner Avatar',
     'profile.updateSuccess': 'Profil mis à jour avec succès!',
     'profile.updateError': 'Échec de la mise à jour du profil.',
+    'profile.changeAvatar': 'Changer Avatar',
     
     // Languages
     'lang.en': 'English',
@@ -137,6 +152,59 @@ const translations = {
     'lang.fr': 'Français',
     'lang.de': 'Deutsch',
     'lang.it': 'Italiano',
+    'lang.zh': '中文',
+    
+    // Theme Settings
+    'theme.settings': 'Paramètres du Thème',
+    'theme.colorTheme': 'Thème de Couleur',
+    'theme.interfaceSize': 'Taille de l\'Interface',
+  },
+  zh: {
+    // Navigation & General
+    'nav.dashboard': '仪表板',
+    'nav.profile': '个人资料',
+    'nav.signOut': '退出登录',
+    'nav.createSet': '创建新卡组',
+    'welcome': '欢迎',
+    'loading': '加载中...',
+    'save': '保存',
+    'cancel': '取消',
+    'edit': '编辑',
+    'delete': '删除',
+    
+    // Dashboard
+    'dashboard.title': '您的闪卡卡组',
+    'dashboard.noSets': '暂无闪卡卡组',
+    'dashboard.noSetsDesc': '创建您的第一个卡组开始学习！',
+    'dashboard.createFirst': '创建您的第一个卡组',
+    'dashboard.viewCards': '查看卡片',
+    'dashboard.study': '学习',
+    
+    // Profile
+    'profile.title': '个人资料设置',
+    'profile.personalInfo': '个人信息',
+    'profile.firstName': '名',
+    'profile.lastName': '姓',
+    'profile.email': '电子邮箱',
+    'profile.avatar': '头像',
+    'profile.language': '语言',
+    'profile.selectAvatar': '选择头像',
+    'profile.updateSuccess': '个人资料更新成功！',
+    'profile.updateError': '更新个人资料失败。',
+    'profile.changeAvatar': '更换头像',
+    
+    // Languages
+    'lang.en': 'English',
+    'lang.es': 'Español',
+    'lang.fr': 'Français',
+    'lang.de': 'Deutsch',
+    'lang.it': 'Italiano',
+    'lang.zh': '中文',
+    
+    // Theme Settings
+    'theme.settings': '主题设置',
+    'theme.colorTheme': '颜色主题',
+    'theme.interfaceSize': '界面大小',
   }
 };
 

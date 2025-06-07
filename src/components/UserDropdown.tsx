@@ -113,13 +113,13 @@ export const UserDropdown = () => {
         <DropdownMenuSub>
           <DropdownMenuSubTrigger className="cursor-pointer">
             <Palette className="mr-2 h-4 w-4" />
-            <span>Theme Settings</span>
+            <span>{t('theme.settings')}</span>
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-64 bg-popover">
             <div className="p-3 space-y-4">
               <div>
                 <Label htmlFor="theme-select" className="text-sm font-medium mb-2 block">
-                  Color Theme
+                  {t('theme.colorTheme')}
                 </Label>
                 <Select value={theme} onValueChange={setTheme}>
                   <SelectTrigger id="theme-select" className="w-full">
@@ -138,7 +138,7 @@ export const UserDropdown = () => {
               <div>
                 <Label htmlFor="size-select" className="text-sm font-medium mb-2 flex items-center gap-2">
                   <Type className="w-4 h-4" />
-                  Interface Size
+                  {t('theme.interfaceSize')}
                 </Label>
                 <Select value={size} onValueChange={setSize}>
                   <SelectTrigger id="size-select" className="w-full">

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,6 +34,7 @@ interface ThemeToggleProps {
 
 export const ThemeToggle = ({ limitedThemes = false, showSizeControls = true }: ThemeToggleProps) => {
   const { theme, size, setTheme, setSize } = useTheme();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
   const themes = limitedThemes 
@@ -44,14 +46,14 @@ export const ThemeToggle = ({ limitedThemes = false, showSizeControls = true }: 
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="flex items-center gap-2">
           <Palette className="w-4 h-4" />
-          Theme
+          {t('theme.settings')}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80" align="end">
         <div className="space-y-4">
           <div>
             <Label htmlFor="theme-select" className="text-sm font-medium">
-              Color Theme
+              {t('theme.colorTheme')}
             </Label>
             <Select value={theme} onValueChange={setTheme}>
               <SelectTrigger id="theme-select">
@@ -71,7 +73,7 @@ export const ThemeToggle = ({ limitedThemes = false, showSizeControls = true }: 
             <div>
               <Label htmlFor="size-select" className="text-sm font-medium flex items-center gap-2">
                 <Type className="w-4 h-4" />
-                Interface Size
+                {t('theme.interfaceSize')}
               </Label>
               <Select value={size} onValueChange={setSize}>
                 <SelectTrigger id="size-select">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -27,6 +28,7 @@ const languages = [
   { code: 'fr', name: 'lang.fr' },
   { code: 'de', name: 'lang.de' },
   { code: 'it', name: 'lang.it' },
+  { code: 'zh', name: 'lang.zh' },
 ];
 
 const Profile = () => {
@@ -200,7 +202,7 @@ const Profile = () => {
                   variant="outline"
                   onClick={() => setShowAvatarSelector(true)}
                 >
-                  Change Avatar
+                  {t('profile.changeAvatar')}
                 </Button>
               </div>
             </div>
