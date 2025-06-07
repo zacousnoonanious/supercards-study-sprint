@@ -32,8 +32,8 @@ export const CardEditor = () => {
 
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [deckName, setDeckName] = useState(set?.title || '');
-  const [cardWidth] = useState(900);
-  const [cardHeight] = useState(600);
+  const [cardWidth, setCardWidth] = useState(900);
+  const [cardHeight, setCardHeight] = useState(600);
 
   // Save card when switching cards or sides
   useEffect(() => {
@@ -165,6 +165,11 @@ export const CardEditor = () => {
     });
   };
 
+  const handleCanvasSizeChange = useCallback((width: number, height: number) => {
+    setCardWidth(width);
+    setCardHeight(height);
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -213,6 +218,9 @@ export const CardEditor = () => {
         selectedElement={getSelectedElementData()}
         onUpdateElement={handleUpdateElement}
         onDeleteElement={(id) => handleDeleteElement(id)}
+        canvasWidth={cardWidth}
+        canvasHeight={cardHeight}
+        onCanvasSizeChange={handleCanvasSizeChange}
       />
 
       {/* Main Content Area */}
