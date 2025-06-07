@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,52 +27,18 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   const [interval, setInterval] = useState(element.fillInBlankInterval || 3);
   const [percentage, setPercentage] = useState(element.fillInBlankPercentage || 25);
 
-  // Use ref to track if we're in the middle of an update to prevent loops
-  const isUpdatingRef = useRef(false);
-
-  // Only update parent when state actually changes and we're not already updating
+  // Initialize state from element props only once
   useEffect(() => {
-    if (isUpdatingRef.current) return;
-    
-    // Use a timeout to debounce updates and prevent infinite loops
-    const timeoutId = setTimeout(() => {
-      onUpdate({
-        fillInBlankText: originalText,
-        fillInBlankBlanks: blanks,
-        fillInBlankMode: mode,
-        fillInBlankInterval: interval,
-        fillInBlankPercentage: percentage
-      });
-    }, 100);
+    setOriginalText(element.fillInBlankText || '');
+    setBlanks(element.fillInBlankBlanks || []);
+    setMode(element.fillInBlankMode || 'manual');
+    setInterval(element.fillInBlankInterval || 3);
+    setPercentage(element.fillInBlankPercentage || 25);
+  }, []); // Empty dependency array - only run once on mount
 
-    return () => clearTimeout(timeoutId);
-  }, [originalText, blanks, mode, interval, percentage]);
-
-  // Update local state when element prop changes (but prevent loops)
-  useEffect(() => {
-    isUpdatingRef.current = true;
-    
-    if (element.fillInBlankText !== originalText) {
-      setOriginalText(element.fillInBlankText || '');
-    }
-    if (JSON.stringify(element.fillInBlankBlanks) !== JSON.stringify(blanks)) {
-      setBlanks(element.fillInBlankBlanks || []);
-    }
-    if (element.fillInBlankMode !== mode) {
-      setMode(element.fillInBlankMode || 'manual');
-    }
-    if (element.fillInBlankInterval !== interval) {
-      setInterval(element.fillInBlankInterval || 3);
-    }
-    if (element.fillInBlankPercentage !== percentage) {
-      setPercentage(element.fillInBlankPercentage || 25);
-    }
-    
-    // Reset the flag after a brief delay
-    setTimeout(() => {
-      isUpdatingRef.current = false;
-    }, 50);
-  }, [element.fillInBlankText, element.fillInBlankBlanks, element.fillInBlankMode, element.fillInBlankInterval, element.fillInBlankPercentage]);
+  const updateParent = (updates: Partial<CanvasElement>) => {
+    onUpdate(updates);
+  };
 
   const generateBlanks = () => {
     if (!originalText.trim()) return;
@@ -139,12 +106,59 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
     });
 
     setBlanks(newBlanks);
+    updateParent({
+      fillInBlankText: originalText,
+      fillInBlankBlanks: newBlanks,
+      fillInBlankMode: mode,
+      fillInBlankInterval: interval,
+      fillInBlankPercentage: percentage
+    });
   };
 
   const handleTextChange = (text: string) => {
     setOriginalText(text);
     // Reset blanks when text changes significantly
     setBlanks([]);
+    updateParent({
+      fillInBlankText: text,
+      fillInBlankBlanks: [],
+      fillInBlankMode: mode,
+      fillInBlankInterval: interval,
+      fillInBlankPercentage: percentage
+    });
+  };
+
+  const handleModeChange = (newMode: string) => {
+    setMode(newMode);
+    updateParent({
+      fillInBlankText: originalText,
+      fillInBlankBlanks: blanks,
+      fillInBlankMode: newMode,
+      fillInBlankInterval: interval,
+      fillInBlankPercentage: percentage
+    });
+  };
+
+  const handleIntervalChange = (newInterval: number) => {
+    setInterval(newInterval);
+    updateParent({
+      fillInBlankText: originalText,
+      fillInBlankBlanks: blanks,
+      fillInBlankMode: mode,
+      fillInBlankInterval: newInterval,
+      fillInBlankPercentage: percentage
+    });
+  };
+
+  const handlePercentageChange = (newPercentage: number) => {
+    setPercentage(newPercentage);
+    updateParent({
+      fillInBlankText: originalText,
+      fillInBlankBlanks: blanks,
+      fillInBlankMode: mode,
+      fillInBlankInterval: interval,
+      fillInBlankPercentage: newPercentage
+    });
   };
 
   const handleWordDoubleClick = (word: string, position: number) => {
@@ -153,13 +167,23 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
     const blankId = `blank_${Date.now()}`;
     const existingBlankIndex = blanks.findIndex(blank => blank.position === position);
     
+    let newBlanks;
     if (existingBlankIndex >= 0) {
       // Remove blank if double-clicking on an already blanked word
-      setBlanks(blanks.filter((_, index) => index !== existingBlankIndex));
+      newBlanks = blanks.filter((_, index) => index !== existingBlankIndex);
     } else {
       // Add new blank
-      setBlanks([...blanks, { word, position, id: blankId }]);
+      newBlanks = [...blanks, { word, position, id: blankId }];
     }
+    
+    setBlanks(newBlanks);
+    updateParent({
+      fillInBlankText: originalText,
+      fillInBlankBlanks: newBlanks,
+      fillInBlankMode: mode,
+      fillInBlankInterval: interval,
+      fillInBlankPercentage: percentage
+    });
   };
 
   const renderTextWithBlanks = () => {
@@ -212,7 +236,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
 
         <div>
           <Label className="text-xs font-medium">Blank creation mode:</Label>
-          <Select value={mode} onValueChange={(value: any) => setMode(value)}>
+          <Select value={mode} onValueChange={handleModeChange}>
             <SelectTrigger className="h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -230,7 +254,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
             <Label className="text-xs font-medium">Every {interval} words:</Label>
             <Slider
               value={[interval]}
-              onValueChange={(values) => setInterval(values[0])}
+              onValueChange={(values) => handleIntervalChange(values[0])}
               min={2}
               max={10}
               step={1}
@@ -244,7 +268,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
             <Label className="text-xs font-medium">Percentage to blank: {percentage}%</Label>
             <Slider
               value={[percentage]}
-              onValueChange={(values) => setPercentage(values[0])}
+              onValueChange={(values) => handlePercentageChange(values[0])}
               min={10}
               max={80}
               step={5}
@@ -286,7 +310,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
           <Label className="text-xs font-medium">Show letter count</Label>
           <Switch
             checked={element.showLetterCount || false}
-            onCheckedChange={(checked) => onUpdate({ showLetterCount: checked })}
+            onCheckedChange={(checked) => updateParent({ showLetterCount: checked })}
           />
         </div>
 
@@ -294,7 +318,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
           <Label className="text-xs font-medium">Ignore case</Label>
           <Switch
             checked={element.ignoreCase || false}
-            onCheckedChange={(checked) => onUpdate({ ignoreCase: checked })}
+            onCheckedChange={(checked) => updateParent({ ignoreCase: checked })}
           />
         </div>
 
