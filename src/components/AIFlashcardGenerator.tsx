@@ -76,6 +76,16 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
       return;
     }
 
+    // Validate quiz settings
+    if (includeQuiz && !quizTypes.multipleChoice && !quizTypes.trueFalse) {
+      toast({
+        title: "Error",
+        description: "Please select at least one quiz type if including quiz questions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
@@ -119,9 +129,13 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
       if (error) throw error;
 
       if (data.success) {
+        const totalCards = data.cardCount || cardCount[0];
+        const quizCards = data.quizCards || 0;
+        const regularCards = data.regularCards || 0;
+        
         toast({
           title: "Success",
-          description: `Generated ${data.cardCount} flashcards successfully!`,
+          description: `Generated ${totalCards} flashcards successfully! (${regularCards} regular, ${quizCards} quiz cards)`,
         });
 
         if (mode === 'create-new-deck' && onDeckCreated) {
@@ -234,7 +248,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
             />
             <Label htmlFor="include-quiz" className="flex items-center gap-2">
               <Brain className="w-4 h-4" />
-              Include Quiz Questions
+              Include Interactive Quiz Questions
             </Label>
           </div>
 
@@ -254,6 +268,9 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                   <span>10%</span>
                   <span>50%</span>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Percentage of cards that will be interactive quiz questions
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -267,7 +284,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                         setQuizTypes(prev => ({ ...prev, multipleChoice: checked as boolean }))
                       }
                     />
-                    <Label htmlFor="multiple-choice">Multiple Choice</Label>
+                    <Label htmlFor="multiple-choice">Multiple Choice (4 options)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -280,6 +297,9 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                     <Label htmlFor="true-false">True/False</Label>
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Quiz questions will have appropriate distractors and be positioned automatically
+                </p>
               </div>
             </div>
           )}
@@ -300,6 +320,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
             <>
               <BookOpen className="w-4 h-4 mr-2" />
               Generate {cardCount[0]} Card{cardCount[0] !== 1 ? 's' : ''}
+              {includeQuiz && ` (${Math.ceil((cardCount[0] * quizPercentage[0]) / 100)} quiz)`}
             </>
           )}
         </Button>
