@@ -230,7 +230,7 @@ const Profile = () => {
 
         {showAvatarSelector && (
           <AvatarSelector
-            onSelect={handleAvatarSelect}
+            onSelectAvatar={handleAvatarSelect}
             onClose={() => setShowAvatarSelector(false)}
           />
         )}

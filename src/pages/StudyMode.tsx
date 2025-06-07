@@ -92,19 +92,19 @@ const StudyMode = () => {
       if (cardsError) throw cardsError;
       
       // Transform the data to match our Flashcard interface
-      const transformedCards = (cardsData || []).map(card => ({
+      const transformedCards: Flashcard[] = (cardsData || []).map(card => ({
         ...card,
         front_content: card.question || '',
         back_content: card.answer || '',
         front_elements: (card.front_elements as unknown as CanvasElement[]) || [],
         back_elements: (card.back_elements as unknown as CanvasElement[]) || [],
         card_type: (card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') || 'normal',
-        interactive_type: (card.interactive_type === 'multiple-choice' || card.interactive_type === 'true-false' || card.interactive_type === 'fill-in-blank') 
-          ? card.interactive_type 
+        interactive_type: (['multiple-choice', 'true-false', 'fill-in-blank'].includes(card.interactive_type as string)) 
+          ? (card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') 
           : null,
         countdown_timer: card.countdown_timer || 0,
-        countdown_seconds: card.countdown_seconds || 0,
-        countdown_behavior: (card.countdown_behavior as 'flip' | 'next') || 'flip'
+        countdown_seconds: 0, // Default value since not in database
+        countdown_behavior: 'flip' as 'flip' | 'next' // Default value since not in database
       }));
       
       setCards(transformedCards);
