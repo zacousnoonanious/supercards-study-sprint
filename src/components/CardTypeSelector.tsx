@@ -18,8 +18,9 @@ export const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({
   onUpdateCard,
 }) => {
   const cardTypes = [
-    { value: 'standard', label: 'Standard', description: 'Regular flashcard with front and back' },
-    { value: 'informational', label: 'Informational', description: 'Single-sided card with lots of content' },
+    { value: 'normal', label: 'Normal', description: 'Customizable front and back with flexible sizing' },
+    { value: 'simple', label: 'Simple Flashcard', description: 'Standard 600×900 size with single text elements' },
+    { value: 'informational', label: 'Informational', description: 'Large format (900×1800) for detailed content' },
     { value: 'single-sided', label: 'Single-sided', description: 'Only shows the front side' },
   ];
 
@@ -30,7 +31,7 @@ export const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({
       <div>
         <Label className="text-sm font-medium">Card Type</Label>
         <Select
-          value={card.card_type || 'standard'}
+          value={card.card_type || 'normal'}
           onValueChange={(value) => onUpdateCard({ card_type: value as Flashcard['card_type'] })}
         >
           <SelectTrigger className="w-full">

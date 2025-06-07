@@ -33,8 +33,8 @@ export interface CanvasElement {
   // Interactive element properties
   multipleChoiceOptions?: string[];
   correctAnswer?: number;
-  showImmediateFeedback?: boolean; // New: whether to show correct/incorrect immediately
-  autoAdvanceOnAnswer?: boolean; // New: whether to auto-advance after answering
+  showImmediateFeedback?: boolean;
+  autoAdvanceOnAnswer?: boolean;
   
   // Fill in blank properties
   fillInBlankText?: string;
@@ -68,7 +68,7 @@ export interface Flashcard {
   created_at: string;
   updated_at: string;
   last_reviewed_at?: string | null;
-  card_type: 'standard' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
+  card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
   interactive_type?: 'multiple-choice' | 'true-false' | 'fill-in-blank' | null;
   countdown_timer?: number;
   countdown_seconds?: number;
@@ -87,4 +87,16 @@ export interface FlashcardSet {
   created_at: string;
   updated_at: string;
   flashcards?: Flashcard[];
+}
+
+export interface CardTemplate {
+  id: string;
+  name: string;
+  description: string;
+  card_type: Flashcard['card_type'];
+  canvas_width: number;
+  canvas_height: number;
+  front_elements: CanvasElement[];
+  back_elements: CanvasElement[];
+  thumbnail?: string;
 }

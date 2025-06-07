@@ -39,7 +39,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   onDeleteElement,
   cardSide,
   style = {},
-  cardType = 'standard',
+  cardType = 'normal',
   onAddElement,
   quizTitle = '',
   onQuizTitleChange,
@@ -340,9 +340,20 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     );
   }
 
-  // For informational cards, make canvas taller to accommodate more content
-  const canvasHeight = cardType === 'informational' ? '800px' : '600px';
-  const canvasWidth = '900px';
+  // Determine canvas dimensions based on card type
+  const getCanvasDimensions = () => {
+    switch (cardType) {
+      case 'simple':
+        return { width: '600px', height: '900px' };
+      case 'informational':
+        return { width: '900px', height: '1800px' };
+      case 'normal':
+      default:
+        return { width: '600px', height: '900px' };
+    }
+  };
+
+  const canvasDimensions = getCanvasDimensions();
 
   return (
     <div
@@ -351,12 +362,10 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         theme === 'dark' ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
       }`}
       style={{ 
-        width: canvasWidth, 
-        height: canvasHeight,
+        ...canvasDimensions,
         ...style 
       }}
       onMouseDown={(e) => {
-        // Deselect element when clicking on empty canvas OR select canvas for options
         if (e.target === e.currentTarget) {
           onSelectElement('canvas');
         }
@@ -385,7 +394,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           <div
             className={`absolute cursor-move ${
               selectedElement === element.id ? 'ring-2 ring-blue-500' : ''
-            }`}
+            } ${cardType === 'simple' ? 'pointer-events-none' : ''}`}
             style={{
               left: element.x,
               top: element.y,
@@ -396,9 +405,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
               zIndex: element.zIndex || 0,
             }}
             onMouseDown={(e) => {
-              // Only allow dragging from specific areas for drawing elements
+              if (cardType === 'simple') return; // Disable dragging for simple cards
               if (element.type === 'drawing') {
-                // For drawing elements, only allow dragging from the top drag handle
                 return;
               }
               handleMouseDown(e, element.id, 'drag');
@@ -421,8 +429,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         </ElementContextMenu>
       ))}
 
-      {/* Resize handles for selected element */}
-      {selectedElement && selectedElement !== 'canvas' && selectedElementData && (
+      {/* Resize handles for selected element - disabled for simple cards */}
+      {selectedElement && selectedElement !== 'canvas' && selectedElementData && cardType !== 'simple' && (
         <CanvasInteractionHandler
           selectedElement={selectedElement}
           selectedElementData={selectedElementData}

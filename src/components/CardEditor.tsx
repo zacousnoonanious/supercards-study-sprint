@@ -166,9 +166,36 @@ export const CardEditor = () => {
   };
 
   const handleCanvasSizeChange = useCallback((width: number, height: number) => {
-    setCardWidth(width);
-    setCardHeight(height);
-  }, []);
+    // Only allow size changes for normal cards
+    if (currentCard?.card_type === 'normal') {
+      setCardWidth(width);
+      setCardHeight(height);
+    }
+  }, [currentCard?.card_type]);
+
+  // Set canvas dimensions based on card type
+  useEffect(() => {
+    if (currentCard) {
+      switch (currentCard.card_type) {
+        case 'simple':
+          setCardWidth(600);
+          setCardHeight(900);
+          break;
+        case 'informational':
+          setCardWidth(900);
+          setCardHeight(1800);
+          break;
+        case 'normal':
+        default:
+          // Keep current dimensions for normal cards, or set defaults
+          if (!cardWidth || !cardHeight) {
+            setCardWidth(600);
+            setCardHeight(900);
+          }
+          break;
+      }
+    }
+  }, [currentCard?.card_type]);
 
   if (loading) {
     return (
@@ -221,6 +248,7 @@ export const CardEditor = () => {
         canvasWidth={cardWidth}
         canvasHeight={cardHeight}
         onCanvasSizeChange={handleCanvasSizeChange}
+        cardType={currentCard?.card_type}
       />
 
       {/* Main Content Area */}

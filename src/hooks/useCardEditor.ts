@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -225,8 +224,10 @@ export const useCardEditor = () => {
       front_elements: [] as any,
       back_elements: [] as any,
       set_id: setId,
-      card_type: 'standard' as const,
+      card_type: 'normal' as const,
       countdown_timer: 0,
+      canvas_width: 600,
+      canvas_height: 900,
     };
 
     try {
@@ -249,19 +250,14 @@ export const useCardEditor = () => {
         back_elements: data.back_elements as unknown as CanvasElement[] || [],
         hint: data.hint || '',
         last_reviewed_at: data.last_reviewed_at || null,
-        card_type: (data.card_type as Flashcard['card_type']) || 'standard',
+        card_type: (data.card_type as Flashcard['card_type']) || 'normal',
         interactive_type: (data.interactive_type as Flashcard['interactive_type']) || null,
         countdown_timer: data.countdown_timer || 0,
         password: data.password || null
       };
 
-      // Calculate the new index before updating state
       const newCardIndex = cards.length;
-
-      // Add the card to state and navigate to it
       setCards(prevCards => [...prevCards, createdCard]);
-      
-      // Navigate to the new card using the pre-calculated index
       setCurrentCardIndex(newCardIndex);
       setSelectedElement(null);
       setCurrentSide('front');
@@ -269,6 +265,76 @@ export const useCardEditor = () => {
       console.log('Set current card index to:', newCardIndex);
     } catch (error) {
       console.error('Error creating new card:', error);
+    }
+  };
+
+  const createNewCardFromTemplate = async (template: CardTemplate) => {
+    if (!setId) {
+      console.error('No setId available for creating new card from template');
+      return;
+    }
+
+    console.log('Creating new card from template:', template.name);
+
+    // Generate new IDs for all elements
+    const newFrontElements = template.front_elements.map(el => ({
+      ...el,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    }));
+    
+    const newBackElements = template.back_elements.map(el => ({
+      ...el,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    }));
+
+    const newCard = {
+      question: template.front_elements.find(el => el.type === 'text')?.content || 'New Card',
+      answer: template.back_elements.find(el => el.type === 'text')?.content || 'Answer',
+      hint: '',
+      front_elements: newFrontElements as any,
+      back_elements: newBackElements as any,
+      set_id: setId,
+      card_type: template.card_type,
+      countdown_timer: 0,
+      canvas_width: template.canvas_width,
+      canvas_height: template.canvas_height,
+    };
+
+    try {
+      const { data, error } = await supabase
+        .from('flashcards')
+        .insert(newCard)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Card created from template successfully:', data);
+
+      const createdCard: Flashcard = {
+        ...data,
+        front_elements: data.front_elements as unknown as CanvasElement[] || [],
+        back_elements: data.back_elements as unknown as CanvasElement[] || [],
+        hint: data.hint || '',
+        last_reviewed_at: data.last_reviewed_at || null,
+        card_type: (data.card_type as Flashcard['card_type']) || 'normal',
+        interactive_type: (data.interactive_type as Flashcard['interactive_type']) || null,
+        countdown_timer: data.countdown_timer || 0,
+        password: data.password || null
+      };
+
+      const newCardIndex = cards.length;
+      setCards(prevCards => [...prevCards, createdCard]);
+      setCurrentCardIndex(newCardIndex);
+      setSelectedElement(null);
+      setCurrentSide('front');
+      
+      console.log('Set current card index to:', newCardIndex);
+    } catch (error) {
+      console.error('Error creating new card from template:', error);
     }
   };
 
@@ -407,6 +473,7 @@ export const useCardEditor = () => {
     deleteElement,
     navigateCard,
     createNewCard,
+    createNewCardFromTemplate,
     createNewCardWithLayout,
     deleteCard,
     reorderCards,

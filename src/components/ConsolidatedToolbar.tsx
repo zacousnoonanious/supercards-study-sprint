@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -23,6 +22,8 @@ import {
   Settings,
 } from 'lucide-react';
 import { Flashcard } from '@/types/flashcard';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from 'react-tooltip';
+import { TemplateSelector } from '@/components/template-selector';
 
 interface ConsolidatedToolbarProps {
   onAddElement: (type: string) => void;
@@ -54,11 +55,19 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   onCreateNewCardWithLayout,
   onDeleteCard,
   onCardTypeChange,
-  position = 'left',
-  onPositionChange,
+  position = "left",
 }) => {
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
   const buttonSizeClass = "w-12 h-10";
   const separatorClass = "w-full h-px bg-border";
+
+  const handleCreateFromTemplate = (template: CardTemplate) => {
+    // This would be handled by the parent component
+    setShowTemplateSelector(false);
+    // For now, just create a new card - the template logic would be implemented in the parent
+    onCreateNewCard();
+  };
 
   return (
     <div className="bg-background border-r rounded-l-lg shadow-lg p-2 gap-2 flex flex-col w-16">
@@ -166,15 +175,82 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
       {/* Card Actions */}
       <div className="flex flex-col gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onCreateNewCard}
-          className={`${buttonSizeClass} p-0`}
-          title="New Card"
-        >
-          <Plus className="w-4 h-4" />
-        </Button>
+        {/* Card Creation */}
+        <div className="space-y-2">
+          <div className="text-xs font-medium text-gray-500 px-2">Cards</div>
+          
+          <div className="relative">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={onCreateNewCard}
+                    onMouseDown={(e) => {
+                      // Check for long press to show template selector
+                      const timeoutId = setTimeout(() => {
+                        setShowTemplateSelector(true);
+                      }, 500);
+                      
+                      const handleMouseUp = () => {
+                        clearTimeout(timeoutId);
+                        document.removeEventListener('mouseup', handleMouseUp);
+                      };
+                      
+                      document.addEventListener('mouseup', handleMouseUp);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Card
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Click to create new card, hold to see templates</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={onCreateNewCardWithLayout}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy Layout
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Create new card with same layout</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setShowTemplateSelector(true)}
+                >
+                  <FileTemplate className="w-4 h-4 mr-2" />
+                  Templates
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Choose from predefined templates</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
 
         <Button
           variant="ghost"
@@ -187,6 +263,13 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           <Trash2 className="w-4 h-4" />
         </Button>
       </div>
+
+      {showTemplateSelector && (
+        <TemplateSelector
+          onSelectTemplate={handleCreateFromTemplate}
+          onClose={() => setShowTemplateSelector(false)}
+        />
+      )}
     </div>
   );
 };
