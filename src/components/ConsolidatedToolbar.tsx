@@ -239,7 +239,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           <div className="flex flex-col gap-1">
             <ToolbarButton
               icon={Grid3X3}
-              label={t('grid') || 'Grid'}}
+              label={t('grid') || 'Grid'}
               onClick={() => onAutoArrange('grid')}
             />
             <ToolbarButton
