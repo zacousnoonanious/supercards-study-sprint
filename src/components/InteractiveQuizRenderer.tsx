@@ -32,7 +32,11 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
   const [showFeedback, setShowFeedback] = useState(false);
 
   const handleAnswer = (answerIndex: number) => {
-    // Always allow answering in study mode
+    // Don't allow changing answer once answered in quiz-only mode
+    if (hasAnswered && element.autoAdvanceOnAnswer) {
+      return;
+    }
+    
     setSelectedAnswer(answerIndex);
     setHasAnswered(true);
     
@@ -97,9 +101,10 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
     return (showResults || (element.showImmediateFeedback && showFeedback)) && hasAnswered;
   };
 
-  // In study mode, buttons should never be disabled to allow interaction
+  // In quiz-only mode with auto-advance, disable buttons after answering
   const areButtonsDisabled = () => {
     if (isStudyMode) return false;
+    if (hasAnswered && element.autoAdvanceOnAnswer) return true;
     return hasAnswered && !showResults && !element.showImmediateFeedback;
   };
 

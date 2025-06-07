@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { CanvasElement } from '@/types/flashcard';
 
 interface FillInBlankEditorProps {
@@ -21,13 +23,87 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
 }) => {
   const [originalText, setOriginalText] = useState(element.fillInBlankText || '');
   const [blanks, setBlanks] = useState(element.fillInBlankBlanks || []);
+  const [mode, setMode] = useState(element.fillInBlankMode || 'manual');
+  const [interval, setInterval] = useState(element.fillInBlankInterval || 3);
+  const [percentage, setPercentage] = useState(element.fillInBlankPercentage || 25);
 
   useEffect(() => {
     onUpdate({
       fillInBlankText: originalText,
-      fillInBlankBlanks: blanks
+      fillInBlankBlanks: blanks,
+      fillInBlankMode: mode,
+      fillInBlankInterval: interval,
+      fillInBlankPercentage: percentage
     });
-  }, [originalText, blanks, onUpdate]);
+  }, [originalText, blanks, mode, interval, percentage, onUpdate]);
+
+  const generateBlanks = () => {
+    if (!originalText.trim()) return;
+
+    const words = originalText.split(/(\s+)/);
+    const wordIndices: number[] = [];
+    let wordIndex = 0;
+
+    // Get actual word positions (skip whitespace)
+    words.forEach((segment, index) => {
+      if (segment.trim()) {
+        wordIndices.push(wordIndex++);
+      }
+    });
+
+    let blanksToCreate: number[] = [];
+
+    switch (mode) {
+      case 'every-nth':
+        blanksToCreate = wordIndices.filter((_, index) => (index + 1) % interval === 0);
+        break;
+      
+      case 'random':
+        const numBlanks = Math.ceil((wordIndices.length * percentage) / 100);
+        const shuffled = [...wordIndices].sort(() => Math.random() - 0.5);
+        blanksToCreate = shuffled.slice(0, numBlanks);
+        break;
+      
+      case 'sentence-start':
+        const sentences = originalText.split(/[.!?]+/);
+        let currentWordIndex = 0;
+        blanksToCreate = [];
+        
+        sentences.forEach(sentence => {
+          const sentenceWords = sentence.trim().split(/\s+/).filter(w => w.length > 0);
+          if (sentenceWords.length > 0) {
+            blanksToCreate.push(currentWordIndex);
+          }
+          currentWordIndex += sentenceWords.length;
+        });
+        break;
+    }
+
+    // Create blank objects
+    const newBlanks = blanksToCreate.map(wordPos => {
+      const wordSegments = originalText.split(/(\s+)/);
+      let currentWordIndex = 0;
+      let word = '';
+      
+      for (const segment of wordSegments) {
+        if (segment.trim()) {
+          if (currentWordIndex === wordPos) {
+            word = segment.trim();
+            break;
+          }
+          currentWordIndex++;
+        }
+      }
+      
+      return {
+        word: word,
+        position: wordPos,
+        id: `blank_${Date.now()}_${wordPos}`
+      };
+    });
+
+    setBlanks(newBlanks);
+  };
 
   const handleTextChange = (text: string) => {
     setOriginalText(text);
@@ -36,6 +112,8 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   };
 
   const handleWordDoubleClick = (word: string, position: number) => {
+    if (mode !== 'manual') return;
+    
     const blankId = `blank_${Date.now()}`;
     const existingBlankIndex = blanks.findIndex(blank => blank.position === position);
     
@@ -66,10 +144,10 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
               isBlank 
                 ? 'bg-blue-200 text-blue-800 font-medium border border-blue-300' 
                 : 'hover:bg-gray-100 border border-transparent'
-            }`}
-            onDoubleClick={() => handleWordDoubleClick(segment.trim(), currentWordIndex)}
+            } ${mode !== 'manual' ? 'pointer-events-none' : ''}`}
+            onDoubleClick={() => mode === 'manual' && handleWordDoubleClick(segment.trim(), currentWordIndex)}
             style={{ fontSize: `${12 * textScale}px` }}
-            title="Double-click to toggle blank"
+            title={mode === 'manual' ? "Double-click to toggle blank" : ""}
           >
             {segment}
           </span>
@@ -83,27 +161,84 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
     <Card className="w-full h-full">
       <CardContent className="p-3 space-y-3">
         <div>
-          <Label className="text-xs font-medium">Enter your sentence:</Label>
+          <Label className="text-xs font-medium">Enter your text:</Label>
           <Textarea
             value={originalText}
             onChange={(e) => handleTextChange(e.target.value)}
-            placeholder="Type a sentence and double-click words to turn them into blanks"
+            placeholder="Type a sentence or paragraph..."
             className="h-20 text-xs resize-none"
           />
         </div>
 
+        <div>
+          <Label className="text-xs font-medium">Blank creation mode:</Label>
+          <Select value={mode} onValueChange={(value: any) => setMode(value)}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="manual">Manual (double-click words)</SelectItem>
+              <SelectItem value="every-nth">Every Nth word</SelectItem>
+              <SelectItem value="random">Random percentage</SelectItem>
+              <SelectItem value="sentence-start">Start of sentences</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {mode === 'every-nth' && (
+          <div>
+            <Label className="text-xs font-medium">Every {interval} words:</Label>
+            <Slider
+              value={[interval]}
+              onValueChange={(values) => setInterval(values[0])}
+              min={2}
+              max={10}
+              step={1}
+              className="w-full"
+            />
+          </div>
+        )}
+
+        {mode === 'random' && (
+          <div>
+            <Label className="text-xs font-medium">Percentage to blank: {percentage}%</Label>
+            <Slider
+              value={[percentage]}
+              onValueChange={(values) => setPercentage(values[0])}
+              min={10}
+              max={80}
+              step={5}
+              className="w-full"
+            />
+          </div>
+        )}
+
+        {mode !== 'manual' && originalText && (
+          <Button
+            onClick={generateBlanks}
+            size="sm"
+            className="w-full text-xs"
+          >
+            Generate Blanks
+          </Button>
+        )}
+
         {originalText && (
           <div>
-            <Label className="text-xs font-medium">Double-click words to turn into blanks:</Label>
+            <Label className="text-xs font-medium">
+              {mode === 'manual' ? 'Double-click words to turn into blanks:' : 'Preview:'}
+            </Label>
             <div 
               className="p-2 border rounded min-h-[60px] text-xs leading-relaxed bg-gray-50 dark:bg-gray-900"
               style={{ fontSize: `${10 * textScale}px` }}
             >
               {renderTextWithBlanks()}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Tip: Double-click any word to toggle it as a blank
-            </p>
+            {mode === 'manual' && (
+              <p className="text-xs text-gray-500 mt-1">
+                Tip: Double-click any word to toggle it as a blank
+              </p>
+            )}
           </div>
         )}
 

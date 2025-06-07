@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -23,6 +22,10 @@ import {
   Settings,
   Copy,
   FileImage,
+  Video,
+  HelpCircle,
+  Edit3,
+  Paintbrush,
 } from 'lucide-react';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
 import { TemplateSelector } from '@/components/TemplateSelector';
@@ -59,12 +62,24 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   onCreateNewCardFromTemplate,
   onDeleteCard,
   onCardTypeChange,
-  position = "left",
+  position = 'left'
 }) => {
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const buttonSizeClass = "w-12 h-10";
   const separatorClass = "w-full h-px bg-border";
+
+  const elementTypes = [
+    { type: 'text', icon: Type, label: 'Text' },
+    { type: 'image', icon: Image, label: 'Image' },
+    { type: 'audio', icon: Volume2, label: 'Audio' },
+    { type: 'youtube', icon: Video, label: 'YouTube' },
+    { type: 'multiple-choice', icon: CheckSquare, label: 'Quiz' },
+    { type: 'true-false', icon: HelpCircle, label: 'True/False' },
+    { type: 'fill-in-blank', icon: Edit3, label: 'Fill it in' },
+    { type: 'drawing', icon: Paintbrush, label: 'Drawing' },
+    { type: 'deck-embed', icon: Layers, label: 'Embed Deck' },
+  ];
 
   const handleCreateFromTemplate = (template: CardTemplate) => {
     onCreateNewCardFromTemplate(template);
@@ -97,55 +112,17 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
       {/* Add Elements */}
       <div className="flex flex-col gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddElement('text')}
-          className={`${buttonSizeClass} p-0`}
-          title="Add Text"
-        >
-          <Type className="w-4 h-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddElement('image')}
-          className={`${buttonSizeClass} p-0`}
-          title="Add Image"
-        >
-          <Image className="w-4 h-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddElement('audio')}
-          className={`${buttonSizeClass} p-0`}
-          title="Add Audio"
-        >
-          <Volume2 className="w-4 h-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddElement('multiple-choice')}
-          className={`${buttonSizeClass} p-0`}
-          title="Multiple Choice"
-        >
-          <CheckSquare className="w-4 h-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddElement('youtube')}
-          className={`${buttonSizeClass} p-0`}
-          title="Add YouTube Video"
-        >
-          <Youtube className="w-4 h-4" />
-        </Button>
+        {elementTypes.map((type) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddElement(type.type)}
+            className={`${buttonSizeClass} p-0`}
+            title={type.label}
+          >
+            {type.icon}
+          </Button>
+        ))}
       </div>
 
       <div className={separatorClass} />

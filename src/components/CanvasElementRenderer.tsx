@@ -3,6 +3,7 @@ import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
 import { FillInBlankEditor } from './FillInBlankEditor';
+import { FillInBlankRenderer } from './FillInBlankRenderer';
 import { DrawingCanvas } from './DrawingCanvas';
 import { DeckSelector } from './DeckSelector';
 import { EmbeddedDeckViewer } from './EmbeddedDeckViewer';
@@ -98,11 +99,18 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           className={`w-full h-full ${isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
           onClick={handleElementClick}
         >
-          <FillInBlankEditor
-            element={element}
-            onUpdate={(updates) => onUpdateElement(element.id, updates)}
-            textScale={textScale}
-          />
+          {isStudyMode ? (
+            <FillInBlankRenderer
+              element={element}
+              textScale={textScale}
+            />
+          ) : (
+            <FillInBlankEditor
+              element={element}
+              onUpdate={(updates) => onUpdateElement(element.id, updates)}
+              textScale={textScale}
+            />
+          )}
         </div>
       );
     case 'youtube':

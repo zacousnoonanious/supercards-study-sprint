@@ -44,6 +44,9 @@ export interface CanvasElement {
     position: number;
     id: string;
   }>;
+  fillInBlankMode?: 'every-nth' | 'random' | 'sentence-start' | 'manual';
+  fillInBlankInterval?: number; // For every-nth mode
+  fillInBlankPercentage?: number; // For random mode (0-100)
   showLetterCount?: boolean;
   ignoreCase?: boolean;
   
