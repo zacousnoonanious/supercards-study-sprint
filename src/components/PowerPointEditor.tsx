@@ -328,7 +328,11 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
           )}
 
           {element.type === 'deck-embed' && (
-            <DeckEmbedRenderer element={element} />
+            <DeckEmbedRenderer 
+              element={element} 
+              isEditing={showPopup} 
+              onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            />
           )}
 
           {/* Resize handles for selected element */}
