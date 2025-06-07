@@ -1,5 +1,4 @@
-
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
 import { FillInBlankEditor } from './FillInBlankEditor';
@@ -18,12 +17,6 @@ interface PowerPointEditorProps {
   selectedElementId?: string | null;
   onElementSelect?: (id: string | null) => void;
   showGrid?: boolean;
-}
-
-interface ElementRendererProps {
-  element: CanvasElement;
-  isEditing: boolean;
-  onUpdate: (updates: Partial<CanvasElement>) => void;
 }
 
 export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
@@ -89,7 +82,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
     }
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = useCallback((e: MouseEvent) => {
     if (dragState?.isDragging) {
       const deltaX = e.clientX - dragState.dragStart.x;
       const deltaY = e.clientY - dragState.dragStart.y;
@@ -133,12 +126,12 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
         y: newY
       });
     }
-  };
+  }, [dragState, resizeState, cardWidth, cardHeight, onUpdateElement]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setDragState(null);
     setResizeState(null);
-  };
+  }, []);
 
   const handleDoubleClick = (e: React.MouseEvent, elementId: string) => {
     e.preventDefault();
@@ -170,7 +163,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [dragState, resizeState]);
+  }, [dragState, resizeState, handleMouseMove, handleMouseUp]);
 
   // Handle keyboard events
   useEffect(() => {
