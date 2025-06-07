@@ -38,7 +38,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           <div className="flex items-center">
             <Button
               variant="ghost"
-              onClick={() => navigate(`/set/${set.id}`)}
+              onClick={() => navigate(`/sets/${set.id}`)}
               className="mr-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

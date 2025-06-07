@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,7 +51,7 @@ const CreateSet = () => {
         description: "Deck created successfully!",
       });
       
-      navigate(`/set/${data.id}`);
+      navigate(`/sets/${data.id}`);
     } catch (error) {
       console.error('Error creating set:', error);
       toast({
@@ -66,7 +65,7 @@ const CreateSet = () => {
   };
 
   const handleAIDeckCreated = (deckId: string) => {
-    navigate(`/set/${deckId}`);
+    navigate(`/sets/${deckId}`);
   };
 
   return (

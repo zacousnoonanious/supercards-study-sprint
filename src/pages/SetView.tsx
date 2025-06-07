@@ -91,7 +91,7 @@ const SetView = () => {
   };
 
   const handleStudy = () => {
-    navigate(`/study/${setId}`);
+    navigate(`/sets/${setId}/study`);
   };
 
   const handleAddCard = () => {
@@ -108,7 +108,7 @@ const SetView = () => {
   };
 
   const handleVisualEditor = () => {
-    navigate(`/edit-cards/${setId}`);
+    navigate(`/sets/${setId}/cards/${cards[0]?.id || ''}`);
   };
 
   const handleDeleteSet = async () => {
@@ -131,7 +131,10 @@ const SetView = () => {
   };
 
   const handleCardClick = (index: number) => {
-    navigate(`/edit-cards/${setId}?card=${index}`);
+    const cardId = cards[index]?.id;
+    if (cardId) {
+      navigate(`/sets/${setId}/cards/${cardId}`);
+    }
   };
 
   const handleDeleteCard = async (cardId: string) => {
