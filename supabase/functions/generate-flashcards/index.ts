@@ -251,7 +251,6 @@ IMPORTANT: Return ONLY a valid JSON array of cards, no additional text, no markd
         set_id: setId,
         question: card.question || card.front || '',
         answer: card.answer || card.back || '',
-        user_id: userId,
         card_type: 'normal',
         interactive_type: null
       };
