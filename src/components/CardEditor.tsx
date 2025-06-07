@@ -1,7 +1,7 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useCardEditor } from '@/hooks/useCardEditor';
 import { EditorHeader } from './EditorHeader';
-import { SimpleEditorFooter } from './SimpleEditorFooter';
 import { ElementOptionsPanel } from './ElementOptionsPanel';
 import { CardCanvas } from './CardCanvas';
 import { ConsolidatedToolbar } from './ConsolidatedToolbar';
@@ -216,7 +216,7 @@ export const CardEditor = () => {
           onCreateNewCard={createNewCard}
           onCreateNewCardWithLayout={createNewCardWithLayout}
           onDeleteCard={() => deleteCard(currentCard.id)}
-          onCardTypeChange={(type) => updateCard(currentCard.id, { card_type: type })}
+          onCardTypeChange={(type: 'standard' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
         />
 
         {/* Card Canvas Area */}
@@ -233,14 +233,6 @@ export const CardEditor = () => {
           </div>
         </div>
       </div>
-
-      {/* Simple Footer */}
-      <SimpleEditorFooter
-        currentCard={currentCard}
-        selectedElement={getSelectedElementData()}
-        onUpdateCard={(cardId, updates) => updateCard(cardId, updates)}
-        cardWidth={cardWidth}
-      />
 
       {showShortcuts && (
         <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />

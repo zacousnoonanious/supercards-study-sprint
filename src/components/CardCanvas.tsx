@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
@@ -329,24 +328,13 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
       {/* Resize handles for selected element */}
       {selectedElement && selectedElementData && (
-        <>
-          <CanvasInteractionHandler
-            selectedElement={selectedElement}
-            selectedElementData={selectedElementData}
-            dragState={dragState}
-            onMouseDown={handleMouseDown}
-            isDrawingMode={false}
-          />
-
-          {/* Element Settings Popup */}
-          <HoverElementPopup
-            element={selectedElementData}
-            position={getElementPopupPosition(selectedElementData)}
-            onUpdate={(updates) => selectedElement && onUpdateElement(selectedElement, updates)}
-            onDelete={() => selectedElement && onDeleteElement(selectedElement)}
-            isSelected={true}
-          />
-        </>
+        <CanvasInteractionHandler
+          selectedElement={selectedElement}
+          selectedElementData={selectedElementData}
+          dragState={dragState}
+          onMouseDown={handleMouseDown}
+          isDrawingMode={false}
+        />
       )}
 
       {/* Context Menu */}
