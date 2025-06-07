@@ -1,14 +1,19 @@
 
 import React from 'react';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
-export const KeyboardShortcutsHelp: React.FC = () => {
+interface KeyboardShortcutsHelpProps {
+  onClose: () => void;
+}
+
+export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ onClose }) => {
   const shortcuts = [
     { key: 'Delete', description: 'Delete selected element' },
     { key: 'Escape', description: 'Deselect element / Exit editing mode' },
@@ -20,31 +25,29 @@ export const KeyboardShortcutsHelp: React.FC = () => {
   ];
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
-            <HelpCircle className="w-5 h-5" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="left" className="w-64">
-          <div className="space-y-2">
-            <h4 className="font-semibold text-sm">Keyboard Shortcuts</h4>
-            <div className="space-y-1">
-              {shortcuts.map((shortcut, index) => (
-                <div key={index} className="flex justify-between text-xs">
-                  <span className="font-mono bg-muted px-1 rounded">
-                    {shortcut.key}
-                  </span>
-                  <span className="text-muted-foreground ml-2">
-                    {shortcut.description}
-                  </span>
-                </div>
-              ))}
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="w-96">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between">
+            Keyboard Shortcuts
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="w-4 h-4" />
+            </Button>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          {shortcuts.map((shortcut, index) => (
+            <div key={index} className="flex justify-between items-center">
+              <span className="font-mono text-sm bg-muted px-2 py-1 rounded">
+                {shortcut.key}
+              </span>
+              <span className="text-sm text-muted-foreground ml-4">
+                {shortcut.description}
+              </span>
             </div>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };

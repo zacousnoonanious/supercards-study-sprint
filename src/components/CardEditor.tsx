@@ -37,6 +37,8 @@ export const CardEditor = () => {
   const [snapPrecision, setSnapPrecision] = useState<'coarse' | 'medium' | 'fine'>('medium');
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [textScale, setTextScale] = useState(1);
+  const [isEditingDeckName, setIsEditingDeckName] = useState(false);
+  const [deckName, setDeckName] = useState(set?.title || '');
 
   // Save card when switching cards or sides
   useEffect(() => {
@@ -51,6 +53,13 @@ export const CardEditor = () => {
 
     return () => clearTimeout(timeoutId);
   }, [cards, currentCardIndex, updateCard]);
+
+  // Update deck name when set changes
+  useEffect(() => {
+    if (set?.title) {
+      setDeckName(set.title);
+    }
+  }, [set?.title]);
 
   const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     updateElement(elementId, updates);
@@ -74,6 +83,29 @@ export const CardEditor = () => {
   const getSelectedElementData = () => {
     if (!selectedElement) return null;
     return getCurrentElements().find(el => el.id === selectedElement) || null;
+  };
+
+  const handleSave = async () => {
+    if (cards.length > 0) {
+      const currentCard = cards[currentCardIndex];
+      if (currentCard) {
+        await updateCard(currentCard.id, currentCard);
+      }
+    }
+  };
+
+  const handleStartEdit = () => {
+    setIsEditingDeckName(true);
+  };
+
+  const handleSaveEdit = () => {
+    setIsEditingDeckName(false);
+    // TODO: Update set title in database
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingDeckName(false);
+    setDeckName(set?.title || '');
   };
 
   if (loading) {
@@ -109,24 +141,14 @@ export const CardEditor = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <EditorHeader
         set={set}
-        currentCard={currentCard}
-        onUpdateCard={(updates) => updateCard(currentCard.id, updates)}
-        currentCardIndex={currentCardIndex}
-        totalCards={cards.length}
-        showGrid={showGrid}
-        onShowGridChange={setShowGrid}
-        snapToGrid={snapToGrid}
-        onSnapToGridChange={setSnapToGrid}
-        gridSize={gridSize}
-        onGridSizeChange={setGridSize}
-        snapPrecision={snapPrecision}
-        onSnapPrecisionChange={setSnapPrecision}
-        onShowShortcuts={() => setShowShortcuts(true)}
-        textScale={textScale}
-        onTextScaleChange={setTextScale}
+        onSave={handleSave}
+        isEditingDeckName={isEditingDeckName}
+        deckName={deckName}
+        onDeckNameChange={setDeckName}
+        onStartEdit={handleStartEdit}
+        onSaveEdit={handleSaveEdit}
+        onCancelEdit={handleCancelEdit}
       />
-
-      <ElementToolbar onAddElement={addElement} />
 
       {/* Element Options Panel */}
       <ElementOptionsPanel
@@ -138,34 +160,19 @@ export const CardEditor = () => {
       <div className="flex-1 flex flex-col">
         <CardCanvas
           elements={getCurrentElements()}
+          selectedElement={selectedElement}
+          onSelectElement={handleElementSelect}
           onUpdateElement={handleUpdateElement}
-          selectedElementId={selectedElement}
-          onElementSelect={handleElementSelect}
           onDeleteElement={handleDeleteElement}
-          cardWidth={800}
-          cardHeight={600}
-          showGrid={showGrid}
-          snapToGrid={snapToGrid}
-          gridSize={gridSize}
-          snapPrecision={snapPrecision}
-          currentSide={currentSide}
-          onSideChange={setCurrentSide}
-          textScale={textScale}
+          cardSide={currentSide}
         />
       </div>
 
       <EditorFooter
-        currentCardIndex={currentCardIndex}
-        totalCards={cards.length}
-        onNavigate={navigateCard}
-        onCreateCard={createNewCard}
-        onCreateCardWithLayout={createNewCardWithLayout}
-        onDeleteCard={() => deleteCard(currentCard.id)}
-        onCardIndexChange={setCurrentCardIndex}
-        cards={cards}
-        onReorderCards={reorderCards}
-        currentSide={currentSide}
-        onSideChange={setCurrentSide}
+        currentCard={currentCard}
+        selectedElement={getSelectedElementData()}
+        onUpdateElement={handleUpdateElement}
+        onUpdateCard={(cardId, updates) => updateCard(cardId, updates)}
       />
 
       {showShortcuts && (
