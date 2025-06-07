@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { ElementPopupToolbar } from './ElementPopupToolbar';
 import { CanvasElement } from '@/types/flashcard';
+import { QuizBehaviorSettings } from './QuizBehaviorSettings';
 
 interface HoverElementPopupProps {
   element: CanvasElement;
@@ -21,16 +21,19 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
   isSelected,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const isDarkTheme = false; // Example condition for dark theme
 
   if (!isSelected) return null;
 
   return (
     <div
-      className="absolute pointer-events-auto"
+      className={`absolute z-50 bg-card border border-border rounded-lg shadow-lg p-4 w-64 ${
+        isDarkTheme ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+      }`}
       style={{
         left: position.x,
         top: position.y,
-        zIndex: 100,
+        transform: position.x > 400 ? 'translateX(-100%)' : 'none',
       }}
     >
       {/* Collapsed state - just a small settings icon */}
@@ -79,6 +82,14 @@ export const HoverElementPopup: React.FC<HoverElementPopupProps> = ({
             onClose={() => setIsExpanded(false)}
           />
         </div>
+      )}
+
+      {/* Quiz Behavior Settings for interactive elements */}
+      {(element.type === 'multiple-choice' || element.type === 'true-false') && (
+        <QuizBehaviorSettings
+          element={element}
+          onUpdate={onUpdate}
+        />
       )}
     </div>
   );

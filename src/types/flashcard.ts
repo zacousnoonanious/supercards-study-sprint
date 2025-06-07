@@ -1,3 +1,4 @@
+
 export interface CanvasElement {
   id: string;
   type: 'text' | 'image' | 'audio' | 'drawing' | 'multiple-choice' | 'true-false' | 'youtube' | 'deck-embed' | 'fill-in-blank';
@@ -32,6 +33,8 @@ export interface CanvasElement {
   // Interactive element properties
   multipleChoiceOptions?: string[];
   correctAnswer?: number;
+  showImmediateFeedback?: boolean; // New: whether to show correct/incorrect immediately
+  autoAdvanceOnAnswer?: boolean; // New: whether to auto-advance after answering
   
   // Fill in blank properties
   fillInBlankText?: string;

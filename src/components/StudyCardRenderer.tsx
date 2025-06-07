@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
@@ -17,6 +18,8 @@ interface StudyCardRendererProps {
   requireAnswer?: boolean;
   textScale?: number;
   isInformationalCard?: boolean;
+  cardWidth?: number; // New: actual card width from editor
+  cardHeight?: number; // New: actual card height from editor
 }
 
 export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({ 
@@ -29,7 +32,9 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
   fillInBlankAnswers = {},
   requireAnswer = false,
   textScale = 1,
-  isInformationalCard = false
+  isInformationalCard = false,
+  cardWidth = 500, // Default fallback
+  cardHeight = 300  // Default fallback
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
@@ -171,11 +176,11 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
     aspectRatio: 'unset',
     overflow: 'auto'
   } : {
-    width: '100%', 
-    height: '300px',
-    minHeight: '300px',
-    maxWidth: '500px',
-    aspectRatio: '4/3'
+    width: `${cardWidth}px`,
+    height: `${cardHeight}px`,
+    minHeight: `${cardHeight}px`,
+    maxWidth: `${cardWidth}px`,
+    aspectRatio: `${cardWidth}/${cardHeight}`
   };
 
   return (

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle } from 'lucide-react';
@@ -10,6 +11,7 @@ export interface InteractiveQuizRendererProps {
   userAnswer?: number;
   requireAnswer?: boolean;
   textScale?: number;
+  onAutoAdvance?: () => void; // New: callback for auto-advance
 }
 
 export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = ({
@@ -18,10 +20,12 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
   showResults,
   userAnswer,
   requireAnswer = false,
-  textScale = 1
+  textScale = 1,
+  onAutoAdvance
 }) => {
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(userAnswer);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(userAnswer ?? null);
   const [hasAnswered, setHasAnswered] = useState(userAnswer !== null);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const handleAnswer = (answerIndex: number) => {
     if (hasAnswered && !showResults) return;
@@ -29,14 +33,29 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
     setSelectedAnswer(answerIndex);
     setHasAnswered(true);
     
+    const correct = answerIndex === element.correctAnswer;
+    
     if (onAnswer) {
-      const correct = answerIndex === element.correctAnswer;
       onAnswer(correct);
+    }
+
+    // Show immediate feedback if configured
+    if (element.showImmediateFeedback) {
+      setShowFeedback(true);
+      
+      // Auto-advance if configured
+      if (element.autoAdvanceOnAnswer && onAutoAdvance) {
+        setTimeout(() => {
+          onAutoAdvance();
+        }, 2000); // Wait 2 seconds to show feedback before advancing
+      }
     }
   };
 
   const getButtonVariant = (index: number) => {
-    if (!hasAnswered || !showResults) {
+    const shouldShowResults = showResults || (element.showImmediateFeedback && showFeedback);
+    
+    if (!hasAnswered || !shouldShowResults) {
       return selectedAnswer === index ? 'default' : 'outline';
     }
     
@@ -51,7 +70,9 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
   };
 
   const getButtonIcon = (index: number) => {
-    if (!showResults || !hasAnswered) return null;
+    const shouldShowResults = showResults || (element.showImmediateFeedback && showFeedback);
+    
+    if (!shouldShowResults || !hasAnswered) return null;
     
     if (index === element.correctAnswer) {
       return <CheckCircle className="w-4 h-4 ml-2 text-green-600" />;
@@ -62,10 +83,16 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
     return null;
   };
 
+  const shouldShowFeedbackText = () => {
+    return (showResults || (element.showImmediateFeedback && showFeedback)) && hasAnswered;
+  };
+
   if (element.type === 'multiple-choice') {
     return (
       <div className="p-4 space-y-4">
-        <h3 className="font-medium text-center">{element.content}</h3>
+        <h3 className="font-medium text-center" style={{ fontSize: `${14 * textScale}px` }}>
+          {element.content}
+        </h3>
         <div className="space-y-2">
           {element.multipleChoiceOptions?.map((option, index) => (
             <Button
@@ -73,18 +100,19 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
               variant={getButtonVariant(index)}
               className="w-full justify-between"
               onClick={() => handleAnswer(index)}
-              disabled={hasAnswered && !showResults}
+              disabled={hasAnswered && !showResults && !element.showImmediateFeedback}
+              style={{ fontSize: `${12 * textScale}px` }}
             >
               <span>{option}</span>
               {getButtonIcon(index)}
             </Button>
           ))}
         </div>
-        {showResults && hasAnswered && (
+        {shouldShowFeedbackText() && (
           <div className="text-center pt-2">
             <p className={`font-medium ${
               selectedAnswer === element.correctAnswer ? 'text-green-600' : 'text-red-600'
-            }`}>
+            }`} style={{ fontSize: `${12 * textScale}px` }}>
               {selectedAnswer === element.correctAnswer ? 'Correct!' : 'Incorrect'}
             </p>
           </div>
@@ -98,7 +126,9 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
     
     return (
       <div className="p-4 space-y-4">
-        <h3 className="font-medium text-center">{element.content}</h3>
+        <h3 className="font-medium text-center" style={{ fontSize: `${14 * textScale}px` }}>
+          {element.content}
+        </h3>
         <div className="flex gap-4 justify-center">
           {options.map((option, index) => (
             <Button
@@ -106,18 +136,19 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
               variant={getButtonVariant(index)}
               className="flex-1 justify-between"
               onClick={() => handleAnswer(index)}
-              disabled={hasAnswered && !showResults}
+              disabled={hasAnswered && !showResults && !element.showImmediateFeedback}
+              style={{ fontSize: `${12 * textScale}px` }}
             >
               <span>{option}</span>
               {getButtonIcon(index)}
             </Button>
           ))}
         </div>
-        {showResults && hasAnswered && (
+        {shouldShowFeedbackText() && (
           <div className="text-center pt-2">
             <p className={`font-medium ${
               selectedAnswer === element.correctAnswer ? 'text-green-600' : 'text-red-600'
-            }`}>
+            }`} style={{ fontSize: `${12 * textScale}px` }}>
               {selectedAnswer === element.correctAnswer ? 'Correct!' : 'Incorrect'}
             </p>
           </div>

@@ -47,6 +47,16 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   const handleQuizAnswer = (elementId: string, correct: boolean, answerIndex: number) => {
     setQuizAnswers(prev => ({ ...prev, [elementId]: answerIndex }));
     
+    const element = currentCard.front_elements.find(el => el.id === elementId);
+    
+    // Handle auto-advance if configured for this element
+    if (element?.autoAdvanceOnAnswer && element?.showImmediateFeedback) {
+      setTimeout(() => {
+        onAnswer(correct);
+      }, 2000);
+      return;
+    }
+    
     const quizElements = currentCard.front_elements.filter(el => 
       el.type === 'multiple-choice' || el.type === 'true-false'
     );
@@ -59,6 +69,27 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
       onAnswer(correct);
     }
   };
+
+  const handleAutoAdvance = () => {
+    // This will be called by InteractiveQuizRenderer for auto-advance
+    if (currentCard.card_type === 'single-sided' || currentCard.card_type === 'quiz-only') {
+      const quizElements = currentCard.front_elements.filter(el => 
+        el.type === 'multiple-choice' || el.type === 'true-false'
+      );
+      const correctAnswers = quizElements.filter(el => 
+        quizAnswers[el.id] === el.correctAnswer
+      ).length;
+      const totalQuestions = quizElements.length;
+      const isCorrect = correctAnswers === totalQuestions;
+      onAnswer(isCorrect);
+    } else {
+      onFlipCard();
+    }
+  };
+
+  // Get card dimensions for proper sizing
+  const cardWidth = currentCard.canvas_width || 600;
+  const cardHeight = currentCard.canvas_height || 400;
 
   // Show password protection for password-protected cards
   if (currentCard.card_type === 'password-protected' && !isPasswordCorrect) {
@@ -111,6 +142,9 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
             showQuizResults={showAnswer}
             quizAnswers={quizAnswers}
             textScale={textScale}
+            cardWidth={cardWidth}
+            cardHeight={cardHeight}
+            isInformationalCard={true}
           />
         </div>
         
@@ -152,6 +186,8 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
               showQuizResults={showAnswer}
               quizAnswers={quizAnswers}
               textScale={textScale}
+              cardWidth={cardWidth}
+              cardHeight={cardHeight}
             />
           </div>
         </div>
@@ -195,6 +231,8 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
               quizAnswers={quizAnswers}
               requireAnswer={true}
               textScale={textScale}
+              cardWidth={cardWidth}
+              cardHeight={cardHeight}
             />
           </div>
         </div>
@@ -256,6 +294,8 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
               showQuizResults={showAnswer}
               quizAnswers={quizAnswers}
               textScale={textScale}
+              cardWidth={cardWidth}
+              cardHeight={cardHeight}
             />
           </div>
         </div>
@@ -294,7 +334,12 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
               <div className="space-y-4">
                 <h3 className="text-base sm:text-lg font-medium text-foreground mb-4 text-center">Answer</h3>
                 <div className="flex justify-center">
-                  <StudyCardRenderer elements={currentCard.back_elements} />
+                  <StudyCardRenderer 
+                    elements={currentCard.back_elements} 
+                    cardWidth={cardWidth}
+                    cardHeight={cardHeight}
+                    textScale={textScale}
+                  />
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 justify-center">
@@ -339,6 +384,8 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
               showQuizResults={showAnswer}
               quizAnswers={quizAnswers}
               textScale={textScale}
+              cardWidth={cardWidth}
+              cardHeight={cardHeight}
             />
           </div>
           
@@ -346,6 +393,8 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
             <StudyCardRenderer 
               elements={currentCard.back_elements} 
               textScale={textScale}
+              cardWidth={cardWidth}
+              cardHeight={cardHeight}
             />
           </div>
         </div>
