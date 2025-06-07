@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { TextInputModal } from './TextInputModal';
 import { CanvasElement } from '@/types/flashcard';
 
 interface FillInBlankEditorProps {
@@ -216,15 +216,21 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
       <CardContent className="p-3 space-y-3">
         <div>
           <Label className="text-xs font-medium">Enter your text:</Label>
-          <Textarea
-            value={originalText}
-            onChange={(e) => handleTextChange(e.target.value)}
-            placeholder="Type a sentence, paragraph, or multiple paragraphs here. This text area will expand as you type more content..."
-            className="min-h-[120px] max-h-[300px] text-xs resize-y"
-            rows={6}
-          />
-          <div className="text-xs text-muted-foreground mt-1">
-            {originalText.length} characters • {originalText.trim().split(/\s+/).filter(w => w.length > 0).length} words
+          <div className="space-y-2">
+            <TextInputModal
+              value={originalText}
+              onSave={handleTextChange}
+              placeholder="Type a sentence, paragraph, or multiple paragraphs here. This text area will expand as you type more content..."
+              buttonText={originalText ? "Edit Text" : "Add Text"}
+              title="Fill-in-the-Blank Text"
+            />
+            {originalText && (
+              <div className="text-xs text-muted-foreground p-2 bg-gray-50 dark:bg-gray-900 rounded border">
+                Preview: {originalText.substring(0, 100)}{originalText.length > 100 ? '...' : ''}
+                <br />
+                {originalText.length} characters • {originalText.trim().split(/\s+/).filter(w => w.length > 0).length} words
+              </div>
+            )}
           </div>
         </div>
 
