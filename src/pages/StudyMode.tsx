@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +12,7 @@ import { StudyModeContent } from '@/components/StudyModeContent';
 import { StudyNavigationBar } from '@/components/StudyNavigationBar';
 import { StudyModeSettings } from '@/components/StudyModeSettings';
 import { StudyModeComplete } from '@/components/StudyModeComplete';
-import { Flashcard, FlashcardSet, CanvasElement } from '@/types/flashcard';
+import { Flashcard, FlashcardSet } from '@/types/flashcard';
 
 const StudyMode = () => {
   const { setId } = useParams<{ setId: string }>();
@@ -30,7 +31,6 @@ const StudyMode = () => {
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showPanelView, setShowPanelView] = useState(false);
-  const [allowNavigation, setAllowNavigation] = useState(true);
   const [studyComplete, setStudyComplete] = useState(false);
   const [fillInBlankResults, setFillInBlankResults] = useState<{[elementId: string]: boolean}>({});
 
@@ -70,22 +70,7 @@ const StudyMode = () => {
         .order('created_at', { ascending: true });
 
       if (cardsError) throw cardsError;
-      
-      // Type cast the data to match our Flashcard interface
-      const typedCards: Flashcard[] = (cardsData || []).map(card => ({
-        ...card,
-        front_elements: Array.isArray(card.front_elements) ? (card.front_elements as unknown as CanvasElement[]) : [],
-        back_elements: Array.isArray(card.back_elements) ? (card.back_elements as unknown as CanvasElement[]) : [],
-        card_type: (card.card_type || 'normal') as Flashcard['card_type'],
-        interactive_type: card.interactive_type && ['multiple-choice', 'true-false', 'fill-in-blank'].includes(card.interactive_type) 
-          ? card.interactive_type as Flashcard['interactive_type'] 
-          : null,
-        canvas_width: card.canvas_width || 600,
-        canvas_height: card.canvas_height || 400,
-        countdown_timer: card.countdown_timer || 0,
-      }));
-      
-      setCards(typedCards);
+      setCards(cardsData || []);
     } catch (error) {
       console.error('Error fetching set and cards:', error);
       toast({
@@ -153,15 +138,6 @@ const StudyMode = () => {
     }));
   }, []);
 
-  const handleResetStudy = useCallback(() => {
-    setCurrentIndex(0);
-    setSessionStats({ correct: 0, incorrect: 0 });
-    setStudyComplete(false);
-    setShowAnswer(false);
-    setShowHint(false);
-    setFillInBlankResults({});
-  }, []);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -208,9 +184,18 @@ const StudyMode = () => {
           </div>
         </header>
         <StudyModeComplete
-          setId={setId!}
+          setTitle={set.title}
           sessionStats={sessionStats}
-          onResetStudy={handleResetStudy}
+          totalCards={cards.length}
+          onRestart={() => {
+            setCurrentIndex(0);
+            setSessionStats({ correct: 0, incorrect: 0 });
+            setStudyComplete(false);
+            setShowAnswer(false);
+            setShowHint(false);
+            setFillInBlankResults({});
+          }}
+          onBackToSet={handleGoBack}
         />
       </div>
     );
@@ -243,10 +228,10 @@ const StudyMode = () => {
 
       {showSettings && (
         <StudyModeSettings
+          settings={settings}
+          onSettingsChange={setSettings}
           showPanelView={showPanelView}
-          allowNavigation={allowNavigation}
-          onPanelViewChange={setShowPanelView}
-          onNavigationChange={setAllowNavigation}
+          onTogglePanelView={() => setShowPanelView(!showPanelView)}
         />
       )}
 
@@ -273,7 +258,7 @@ const StudyMode = () => {
         showAnswer={showAnswer}
         countdownTimer={settings.countdownTimer}
         onTimeUp={handleRevealAnswer}
-        allowNavigation={allowNavigation}
+        allowNavigation={true}
       />
     </div>
   );

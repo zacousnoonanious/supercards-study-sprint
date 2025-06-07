@@ -106,7 +106,7 @@ const Profile = () => {
     }
   };
 
-  const handleAvatarChange = (avatarUrl: string) => {
+  const handleAvatarSelect = (avatarUrl: string) => {
     setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
     setShowAvatarSelector(false);
   };
@@ -230,8 +230,7 @@ const Profile = () => {
 
         {showAvatarSelector && (
           <AvatarSelector
-            currentAvatarUrl={profile?.avatar_url || ''}
-            onAvatarChange={handleAvatarChange}
+            onSelect={handleAvatarSelect}
             onClose={() => setShowAvatarSelector(false)}
           />
         )}
