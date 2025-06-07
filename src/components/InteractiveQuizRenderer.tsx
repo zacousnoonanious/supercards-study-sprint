@@ -28,10 +28,11 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
   onElementSelect
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(userAnswer ?? null);
-  const [hasAnswered, setHasAnswered] = useState(userAnswer !== null);
+  const [hasAnswered, setHasAnswered] = useState(userAnswer !== undefined && userAnswer !== null);
   const [showFeedback, setShowFeedback] = useState(false);
 
   const handleAnswer = (answerIndex: number) => {
+    // Always allow answering in study mode
     setSelectedAnswer(answerIndex);
     setHasAnswered(true);
     
@@ -96,12 +97,9 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
     return (showResults || (element.showImmediateFeedback && showFeedback)) && hasAnswered;
   };
 
-  // Determine if buttons should be disabled
+  // In study mode, buttons should never be disabled to allow interaction
   const areButtonsDisabled = () => {
-    // Never disable in study mode - always allow interaction
     if (isStudyMode) return false;
-    
-    // In editor mode, disable after answering if not showing results and no immediate feedback
     return hasAnswered && !showResults && !element.showImmediateFeedback;
   };
 

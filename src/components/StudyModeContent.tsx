@@ -46,7 +46,9 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
   };
 
   const handleQuizAnswer = (elementId: string, correct: boolean, answerIndex: number) => {
-    setQuizAnswers(prev => ({ ...prev, [elementId]: answerIndex }));
+    // Update the quiz answers state
+    const newAnswers = { ...quizAnswers, [elementId]: answerIndex };
+    setQuizAnswers(newAnswers);
     
     const element = currentCard.front_elements.find(el => el.id === elementId);
     
@@ -62,7 +64,6 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
       el.type === 'multiple-choice' || el.type === 'true-false'
     );
     
-    const newAnswers = { ...quizAnswers, [elementId]: answerIndex };
     const allAnswered = quizElements.every(el => newAnswers[el.id] !== undefined);
     setHasAnsweredAllQuiz(allAnswered);
     
