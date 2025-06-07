@@ -1,66 +1,43 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from '@/contexts/AuthContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { I18nProvider } from '@/contexts/I18nContext';
-import { Toaster } from '@/components/ui/sonner';
-import Index from '@/pages/Index';
-import Auth from '@/pages/Auth';
-import Dashboard from '@/pages/Dashboard';
-import Decks from '@/pages/Decks';
-import CreateSet from '@/pages/CreateSet';
-import SetView from '@/pages/SetView';
-import AddCard from '@/pages/AddCard';
-import StudyMode from '@/pages/StudyMode';
-import Profile from '@/pages/Profile';
-import Marketplace from '@/pages/Marketplace';
-import CardEditorPage from '@/pages/CardEditorPage';
-import NotFound from '@/pages/NotFound';
-import './App.css';
+import { ThemeProvider } from "@/components/theme-provider";
+import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import SetView from "./pages/SetView";
+import StudyMode from "./pages/StudyMode";
+import CreateSet from "./pages/CreateSet";
+import EditSet from "./pages/EditSet";
+import CardEditorPage from "./pages/CardEditorPage";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <I18nProvider>
-          <Router>
-            <AuthProvider>
-              <div className="App">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/decks" element={<Decks />} />
-                  <Route path="/create-set" element={<CreateSet />} />
-                  <Route path="/edit-set/:setId" element={<CreateSet />} />
-                  <Route path="/sets/:setId" element={<SetView />} />
-                  <Route path="/sets/:setId/add-card" element={<AddCard />} />
-                  <Route path="/sets/:setId/cards/:cardId" element={<CardEditorPage />} />
-                  <Route path="/edit-cards/:setId" element={<CardEditorPage />} />
-                  <Route path="/sets/:setId/study" element={<StudyMode />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/marketplace" element={<Marketplace />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </div>
-              <Toaster />
-            </AuthProvider>
-          </Router>
-        </I18nProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
-  );
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <AuthProvider>
+        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/sets/:setId" element={<SetView />} />
+              <Route path="/sets/:setId/study" element={<StudyMode />} />
+              <Route path="/sets/:setId/cards/:cardId" element={<CardEditorPage />} />
+              <Route path="/create-set" element={<CreateSet />} />
+              <Route path="/edit-set/:setId" element={<EditSet />} />
+            </Routes>
+          </TooltipProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </QueryClientProvider>
+);
 
 export default App;

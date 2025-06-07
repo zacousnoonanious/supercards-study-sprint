@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { FlashcardSet, Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
 
 export const useCardEditor = () => {
-  const { setId } = useParams();
+  const { setId, cardId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [set, setSet] = useState<FlashcardSet | null>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
@@ -56,6 +57,17 @@ export const useCardEditor = () => {
         }));
         
         setCards(typedCards);
+
+        // If a specific cardId is provided, find and navigate to that card
+        if (cardId && typedCards.length > 0) {
+          const cardIndex = typedCards.findIndex(card => card.id === cardId);
+          if (cardIndex >= 0) {
+            setCurrentCardIndex(cardIndex);
+          } else {
+            // Card not found, redirect to first card
+            navigate(`/sets/${setId}/cards/${typedCards[0].id}`, { replace: true });
+          }
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -64,7 +76,15 @@ export const useCardEditor = () => {
     };
 
     fetchSetAndCards();
-  }, [user, setId]);
+  }, [user, setId, cardId, navigate]);
+
+  // Update URL when card index changes
+  useEffect(() => {
+    if (cards.length > 0 && cards[currentCardIndex]) {
+      const currentCard = cards[currentCardIndex];
+      navigate(`/sets/${setId}/cards/${currentCard.id}`, { replace: true });
+    }
+  }, [currentCardIndex, cards, setId, navigate]);
 
   const saveCard = async () => {
     if (!setId || cards.length === 0) return;
@@ -82,6 +102,8 @@ export const useCardEditor = () => {
           card_type: currentCard.card_type,
           countdown_timer: currentCard.countdown_timer,
           password: currentCard.password,
+          canvas_width: currentCard.canvas_width,
+          canvas_height: currentCard.canvas_height,
           updated_at: new Date().toISOString(),
         })
         .eq('id', currentCard.id);
@@ -106,6 +128,8 @@ export const useCardEditor = () => {
       if (updates.password !== undefined) updateData.password = updates.password;
       if (updates.front_elements !== undefined) updateData.front_elements = updates.front_elements as any;
       if (updates.back_elements !== undefined) updateData.back_elements = updates.back_elements as any;
+      if (updates.canvas_width !== undefined) updateData.canvas_width = updates.canvas_width;
+      if (updates.canvas_height !== undefined) updateData.canvas_height = updates.canvas_height;
       
       updateData.updated_at = new Date().toISOString();
 
@@ -365,6 +389,8 @@ export const useCardEditor = () => {
       set_id: setId,
       card_type: currentCard.card_type,
       countdown_timer: currentCard.countdown_timer,
+      canvas_width: currentCard.canvas_width || 600,
+      canvas_height: currentCard.canvas_height || 900,
     };
 
     try {

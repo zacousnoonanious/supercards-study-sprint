@@ -93,6 +93,34 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
         <div className="flex items-center gap-4 flex-wrap">
           <h3 className="font-medium text-sm whitespace-nowrap">Element Options</h3>
           
+          {/* Canvas Size Controls - Always show */}
+          {onCanvasSizeChange && (
+            <>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs whitespace-nowrap">Canvas Width:</Label>
+                <Input
+                  type="number"
+                  value={canvasWidth}
+                  onChange={(e) => onCanvasSizeChange(parseInt(e.target.value) || canvasWidth, canvasHeight)}
+                  min={200}
+                  max={2000}
+                  className="w-20 h-7 text-xs"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs whitespace-nowrap">Canvas Height:</Label>
+                <Input
+                  type="number"
+                  value={canvasHeight}
+                  onChange={(e) => onCanvasSizeChange(canvasWidth, parseInt(e.target.value) || canvasHeight)}
+                  min={200}
+                  max={2000}
+                  className="w-20 h-7 text-xs"
+                />
+              </div>
+            </>
+          )}
+          
           {selectedElement && selectedElement !== 'canvas' && typeof selectedElement !== 'string' ? (
             <>
               {selectedElement.type === 'text' && (
@@ -262,45 +290,6 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
               </Button>
             </>
           ) : null}
-
-          {/* Canvas Size Controls - only show for normal cards */}
-          {selectedElement === 'canvas' && cardType === 'normal' && onCanvasSizeChange && (
-            <>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs whitespace-nowrap">Width:</Label>
-                <Input
-                  type="number"
-                  value={canvasWidth}
-                  onChange={(e) => onCanvasSizeChange(parseInt(e.target.value) || canvasWidth, canvasHeight)}
-                  min={400}
-                  max={1200}
-                  className="w-20 h-7 text-xs"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs whitespace-nowrap">Height:</Label>
-                <Input
-                  type="number"
-                  value={canvasHeight}
-                  onChange={(e) => onCanvasSizeChange(canvasWidth, parseInt(e.target.value) || canvasHeight)}
-                  min={300}
-                  max={2000}
-                  className="w-20 h-7 text-xs"
-                />
-              </div>
-            </>
-          )}
-
-          {/* Show card type info for constrained types */}
-          {selectedElement === 'canvas' && cardType !== 'normal' && (
-            <div className="flex items-center gap-2">
-              <div className="px-3 py-1 bg-blue-50 rounded border text-xs text-blue-700">
-                {cardType === 'simple' && 'Simple cards: 600×900 fixed size'}
-                {cardType === 'informational' && 'Info cards: 900×1800 fixed size'}
-                <span className="ml-2 text-blue-600">({canvasWidth} × {canvasHeight})</span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

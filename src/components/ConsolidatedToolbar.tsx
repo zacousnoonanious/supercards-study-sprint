@@ -29,7 +29,7 @@ import { TemplateSelector } from '@/components/TemplateSelector';
 
 interface ConsolidatedToolbarProps {
   onAddElement: (type: string) => void;
-  onAutoArrange: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right') => void;
+  onAutoArrange: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => void;
   currentCard: Flashcard;
   currentCardIndex: number;
   totalCards: number;
@@ -165,11 +165,21 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onAutoArrange('center')}
+          onClick={() => onAutoArrange('center-horizontal')}
           className={`${buttonSizeClass} p-0`}
-          title="Center Elements"
+          title="Center Horizontally"
         >
-          <AlignCenter className="w-4 h-4" />
+          <AlignCenter className="w-4 h-4 rotate-0" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAutoArrange('center-vertical')}
+          className={`${buttonSizeClass} p-0`}
+          title="Center Vertically"
+        >
+          <AlignCenter className="w-4 h-4 rotate-90" />
         </Button>
       </div>
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useCardEditor } from '@/hooks/useCardEditor';
 import { EditorHeader } from './EditorHeader';
@@ -99,7 +100,7 @@ export const CardEditor = () => {
     }
   };
 
-  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right') => {
+  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => {
     const elements = getCurrentElements();
     if (elements.length === 0) return;
 
@@ -126,6 +127,24 @@ export const CardEditor = () => {
             ...element,
             x: (cardWidth - element.width) / 2,
             y: element.y
+          };
+        });
+        break;
+
+      case 'center-horizontal':
+        elements.forEach((element, index) => {
+          updatedElements[index] = {
+            ...element,
+            x: (cardWidth - element.width) / 2
+          };
+        });
+        break;
+
+      case 'center-vertical':
+        elements.forEach((element, index) => {
+          updatedElements[index] = {
+            ...element,
+            y: (cardHeight - element.height) / 2
           };
         });
         break;
@@ -163,36 +182,28 @@ export const CardEditor = () => {
   };
 
   const handleCanvasSizeChange = useCallback((width: number, height: number) => {
-    // Only allow size changes for normal cards
-    if (currentCard?.card_type === 'normal') {
+    setCardWidth(width);
+    setCardHeight(height);
+    
+    // Update the current card with new dimensions
+    if (currentCard) {
+      updateCard(currentCard.id, { 
+        canvas_width: width, 
+        canvas_height: height 
+      });
+    }
+  }, [currentCard, updateCard]);
+
+  // Set canvas dimensions based on card data
+  useEffect(() => {
+    if (currentCard) {
+      const width = currentCard.canvas_width || 600;
+      const height = currentCard.canvas_height || 900;
+      
       setCardWidth(width);
       setCardHeight(height);
     }
-  }, [currentCard?.card_type]);
-
-  // Set canvas dimensions based on card type
-  useEffect(() => {
-    if (currentCard) {
-      switch (currentCard.card_type) {
-        case 'simple':
-          setCardWidth(600);
-          setCardHeight(900);
-          break;
-        case 'informational':
-          setCardWidth(900);
-          setCardHeight(1800);
-          break;
-        case 'normal':
-        default:
-          // Keep current dimensions for normal cards, or set defaults
-          if (!cardWidth || !cardHeight) {
-            setCardWidth(600);
-            setCardHeight(900);
-          }
-          break;
-      }
-    }
-  }, [currentCard?.card_type]);
+  }, [currentCard]);
 
   if (loading) {
     return (
