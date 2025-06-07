@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Flashcard, CanvasElement } from '@/types/flashcard';
 import { LockableToolbar } from './LockableToolbar';
 import { PowerPointEditor } from './PowerPointEditor';
+import { CanvasElementRenderer } from './CanvasElementRenderer';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFlashcard, getFlashcard, updateFlashcard, deleteFlashcard } from '@/lib/api/flashcards';
 import { getSet } from '@/lib/api/sets';
