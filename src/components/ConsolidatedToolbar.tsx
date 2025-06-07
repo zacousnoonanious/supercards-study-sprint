@@ -57,91 +57,18 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   position = 'left',
   onPositionChange,
 }) => {
-  const isHorizontal = position === 'top' || position === 'bottom';
-  
-  const getPositionStyles = () => {
-    const baseClasses = "bg-background border rounded-lg shadow-lg p-2 gap-2 z-50";
-    
-    switch (position) {
-      case 'left':
-        return `${baseClasses} flex flex-col w-16`;
-      case 'right':
-        return `${baseClasses} flex flex-col w-16`;
-      case 'top':
-        return `${baseClasses} flex flex-row h-16 min-w-max`;
-      case 'bottom':
-        return `${baseClasses} flex flex-row h-16 min-w-max`;
-      default:
-        return `${baseClasses} flex flex-col w-16`;
-    }
-  };
-
-  const buttonSizeClass = isHorizontal ? "w-12 h-12" : "w-12 h-10";
-  const separatorClass = isHorizontal ? "h-full w-px bg-border" : "w-full h-px bg-border";
+  const buttonSizeClass = "w-12 h-10";
+  const separatorClass = "w-full h-px bg-border";
 
   return (
-    <div className={getPositionStyles()}>
-      {/* Position Settings */}
-      {onPositionChange && (
-        <>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              const positions: ('left' | 'top' | 'right' | 'bottom')[] = ['left', 'top', 'right', 'bottom'];
-              const currentIndex = positions.indexOf(position);
-              const nextPosition = positions[(currentIndex + 1) % positions.length];
-              onPositionChange(nextPosition);
-            }}
-            className={`${buttonSizeClass} p-0`}
-            title="Change Position"
-          >
-            <Settings className="w-4 h-4" />
-          </Button>
-          <div className={separatorClass} />
-        </>
-      )}
-
-      {/* Card Navigation */}
-      <div className={`flex ${isHorizontal ? 'flex-row' : 'flex-col'} gap-1`}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onNavigateCard('prev')}
-          disabled={currentCardIndex === 0}
-          className={`${buttonSizeClass} p-0`}
-          title="Previous Card"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </Button>
-        
-        {!isHorizontal && (
-          <div className="text-xs text-center py-1 text-muted-foreground">
-            {currentCardIndex + 1}/{totalCards}
-          </div>
-        )}
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onNavigateCard('next')}
-          disabled={currentCardIndex === totalCards - 1}
-          className={`${buttonSizeClass} p-0`}
-          title="Next Card"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-      </div>
-
-      <div className={separatorClass} />
-
+    <div className="bg-background border-r rounded-l-lg shadow-lg p-2 gap-2 flex flex-col w-16">
       {/* Side Toggle */}
-      <div className={`flex ${isHorizontal ? 'flex-row' : 'flex-col'} gap-1`}>
+      <div className="flex flex-col gap-1">
         <Button
           variant={currentSide === 'front' ? 'default' : 'outline'}
           size="sm"
           onClick={() => onSideChange('front')}
-          className={`${isHorizontal ? 'w-16 h-8' : 'w-12 h-8'} p-0 text-xs`}
+          className="w-12 h-8 p-0 text-xs"
         >
           Front
         </Button>
@@ -149,7 +76,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           variant={currentSide === 'back' ? 'default' : 'outline'}
           size="sm"
           onClick={() => onSideChange('back')}
-          className={`${isHorizontal ? 'w-16 h-8' : 'w-12 h-8'} p-0 text-xs`}
+          className="w-12 h-8 p-0 text-xs"
         >
           Back
         </Button>
@@ -158,7 +85,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       <div className={separatorClass} />
 
       {/* Add Elements */}
-      <div className={`flex ${isHorizontal ? 'flex-row' : 'flex-col'} gap-1`}>
+      <div className="flex flex-col gap-1">
         <Button
           variant="ghost"
           size="sm"
@@ -213,7 +140,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       <div className={separatorClass} />
 
       {/* Quick Actions */}
-      <div className={`flex ${isHorizontal ? 'flex-row' : 'flex-col'} gap-1`}>
+      <div className="flex flex-col gap-1">
         <Button
           variant="ghost"
           size="sm"
@@ -238,7 +165,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       <div className={separatorClass} />
 
       {/* Card Actions */}
-      <div className={`flex ${isHorizontal ? 'flex-row' : 'flex-col'} gap-1`}>
+      <div className="flex flex-col gap-1">
         <Button
           variant="ghost"
           size="sm"

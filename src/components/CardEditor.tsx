@@ -1,9 +1,11 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useCardEditor } from '@/hooks/useCardEditor';
 import { EditorHeader } from './EditorHeader';
 import { ElementOptionsPanel } from './ElementOptionsPanel';
 import { CardCanvas } from './CardCanvas';
 import { ConsolidatedToolbar } from './ConsolidatedToolbar';
+import { SimpleEditorFooter } from './SimpleEditorFooter';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { CanvasElement } from '@/types/flashcard';
 
@@ -31,8 +33,8 @@ export const CardEditor = () => {
 
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [deckName, setDeckName] = useState(set?.title || '');
-  const [cardWidth] = useState(600);
-  const [toolbarPosition, setToolbarPosition] = useState<'left' | 'top' | 'right' | 'bottom'>('left');
+  const [cardWidth] = useState(900);
+  const [cardHeight] = useState(600);
 
   // Save card when switching cards or sides
   useEffect(() => {
@@ -151,37 +153,6 @@ export const CardEditor = () => {
     });
   };
 
-  const getToolbarPositionStyles = () => {
-    switch (toolbarPosition) {
-      case 'left':
-        return 'absolute left-4 top-1/2 transform -translate-y-1/2';
-      case 'right':
-        return 'absolute right-4 top-1/2 transform -translate-y-1/2';
-      case 'top':
-        return 'absolute top-4 left-1/2 transform -translate-x-1/2';
-      case 'bottom':
-        return 'absolute bottom-4 left-1/2 transform -translate-x-1/2';
-      default:
-        return 'absolute left-4 top-1/2 transform -translate-y-1/2';
-    }
-  };
-
-  const getCanvasContainerStyles = () => {
-    const baseClass = "flex-1 flex items-start justify-center pt-4 pb-20";
-    switch (toolbarPosition) {
-      case 'left':
-        return `${baseClass} ml-20`;
-      case 'right':
-        return `${baseClass} mr-20`;
-      case 'top':
-        return `${baseClass} mt-20`;
-      case 'bottom':
-        return `${baseClass} mb-20`;
-      default:
-        return `${baseClass} ml-20`;
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -233,9 +204,9 @@ export const CardEditor = () => {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex relative">
-        {/* Positionable Consolidated Tool Palette */}
-        <div className={getToolbarPositionStyles()}>
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="flex items-start gap-0">
+          {/* Left Toolbar - directly adjacent to canvas */}
           <ConsolidatedToolbar
             onAddElement={addElement}
             onAutoArrange={handleAutoArrange}
@@ -249,14 +220,11 @@ export const CardEditor = () => {
             onCreateNewCardWithLayout={createNewCardWithLayout}
             onDeleteCard={() => deleteCard(currentCard.id)}
             onCardTypeChange={(type: 'standard' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
-            position={toolbarPosition}
-            onPositionChange={setToolbarPosition}
+            position="left"
           />
-        </div>
 
-        {/* Card Canvas Area */}
-        <div className={getCanvasContainerStyles()}>
-          <div className="relative">
+          {/* Card Canvas and Footer */}
+          <div className="flex flex-col">
             <CardCanvas
               elements={getCurrentElements()}
               selectedElement={selectedElement}
@@ -264,6 +232,18 @@ export const CardEditor = () => {
               onUpdateElement={handleUpdateElement}
               onDeleteElement={handleDeleteElement}
               cardSide={currentSide}
+              style={{ width: cardWidth, height: cardHeight }}
+            />
+
+            {/* Bottom Footer */}
+            <SimpleEditorFooter
+              currentCard={currentCard}
+              currentCardIndex={currentCardIndex}
+              totalCards={cards.length}
+              selectedElement={getSelectedElementData()}
+              onUpdateCard={updateCard}
+              onNavigateCard={navigateCard}
+              cardWidth={cardWidth}
             />
           </div>
         </div>
