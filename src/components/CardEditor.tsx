@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -80,6 +79,8 @@ export const CardEditor: React.FC = () => {
   // Mutation for updating cards
   const updateCardMutation = useMutation({
     mutationFn: async ({ cardId, updates }: { cardId: string; updates: Partial<Flashcard> }) => {
+      console.log('Updating card:', cardId, 'with updates:', updates);
+      
       // Convert CanvasElement arrays to JSON for database storage
       const dbUpdates: any = { ...updates };
       if (updates.front_elements) {
@@ -89,12 +90,20 @@ export const CardEditor: React.FC = () => {
         dbUpdates.back_elements = updates.back_elements as any;
       }
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('flashcards')
         .update(dbUpdates)
-        .eq('id', cardId);
+        .eq('id', cardId)
+        .select()
+        .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Update error:', error);
+        throw error;
+      }
+      
+      console.log('Card updated successfully:', data);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flashcard-set', setId] });
@@ -114,6 +123,8 @@ export const CardEditor: React.FC = () => {
     mutationFn: async () => {
       if (!setId) throw new Error('Set ID is required');
       
+      console.log('Creating new card for setId:', setId);
+      
       const { data, error } = await supabase
         .from('flashcards')
         .insert({
@@ -128,7 +139,12 @@ export const CardEditor: React.FC = () => {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Create card error:', error);
+        throw error;
+      }
+      
+      console.log('Card created successfully:', data);
       return data;
     },
     onSuccess: (newCard) => {
@@ -152,12 +168,19 @@ export const CardEditor: React.FC = () => {
   // Mutation for deleting cards
   const deleteCardMutation = useMutation({
     mutationFn: async (cardId: string) => {
+      console.log('Deleting card:', cardId);
+      
       const { error } = await supabase
         .from('flashcards')
         .delete()
         .eq('id', cardId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Delete card error:', error);
+        throw error;
+      }
+      
+      console.log('Card deleted successfully');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flashcard-set', setId] });
@@ -182,23 +205,46 @@ export const CardEditor: React.FC = () => {
     : (currentCard?.back_elements as CanvasElement[] || []);
 
   const handleUpdateCard = useCallback((cardId: string, updates: Partial<Flashcard>) => {
+    console.log('handleUpdateCard called:', { cardId, updates });
     updateCardMutation.mutate({ cardId, updates });
   }, [updateCardMutation]);
 
   const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
-    if (!currentCard) return;
+    if (!currentCard) {
+      console.log('No current card, cannot update element');
+      return;
+    }
+
+    console.log('handleUpdateElement called:', { elementId, updates });
 
     const elementField = currentSide === 'front' ? 'front_elements' : 'back_elements';
     const elements = currentElements;
-    const updatedElements = elements.map(el => 
-      el.id === elementId ? { ...el, ...updates } : el
-    );
+    
+    // Find the element and update it, or add it if it doesn't exist
+    const elementIndex = elements.findIndex(el => el.id === elementId);
+    let updatedElements;
+    
+    if (elementIndex >= 0) {
+      // Update existing element
+      updatedElements = elements.map(el => 
+        el.id === elementId ? { ...el, ...updates } : el
+      );
+    } else {
+      // Add new element if it doesn't exist
+      updatedElements = [...elements, { ...updates } as CanvasElement];
+    }
 
+    console.log('Updating elements:', { elementField, updatedElements });
     handleUpdateCard(currentCard.id, { [elementField]: updatedElements });
   }, [currentCard, currentSide, currentElements, handleUpdateCard]);
 
   const handleAddElement = useCallback((type: CanvasElement['type']) => {
-    if (!currentCard) return;
+    if (!currentCard) {
+      console.log('No current card, cannot add element');
+      return;
+    }
+
+    console.log('handleAddElement called:', { type });
 
     const newElement: CanvasElement = {
       id: `element_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -214,16 +260,23 @@ export const CardEditor: React.FC = () => {
     const elementField = currentSide === 'front' ? 'front_elements' : 'back_elements';
     const updatedElements = [...currentElements, newElement];
     
+    console.log('Adding element:', { newElement, elementField, updatedElements });
     handleUpdateCard(currentCard.id, { [elementField]: updatedElements });
     setSelectedElementId(newElement.id);
   }, [currentCard, currentSide, currentElements, handleUpdateCard]);
 
   const handleDeleteElement = useCallback((elementId: string) => {
-    if (!currentCard) return;
+    if (!currentCard) {
+      console.log('No current card, cannot delete element');
+      return;
+    }
+
+    console.log('handleDeleteElement called:', { elementId });
 
     const elementField = currentSide === 'front' ? 'front_elements' : 'back_elements';
     const updatedElements = currentElements.filter(el => el.id !== elementId);
     
+    console.log('Deleting element:', { elementId, elementField, updatedElements });
     handleUpdateCard(currentCard.id, { [elementField]: updatedElements });
     setSelectedElementId(null);
   }, [currentCard, currentSide, currentElements, handleUpdateCard]);
@@ -317,6 +370,7 @@ export const CardEditor: React.FC = () => {
   const handleCardDimensionsChange = useCallback((width: number, height: number) => {
     if (!currentCard) return;
     
+    console.log('handleCardDimensionsChange called:', { width, height });
     setCardDimensions({ width, height });
     handleUpdateCard(currentCard.id, { 
       canvas_width: width, 

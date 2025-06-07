@@ -81,6 +81,8 @@ export type Database = {
         Row: {
           answer: string
           back_elements: Json | null
+          canvas_height: number | null
+          canvas_width: number | null
           card_type: string | null
           countdown_timer: number | null
           created_at: string
@@ -97,6 +99,8 @@ export type Database = {
         Insert: {
           answer: string
           back_elements?: Json | null
+          canvas_height?: number | null
+          canvas_width?: number | null
           card_type?: string | null
           countdown_timer?: number | null
           created_at?: string
@@ -113,6 +117,8 @@ export type Database = {
         Update: {
           answer?: string
           back_elements?: Json | null
+          canvas_height?: number | null
+          canvas_width?: number | null
           card_type?: string | null
           countdown_timer?: number | null
           created_at?: string
