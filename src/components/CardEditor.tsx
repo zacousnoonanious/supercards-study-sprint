@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { useCardEditor } from '@/hooks/useCardEditor';
 import { EditorHeader } from './EditorHeader';
@@ -108,6 +107,13 @@ export const CardEditor = () => {
     setDeckName(set?.title || '');
   };
 
+  // Wrapper function for ElementToolbar that matches expected signature
+  const handleToolbarUpdateElement = useCallback((updates: Partial<CanvasElement>) => {
+    if (selectedElement) {
+      handleUpdateElement(selectedElement, updates);
+    }
+  }, [selectedElement, handleUpdateElement]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -144,7 +150,7 @@ export const CardEditor = () => {
         <ElementToolbar
           onAddElement={addElement}
           selectedElement={getSelectedElementData()}
-          onUpdateElement={handleUpdateElement}
+          onUpdateElement={handleToolbarUpdateElement}
           onDeleteElement={() => selectedElement && handleDeleteElement(selectedElement)}
           onCreateNewCard={createNewCard}
           onCreateNewCardWithLayout={createNewCardWithLayout}
