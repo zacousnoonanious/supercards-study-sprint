@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -112,17 +113,21 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
       {/* Add Elements */}
       <div className="flex flex-col gap-1">
-        {elementTypes.map((type) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onAddElement(type.type)}
-            className={`${buttonSizeClass} p-0`}
-            title={type.label}
-          >
-            {type.icon}
-          </Button>
-        ))}
+        {elementTypes.map((type) => {
+          const IconComponent = type.icon;
+          return (
+            <Button
+              key={type.type}
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddElement(type.type)}
+              className={`${buttonSizeClass} p-0`}
+              title={type.label}
+            >
+              <IconComponent className="w-4 h-4" />
+            </Button>
+          );
+        })}
       </div>
 
       <div className={separatorClass} />

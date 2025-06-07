@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { I18nProvider } from '@/contexts/I18nContext';
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import SetView from "./pages/SetView";
@@ -19,20 +20,22 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/sets/:setId" element={<SetView />} />
-              <Route path="/sets/:setId/study" element={<StudyMode />} />
-              <Route path="/sets/:setId/cards/:cardId" element={<CardEditorPage />} />
-              <Route path="/create-set" element={<CreateSet />} />
-            </Routes>
-          </TooltipProvider>
-        </ThemeProvider>
+        <I18nProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/sets/:setId" element={<SetView />} />
+                <Route path="/sets/:setId/study" element={<StudyMode />} />
+                <Route path="/sets/:setId/cards/:cardId" element={<CardEditorPage />} />
+                <Route path="/create-set" element={<CreateSet />} />
+              </Routes>
+            </TooltipProvider>
+          </ThemeProvider>
+        </I18nProvider>
       </AuthProvider>
     </BrowserRouter>
   </QueryClientProvider>
