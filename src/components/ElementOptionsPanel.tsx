@@ -10,7 +10,7 @@ import { Trash2, Palette, Type, Link, RotateCw, Image, Volume2, Video, Grid3X3, 
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface ElementOptionsPanelProps {
-  selectedElement: CanvasElement | null;
+  selectedElement: CanvasElement | string | null;
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
   onDeleteElement: (id: string) => void;
   canvasWidth: number;
@@ -74,6 +74,17 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
           >
             Reset
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if selectedElement is a string (shouldn't happen except for 'canvas')
+  if (typeof selectedElement === 'string') {
+    return (
+      <div className={`border-b ${theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'} p-4`}>
+        <div className="text-sm text-muted-foreground text-center">
+          Select an element or canvas to edit its properties
         </div>
       </div>
     );
@@ -203,7 +214,10 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
             </div>
 
             {/* Text Alignment */}
-            <Select value={selectedElement.textAlign || 'left'} onValueChange={(value) => onUpdateElement(selectedElement.id, { textAlign: value })}>
+            <Select 
+              value={selectedElement.textAlign || 'left'} 
+              onValueChange={(value: 'left' | 'center' | 'right' | 'justify') => onUpdateElement(selectedElement.id, { textAlign: value })}
+            >
               <SelectTrigger className="w-20 h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
