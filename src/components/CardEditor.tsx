@@ -25,6 +25,7 @@ export const CardEditor = () => {
     deleteElement,
     navigateCard,
     createNewCard,
+    createNewCardFromTemplate,
     createNewCardWithLayout,
     deleteCard,
     reorderCards,
@@ -260,6 +261,7 @@ export const CardEditor = () => {
             onSideChange={setCurrentSide}
             onCreateNewCard={createNewCard}
             onCreateNewCardWithLayout={createNewCardWithLayout}
+            onCreateNewCardFromTemplate={createNewCardFromTemplate}
             onDeleteCard={() => deleteCard(currentCard.id)}
             onCardTypeChange={(type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
             position="left"

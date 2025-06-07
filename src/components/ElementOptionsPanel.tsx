@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -43,100 +44,96 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
   }, [selectedElement, onDeleteElement]);
 
   return (
-    <Card className="w-80 bg-white/90 backdrop-blur-sm border shadow-sm">
-      <CardHeader>
-        <CardTitle>Element Options</CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 space-y-4">
-        {selectedElement && selectedElement !== 'canvas' && typeof selectedElement !== 'string' ? (
-          <>
-            {selectedElement.type === 'text' && (
-              <div className="space-y-4">
-                <h3 className="font-medium">Text Properties</h3>
-                <div className="space-y-2">
-                  <Label className="text-sm">Content</Label>
-                  <Input
-                    type="text"
-                    value={selectedElement.content || ''}
-                    onChange={(e) => handleTextUpdate('content', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm">Font Size</Label>
-                  <Slider
-                    defaultValue={[selectedElement.fontSize || 16]}
-                    max={100}
-                    step={1}
-                    onValueChange={handleSliderChange}
-                  />
-                </div>
-              </div>
-            )}
+    <div className="w-full bg-white/90 backdrop-blur-sm border-b shadow-sm">
+      <div className="px-4 py-2">
+        <div className="flex items-center gap-6">
+          <h3 className="font-medium text-sm whitespace-nowrap">Element Options</h3>
+          
+          {selectedElement && selectedElement !== 'canvas' && typeof selectedElement !== 'string' ? (
+            <>
+              {selectedElement.type === 'text' && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs whitespace-nowrap">Content:</Label>
+                    <Input
+                      type="text"
+                      value={selectedElement.content || ''}
+                      onChange={(e) => handleTextUpdate('content', e.target.value)}
+                      className="w-40 h-7 text-xs"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs whitespace-nowrap">Font Size:</Label>
+                    <div className="w-20">
+                      <Slider
+                        defaultValue={[selectedElement.fontSize || 16]}
+                        max={100}
+                        step={1}
+                        onValueChange={handleSliderChange}
+                        className="w-full"
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500 w-8">{selectedElement.fontSize || 16}</span>
+                  </div>
+                </>
+              )}
 
-            {selectedElement.type === 'image' && (
-              <div className="space-y-4">
-                <h3 className="font-medium">Image Properties</h3>
-                <AspectRatioSelector
-                  element={selectedElement}
-                  onUpdateElement={onUpdateElement}
+              {selectedElement.type === 'image' && (
+                <div className="flex items-center gap-2">
+                  <AspectRatioSelector
+                    element={selectedElement}
+                    onUpdateElement={onUpdateElement}
+                  />
+                </div>
+              )}
+
+              <Button variant="destructive" size="sm" onClick={handleDelete} className="h-7 px-2">
+                <Trash2 className="w-3 h-3 mr-1" />
+                <span className="text-xs">Delete</span>
+              </Button>
+            </>
+          ) : null}
+
+          {/* Canvas Size Controls - only show for normal cards */}
+          {selectedElement === 'canvas' && cardType === 'normal' && onCanvasSizeChange && (
+            <>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs whitespace-nowrap">Width:</Label>
+                <Input
+                  type="number"
+                  value={canvasWidth}
+                  onChange={(e) => onCanvasSizeChange(parseInt(e.target.value) || canvasWidth, canvasHeight)}
+                  min={400}
+                  max={1200}
+                  className="w-20 h-7 text-xs"
                 />
               </div>
-            )}
+              <div className="flex items-center gap-2">
+                <Label className="text-xs whitespace-nowrap">Height:</Label>
+                <Input
+                  type="number"
+                  value={canvasHeight}
+                  onChange={(e) => onCanvasSizeChange(canvasWidth, parseInt(e.target.value) || canvasHeight)}
+                  min={300}
+                  max={2000}
+                  className="w-20 h-7 text-xs"
+                />
+              </div>
+            </>
+          )}
 
-            <Button variant="destructive" className="w-full" onClick={handleDelete}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete Element
-            </Button>
-          </>
-        ) : null}
-
-      {/* Canvas Size Controls - only show for normal cards */}
-      {selectedElement === 'canvas' && cardType === 'normal' && onCanvasSizeChange && (
-        <div className="space-y-4">
-          <h3 className="font-medium">Canvas Size</h3>
-          <div className="space-y-2">
-            <div>
-              <Label className="text-sm">Width</Label>
-              <Input
-                type="number"
-                value={canvasWidth}
-                onChange={(e) => onCanvasSizeChange(parseInt(e.target.value) || canvasWidth, canvasHeight)}
-                min={400}
-                max={1200}
-                className="w-full"
-              />
+          {/* Show card type info for constrained types */}
+          {selectedElement === 'canvas' && cardType !== 'normal' && (
+            <div className="flex items-center gap-2">
+              <div className="px-3 py-1 bg-blue-50 rounded border text-xs text-blue-700">
+                {cardType === 'simple' && 'Simple cards: 600×900 fixed size'}
+                {cardType === 'informational' && 'Info cards: 900×1800 fixed size'}
+                <span className="ml-2 text-blue-600">({canvasWidth} × {canvasHeight})</span>
+              </div>
             </div>
-            <div>
-              <Label className="text-sm">Height</Label>
-              <Input
-                type="number"
-                value={canvasHeight}
-                onChange={(e) => onCanvasSizeChange(canvasWidth, parseInt(e.target.value) || canvasHeight)}
-                min={300}
-                max={2000}
-                className="w-full"
-              />
-            </div>
-          </div>
+          )}
         </div>
-      )}
-
-      {/* Show card type info for constrained types */}
-      {selectedElement === 'canvas' && cardType !== 'normal' && (
-        <div className="space-y-4">
-          <h3 className="font-medium">Canvas Settings</h3>
-          <div className="p-3 bg-blue-50 rounded border">
-            <p className="text-sm text-blue-700">
-              {cardType === 'simple' && 'Simple cards have a fixed 600×900 size and single text elements.'}
-              {cardType === 'informational' && 'Informational cards have a fixed 900×1800 size for detailed content.'}
-            </p>
-            <p className="text-xs text-blue-600 mt-1">
-              Current size: {canvasWidth} × {canvasHeight}
-            </p>
-          </div>
-        </div>
-      )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

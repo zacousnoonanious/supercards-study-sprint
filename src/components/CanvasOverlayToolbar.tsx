@@ -40,6 +40,7 @@ interface CanvasOverlayToolbarProps {
   onSideChange: (side: 'front' | 'back') => void;
   onCreateNewCard: () => void;
   onCreateNewCardWithLayout: () => void;
+  onCreateNewCardFromTemplate: (template: CardTemplate) => void;
   onDeleteCard: () => Promise<boolean>;
   onSave: () => void;
   onAutoArrange?: (type: 'grid' | 'center' | 'justify' | 'stack') => void;
@@ -60,6 +61,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
   onSideChange,
   onCreateNewCard,
   onCreateNewCardWithLayout,
+  onCreateNewCardFromTemplate,
   onDeleteCard,
   onSave,
   onAutoArrange,
@@ -68,6 +70,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
   isBackSideDisabled = false,
 }) => {
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [countdownTimer, setCountdownTimer] = useState(currentCard?.countdown_timer || 0);
 
   const deleteCard = async () => {
@@ -85,6 +88,11 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
   const handleCountdownTimerChange = (timer: number) => {
     setCountdownTimer(timer);
     onUpdateCard(currentCard.id, { countdown_timer: timer });
+  };
+
+  const handleTemplateSelect = (template: CardTemplate) => {
+    onCreateNewCardFromTemplate(template);
+    setIsTemplateDialogOpen(false);
   };
 
   const getCardTypeLabel = (cardType: Flashcard['card_type']) => {
@@ -379,13 +387,37 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           className={buttonSize}
           title="New Card"
         >
-          {isCompact ? <Plus className={iconSize} /> : (
-            <>
-              <Plus className={`${iconSize} mr-1`} />
-              <span className={textSize}>New</span>
-            </>
-          )}
+          <Plus className={iconSize} />
         </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCreateNewCardWithLayout}
+          className={buttonSize}
+          title="Copy Layout"
+        >
+          <Copy className={iconSize} />
+        </Button>
+
+        <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={buttonSize}
+              title="Templates"
+            >
+              <LayoutTemplate className={iconSize} />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden p-0">
+            <TemplateSelector
+              onSelectTemplate={handleTemplateSelect}
+              onClose={() => setIsTemplateDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
         
         <Button
           variant="ghost"
@@ -394,12 +426,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           className={`${buttonSize} text-red-600 hover:text-red-700`}
           title="Delete Card"
         >
-          {isCompact ? <Trash2 className={iconSize} /> : (
-            <>
-              <Trash2 className={`${iconSize} mr-1`} />
-              <span className={textSize}>Delete</span>
-            </>
-          )}
+          <Trash2 className={iconSize} />
         </Button>
         
         <Button
@@ -409,14 +436,17 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           className={buttonSize}
           title="Save"
         >
-          {isCompact ? <Save className={iconSize} /> : (
-            <>
-              <Save className={`${iconSize} mr-1`} />
-              <span className={textSize}>Save</span>
-            </>
-          )}
+          <Save className={iconSize} />
         </Button>
       </div>
+
+      {/* Template Selector */}
+      {isTemplateDialogOpen && (
+        <TemplateSelector
+          onSelectTemplate={handleTemplateSelect}
+          onClose={() => setIsTemplateDialogOpen(false)}
+        />
+      )}
     </div>
   );
 };
