@@ -1,6 +1,12 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { CanvasElement } from '@/types/flashcard';
+import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
+import { FillInBlankEditor } from './FillInBlankEditor';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface PowerPointEditorProps {
   elements: CanvasElement[];
@@ -11,6 +17,7 @@ interface PowerPointEditorProps {
   cardHeight: number;
   selectedElementId?: string | null;
   onElementSelect?: (id: string | null) => void;
+  showGrid?: boolean;
 }
 
 export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
@@ -22,6 +29,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
   cardHeight,
   selectedElementId,
   onElementSelect,
+  showGrid = true,
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<{
@@ -37,8 +45,8 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
     elementId: string;
     handle: string;
   } | null>(null);
-  const [isDoubleClick, setIsDoubleClick] = useState(false);
   const [editingElementId, setEditingElementId] = useState<string | null>(null);
+  const [elementPopups, setElementPopups] = useState<{ [key: string]: boolean }>({});
 
   // Handle mouse events for dragging and resizing
   const handleMouseDown = (e: React.MouseEvent, elementId: string, handle?: string) => {
@@ -129,16 +137,22 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
   const handleDoubleClick = (e: React.MouseEvent, elementId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDoubleClick(true);
-    setEditingElementId(elementId);
-    
-    // Reset double click flag after a short delay
-    setTimeout(() => setIsDoubleClick(false), 200);
+    const element = elements.find(el => el.id === elementId);
+    if (element?.type === 'text') {
+      setEditingElementId(elementId);
+    } else {
+      // Show popup for other element types
+      setElementPopups(prev => ({ ...prev, [elementId]: true }));
+    }
   };
 
   const handleTextEdit = (elementId: string, newContent: string) => {
     onUpdateElement(elementId, { content: newContent });
     setEditingElementId(null);
+  };
+
+  const closeElementPopup = (elementId: string) => {
+    setElementPopups(prev => ({ ...prev, [elementId]: false }));
   };
 
   useEffect(() => {
@@ -172,211 +186,234 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
   const renderElement = (element: CanvasElement) => {
     const isSelected = selectedElementId === element.id;
     const isEditing = editingElementId === element.id;
+    const showPopup = elementPopups[element.id];
     
     return (
-      <div
-        key={element.id}
-        className={`absolute cursor-move border-2 ${
-          isSelected ? 'border-blue-500 bg-blue-50/10' : 'border-transparent hover:border-gray-300'
-        } ${isEditing ? 'cursor-text' : ''}`}
-        style={{
-          left: element.x,
-          top: element.y,
-          width: element.width,
-          height: element.height,
-          transform: `rotate(${element.rotation || 0}deg)`,
-          zIndex: element.zIndex || 1,
-        }}
-        onClick={(e) => {
-          if (!isDoubleClick) {
+      <div key={element.id}>
+        <div
+          className={`absolute cursor-move border-2 ${
+            isSelected ? 'border-blue-500 bg-blue-50/10' : 'border-transparent hover:border-gray-300'
+          } ${isEditing ? 'cursor-text' : ''}`}
+          style={{
+            left: element.x,
+            top: element.y,
+            width: element.width,
+            height: element.height,
+            transform: `rotate(${element.rotation || 0}deg)`,
+            zIndex: element.zIndex || 1,
+          }}
+          onClick={(e) => {
             e.stopPropagation();
             onElementSelect?.(element.id);
-          }
-        }}
-        onDoubleClick={(e) => element.type === 'text' && handleDoubleClick(e, element.id)}
-        onMouseDown={(e) => !isEditing && handleMouseDown(e, element.id)}
-      >
-        {/* Element content based on type */}
-        {element.type === 'text' && (
-          <div
-            className="w-full h-full flex items-center justify-center bg-white/90 rounded shadow-sm border"
-            style={{
-              fontSize: element.fontSize || 16,
-              color: element.color || '#000000',
-              fontWeight: element.fontWeight || 'normal',
-              fontStyle: element.fontStyle || 'normal',
-              textDecoration: element.textDecoration || 'none',
-              textAlign: element.textAlign || 'center',
-              padding: '8px',
-            }}
-          >
-            {isEditing ? (
-              <textarea
-                className="w-full h-full bg-transparent border-none outline-none resize-none"
-                style={{
-                  fontSize: element.fontSize || 16,
-                  color: element.color || '#000000',
-                  fontWeight: element.fontWeight || 'normal',
-                  fontStyle: element.fontStyle || 'normal',
-                  textAlign: element.textAlign || 'center',
-                }}
-                defaultValue={element.content || 'Text'}
-                onBlur={(e) => handleTextEdit(element.id, e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleTextEdit(element.id, e.currentTarget.value);
-                  }
-                }}
-                autoFocus
-              />
-            ) : (
-              <span className="whitespace-pre-wrap">{element.content || 'Double-click to edit'}</span>
-            )}
-          </div>
-        )}
-        
-        {element.type === 'image' && (
-          <div className="w-full h-full bg-gray-100 rounded shadow-sm border flex items-center justify-center">
-            {element.imageUrl ? (
-              <img
-                src={element.imageUrl}
-                alt="Element"
-                className="w-full h-full object-cover rounded"
-                draggable={false}
-              />
-            ) : (
-              <div className="text-center text-gray-500">
-                <div className="text-4xl mb-2">🖼️</div>
-                <span className="text-sm">Click to add image</span>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {element.type === 'multiple-choice' && (
-          <div className="w-full h-full bg-blue-50 rounded shadow-sm border p-4 overflow-auto">
-            <div className="text-sm font-medium mb-2">{element.content || 'What is your question?'}</div>
-            {element.multipleChoiceOptions?.map((option, index) => (
-              <div key={index} className="text-xs mb-1 flex items-center">
-                <span className={`mr-2 px-1 rounded text-white text-xs ${
-                  element.correctAnswer === index ? 'bg-green-500' : 'bg-gray-400'
-                }`}>
-                  {String.fromCharCode(65 + index)}
-                </span>
-                {option}
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {element.type === 'true-false' && (
-          <div className="w-full h-full bg-green-50 rounded shadow-sm border p-4 flex flex-col items-center justify-center">
-            <div className="text-sm font-medium mb-2 text-center">{element.content || 'True or False statement'}</div>
-            <div className="flex gap-2">
-              <span className={`px-2 py-1 rounded text-xs ${
-                element.correctAnswer === 0 ? 'bg-green-500 text-white' : 'bg-gray-200'
-              }`}>
-                True
-              </span>
-              <span className={`px-2 py-1 rounded text-xs ${
-                element.correctAnswer === 1 ? 'bg-red-500 text-white' : 'bg-gray-200'
-              }`}>
-                False
-              </span>
+          }}
+          onDoubleClick={(e) => handleDoubleClick(e, element.id)}
+          onMouseDown={(e) => !isEditing && handleMouseDown(e, element.id)}
+        >
+          {/* Element content based on type */}
+          {element.type === 'text' && (
+            <div
+              className="w-full h-full flex items-center justify-center bg-white/90 rounded shadow-sm border"
+              style={{
+                fontSize: element.fontSize || 16,
+                color: element.color || '#000000',
+                fontWeight: element.fontWeight || 'normal',
+                fontStyle: element.fontStyle || 'normal',
+                textDecoration: element.textDecoration || 'none',
+                textAlign: element.textAlign || 'center',
+                padding: '8px',
+              }}
+            >
+              {isEditing ? (
+                <textarea
+                  className="w-full h-full bg-transparent border-none outline-none resize-none"
+                  style={{
+                    fontSize: element.fontSize || 16,
+                    color: element.color || '#000000',
+                    fontWeight: element.fontWeight || 'normal',
+                    fontStyle: element.fontStyle || 'normal',
+                    textAlign: element.textAlign || 'center',
+                  }}
+                  defaultValue={element.content || 'Text'}
+                  onBlur={(e) => handleTextEdit(element.id, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleTextEdit(element.id, e.currentTarget.value);
+                    }
+                  }}
+                  autoFocus
+                />
+              ) : (
+                <span className="whitespace-pre-wrap">{element.content || 'Double-click to edit'}</span>
+              )}
             </div>
-          </div>
-        )}
-        
-        {element.type === 'fill-in-blank' && (
-          <div className="w-full h-full bg-yellow-50 rounded shadow-sm border p-4">
-            <div className="text-sm font-medium mb-2">Fill in the Blank</div>
-            <div className="text-xs">
-              {element.content || 'The capital of France is _____.'}
-            </div>
-          </div>
-        )}
-        
-        {element.type === 'drawing' && (
-          <div className="w-full h-full bg-gray-50 rounded shadow-sm border flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <div className="text-4xl mb-2">✏️</div>
-              <span className="text-sm">Drawing Canvas</span>
-            </div>
-          </div>
-        )}
-        
-        {element.type === 'youtube' && (
-          <div className="w-full h-full bg-red-50 rounded shadow-sm border flex items-center justify-center">
-            <div className="text-center text-red-600">
-              <div className="text-4xl mb-2">📺</div>
-              <span className="text-sm">YouTube Video</span>
-              {element.youtubeUrl && (
-                <div className="text-xs mt-1 truncate max-w-full">
-                  {element.youtubeUrl}
+          )}
+          
+          {element.type === 'image' && (
+            <div className="w-full h-full bg-gray-100 rounded shadow-sm border flex items-center justify-center">
+              {element.imageUrl ? (
+                <img
+                  src={element.imageUrl}
+                  alt="Element"
+                  className="w-full h-full object-cover rounded"
+                  draggable={false}
+                />
+              ) : (
+                <div className="text-center text-gray-500">
+                  <div className="text-4xl mb-2">🖼️</div>
+                  <span className="text-sm">Double-click to add image</span>
                 </div>
               )}
             </div>
-          </div>
-        )}
-
-        {element.type === 'audio' && (
-          <div className="w-full h-full bg-purple-50 rounded shadow-sm border flex items-center justify-center">
-            <div className="text-center text-purple-600">
-              <div className="text-4xl mb-2">🎵</div>
-              <span className="text-sm">Audio Player</span>
+          )}
+          
+          {element.type === 'multiple-choice' && (
+            <MultipleChoiceRenderer 
+              element={element} 
+              isEditing={showPopup} 
+              onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            />
+          )}
+          
+          {element.type === 'true-false' && (
+            <TrueFalseRenderer 
+              element={element} 
+              isEditing={showPopup} 
+              onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            />
+          )}
+          
+          {element.type === 'fill-in-blank' && (
+            <div className="w-full h-full bg-yellow-50 rounded shadow-sm border p-4">
+              <div className="text-sm font-medium mb-2">Fill in the Blank</div>
+              <div className="text-xs">
+                {element.content || 'Double-click to edit'}
+              </div>
             </div>
-          </div>
-        )}
-
-        {element.type === 'deck-embed' && (
-          <div className="w-full h-full bg-indigo-50 rounded shadow-sm border flex items-center justify-center">
-            <div className="text-center text-indigo-600">
-              <div className="text-4xl mb-2">📚</div>
-              <span className="text-sm">Embedded Deck</span>
+          )}
+          
+          {element.type === 'drawing' && (
+            <div className="w-full h-full bg-gray-50 rounded shadow-sm border flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <div className="text-4xl mb-2">✏️</div>
+                <span className="text-sm">Double-click to draw</span>
+              </div>
             </div>
-          </div>
+          )}
+          
+          {element.type === 'youtube' && (
+            <YouTubeRenderer element={element} />
+          )}
+
+          {element.type === 'audio' && (
+            <div className="w-full h-full bg-purple-50 rounded shadow-sm border flex items-center justify-center">
+              {element.audioUrl ? (
+                <audio controls className="w-full">
+                  <source src={element.audioUrl} type="audio/mpeg" />
+                  Your browser does not support the audio element.
+                </audio>
+              ) : (
+                <div className="text-center text-purple-600">
+                  <div className="text-4xl mb-2">🎵</div>
+                  <span className="text-sm">Double-click to add audio</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {element.type === 'deck-embed' && (
+            <DeckEmbedRenderer element={element} />
+          )}
+
+          {/* Resize handles for selected element */}
+          {isSelected && !isEditing && (
+            <>
+              {/* Corner resize handles */}
+              <div
+                className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 cursor-se-resize rounded-sm border border-white shadow"
+                onMouseDown={(e) => handleMouseDown(e, element.id, 'se')}
+              />
+              <div
+                className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 cursor-ne-resize rounded-sm border border-white shadow"
+                onMouseDown={(e) => handleMouseDown(e, element.id, 'ne')}
+              />
+              <div
+                className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 cursor-nw-resize rounded-sm border border-white shadow"
+                onMouseDown={(e) => handleMouseDown(e, element.id, 'nw')}
+              />
+              <div
+                className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 cursor-sw-resize rounded-sm border border-white shadow"
+                onMouseDown={(e) => handleMouseDown(e, element.id, 'sw')}
+              />
+              
+              {/* Edge resize handles */}
+              <div
+                className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-blue-500 cursor-n-resize rounded-sm border border-white shadow"
+                onMouseDown={(e) => handleMouseDown(e, element.id, 'n')}
+              />
+              <div
+                className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-blue-500 cursor-e-resize rounded-sm border border-white shadow"
+                onMouseDown={(e) => handleMouseDown(e, element.id, 'e')}
+              />
+              <div
+                className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-blue-500 cursor-s-resize rounded-sm border border-white shadow"
+                onMouseDown={(e) => handleMouseDown(e, element.id, 's')}
+              />
+              <div
+                className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-blue-500 cursor-w-resize rounded-sm border border-white shadow"
+                onMouseDown={(e) => handleMouseDown(e, element.id, 'w')}
+              />
+            </>
+          )}
+        </div>
+
+        {/* Element editing popups */}
+        {showPopup && element.type === 'image' && (
+          <ImageEditorPopup
+            element={element}
+            onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            onClose={() => closeElementPopup(element.id)}
+          />
         )}
 
-        {/* Resize handles for selected element */}
-        {isSelected && !isEditing && (
-          <>
-            {/* Corner resize handles */}
-            <div
-              className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 cursor-se-resize rounded-sm border border-white shadow"
-              onMouseDown={(e) => handleMouseDown(e, element.id, 'se')}
-            />
-            <div
-              className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 cursor-ne-resize rounded-sm border border-white shadow"
-              onMouseDown={(e) => handleMouseDown(e, element.id, 'ne')}
-            />
-            <div
-              className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 cursor-nw-resize rounded-sm border border-white shadow"
-              onMouseDown={(e) => handleMouseDown(e, element.id, 'nw')}
-            />
-            <div
-              className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 cursor-sw-resize rounded-sm border border-white shadow"
-              onMouseDown={(e) => handleMouseDown(e, element.id, 'sw')}
-            />
-            
-            {/* Edge resize handles */}
-            <div
-              className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-blue-500 cursor-n-resize rounded-sm border border-white shadow"
-              onMouseDown={(e) => handleMouseDown(e, element.id, 'n')}
-            />
-            <div
-              className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-blue-500 cursor-e-resize rounded-sm border border-white shadow"
-              onMouseDown={(e) => handleMouseDown(e, element.id, 'e')}
-            />
-            <div
-              className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-blue-500 cursor-s-resize rounded-sm border border-white shadow"
-              onMouseDown={(e) => handleMouseDown(e, element.id, 's')}
-            />
-            <div
-              className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-blue-500 cursor-w-resize rounded-sm border border-white shadow"
-              onMouseDown={(e) => handleMouseDown(e, element.id, 'w')}
-            />
-          </>
+        {showPopup && element.type === 'audio' && (
+          <AudioEditorPopup
+            element={element}
+            onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            onClose={() => closeElementPopup(element.id)}
+          />
+        )}
+
+        {showPopup && element.type === 'youtube' && (
+          <YouTubeEditorPopup
+            element={element}
+            onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            onClose={() => closeElementPopup(element.id)}
+          />
+        )}
+
+        {showPopup && element.type === 'fill-in-blank' && (
+          <FillInBlankEditorPopup
+            element={element}
+            onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            onClose={() => closeElementPopup(element.id)}
+          />
+        )}
+
+        {showPopup && element.type === 'deck-embed' && (
+          <DeckEmbedEditorPopup
+            element={element}
+            onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            onClose={() => closeElementPopup(element.id)}
+          />
+        )}
+
+        {showPopup && element.type === 'drawing' && (
+          <DrawingEditorPopup
+            element={element}
+            onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            onClose={() => closeElementPopup(element.id)}
+          />
         )}
       </div>
     );
@@ -391,16 +428,18 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
         onClick={() => onElementSelect?.(null)}
       >
         {/* Grid background */}
-        <div 
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, #000 1px, transparent 1px),
-              linear-gradient(to bottom, #000 1px, transparent 1px)
-            `,
-            backgroundSize: '20px 20px'
-          }}
-        />
+        {showGrid && (
+          <div 
+            className="absolute inset-0 opacity-5"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, #000 1px, transparent 1px),
+                linear-gradient(to bottom, #000 1px, transparent 1px)
+              `,
+              backgroundSize: '20px 20px'
+            }}
+          />
+        )}
         
         {/* Render all elements */}
         {elements.map(renderElement)}
@@ -419,3 +458,165 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
     </div>
   );
 };
+
+// Individual editor popups for different element types
+const ImageEditorPopup: React.FC<{
+  element: CanvasElement;
+  onUpdate: (updates: Partial<CanvasElement>) => void;
+  onClose: () => void;
+}> = ({ element, onUpdate, onClose }) => (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <Card className="w-96">
+      <CardContent className="p-4">
+        <div className="space-y-4">
+          <h3 className="font-semibold">Edit Image</h3>
+          <div>
+            <Label>Image URL</Label>
+            <Input
+              value={element.imageUrl || ''}
+              onChange={(e) => onUpdate({ imageUrl: e.target.value })}
+              placeholder="Enter image URL"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={onClose} className="flex-1">Done</Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
+
+const AudioEditorPopup: React.FC<{
+  element: CanvasElement;
+  onUpdate: (updates: Partial<CanvasElement>) => void;
+  onClose: () => void;
+}> = ({ element, onUpdate, onClose }) => (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <Card className="w-96">
+      <CardContent className="p-4">
+        <div className="space-y-4">
+          <h3 className="font-semibold">Edit Audio</h3>
+          <div>
+            <Label>Audio URL</Label>
+            <Input
+              value={element.audioUrl || ''}
+              onChange={(e) => onUpdate({ audioUrl: e.target.value })}
+              placeholder="Enter audio URL (MP3, WAV, etc.)"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={onClose} className="flex-1">Done</Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
+
+const YouTubeEditorPopup: React.FC<{
+  element: CanvasElement;
+  onUpdate: (updates: Partial<CanvasElement>) => void;
+  onClose: () => void;
+}> = ({ element, onUpdate, onClose }) => (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <Card className="w-96">
+      <CardContent className="p-4">
+        <div className="space-y-4">
+          <h3 className="font-semibold">Edit YouTube Video</h3>
+          <div>
+            <Label>YouTube URL</Label>
+            <Input
+              value={element.youtubeUrl || ''}
+              onChange={(e) => onUpdate({ youtubeUrl: e.target.value })}
+              placeholder="Enter YouTube URL"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={onClose} className="flex-1">Done</Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
+
+const FillInBlankEditorPopup: React.FC<{
+  element: CanvasElement;
+  onUpdate: (updates: Partial<CanvasElement>) => void;
+  onClose: () => void;
+}> = ({ element, onUpdate, onClose }) => (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <Card className="w-96 max-h-[80vh] overflow-auto">
+      <CardContent className="p-4">
+        <div className="space-y-4">
+          <h3 className="font-semibold">Edit Fill in the Blank</h3>
+          <FillInBlankEditor
+            element={element}
+            onUpdate={onUpdate}
+          />
+          <div className="flex gap-2">
+            <Button onClick={onClose} className="flex-1">Done</Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
+
+const DeckEmbedEditorPopup: React.FC<{
+  element: CanvasElement;
+  onUpdate: (updates: Partial<CanvasElement>) => void;
+  onClose: () => void;
+}> = ({ element, onUpdate, onClose }) => (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <Card className="w-96">
+      <CardContent className="p-4">
+        <div className="space-y-4">
+          <h3 className="font-semibold">Embed Deck</h3>
+          <div>
+            <Label>Deck ID</Label>
+            <Input
+              value={element.deckId || ''}
+              onChange={(e) => onUpdate({ deckId: e.target.value })}
+              placeholder="Enter deck ID"
+            />
+          </div>
+          <div>
+            <Label>Deck Title</Label>
+            <Input
+              value={element.deckTitle || ''}
+              onChange={(e) => onUpdate({ deckTitle: e.target.value })}
+              placeholder="Enter deck title"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={onClose} className="flex-1">Done</Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
+
+const DrawingEditorPopup: React.FC<{
+  element: CanvasElement;
+  onUpdate: (updates: Partial<CanvasElement>) => void;
+  onClose: () => void;
+}> = ({ element, onUpdate, onClose }) => (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <Card className="w-96">
+      <CardContent className="p-4">
+        <div className="space-y-4">
+          <h3 className="font-semibold">Drawing Canvas</h3>
+          <div className="bg-white border rounded h-40 flex items-center justify-center">
+            <span className="text-gray-500">Drawing functionality coming soon</span>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={onClose} className="flex-1">Done</Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);

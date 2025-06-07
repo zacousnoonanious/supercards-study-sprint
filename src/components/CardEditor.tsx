@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Flashcard, CanvasElement } from '@/types/flashcard';
 import { LockableToolbar } from './LockableToolbar';
 import { PowerPointEditor } from './PowerPointEditor';
@@ -19,7 +20,6 @@ export const CardEditor = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Handle both route patterns: /sets/:setId/cards/:cardId and /edit-cards/:setId
   const setId = params.setId;
   const cardId = params.cardId;
 
@@ -31,6 +31,8 @@ export const CardEditor = () => {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [selectedElement, setSelectedElement] = useState<CanvasElement | null>(null);
   const [showElementPopup, setShowElementPopup] = useState(false);
+  const [showGrid, setShowGrid] = useState(true);
+  const [cardDimensions, setCardDimensions] = useState({ width: 600, height: 400 });
 
   const { data: set, refetch: refetchSet } = useQuery({
     queryKey: ['set', setId],
@@ -62,8 +64,8 @@ export const CardEditor = () => {
         back_elements: Array.isArray(cardData.back_elements) 
           ? (cardData.back_elements as unknown as CanvasElement[])
           : [],
-        canvas_width: 600,
-        canvas_height: 400,
+        canvas_width: cardData.canvas_width || 600,
+        canvas_height: cardData.canvas_height || 400,
         hint: cardData.hint || '',
         last_reviewed_at: cardData.last_reviewed_at || null,
         card_type: (cardData.card_type as Flashcard['card_type']) || 'standard',
@@ -76,6 +78,10 @@ export const CardEditor = () => {
       };
       
       setCurrentCard(convertedCard);
+      setCardDimensions({ 
+        width: convertedCard.canvas_width || 600, 
+        height: convertedCard.canvas_height || 400 
+      });
       
       const currentElements = currentSide === 'front' 
         ? convertedCard.front_elements 
@@ -85,12 +91,42 @@ export const CardEditor = () => {
     }
   }, [cardData, currentSide]);
 
+  // Debounced save function to prevent too many API calls
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  const debouncedSave = useCallback((updatedElements: CanvasElement[]) => {
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+    }
+    
+    const timeout = setTimeout(() => {
+      if (currentCard.id) {
+        const updatedCard = {
+          ...currentCard,
+          [currentSide === 'front' ? 'front_elements' : 'back_elements']: updatedElements,
+          canvas_width: cardDimensions.width,
+          canvas_height: cardDimensions.height,
+        };
+        
+        const dbUpdates = {
+          [currentSide === 'front' ? 'front_elements' : 'back_elements']: updatedElements,
+          canvas_width: cardDimensions.width,
+          canvas_height: cardDimensions.height,
+        };
+        
+        updateCardMutation({ id: currentCard.id, ...dbUpdates });
+        setCurrentCard(updatedCard);
+      }
+    }, 500); // 500ms debounce
+    
+    setSaveTimeout(timeout);
+  }, [currentCard, currentSide, cardDimensions]);
+
   const { mutate: updateCardMutation } = useMutation({
     mutationFn: updateFlashcard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['card', cardId] });
       queryClient.invalidateQueries({ queryKey: ['set', setId] });
-      refetchSet();
     },
   });
 
@@ -108,7 +144,6 @@ export const CardEditor = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['set', setId] });
       refetchSet();
-      // Navigate to the next available card or back to set view
       if (set?.flashcards && set.flashcards.length > 1) {
         const currentIndex = set.flashcards.findIndex((card) => card.id === currentCard.id);
         const nextCard = set.flashcards[currentIndex + 1] || set.flashcards[currentIndex - 1];
@@ -135,14 +170,18 @@ export const CardEditor = () => {
   const undo = () => {
     if (historyIndex > 0) {
       setHistoryIndex(historyIndex - 1);
-      setElements(history[historyIndex - 1]);
+      const previousElements = history[historyIndex - 1];
+      setElements(previousElements);
+      debouncedSave(previousElements);
     }
   };
 
   const redo = () => {
     if (historyIndex < history.length - 1) {
       setHistoryIndex(historyIndex + 1);
-      setElements(history[historyIndex + 1]);
+      const nextElements = history[historyIndex + 1];
+      setElements(nextElements);
+      debouncedSave(nextElements);
     }
   };
 
@@ -159,7 +198,8 @@ export const CardEditor = () => {
       height: type === 'text' ? 60 : type === 'image' ? 200 : 150,
       rotation: 0,
       content: type === 'text' ? 'Double-click to edit' : 
-               type === 'multiple-choice' ? 'What is your question?' : '',
+               type === 'multiple-choice' ? 'What is your question?' : 
+               type === 'true-false' ? 'What is your question?' : '',
       fontSize: type === 'text' ? 16 : undefined,
       color: type === 'text' ? '#000000' : undefined,
       fontWeight: 'normal',
@@ -171,19 +211,21 @@ export const CardEditor = () => {
       youtubeUrl: '',
       autoplay: false,
       multipleChoiceOptions: type === 'multiple-choice' ? ['Option 1', 'Option 2', 'Option 3', 'Option 4'] : undefined,
-      correctAnswer: type === 'multiple-choice' ? 0 : undefined,
+      correctAnswer: type === 'multiple-choice' ? 0 : type === 'true-false' ? 1 : undefined,
       drawingData: '',
       strokeColor: '#000000',
       strokeWidth: 5,
+      fillInBlankText: '',
+      fillInBlankBlanks: [],
+      showLetterCount: false,
+      ignoreCase: true,
     };
 
     const newElements = [...elements, newElement];
     setElements(newElements);
     setSelectedElementId(newElement.id);
     saveHistory(newElements);
-    
-    // Auto-save the updated elements
-    handleSave();
+    debouncedSave(newElements);
   };
 
   const handleUpdateElement = (id: string, updates: Partial<CanvasElement>) => {
@@ -192,11 +234,7 @@ export const CardEditor = () => {
     );
     setElements(updatedElements);
     saveHistory(updatedElements);
-    
-    // Auto-save after small delay
-    setTimeout(() => {
-      handleSave();
-    }, 500);
+    debouncedSave(updatedElements);
   };
 
   const handleDeleteElement = (id: string) => {
@@ -206,16 +244,13 @@ export const CardEditor = () => {
     setSelectedElement(null);
     setShowElementPopup(false);
     saveHistory(newElements);
-    
-    // Auto-save the updated elements
-    handleSave();
+    debouncedSave(newElements);
   };
 
   const handleUpdateCard = (cardId: string, updates: Partial<Flashcard>) => {
-    const dbUpdates = {
-      ...updates,
-    };
+    const dbUpdates = { ...updates };
     
+    // Remove client-only properties
     delete (dbUpdates as any).canvas_width;
     delete (dbUpdates as any).canvas_height;
     delete (dbUpdates as any).countdown_seconds;
@@ -260,8 +295,8 @@ export const CardEditor = () => {
     if (!setId) return;
 
     const defaultLayout = [
-      { id: uuidv4(), type: 'text', x: 50, y: 50, width: 200, height: 50, content: 'Title', fontSize: 24 },
-      { id: uuidv4(), type: 'text', x: 50, y: 150, width: 300, height: 100, content: 'Description', fontSize: 16 },
+      { id: uuidv4(), type: 'text' as const, x: 50, y: 50, width: 200, height: 50, content: 'Title', fontSize: 24, rotation: 0 },
+      { id: uuidv4(), type: 'text' as const, x: 50, y: 150, width: 300, height: 100, content: 'Description', fontSize: 16, rotation: 0 },
     ];
 
     createCardMutation({
@@ -291,72 +326,83 @@ export const CardEditor = () => {
     
     const updatedCard = {
       ...currentCard,
-      [currentSide === 'front' ? 'front_elements' : 'back_elements']: elements
+      [currentSide === 'front' ? 'front_elements' : 'back_elements']: elements,
+      canvas_width: cardDimensions.width,
+      canvas_height: cardDimensions.height,
     };
     
     handleUpdateCard(currentCard.id, updatedCard);
   };
 
-  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right') => {
+  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'scale-to-fit') => {
     let arrangedElements = [...elements];
-    const cardWidth = currentCard.canvas_width || 600;
-    const cardHeight = currentCard.canvas_height || 400;
+    const cardWidth = cardDimensions.width;
+    const cardHeight = cardDimensions.height;
 
-    switch (type) {
-      case 'grid':
-        arrangedElements = elements.map((element, index) => ({
-          ...element,
-          x: (index % 2) * (cardWidth / 2) + 20,
-          y: Math.floor(index / 2) * (cardHeight / 2) + 20,
-        }));
-        break;
-      case 'center':
-        arrangedElements = elements.map(element => ({
-          ...element,
-          x: (cardWidth - element.width) / 2,
-          y: (cardHeight - element.height) / 2,
-        }));
-        break;
-      case 'justify':
-        arrangedElements = elements.map((element, index) => ({
-          ...element,
-          x: 20,
-          width: cardWidth - 40,
-          y: index * (cardHeight / elements.length),
-        }));
-        break;
-      case 'stack':
-        arrangedElements = elements.map((element, index) => ({
-          ...element,
-          x: 20,
-          y: 20 + index * 10,
-        }));
-        break;
-      case 'align-left':
-        arrangedElements = elements.map(element => ({
-          ...element,
-          x: 20,
-        }));
-        break;
-      case 'align-center':
-        arrangedElements = elements.map(element => ({
-          ...element,
-          x: (cardWidth - element.width) / 2,
-        }));
-        break;
-      case 'align-right':
-        arrangedElements = elements.map(element => ({
-          ...element,
-          x: cardWidth - element.width - 20,
-        }));
-        break;
-      default:
-        break;
+    if (type === 'scale-to-fit' && selectedElementId) {
+      // Scale selected element to fit card dimensions
+      arrangedElements = elements.map(element => 
+        element.id === selectedElementId 
+          ? { ...element, x: 10, y: 10, width: cardWidth - 20, height: cardHeight - 20 }
+          : element
+      );
+    } else {
+      switch (type) {
+        case 'grid':
+          arrangedElements = elements.map((element, index) => ({
+            ...element,
+            x: (index % 2) * (cardWidth / 2) + 20,
+            y: Math.floor(index / 2) * (cardHeight / 2) + 20,
+          }));
+          break;
+        case 'center':
+          arrangedElements = elements.map(element => ({
+            ...element,
+            x: (cardWidth - element.width) / 2,
+            y: (cardHeight - element.height) / 2,
+          }));
+          break;
+        case 'justify':
+          arrangedElements = elements.map((element, index) => ({
+            ...element,
+            x: 20,
+            width: cardWidth - 40,
+            y: index * (cardHeight / elements.length),
+          }));
+          break;
+        case 'stack':
+          arrangedElements = elements.map((element, index) => ({
+            ...element,
+            x: 20,
+            y: 20 + index * 10,
+          }));
+          break;
+        case 'align-left':
+          arrangedElements = elements.map(element => ({
+            ...element,
+            x: 20,
+          }));
+          break;
+        case 'align-center':
+          arrangedElements = elements.map(element => ({
+            ...element,
+            x: (cardWidth - element.width) / 2,
+          }));
+          break;
+        case 'align-right':
+          arrangedElements = elements.map(element => ({
+            ...element,
+            x: cardWidth - element.width - 20,
+          }));
+          break;
+        default:
+          break;
+      }
     }
 
     setElements(arrangedElements);
     saveHistory(arrangedElements);
-    handleSave();
+    debouncedSave(arrangedElements);
   };
 
   const handleElementSelect = (elementId: string | null) => {
@@ -370,13 +416,19 @@ export const CardEditor = () => {
     const elementRight = element.x + element.width;
     const elementTop = element.y;
     const popupWidth = 256;
-    const canvasWidth = currentCard.canvas_width || 600;
     
-    if (elementRight + popupWidth + 20 <= canvasWidth) {
+    if (elementRight + popupWidth + 20 <= cardDimensions.width) {
       return { x: elementRight + 10, y: elementTop };
     } else {
       return { x: Math.max(10, element.x - popupWidth - 10), y: elementTop };
     }
+  };
+
+  const handleCardDimensionsChange = (width: number, height: number) => {
+    setCardDimensions({ width, height });
+    const updatedCard = { ...currentCard, canvas_width: width, canvas_height: height };
+    setCurrentCard(updatedCard);
+    debouncedSave(elements);
   };
 
   // Show loading or redirect if no card is available
@@ -417,7 +469,10 @@ export const CardEditor = () => {
         onSave={handleSave}
         onAutoArrange={handleAutoArrange}
         isBackSideDisabled={currentCard.card_type === 'single-sided'}
-        cardWidth={currentCard.canvas_width || 600}
+        showGrid={showGrid}
+        onToggleGrid={() => setShowGrid(!showGrid)}
+        cardDimensions={cardDimensions}
+        onCardDimensionsChange={handleCardDimensionsChange}
       />
       
       <div className="pt-14">
@@ -427,7 +482,7 @@ export const CardEditor = () => {
           canUndo={canUndo}
           canRedo={canRedo}
           onChangeBackground={() => {}}
-          onToggleGrid={() => {}}
+          onToggleGrid={() => setShowGrid(!showGrid)}
           onSettings={() => {}}
         >
           <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8" style={{ paddingBottom: '120px' }}>
@@ -436,10 +491,11 @@ export const CardEditor = () => {
               onUpdateElement={handleUpdateElement}
               onAddElement={handleAddElement}
               onDeleteElement={handleDeleteElement}
-              cardWidth={currentCard.canvas_width || 600}
-              cardHeight={currentCard.canvas_height || 400}
+              cardWidth={cardDimensions.width}
+              cardHeight={cardDimensions.height}
               selectedElementId={selectedElementId}
               onElementSelect={handleElementSelect}
+              showGrid={showGrid}
             />
           </div>
         </CanvasContextMenu>
@@ -460,7 +516,7 @@ export const CardEditor = () => {
         currentCard={currentCard}
         selectedElement={selectedElement}
         onUpdateCard={handleUpdateCard}
-        cardWidth={currentCard.canvas_width || 600}
+        cardWidth={cardDimensions.width}
       />
     </div>
   );
