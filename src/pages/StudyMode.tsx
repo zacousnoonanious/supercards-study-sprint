@@ -77,6 +77,9 @@ const StudyMode = () => {
         front_elements: Array.isArray(card.front_elements) ? (card.front_elements as unknown as CanvasElement[]) : [],
         back_elements: Array.isArray(card.back_elements) ? (card.back_elements as unknown as CanvasElement[]) : [],
         card_type: (card.card_type || 'normal') as Flashcard['card_type'],
+        interactive_type: card.interactive_type && ['multiple-choice', 'true-false', 'fill-in-blank'].includes(card.interactive_type) 
+          ? card.interactive_type as Flashcard['interactive_type'] 
+          : null,
         canvas_width: card.canvas_width || 600,
         canvas_height: card.canvas_height || 400,
         countdown_timer: card.countdown_timer || 0,
