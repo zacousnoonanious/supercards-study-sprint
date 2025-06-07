@@ -175,39 +175,36 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
       <div className={separatorClass} />
 
-      {/* Card Actions */}
+      {/* Card Actions - Icons Only */}
       <div className="flex flex-col gap-1">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="w-full"
+          className={`${buttonSizeClass} p-0`}
           onClick={onCreateNewCard}
-          title="Create new card"
+          title="New Card"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          New Card
+          <Plus className="w-4 h-4" />
         </Button>
 
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="w-full"
+          className={`${buttonSizeClass} p-0`}
           onClick={onCreateNewCardWithLayout}
-          title="Create new card with same layout"
+          title="Copy Layout"
         >
-          <Copy className="w-4 h-4 mr-2" />
-          Copy Layout
+          <Copy className="w-4 h-4" />
         </Button>
 
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="w-full"
+          className={`${buttonSizeClass} p-0`}
           onClick={() => setShowTemplateSelector(true)}
-          title="Choose from predefined templates"
+          title="Templates"
         >
-          <FileImage className="w-4 h-4 mr-2" />
-          Templates
+          <FileImage className="w-4 h-4" />
         </Button>
 
         <Button
