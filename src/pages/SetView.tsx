@@ -261,6 +261,37 @@ const SetView = () => {
     );
   }
 
+  const getCardDescription = (card: Flashcard) => {
+    const frontElementsCount = card.front_elements?.length || 0;
+    const backElementsCount = card.back_elements?.length || 0;
+    const totalElements = frontElementsCount + backElementsCount;
+    
+    // Get element types for description
+    const allElements = [...(card.front_elements || []), ...(card.back_elements || [])];
+    const elementTypes = [...new Set(allElements.map(el => el.type))];
+    
+    let description = '';
+    
+    if (elementTypes.length > 0) {
+      const typeDescriptions = elementTypes.map(type => {
+        switch(type) {
+          case 'text': return 'text';
+          case 'image': return 'image';
+          case 'audio': return 'audio';
+          case 'multiple-choice': return 'quiz';
+          case 'youtube': return 'video';
+          default: return type;
+        }
+      }).join(', ');
+      
+      description = `${totalElements} elements: ${typeDescriptions}`;
+    } else {
+      description = 'Text-based card';
+    }
+    
+    return description;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navigation />
@@ -405,6 +436,9 @@ const SetView = () => {
                               {card.interactive_type.replace('-', ' ')}
                             </span>
                           )}
+                          <span className="text-xs text-gray-400 mt-1">
+                            {getCardDescription(card)}
+                          </span>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger 

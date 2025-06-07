@@ -33,6 +33,33 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
   const [dragOverCard, setDragOverCard] = useState<number | null>(null);
   const [showShuffleDialog, setShowShuffleDialog] = useState(false);
 
+  const getCardDescription = (card: Flashcard) => {
+    const frontElementsCount = card.front_elements?.length || 0;
+    const backElementsCount = card.back_elements?.length || 0;
+    const totalElements = frontElementsCount + backElementsCount;
+    
+    // Get element types for description
+    const allElements = [...(card.front_elements || []), ...(card.back_elements || [])];
+    const elementTypes = [...new Set(allElements.map(el => el.type))];
+    
+    if (elementTypes.length > 0) {
+      const typeDescriptions = elementTypes.map(type => {
+        switch(type) {
+          case 'text': return 'text';
+          case 'image': return 'image';
+          case 'audio': return 'audio';
+          case 'multiple-choice': return 'quiz';
+          case 'youtube': return 'video';
+          default: return type;
+        }
+      }).join(', ');
+      
+      return `${totalElements} elements: ${typeDescriptions}`;
+    }
+    
+    return 'Text-based card';
+  };
+
   const shuffleCards = useCallback(async () => {
     setIsShuffling(true);
     setShowShuffleDialog(false);
@@ -62,11 +89,21 @@ export const CardOverview: React.FC<CardOverviewProps> = ({
       <div className="p-4 h-full flex flex-col justify-between">
         <div>
           <h3 className="text-lg font-semibold mb-2 line-clamp-3">{card.question}</h3>
-          {card.front_elements.length > 0 && (
-            <p className="text-xs text-gray-400 mb-1">{card.front_elements.length} elements</p>
+          <p className="text-xs text-gray-400 mb-1">{getCardDescription(card)}</p>
+          {card.card_type && card.card_type !== 'normal' && (
+            <p className="text-xs text-blue-600 font-medium capitalize mb-1">
+              {card.card_type.replace('-', ' ')}
+            </p>
           )}
         </div>
-        <p className="text-sm text-gray-500 mt-auto">Card {index + 1}</p>
+        <div className="mt-auto">
+          <p className="text-sm text-gray-500">Card {index + 1}</p>
+          {card.answer && card.card_type !== 'single-sided' && (
+            <p className="text-xs text-gray-400 line-clamp-2 mt-1">
+              Answer: {card.answer.substring(0, 50)}{card.answer.length > 50 ? '...' : ''}
+            </p>
+          )}
+        </div>
       </div>
     );
   };
