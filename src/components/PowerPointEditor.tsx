@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer, DeckEmbedRenderer } from './InteractiveElements';
@@ -18,6 +17,12 @@ interface PowerPointEditorProps {
   selectedElementId?: string | null;
   onElementSelect?: (id: string | null) => void;
   showGrid?: boolean;
+}
+
+interface ElementRendererProps {
+  element: CanvasElement;
+  isEditing: boolean;
+  onUpdate: (updates: Partial<CanvasElement>) => void;
 }
 
 export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
@@ -430,7 +435,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
         {/* Grid background */}
         {showGrid && (
           <div 
-            className="absolute inset-0 opacity-5"
+            className="absolute inset-0 opacity-20"
             style={{
               backgroundImage: `
                 linear-gradient(to right, #000 1px, transparent 1px),
