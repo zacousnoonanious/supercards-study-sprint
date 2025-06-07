@@ -35,19 +35,19 @@ export const CardEditor = () => {
   const [cardWidth, setCardWidth] = useState(900);
   const [cardHeight, setCardHeight] = useState(600);
 
+  // Get current card early in the component
+  const currentCard = cards[currentCardIndex];
+
   // Save card when switching cards or sides
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (cards.length > 0) {
-        const currentCard = cards[currentCardIndex];
-        if (currentCard) {
-          updateCard(currentCard.id, currentCard);
-        }
+      if (cards.length > 0 && currentCard) {
+        updateCard(currentCard.id, currentCard);
       }
     }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [cards, currentCardIndex, updateCard]);
+  }, [cards, currentCardIndex, updateCard, currentCard]);
 
   // Update deck name when set changes
   useEffect(() => {
@@ -83,7 +83,6 @@ export const CardEditor = () => {
   }, [setSelectedElement]);
 
   const getCurrentElements = () => {
-    const currentCard = cards[currentCardIndex];
     if (!currentCard) return [];
     return currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements;
   };
@@ -94,11 +93,8 @@ export const CardEditor = () => {
   };
 
   const handleSave = async () => {
-    if (cards.length > 0) {
-      const currentCard = cards[currentCardIndex];
-      if (currentCard) {
-        await updateCard(currentCard.id, currentCard);
-      }
+    if (cards.length > 0 && currentCard) {
+      await updateCard(currentCard.id, currentCard);
     }
   };
 
@@ -224,8 +220,6 @@ export const CardEditor = () => {
     );
   }
 
-  const currentCard = cards[currentCardIndex];
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
@@ -267,7 +261,7 @@ export const CardEditor = () => {
             onCreateNewCard={createNewCard}
             onCreateNewCardWithLayout={createNewCardWithLayout}
             onDeleteCard={() => deleteCard(currentCard.id)}
-            onCardTypeChange={(type: 'standard' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
+            onCardTypeChange={(type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
             position="left"
           />
 

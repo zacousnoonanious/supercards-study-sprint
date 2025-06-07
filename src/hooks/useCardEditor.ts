@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { FlashcardSet, Flashcard, CanvasElement } from '@/types/flashcard';
+import { FlashcardSet, Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
 
 export const useCardEditor = () => {
   const { setId } = useParams();
