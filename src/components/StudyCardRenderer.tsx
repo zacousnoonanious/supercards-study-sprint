@@ -3,6 +3,7 @@ import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
 import { InteractiveQuizRenderer } from './InteractiveQuizRenderer';
+import { FillInBlankRenderer } from './FillInBlankRenderer';
 
 interface StudyCardRendererProps {
   elements: CanvasElement[];
@@ -17,6 +18,8 @@ interface StudyCardRendererProps {
   cardHeight?: number;
   isInformationalCard?: boolean;
   onElementSelect?: (elementId: string) => void;
+  onFillInBlankAnswer?: (elementId: string, correct: boolean) => void;
+  fillInBlankResults?: {[elementId: string]: boolean};
 }
 
 export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
@@ -32,10 +35,18 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
   cardHeight = 400,
   isInformationalCard = false,
   onElementSelect,
+  onFillInBlankAnswer,
+  fillInBlankResults = {},
 }) => {
   const handleQuizAnswer = (elementId: string, correct: boolean, answerIndex: number) => {
     if (onQuizAnswer) {
       onQuizAnswer(elementId, correct, answerIndex);
+    }
+  };
+
+  const handleFillInBlankAnswer = (elementId: string, correct: boolean) => {
+    if (onFillInBlankAnswer) {
+      onFillInBlankAnswer(elementId, correct);
     }
   };
 
@@ -81,6 +92,33 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
                 textScale={textScale}
                 isStudyMode={true}
                 onElementSelect={onElementSelect}
+              />
+            </div>
+          );
+        }
+
+        // For fill-in-blank elements in study mode, use FillInBlankRenderer directly
+        if (element.type === 'fill-in-blank' && onFillInBlankAnswer) {
+          return (
+            <div
+              key={element.id}
+              className="absolute"
+              style={{
+                left: `${(element.x / cardWidth) * 100}%`,
+                top: `${(element.y / cardHeight) * 100}%`,
+                width: `${(element.width / cardWidth) * 100}%`,
+                height: `${(element.height / cardHeight) * 100}%`,
+                transform: `rotate(${element.rotation || 0}deg)`,
+                transformOrigin: 'center',
+                zIndex: element.zIndex || 0,
+              }}
+            >
+              <FillInBlankRenderer
+                element={element}
+                onAnswer={(correct) => handleFillInBlankAnswer(element.id, correct)}
+                showResults={fillInBlankResults[element.id] !== undefined}
+                requireAnswer={requireAnswer}
+                textScale={textScale}
               />
             </div>
           );

@@ -28,6 +28,7 @@ const StudyMode = () => {
   const [showPanelView, setShowPanelView] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [allowNavigation, setAllowNavigation] = useState(true);
+  const [fillInBlankResults, setFillInBlankResults] = useState<{[elementId: string]: boolean}>({});
   const { toast } = useToast();
 
   // Get the previous page from navigation state or default to set view
@@ -116,9 +117,17 @@ const StudyMode = () => {
       setCurrentIndex(currentIndex + 1);
       setShowAnswer(false);
       setShowHint(false);
+      setFillInBlankResults({}); // Reset fill-in-blank results for next card
     } else {
       setStudyComplete(true);
     }
+  };
+
+  const handleFillInBlankAnswer = (elementId: string, correct: boolean) => {
+    setFillInBlankResults(prev => ({ ...prev, [elementId]: correct }));
+    
+    // Auto-advance logic can be added here if needed
+    // For now, just show the results
   };
 
   const handleNavigate = (direction: 'prev' | 'next') => {
@@ -173,6 +182,7 @@ const StudyMode = () => {
     setShowHint(false);
     setSessionStats({ correct: 0, incorrect: 0 });
     setStudyComplete(false);
+    setFillInBlankResults({});
   };
 
   if (loading) {
@@ -272,6 +282,8 @@ const StudyMode = () => {
             onToggleHint={() => setShowHint(!showHint)}
             onAnswer={handleAnswer}
             onFlipCard={handleFlipCard}
+            onFillInBlankAnswer={handleFillInBlankAnswer}
+            fillInBlankResults={fillInBlankResults}
           />
         </div>
       </main>
