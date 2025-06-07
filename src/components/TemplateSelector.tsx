@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,49 +57,78 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
   const renderTemplatePreview = (template: CardTemplate) => {
     const frontElements = template.front_elements;
-    const elementTypes = [...new Set(frontElements.map(el => el.type))];
+    
+    // Calculate aspect ratio for the preview canvas
+    const aspectRatio = template.canvas_width / template.canvas_height;
+    const previewWidth = 200;
+    const previewHeight = previewWidth / aspectRatio;
+    
+    // Scale factor for positioning elements in preview
+    const scaleX = previewWidth / template.canvas_width;
+    const scaleY = previewHeight / template.canvas_height;
     
     return (
-      <div className="aspect-[2/3] bg-gray-50 rounded border-2 border-dashed border-gray-200 p-2 flex flex-col justify-between">
-        {/* Header with element count */}
-        <div className="flex justify-between items-start text-xs text-gray-600">
-          <span className="font-medium">Front</span>
-          <span>{frontElements.length} elements</span>
+      <div 
+        className="bg-gray-50 rounded border-2 border-dashed border-gray-200 relative overflow-hidden"
+        style={{ 
+          width: previewWidth, 
+          height: previewHeight,
+          minHeight: '120px',
+          maxHeight: '300px'
+        }}
+      >
+        {/* Canvas dimension indicator */}
+        <div className="absolute top-1 left-1 text-xs text-gray-500 bg-white/80 rounded px-1">
+          {template.canvas_width}×{template.canvas_height}
         </div>
         
-        {/* Visual layout representation */}
-        <div className="flex-1 flex flex-col justify-center space-y-1">
-          {frontElements.slice(0, 4).map((element, index) => (
-            <div 
+        {/* Element count indicator */}
+        <div className="absolute top-1 right-1 text-xs text-gray-500 bg-white/80 rounded px-1">
+          {frontElements.length} elements
+        </div>
+        
+        {/* Render elements in their actual positions */}
+        {frontElements.map((element, index) => {
+          const elementX = element.x * scaleX;
+          const elementY = element.y * scaleY;
+          const elementWidth = Math.max(element.width * scaleX, 20);
+          const elementHeight = Math.max(element.height * scaleY, 12);
+          
+          return (
+            <div
               key={index}
-              className="flex items-center gap-1 text-xs text-gray-700 bg-white/80 rounded px-1 py-0.5"
+              className="absolute flex items-center justify-center text-xs bg-white/90 border border-gray-300 rounded"
+              style={{
+                left: elementX,
+                top: elementY,
+                width: elementWidth,
+                height: elementHeight,
+                fontSize: Math.max(8, elementWidth / 15)
+              }}
             >
-              {getElementIcon(element.type)}
-              <span className="truncate">
-                {element.type === 'text' ? (element.content?.substring(0, 15) + '...' || 'Text') 
-                 : element.type === 'image' ? 'Image'
-                 : element.type === 'multiple-choice' ? 'Quiz'
-                 : element.type}
-              </span>
+              <div className="flex items-center gap-0.5">
+                {getElementIcon(element.type)}
+                <span className="truncate">
+                  {element.type === 'text' ? (
+                    element.content?.length > 8 ? element.content.substring(0, 8) + '...' : (element.content || 'Text')
+                  ) : element.type === 'image' ? 'Img'
+                  : element.type === 'multiple-choice' ? 'Quiz'
+                  : element.type === 'true-false' ? 'T/F'
+                  : element.type === 'fill-in-blank' ? 'Fill'
+                  : element.type}
+                </span>
+              </div>
             </div>
-          ))}
-          {frontElements.length > 4 && (
-            <div className="text-xs text-gray-500 text-center">
-              +{frontElements.length - 4} more
-            </div>
-          )}
-        </div>
+          );
+        })}
         
-        {/* Bottom with element types */}
-        <div className="flex flex-wrap gap-1 mt-1">
-          {elementTypes.slice(0, 3).map((type, index) => (
-            <div key={index} className="flex items-center gap-0.5 text-xs bg-blue-50 text-blue-700 rounded px-1">
-              {getElementIcon(type)}
-            </div>
-          ))}
-          {elementTypes.length > 3 && (
-            <div className="text-xs text-gray-500">+{elementTypes.length - 3}</div>
-          )}
+        {/* Layout description overlay */}
+        <div className="absolute bottom-1 left-1 right-1 text-xs text-gray-600 bg-white/90 rounded px-1 py-0.5">
+          {frontElements.length === 0 ? 'Empty layout' :
+           frontElements.length === 1 ? 'Single element' :
+           frontElements.length === 2 ? 'Two elements' :
+           frontElements.length <= 4 ? `${frontElements.length} elements` :
+           `${frontElements.length} elements (dense)`}
         </div>
       </div>
     );
@@ -108,12 +136,12 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-6xl max-h-[85vh] mx-4">
+      <Card className="w-full max-w-7xl max-h-[85vh] mx-4">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold">Choose a Template</h2>
-              <p className="text-gray-600 mt-1">Select a pre-designed layout for your flashcard</p>
+              <p className="text-gray-600 mt-1">Select a pre-designed layout for your flashcard. Canvas sizes are shown to scale.</p>
             </div>
             <Button variant="outline" onClick={onClose}>
               Cancel
@@ -131,7 +159,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                     </Badge>
                   </h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                     {templates.map((template) => (
                       <Card 
                         key={template.id} 
@@ -140,22 +168,24 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                       >
                         <CardContent className="p-4">
                           {/* Template Preview */}
-                          {renderTemplatePreview(template)}
+                          <div className="flex justify-center mb-3">
+                            {renderTemplatePreview(template)}
+                          </div>
                           
                           {/* Template Info */}
-                          <div className="mt-3">
+                          <div>
                             <h4 className="font-medium text-sm mb-1 group-hover:text-primary transition-colors">
                               {template.name}
                             </h4>
-                            <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed">
+                            <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mb-2">
                               {template.description}
                             </p>
                             
-                            <div className="mt-3 flex justify-between items-center">
+                            <div className="flex justify-between items-center text-xs">
                               <Badge variant="outline" className="text-xs">
                                 {template.card_type}
                               </Badge>
-                              <span className="text-xs text-gray-500">
+                              <span className="text-gray-500 font-mono">
                                 {template.canvas_width}×{template.canvas_height}
                               </span>
                             </div>
