@@ -366,11 +366,11 @@ const SetView = () => {
                 <div className="space-y-2">
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground mb-1">Front:</h4>
-                    <p className="text-sm">{card.front_content || card.question}</p>
+                    <p className="text-sm">{card.question}</p>
                   </div>
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground mb-1">Back:</h4>
-                    <p className="text-sm">{card.back_content || card.answer}</p>
+                    <p className="text-sm">{card.answer}</p>
                   </div>
                 </div>
               </CardContent>
