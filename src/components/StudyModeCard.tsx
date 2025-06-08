@@ -82,7 +82,7 @@ export const StudyModeCard: React.FC<StudyModeCardProps> = ({
     
     return (
       <div className="space-y-6">
-        <Card className="min-h-[400px] cursor-pointer" onClick={onFlip}>
+        <Card className="cursor-pointer" onClick={onFlip}>
           <CardContent className="flex items-center justify-center h-full p-8">
             <div className="text-center space-y-4">
               <div className="text-lg leading-relaxed">{content}</div>
@@ -153,25 +153,38 @@ export const StudyModeCard: React.FC<StudyModeCardProps> = ({
 
   // For cards with interactive elements, use the StudyCardRenderer
   const currentElements = showAnswer ? card.back_elements : card.front_elements;
+  const cardWidth = card.canvas_width || 600;
+  const cardHeight = card.canvas_height || 400;
 
   return (
     <div className="space-y-6">
-      <Card className="min-h-[400px]">
-        <CardContent className="p-0 h-full">
-          <StudyCardRenderer
-            elements={currentElements || []}
-            onQuizAnswer={handleQuizAnswer}
-            showQuizResults={showQuizResults}
-            quizAnswers={quizAnswers}
-            onFillInBlankAnswer={handleFillInBlankAnswer}
-            fillInBlankResults={fillInBlankResults}
-            textScale={1}
-            cardWidth={card.canvas_width || 600}
-            cardHeight={card.canvas_height || 400}
-            isInformationalCard={card.card_type === 'informational'}
-          />
-        </CardContent>
-      </Card>
+      <div 
+        className="bg-white border border-gray-200 rounded-lg overflow-hidden"
+        style={{ 
+          width: `${cardWidth}px`,
+          height: `${cardHeight}px`,
+          maxWidth: '100%',
+          margin: '0 auto'
+        }}
+      >
+        <StudyCardRenderer
+          elements={currentElements || []}
+          onQuizAnswer={handleQuizAnswer}
+          showQuizResults={showQuizResults}
+          quizAnswers={quizAnswers}
+          onFillInBlankAnswer={handleFillInBlankAnswer}
+          fillInBlankResults={fillInBlankResults}
+          textScale={1}
+          cardWidth={cardWidth}
+          cardHeight={cardHeight}
+          isInformationalCard={card.card_type === 'informational'}
+          className="w-full h-full"
+          style={{ 
+            width: `${cardWidth}px`,
+            height: `${cardHeight}px`
+          }}
+        />
+      </div>
 
       <div className="flex items-center justify-between">
         <Button

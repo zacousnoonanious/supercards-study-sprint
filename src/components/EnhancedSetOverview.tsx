@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +36,7 @@ interface EnhancedSetOverviewProps {
   onCreateFromTemplate: (template: CardTemplate) => void;
   onSetDefaultTemplate: (template: CardTemplate) => void;
   onDeleteCard: (cardId: string) => void;
+  onStudyFromCard?: (cardIndex: number) => void;
   defaultTemplate?: CardTemplate;
 }
 
@@ -50,13 +50,13 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
   onCreateFromTemplate,
   onSetDefaultTemplate,
   onDeleteCard,
+  onStudyFromCard,
   defaultTemplate,
 }) => {
   const [draggedCard, setDraggedCard] = useState<number | null>(null);
   const [dragOverCard, setDragOverCard] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [scale, setScale] = useState([1]);
-  const [cardsPerRow, setCardsPerRow] = useState([4]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
@@ -156,10 +156,14 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
     onReorderCards(shuffled);
   }, [cards, onReorderCards]);
 
-  const handleContextMenuAction = (action: string, cardId: string) => {
+  const handleContextMenuAction = (action: string, cardId: string, cardIndex?: number) => {
     console.log(`Action: ${action} on card: ${cardId}`);
-    // TODO: Implement AI features and conversions
     switch (action) {
+      case 'study-from-here':
+        if (onStudyFromCard && typeof cardIndex === 'number') {
+          onStudyFromCard(cardIndex);
+        }
+        break;
       case 'convert-to-quiz':
         // Convert to quiz card
         break;
@@ -188,15 +192,28 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
   };
 
   const getCardPreview = (card: Flashcard) => {
+    const cardWidth = card.canvas_width || 600;
+    const cardHeight = card.canvas_height || 450;
+    
     return (
-      <div className="w-full h-full relative overflow-hidden">
-        <StudyCardRenderer
-          elements={card.front_elements}
-          textScale={0.5}
-          cardWidth={card.canvas_width || 600}
-          cardHeight={card.canvas_height || 450}
-          className="w-full h-full"
-        />
+      <div className="w-full h-full relative overflow-auto bg-white rounded border">
+        <div 
+          className="relative"
+          style={{ 
+            width: `${cardWidth}px`,
+            height: `${cardHeight}px`,
+            minWidth: `${cardWidth}px`,
+            minHeight: `${cardHeight}px`
+          }}
+        >
+          <StudyCardRenderer
+            elements={card.front_elements}
+            textScale={scale[0]}
+            cardWidth={cardWidth}
+            cardHeight={cardHeight}
+            className="w-full h-full"
+          />
+        </div>
       </div>
     );
   };
@@ -275,7 +292,7 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
       </div>
 
       {/* Controls */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-card rounded-lg border">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-card rounded-lg border">
         <div className="space-y-2">
           <label className="text-sm font-medium">Search</label>
           <div className="relative">
@@ -305,25 +322,13 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
         </div>
         
         <div className="space-y-2">
-          <label className="text-sm font-medium">Scale: {scale[0].toFixed(1)}x</label>
+          <label className="text-sm font-medium">Preview Scale: {scale[0].toFixed(1)}x</label>
           <Slider
             value={scale}
             onValueChange={setScale}
-            min={0.5}
-            max={2}
+            min={0.3}
+            max={1}
             step={0.1}
-            className="w-full"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Cards per Row: {cardsPerRow[0]}</label>
-          <Slider
-            value={cardsPerRow}
-            onValueChange={setCardsPerRow}
-            min={1}
-            max={8}
-            step={1}
             className="w-full"
           />
         </div>
@@ -353,21 +358,17 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
         </div>
       </div>
 
-      {/* Cards Grid */}
+      {/* Cards Grid - Responsive */}
       <div 
         className={viewMode === 'grid' 
-          ? `grid gap-4`
+          ? "grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
           : "flex flex-col gap-3"
         }
-        style={{
-          gridTemplateColumns: viewMode === 'grid' ? `repeat(${cardsPerRow[0]}, 1fr)` : undefined
-        }}
       >
         {filteredCards.map((card, index) => {
           const isSelected = selectedCards.includes(card.id);
           const isDragging = draggedCard === index;
           const isDragOver = dragOverCard === index;
-          const cardScale = scale[0];
           
           return (
             <ContextMenu key={card.id}>
@@ -379,12 +380,7 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
                     isDragOver ? 'drag-over' : ''
                   }`}
                   style={{ 
-                    width: '100%', 
-                    height: viewMode === 'grid' ? `${200 * cardScale}px` : `${120 * cardScale}px`,
-                    transform: `scale(${cardScale})`,
-                    transformOrigin: 'top left',
-                    marginBottom: viewMode === 'grid' ? `${(cardScale - 1) * 200}px` : `${(cardScale - 1) * 120}px`,
-                    marginRight: viewMode === 'grid' ? `${(cardScale - 1) * 100}px` : '0'
+                    height: viewMode === 'grid' ? '300px' : '150px'
                   }}
                   onClick={(e) => handleCardClick(index, e)}
                   draggable
@@ -427,6 +423,11 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
                 <ContextMenuItem onClick={() => onNavigateToCard(index)}>
                   Edit in Visual Editor
                 </ContextMenuItem>
+                {onStudyFromCard && (
+                  <ContextMenuItem onClick={() => handleContextMenuAction('study-from-here', card.id, index)}>
+                    Study from Here
+                  </ContextMenuItem>
+                )}
                 <ContextMenuSeparator />
                 <ContextMenuSub>
                   <ContextMenuSubTrigger>Convert To</ContextMenuSubTrigger>

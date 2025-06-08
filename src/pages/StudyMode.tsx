@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { StudyModeCard } from '@/components/StudyModeCard';
 import { StudyModeComplete } from '@/components/StudyModeComplete';
 import { StudyModeSettings } from '@/components/StudyModeSettings';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
 
 interface Flashcard {
@@ -42,6 +44,7 @@ interface FlashcardSet {
 
 const StudyMode = () => {
   const { setId } = useParams<{ setId: string }>();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -71,6 +74,14 @@ const StudyMode = () => {
       fetchSetAndCards();
     }
   }, [user, setId, navigate]);
+
+  // Handle starting index from URL params
+  useEffect(() => {
+    const startIndex = searchParams.get('startIndex');
+    if (startIndex && !isNaN(parseInt(startIndex))) {
+      setCurrentCardIndex(parseInt(startIndex));
+    }
+  }, [searchParams]);
 
   const fetchSetAndCards = async () => {
     try {
@@ -197,11 +208,21 @@ const StudyMode = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{set.title}</h1>
-            <p className="text-muted-foreground">
-              Card {currentCardIndex + 1} of {cards.length}
-            </p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={handleBackToSet}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Set
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">{set.title}</h1>
+              <p className="text-muted-foreground">
+                Card {currentCardIndex + 1} of {cards.length}
+              </p>
+            </div>
           </div>
           <button
             onClick={() => setShowSettings(true)}

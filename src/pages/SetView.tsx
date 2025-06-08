@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -256,6 +255,10 @@ const SetView = () => {
     }
   };
 
+  const handleStudyFromCard = (cardIndex: number) => {
+    navigate(`/study/${setId}?startIndex=${cardIndex}`);
+  };
+
   // Load default template from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('defaultCardTemplate');
@@ -315,6 +318,7 @@ const SetView = () => {
         onCreateFromTemplate={handleCreateFromTemplate}
         onSetDefaultTemplate={handleSetDefaultTemplate}
         onDeleteCard={handleDeleteCard}
+        onStudyFromCard={handleStudyFromCard}
         defaultTemplate={defaultTemplate}
       />
     );
