@@ -36,7 +36,7 @@ const SetView = () => {
   const [loading, setLoading] = useState(true);
   const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [showCardCreator, setShowCardCreator] = useState(false);
-  const [showCardOverview, setShowCardOverview] = useState(false);
+  const [showEnhancedOverview, setShowEnhancedOverview] = useState(false);
   const [defaultTemplate, setDefaultTemplate] = useState<CardTemplate | undefined>(undefined);
 
   useEffect(() => {
@@ -207,6 +207,30 @@ const SetView = () => {
     });
   };
 
+  const handleDeleteCard = async (cardId: string) => {
+    try {
+      const { error } = await supabase
+        .from('flashcards')
+        .delete()
+        .eq('id', cardId);
+
+      if (error) throw error;
+
+      fetchSetAndCards();
+      toast({
+        title: "Success",
+        description: "Card deleted successfully!",
+      });
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete card.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleReorderCards = async (reorderedCards: Flashcard[]) => {
     setCards(reorderedCards);
     
@@ -278,14 +302,19 @@ const SetView = () => {
     );
   }
 
-  if (showCardOverview) {
+  if (showEnhancedOverview) {
     return (
-      <EditorCardOverview
+      <EnhancedSetOverview
         cards={cards}
-        currentCardIndex={0}
+        setId={setId!}
         onReorderCards={handleReorderCards}
         onNavigateToCard={handleNavigateToCard}
-        onBackToEditor={() => setShowCardOverview(false)}
+        onBackToSet={() => setShowEnhancedOverview(false)}
+        onCreateCard={handleCreateCard}
+        onCreateFromTemplate={handleCreateFromTemplate}
+        onSetDefaultTemplate={handleSetDefaultTemplate}
+        onDeleteCard={handleDeleteCard}
+        defaultTemplate={defaultTemplate}
       />
     );
   }
@@ -324,11 +353,11 @@ const SetView = () => {
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              onClick={() => setShowCardOverview(true)}
+              onClick={() => setShowEnhancedOverview(true)}
               className="flex items-center gap-2"
             >
               <Grid className="w-4 h-4" />
-              Overview
+              Enhanced Overview
             </Button>
             <Button
               variant="outline"
