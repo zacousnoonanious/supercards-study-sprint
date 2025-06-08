@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -88,16 +89,16 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
         blanksToCreate = shuffled.slice(0, numBlanks);
         break;
       
-      case 'significant-words':
+      case 'significant-words': {
         const significantIndices: number[] = [];
-        let currentWordIndex = 0;
+        let significantWordIndex = 0;
         
         words.forEach((segment) => {
           if (segment.trim() && isSignificantWord(segment)) {
-            significantIndices.push(currentWordIndex);
+            significantIndices.push(significantWordIndex);
           }
           if (segment.trim()) {
-            currentWordIndex++;
+            significantWordIndex++;
           }
         });
         
@@ -105,35 +106,37 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
         const shuffledSignificant = [...significantIndices].sort(() => Math.random() - 0.5);
         blanksToCreate = shuffledSignificant.slice(0, numSignificantBlanks);
         break;
+      }
       
-      case 'sentence-start':
+      case 'sentence-start': {
         const sentences = cleanedText.split(/[.!?]+/);
-        let currentWordIndex = 0;
+        let sentenceWordIndex = 0;
         blanksToCreate = [];
         
         sentences.forEach(sentence => {
           const sentenceWords = sentence.trim().split(/\s+/).filter(w => w.length > 0);
           if (sentenceWords.length > 0) {
-            blanksToCreate.push(currentWordIndex);
+            blanksToCreate.push(sentenceWordIndex);
           }
-          currentWordIndex += sentenceWords.length;
+          sentenceWordIndex += sentenceWords.length;
         });
         break;
+      }
     }
 
     // Create blank objects
     const newBlanks = blanksToCreate.map(wordPos => {
       const wordSegments = cleanedText.split(/(\s+)/);
-      let currentWordIndex = 0;
+      let blankWordIndex = 0;
       let word = '';
       
       for (const segment of wordSegments) {
         if (segment.trim()) {
-          if (currentWordIndex === wordPos) {
+          if (blankWordIndex === wordPos) {
             word = segment.trim();
             break;
           }
-          currentWordIndex++;
+          blankWordIndex++;
         }
       }
       
