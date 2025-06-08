@@ -19,7 +19,7 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
   isDragging = false
 }) => {
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(0.8);
+  const [zoom, setZoom] = useState(0.5); // Reduced initial zoom to fit content better
   const [isPanning, setIsPanning] = useState(false);
   const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
   const previewRef = useRef<HTMLDivElement>(null);
@@ -68,14 +68,19 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
 
   const handleZoomOut = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setZoom(prev => Math.max(prev - 0.1, 0.2));
+    setZoom(prev => Math.max(prev - 0.1, 0.1));
   };
 
   const resetView = (e: React.MouseEvent) => {
     e.stopPropagation();
     setPanPosition({ x: 0, y: 0 });
-    setZoom(0.8);
+    setZoom(0.5); // Reset to better fitting zoom
   };
+
+  // Calculate card dimensions to fit within preview
+  const cardWidth = card.canvas_width || 600;
+  const cardHeight = card.canvas_height || 450;
+  const aspectRatio = cardWidth / cardHeight;
 
   return (
     <div
@@ -105,14 +110,14 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
         </div>
       </div>
       
-      {/* Card Preview Area */}
+      {/* Card Preview Area - Increased height to show more content */}
       <div 
-        className="aspect-[4/3] bg-gray-50 rounded-b-lg overflow-hidden cursor-grab active:cursor-grabbing relative"
+        className="h-80 bg-gray-50 rounded-b-lg overflow-hidden cursor-grab active:cursor-grabbing relative flex items-center justify-center"
         onMouseDown={handleMouseDown}
         ref={previewRef}
       >
         <div 
-          className="w-full h-full transition-transform"
+          className="transition-transform flex items-center justify-center"
           style={{
             transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoom})`,
             transformOrigin: 'center center'
@@ -121,9 +126,10 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
           <StudyCardRenderer
             elements={card.front_elements || []}
             textScale={1}
-            cardWidth={350}
-            cardHeight={262}
+            cardWidth={cardWidth}
+            cardHeight={cardHeight}
             isInformationalCard={card.card_type === 'informational'}
+            className="border border-gray-200 shadow-sm"
           />
         </div>
       </div>
