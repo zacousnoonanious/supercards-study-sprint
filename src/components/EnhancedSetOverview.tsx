@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Minus } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
 import { DraggableCardHeader } from './DraggableCardHeader';
 import { EditableDeckTitle } from './EditableDeckTitle';
 import { DeckGlobalSettings } from './DeckGlobalSettings';
 import { CardTemplateSelector } from './CardTemplateSelector';
-import { StudyCardRenderer } from './StudyCardRenderer';
+import { CardPreviewWithControls } from './CardPreviewWithControls';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -45,11 +46,6 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [setTitle, setSetTitle] = useState('');
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
-  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(0.5); // Default 50% zoom
-  const [isPanning, setIsPanning] = useState(false);
-  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   // Fetch set title
@@ -134,50 +130,6 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
     setIsDragging(false);
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 0) { // Left click only
-      setIsPanning(true);
-      setLastMousePos({ x: e.clientX, y: e.clientY });
-    }
-  };
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isPanning) return;
-    
-    const deltaX = (e.clientX - lastMousePos.x) * 0.3; // Reduced sensitivity
-    const deltaY = (e.clientY - lastMousePos.y) * 0.3; // Reduced sensitivity
-    
-    setPanPosition(prev => ({
-      x: prev.x + deltaX,
-      y: prev.y + deltaY
-    }));
-    
-    setLastMousePos({ x: e.clientX, y: e.clientY });
-  }, [isPanning, lastMousePos]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsPanning(false);
-  }, []);
-
-  useEffect(() => {
-    if (isPanning) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isPanning, handleMouseMove, handleMouseUp]);
-
-  const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev + 0.1, 2));
-  };
-
-  const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 0.1, 0.1));
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <header className="shadow-sm border-b bg-card sticky top-0 z-10">
@@ -199,17 +151,6 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
             </div>
             
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-                <Button variant="ghost" size="sm" onClick={handleZoomOut}>
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <span className="text-sm px-2 min-w-[50px] text-center">
-                  {Math.round(zoom * 100)}%
-                </span>
-                <Button variant="ghost" size="sm" onClick={handleZoomIn}>
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
               <CardTemplateSelector
                 onCreateCard={onCreateCard}
                 onCreateFromTemplate={onCreateFromTemplate}
@@ -221,57 +162,28 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
         </div>
       </header>
 
-      <main 
-        className="overflow-hidden cursor-grab active:cursor-grabbing"
-        style={{ height: 'calc(100vh - 64px)' }}
-        onMouseDown={handleMouseDown}
-        ref={containerRef}
-      >
+      <main className="p-8">
         <div 
-          className="p-8 grid gap-6 transition-transform"
+          className="grid gap-6"
           style={{
             gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
-            transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoom})`,
-            transformOrigin: 'center center',
-            width: '100%',
-            minHeight: '100%'
           }}
         >
           {cards.map((card, index) => (
             <div
               key={card.id}
-              className={`bg-white border-2 rounded-lg p-4 shadow-lg hover:shadow-xl transition-all cursor-pointer select-none ${
-                draggedIndex === index ? 'opacity-50 transform rotate-2' : ''
-              }`}
               draggable
               onDragStart={(e) => handleDragStart(e, index)}
               onDragEnd={handleDragEnd}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, index)}
-              onClick={() => onNavigateToCard(index)}
             >
-              <DraggableCardHeader
+              <CardPreviewWithControls
+                card={card}
                 cardIndex={index}
-                cardType={card.card_type || 'normal'}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
+                onClick={() => onNavigateToCard(index)}
                 isDragging={draggedIndex === index}
               />
-              
-              <div className="aspect-[4/3] bg-gray-50 rounded border overflow-hidden">
-                <StudyCardRenderer
-                  elements={card.front_elements || []}
-                  textScale={1}
-                  cardWidth={400}
-                  cardHeight={300}
-                  isInformationalCard={card.card_type === 'informational'}
-                />
-              </div>
-              
-              <div className="mt-2 flex justify-between text-xs text-gray-500">
-                <span>Question: {card.question?.substring(0, 30)}...</span>
-                <span>Answer: {card.answer?.substring(0, 30)}...</span>
-              </div>
             </div>
           ))}
         </div>
