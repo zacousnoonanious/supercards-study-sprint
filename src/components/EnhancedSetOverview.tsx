@@ -1,10 +1,11 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Plus, ZoomIn, ZoomOut, Grid, List, Shuffle, Search, Filter, MoreHorizontal } from 'lucide-react';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
 import { EnhancedCardButton } from './EnhancedCardButton';
-import { CardCanvas } from './CardCanvas';
+import { StudyCardRenderer } from './StudyCardRenderer';
 import { ElementContextMenu } from './ElementContextMenu';
 import {
   ContextMenu,
@@ -189,21 +190,13 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
   const getCardPreview = (card: Flashcard) => {
     return (
       <div className="w-full h-full relative overflow-hidden">
-        <div className="absolute inset-0 scale-50 origin-top-left">
-          <CardCanvas
-            elements={card.front_elements}
-            selectedElement={null}
-            onElementSelect={() => {}}
-            onElementUpdate={() => {}}
-            isStudyMode={true}
-            textScale={0.5}
-            onElementDragStart={() => {}}
-            backgroundStyle="solid"
-            backgroundColor="#ffffff"
-            isDrawingMode={false}
-            onDrawingComplete={() => {}}
-          />
-        </div>
+        <StudyCardRenderer
+          elements={card.front_elements}
+          textScale={0.5}
+          cardWidth={card.canvas_width || 600}
+          cardHeight={card.canvas_height || 450}
+          className="w-full h-full"
+        />
       </div>
     );
   };
