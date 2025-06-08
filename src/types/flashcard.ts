@@ -1,3 +1,4 @@
+
 export interface CanvasElement {
   id: string;
   type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'fill-in-blank' | 'youtube' | 'deck-embed' | 'drawing' | 'audio';
@@ -10,6 +11,9 @@ export interface CanvasElement {
   audioUrl?: string;
   fontSize?: number;
   fontWeight?: 'normal' | 'bold';
+  fontStyle?: 'normal' | 'italic';
+  fontFamily?: string;
+  textDecoration?: 'none' | 'underline' | 'line-through';
   color?: string;
   backgroundColor?: string;
   textAlign?: 'left' | 'center' | 'right';
@@ -18,6 +22,8 @@ export interface CanvasElement {
   mcCorrectAnswer?: number;
   mcCorrectAnswers?: number[];
   mcType?: 'single' | 'multiple';
+  multipleChoiceOptions?: string[];
+  correctAnswer?: number;
   tfCorrectAnswer?: boolean;
   fillInBlankText?: string;
   fillInBlankBlanks?: Array<{
@@ -36,4 +42,63 @@ export interface CanvasElement {
   drawingData?: string;
   strokeColor?: string;
   strokeWidth?: number;
+  zIndex?: number;
+  rotation?: number;
+}
+
+export interface Flashcard {
+  id: string;
+  set_id: string;
+  question?: string;
+  answer?: string;
+  front_elements: CanvasElement[];
+  back_elements: CanvasElement[];
+  card_type?: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
+  countdown_timer?: number;
+  canvas_width?: number;
+  canvas_height?: number;
+  position: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface FlashcardSet {
+  id: string;
+  title: string;
+  description?: string;
+  user_id: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  cards?: Flashcard[];
+}
+
+export interface CardTemplate {
+  id: string;
+  name: string;
+  description: string;
+  thumbnail: string;
+  category: string;
+  front_elements: CanvasElement[];
+  back_elements: CanvasElement[];
+  canvas_width?: number;
+  canvas_height?: number;
+}
+
+export interface StudySession {
+  id: string;
+  set_id: string;
+  user_id: string;
+  started_at: string;
+  completed_at?: string;
+  total_cards: number;
+  correct_answers: number;
+  incorrect_answers: number;
+}
+
+export interface StudyProgress {
+  card_id: string;
+  is_correct: boolean;
+  time_spent: number;
+  attempts: number;
 }
