@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight, RotateCcw,
   Plus, Copy, Trash2, Grid3X3, AlignCenter, AlignJustify, 
   AlignLeft, AlignRight, Layers, FlipHorizontal, FlipVertical,
-  CheckSquare, HelpCircle, Shuffle, List, Grid, Eye
+  CheckSquare, HelpCircle, Shuffle, List, Grid, Eye, FileText
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
@@ -210,6 +210,12 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           icon={HelpCircle}
           label={t('trueFalse') || 'True/False'}
           onClick={() => onAddElement('true-false')}
+        />
+
+        <ToolbarButton
+          icon={FileText}
+          label={t('fillInBlank') || 'Fill in the Blank'}
+          onClick={() => onAddElement('fill-in-blank')}
         />
 
         <div className="w-6 h-px bg-border my-1" />

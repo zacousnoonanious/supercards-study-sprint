@@ -23,7 +23,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
   onClose,
 }) => {
   const [cardType, setCardType] = useState<'standard' | 'informational' | 'no-back' | 'password-protected'>('standard');
-  const [interactiveType, setInteractiveType] = useState<'none' | 'multiple-choice' | 'true-false' | 'fill-blank'>('none');
+  const [interactiveType, setInteractiveType] = useState<'none' | 'multiple-choice' | 'true-false' | 'fill-in-blank'>('none');
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [hint, setHint] = useState('');
@@ -40,7 +40,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
   
   // Fill in the blank
   const [blankText, setBlankText] = useState('');
-  const [blankAnswer, setBlankAnswer] = useState('');
+  const [blankAnswers, setBlankAnswers] = useState<string[]>(['']);
 
   const { toast } = useToast();
 
@@ -70,10 +70,17 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
       if (data.success) {
         setQuestion(data.card.question);
         setAnswer(data.card.answer);
+        
         if (data.card.mcOptions) {
           setMcOptions(data.card.mcOptions);
           setCorrectAnswer(data.card.correctAnswer || 0);
         }
+        
+        if (data.card.fillInBlankText) {
+          setBlankText(data.card.fillInBlankText);
+          setBlankAnswers(data.card.fillInBlankAnswers || ['']);
+        }
+        
         toast({
           title: "Success",
           description: "Card content generated successfully!",
@@ -104,60 +111,115 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
     }
 
     let finalAnswer = answer;
-    let interactiveData: any = {};
+    let frontElements: CanvasElement[] = [];
+    let backElements: CanvasElement[] = [];
 
-    // Handle interactive elements
-    if (interactiveType === 'multiple-choice') {
-      interactiveData = {
-        options: mcOptions.filter(opt => opt.trim()),
+    // Create elements based on interactive type
+    if (interactiveType === 'fill-in-blank') {
+      // Create fill-in-blank element for front
+      const blanks = blankAnswers.map((answer, index) => ({
+        word: answer.trim(),
+        position: index,
+        id: `blank_${Date.now()}_${index}`
+      })).filter(blank => blank.word);
+
+      const fillInBlankElement: CanvasElement = {
+        id: `fill-blank-${Date.now()}`,
+        type: 'fill-in-blank',
+        x: 50,
+        y: 100,
+        width: 500,
+        height: 200,
+        fillInBlankText: blankText,
+        fillInBlankBlanks: blanks,
+        fillInBlankMode: 'manual',
+        showLetterCount: true,
+        ignoreCase: true
+      };
+
+      frontElements = [fillInBlankElement];
+      finalAnswer = blankAnswers.join(', ');
+      
+      // Add answer element to back
+      const answerElement: CanvasElement = {
+        id: `answer-text-${Date.now()}`,
+        type: 'text',
+        x: 150,
+        y: 180,
+        width: 300,
+        height: 60,
+        content: `Answers: ${blankAnswers.join(', ')}`,
+        fontSize: 18,
+        color: '#000000',
+        textAlign: 'center'
+      };
+      backElements = [answerElement];
+      
+    } else if (interactiveType === 'multiple-choice') {
+      // Create multiple choice element
+      const mcElement: CanvasElement = {
+        id: `mc-${Date.now()}`,
+        type: 'multiple-choice',
+        x: 50,
+        y: 80,
+        width: 500,
+        height: 300,
+        content: question,
+        multipleChoiceOptions: mcOptions.filter(opt => opt.trim()),
         correctAnswer,
+        showImmediateFeedback: true
       };
+      frontElements = [mcElement];
       finalAnswer = mcOptions[correctAnswer] || answer;
+      
     } else if (interactiveType === 'true-false') {
-      interactiveData = { correctAnswer: tfAnswer };
-      finalAnswer = tfAnswer.toString();
-    } else if (interactiveType === 'fill-blank') {
-      interactiveData = { 
-        text: blankText,
-        correctAnswer: blankAnswer 
+      // Create true/false element
+      const tfElement: CanvasElement = {
+        id: `tf-${Date.now()}`,
+        type: 'true-false',
+        x: 50,
+        y: 100,
+        width: 500,
+        height: 200,
+        content: question,
+        correctAnswer: tfAnswer ? 1 : 0,
+        showImmediateFeedback: true
       };
-      finalAnswer = blankAnswer;
+      frontElements = [tfElement];
+      finalAnswer = tfAnswer.toString();
+      
+    } else {
+      // Standard text elements
+      const questionElement: CanvasElement = {
+        id: `front-text-${Date.now()}`,
+        type: 'text',
+        x: 150,
+        y: 180,
+        width: 300,
+        height: 60,
+        content: question,
+        fontSize: cardType === 'informational' ? 18 : 24,
+        color: '#000000',
+        textAlign: 'center'
+      };
+      frontElements = [questionElement];
+
+      if (cardType !== 'no-back') {
+        const answerElement: CanvasElement = {
+          id: `back-text-${Date.now()}`,
+          type: 'text',
+          x: 150,
+          y: 180,
+          width: 300,
+          height: 60,
+          content: finalAnswer,
+          fontSize: cardType === 'informational' ? 16 : 24,
+          color: '#000000',
+          textAlign: 'center'
+        };
+        backElements = [answerElement];
+      }
     }
-
-    // Create default elements
-    const defaultFrontElement: CanvasElement = {
-      id: `front-text-${Date.now()}`,
-      type: 'text',
-      x: 150,
-      y: 180,
-      width: 300,
-      height: 60,
-      rotation: 0,
-      content: question,
-      fontSize: cardType === 'informational' ? 18 : 24,
-      color: '#000000',
-      fontWeight: 'normal',
-      fontStyle: 'normal',
-      textDecoration: 'none',
-      textAlign: 'center'
-    };
-
-    const defaultBackElement: CanvasElement = {
-      id: `back-text-${Date.now()}`,
-      type: 'text',
-      x: 150,
-      y: 180,
-      width: 300,
-      height: 60,
-      rotation: 0,
-      content: finalAnswer,
-      fontSize: cardType === 'informational' ? 16 : 24,
-      color: '#000000',
-      fontWeight: 'normal',
-      fontStyle: 'normal',
-      textDecoration: 'none',
-      textAlign: 'center'
-    };
 
     try {
       const cardData: any = {
@@ -165,11 +227,10 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
         question,
         answer: finalAnswer,
         hint: hint || null,
-        front_elements: [defaultFrontElement],
-        back_elements: cardType === 'no-back' ? [] : [defaultBackElement],
+        front_elements: frontElements,
+        back_elements: backElements,
         card_type: cardType,
         interactive_type: interactiveType === 'none' ? null : interactiveType,
-        interactive_data: Object.keys(interactiveData).length > 0 ? interactiveData : null,
       };
 
       if (cardType === 'password-protected' && password) {
@@ -205,12 +266,28 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
     setMcOptions(newOptions);
   };
 
+  const updateBlankAnswer = (index: number, value: string) => {
+    const newAnswers = [...blankAnswers];
+    newAnswers[index] = value;
+    setBlankAnswers(newAnswers);
+  };
+
+  const addBlankAnswer = () => {
+    setBlankAnswers([...blankAnswers, '']);
+  };
+
+  const removeBlankAnswer = (index: number) => {
+    if (blankAnswers.length > 1) {
+      setBlankAnswers(blankAnswers.filter((_, i) => i !== index));
+    }
+  };
+
   const handleCardTypeChange = (value: string) => {
     setCardType(value as 'standard' | 'informational' | 'no-back' | 'password-protected');
   };
 
   const handleInteractiveTypeChange = (value: string) => {
-    setInteractiveType(value as 'none' | 'multiple-choice' | 'true-false' | 'fill-blank');
+    setInteractiveType(value as 'none' | 'multiple-choice' | 'true-false' | 'fill-in-blank');
   };
 
   return (
@@ -224,7 +301,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
           <Label>AI Card Generation (Optional)</Label>
           <div className="flex gap-2">
             <Textarea
-              placeholder="e.g., 'Create a card about photosynthesis' or 'Make a multiple choice question about World War 2'"
+              placeholder="e.g., 'Create a fill-in-blank about the solar system' or 'Make a multiple choice question about World War 2'"
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               className="flex-1"
@@ -279,7 +356,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
               <SelectItem value="none">None</SelectItem>
               <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
               <SelectItem value="true-false">True/False</SelectItem>
-              <SelectItem value="fill-blank">Fill in the Blank</SelectItem>
+              <SelectItem value="fill-in-blank">Fill in the Blank</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -334,23 +411,51 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
           </div>
         )}
 
-        {interactiveType === 'fill-blank' && (
+        {interactiveType === 'fill-in-blank' && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Text with Blank (use _____ for the blank)</Label>
+              <Label>Text with Blanks</Label>
               <Textarea
                 value={blankText}
                 onChange={(e) => setBlankText(e.target.value)}
-                placeholder="The capital of France is _____."
+                placeholder="Enter your text. You'll specify the blank answers below."
+                className="min-h-[100px]"
               />
+              <p className="text-sm text-muted-foreground">
+                Tip: Type your complete text above, then specify which words should be blanks using the fields below.
+              </p>
             </div>
+            
             <div className="space-y-2">
-              <Label>Correct Answer for Blank</Label>
-              <Input
-                value={blankAnswer}
-                onChange={(e) => setBlankAnswer(e.target.value)}
-                placeholder="Paris"
-              />
+              <Label>Blank Answers</Label>
+              {blankAnswers.map((answer, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <Input
+                    value={answer}
+                    onChange={(e) => updateBlankAnswer(index, e.target.value)}
+                    placeholder={`Answer for blank ${index + 1}`}
+                    className="flex-1"
+                  />
+                  {blankAnswers.length > 1 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeBlankAnswer(index)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={addBlankAnswer}
+                className="w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Another Blank
+              </Button>
             </div>
           </div>
         )}
