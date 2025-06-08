@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,16 +50,18 @@ export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
 
         if (cardsError) throw cardsError;
 
-        const transformedCards: Flashcard[] = cardsData?.map(card => ({
+        const transformedCards: Flashcard[] = cardsData?.map((card, index) => ({
           ...card,
           front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
           back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
           hint: card.hint || '',
           last_reviewed_at: card.last_reviewed_at || null,
           card_type: (card.card_type === 'standard' ? 'normal' : card.card_type as Flashcard['card_type']) || 'normal',
-          interactive_type: (card.interactive_type as Flashcard['interactive_type']) || null,
+          interactive_type: card.interactive_type || null,
           countdown_timer: card.countdown_timer || 0,
-          password: card.password || null
+          password: card.password || null,
+          position: index, // Add position based on array index
+          countdown_behavior: card.countdown_behavior as 'flip' | 'next' || 'flip'
         })) || [];
 
         setCards(transformedCards);

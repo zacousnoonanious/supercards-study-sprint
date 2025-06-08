@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,7 +35,16 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setUserSets(data || []);
+        
+        // Transform the data to match FlashcardSet interface
+        const transformedSets: FlashcardSet[] = (data || []).map(set => ({
+          ...set,
+          is_public: set.is_public ?? false, // Provide default value if missing
+          permanent_shuffle: set.permanent_shuffle ?? false,
+          description: set.description ?? ''
+        }));
+        
+        setUserSets(transformedSets);
       } catch (error) {
         console.error('Error fetching user sets:', error);
       } finally {

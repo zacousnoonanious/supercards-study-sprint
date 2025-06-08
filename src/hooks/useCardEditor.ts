@@ -33,7 +33,14 @@ export const useCardEditor = () => {
 
         if (setError) throw setError;
         
-        setSet(setData);
+        // Transform set data to match FlashcardSet interface
+        const transformedSet: FlashcardSet = {
+          ...setData,
+          is_public: setData.is_public ?? false,
+          permanent_shuffle: setData.permanent_shuffle ?? false,
+          description: setData.description ?? ''
+        };
+        setSet(transformedSet);
 
         // Fetch cards
         const { data: cardsData, error: cardsError } = await supabase
@@ -45,16 +52,18 @@ export const useCardEditor = () => {
         if (cardsError) throw cardsError;
         
         // Type cast the data to match our Flashcard interface
-        const typedCards: Flashcard[] = (cardsData || []).map(card => ({
+        const typedCards: Flashcard[] = (cardsData || []).map((card, index) => ({
           ...card,
           front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
           back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
           hint: card.hint || '',
           last_reviewed_at: card.last_reviewed_at || null,
           card_type: (card.card_type as Flashcard['card_type']) || 'normal',
-          interactive_type: (card.interactive_type as Flashcard['interactive_type']) || null,
+          interactive_type: card.interactive_type || null,
           countdown_timer: card.countdown_timer || 0,
-          password: card.password || null
+          password: card.password || null,
+          position: index, // Add position based on array index
+          countdown_behavior: card.countdown_behavior as 'flip' | 'next' || 'flip'
         }));
         
         setCards(typedCards);
@@ -295,9 +304,11 @@ export const useCardEditor = () => {
         hint: data.hint || '',
         last_reviewed_at: data.last_reviewed_at || null,
         card_type: (data.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: (data.interactive_type as Flashcard['interactive_type']) || null,
+        interactive_type: data.interactive_type || null,
         countdown_timer: data.countdown_timer || 0,
-        password: data.password || null
+        password: data.password || null,
+        position: cards.length, // Set position to current array length
+        countdown_behavior: data.countdown_behavior as 'flip' | 'next' || 'flip'
       };
 
       const newCardIndex = cards.length;
@@ -365,9 +376,11 @@ export const useCardEditor = () => {
         hint: data.hint || '',
         last_reviewed_at: data.last_reviewed_at || null,
         card_type: (data.card_type === 'standard' ? 'normal' : data.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: (data.interactive_type as Flashcard['interactive_type']) || null,
+        interactive_type: data.interactive_type || null,
         countdown_timer: data.countdown_timer || 0,
-        password: data.password || null
+        password: data.password || null,
+        position: cards.length, // Set position to current array length
+        countdown_behavior: data.countdown_behavior as 'flip' | 'next' || 'flip'
       };
 
       const newCardIndex = cards.length;
@@ -429,9 +442,11 @@ export const useCardEditor = () => {
         hint: data.hint || '',
         last_reviewed_at: data.last_reviewed_at || null,
         card_type: (data.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: (data.interactive_type as Flashcard['interactive_type']) || null,
+        interactive_type: data.interactive_type || null,
         countdown_timer: data.countdown_timer || 0,
-        password: data.password || null
+        password: data.password || null,
+        position: cards.length, // Set position to current array length
+        countdown_behavior: data.countdown_behavior as 'flip' | 'next' || 'flip'
       };
 
       // Calculate the new index before updating state
