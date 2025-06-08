@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -193,8 +192,6 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
         <div className="absolute inset-0 scale-50 origin-top-left">
           <CardCanvas
             elements={card.front_elements}
-            width={card.canvas_width || 600}
-            height={card.canvas_height || 450}
             selectedElement={null}
             onElementSelect={() => {}}
             onElementUpdate={() => {}}

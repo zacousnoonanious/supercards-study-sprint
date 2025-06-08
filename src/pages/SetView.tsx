@@ -14,6 +14,7 @@ import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
 import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
 import { EditorCardOverview } from '@/components/EditorCardOverview';
 import { EnhancedCardButton } from '@/components/EnhancedCardButton';
+import { EnhancedSetOverview } from '@/components/EnhancedSetOverview';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CanvasElement, CardTemplate, Flashcard } from '@/types/flashcard';
 
