@@ -5,7 +5,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, Edit, ArrowLeft, Sparkles, Grid } from 'lucide-react';
+import { Play, Edit, ArrowLeft, Sparkles, Grid, Settings, Shuffle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserDropdown } from '@/components/UserDropdown';
 import { Navigation } from '@/components/Navigation';
@@ -14,7 +14,10 @@ import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
 import { EditorCardOverview } from '@/components/EditorCardOverview';
 import { EnhancedCardButton } from '@/components/EnhancedCardButton';
 import { EnhancedSetOverview } from '@/components/EnhancedSetOverview';
+import { StudyModePreSettings, StudySettings } from '@/components/StudyModePreSettings';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { CanvasElement, CardTemplate, Flashcard } from '@/types/flashcard';
 
 interface FlashcardSet {
@@ -23,6 +26,7 @@ interface FlashcardSet {
   description: string;
   created_at: string;
   updated_at: string;
+  permanent_shuffle?: boolean;
 }
 
 const SetView = () => {
@@ -37,6 +41,8 @@ const SetView = () => {
   const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [showCardCreator, setShowCardCreator] = useState(false);
   const [showEnhancedOverview, setShowEnhancedOverview] = useState(false);
+  const [showStudySettings, setShowStudySettings] = useState(false);
+  const [showPermanentShuffleSettings, setShowPermanentShuffleSettings] = useState(false);
   const [defaultTemplate, setDefaultTemplate] = useState<CardTemplate | undefined>(undefined);
 
   useEffect(() => {
@@ -259,6 +265,45 @@ const SetView = () => {
     navigate(`/study/${setId}?startIndex=${cardIndex}`);
   };
 
+  const handleStartStudyWithSettings = (settings: StudySettings) => {
+    const queryParams = new URLSearchParams();
+    if (settings.shuffle) queryParams.set('shuffle', 'true');
+    if (settings.mode !== 'flashcard') queryParams.set('mode', settings.mode);
+    if (settings.autoFlip) queryParams.set('autoFlip', 'true');
+    if (settings.countdownTimer > 0) queryParams.set('timer', settings.countdownTimer.toString());
+    if (!settings.showHints) queryParams.set('hideHints', 'true');
+    if (!settings.allowMultipleAttempts) queryParams.set('singleAttempt', 'true');
+    
+    const queryString = queryParams.toString();
+    navigate(`/study/${setId}${queryString ? `?${queryString}` : ''}`);
+  };
+
+  const handlePermanentShuffleToggle = async (enabled: boolean) => {
+    if (!setId) return;
+    
+    try {
+      const { error } = await supabase
+        .from('flashcard_sets')
+        .update({ permanent_shuffle: enabled })
+        .eq('id', setId);
+
+      if (error) throw error;
+
+      setSet(prev => prev ? { ...prev, permanent_shuffle: enabled } : null);
+      toast({
+        title: "Success",
+        description: `Permanent shuffle ${enabled ? 'enabled' : 'disabled'}`,
+      });
+    } catch (error) {
+      console.error('Error updating permanent shuffle:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update shuffle setting.",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Load default template from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('defaultCardTemplate');
@@ -320,6 +365,8 @@ const SetView = () => {
         onDeleteCard={handleDeleteCard}
         onStudyFromCard={handleStudyFromCard}
         defaultTemplate={defaultTemplate}
+        permanentShuffle={set?.permanent_shuffle || false}
+        onPermanentShuffleChange={handlePermanentShuffleToggle}
       />
     );
   }
@@ -358,6 +405,14 @@ const SetView = () => {
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
+              onClick={() => setShowPermanentShuffleSettings(true)}
+              className="flex items-center gap-2"
+            >
+              <Shuffle className="w-4 h-4" />
+              Deck Settings
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => setShowEnhancedOverview(true)}
               className="flex items-center gap-2"
             >
@@ -381,7 +436,7 @@ const SetView = () => {
               {t('edit')}
             </Button>
             <Button
-              onClick={() => navigate(`/study/${setId}`)}
+              onClick={() => setShowStudySettings(true)}
               className="flex items-center gap-2"
             >
               <Play className="w-4 h-4" />
@@ -423,6 +478,38 @@ const SetView = () => {
           </Card>
         </div>
       </main>
+
+      {/* Study Mode Pre-Settings Dialog */}
+      <StudyModePreSettings
+        open={showStudySettings}
+        onClose={() => setShowStudySettings(false)}
+        onStartStudy={handleStartStudyWithSettings}
+        totalCards={cards.length}
+      />
+
+      {/* Permanent Shuffle Settings Dialog */}
+      <Dialog open={showPermanentShuffleSettings} onOpenChange={setShowPermanentShuffleSettings}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Deck Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="permanent-shuffle">Permanent Shuffle</Label>
+                <p className="text-sm text-muted-foreground">
+                  Always shuffle cards when studying this deck
+                </p>
+              </div>
+              <Switch
+                id="permanent-shuffle"
+                checked={set?.permanent_shuffle || false}
+                onCheckedChange={handlePermanentShuffleToggle}
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* AI Generator Dialog */}
       <Dialog open={showAIGenerator} onOpenChange={setShowAIGenerator}>

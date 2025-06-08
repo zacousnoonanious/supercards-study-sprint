@@ -1,11 +1,21 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, ZoomIn, ZoomOut, Grid, List, Shuffle, Search, Filter, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, Plus, ZoomIn, ZoomOut, Grid, List, Shuffle, Search, Filter, MoreHorizontal, AlertTriangle } from 'lucide-react';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
 import { EnhancedCardButton } from './EnhancedCardButton';
 import { StudyCardRenderer } from './StudyCardRenderer';
 import { ElementContextMenu } from './ElementContextMenu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -38,6 +48,8 @@ interface EnhancedSetOverviewProps {
   onDeleteCard: (cardId: string) => void;
   onStudyFromCard?: (cardIndex: number) => void;
   defaultTemplate?: CardTemplate;
+  permanentShuffle?: boolean;
+  onPermanentShuffleChange?: (enabled: boolean) => void;
 }
 
 export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
@@ -52,14 +64,18 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
   onDeleteCard,
   onStudyFromCard,
   defaultTemplate,
+  permanentShuffle = false,
+  onPermanentShuffleChange,
 }) => {
   const [draggedCard, setDraggedCard] = useState<number | null>(null);
   const [dragOverCard, setDragOverCard] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [scale, setScale] = useState([1]);
+  const [scale, setScale] = useState([0.8]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
+  const [showShuffleWarning, setShowShuffleWarning] = useState(false);
+  const [cardZoom, setCardZoom] = useState<{[cardId: string]: { scale: number; x: number; y: number }}>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Filter and search cards
@@ -191,34 +207,105 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
     }
   };
 
+  const handleCardZoom = (cardId: string, delta: number, event: React.WheelEvent) => {
+    event.preventDefault();
+    setCardZoom(prev => {
+      const current = prev[cardId] || { scale: 1, x: 0, y: 0 };
+      const newScale = Math.max(0.5, Math.min(3, current.scale + delta * 0.1));
+      return {
+        ...prev,
+        [cardId]: { ...current, scale: newScale }
+      };
+    });
+  };
+
+  const handleCardPan = (cardId: string, deltaX: number, deltaY: number) => {
+    setCardZoom(prev => {
+      const current = prev[cardId] || { scale: 1, x: 0, y: 0 };
+      return {
+        ...prev,
+        [cardId]: { 
+          ...current, 
+          x: current.x + deltaX,
+          y: current.y + deltaY
+        }
+      };
+    });
+  };
+
   const getCardPreview = (card: Flashcard) => {
     const cardWidth = card.canvas_width || 600;
     const cardHeight = card.canvas_height || 450;
+    const zoom = cardZoom[card.id] || { scale: 1, x: 0, y: 0 };
+    
+    // Standard card display size
+    const displayWidth = 280;
+    const displayHeight = 200;
     
     return (
-      <div className="w-full h-full relative overflow-auto bg-white rounded border">
+      <div 
+        className="w-full h-full relative overflow-hidden bg-white rounded border cursor-grab active:cursor-grabbing"
+        style={{ width: displayWidth, height: displayHeight }}
+        onWheel={(e) => handleCardZoom(card.id, e.deltaY > 0 ? -1 : 1, e)}
+        onMouseDown={(e) => {
+          const startX = e.clientX;
+          const startY = e.clientY;
+          
+          const handleMouseMove = (moveEvent: MouseEvent) => {
+            const deltaX = moveEvent.clientX - startX;
+            const deltaY = moveEvent.clientY - startY;
+            handleCardPan(card.id, deltaX * 0.5, deltaY * 0.5);
+          };
+          
+          const handleMouseUp = () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+          };
+          
+          document.addEventListener('mousemove', handleMouseMove);
+          document.addEventListener('mouseup', handleMouseUp);
+        }}
+      >
         <div 
-          className="relative"
+          className="absolute"
           style={{ 
             width: `${cardWidth}px`,
             height: `${cardHeight}px`,
-            minWidth: `${cardWidth}px`,
-            minHeight: `${cardHeight}px`
+            transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale * scale[0]})`,
+            transformOrigin: 'top left'
           }}
         >
           <StudyCardRenderer
             elements={card.front_elements}
-            textScale={scale[0]}
+            textScale={1}
             cardWidth={cardWidth}
             cardHeight={cardHeight}
-            className="w-full h-full"
+            className="w-full h-full pointer-events-none"
           />
+        </div>
+        <div className="absolute bottom-1 right-1 text-xs bg-black/50 text-white px-1 rounded">
+          {Math.round(zoom.scale * 100)}%
         </div>
       </div>
     );
   };
 
   const cardTypes = ['all', 'normal', 'simple', 'informational', 'single-sided', 'quiz-only'];
+
+  const handlePermanentShuffleToggle = () => {
+    if (permanentShuffle) {
+      // If disabling, no warning needed
+      onPermanentShuffleChange?.(false);
+    } else {
+      // If enabling, show warning
+      setShowShuffleWarning(true);
+    }
+  };
+
+  const confirmPermanentShuffle = () => {
+    onPermanentShuffleChange?.(true);
+    setShowShuffleWarning(false);
+  };
 
   return (
     <div className="min-h-screen bg-background p-6" ref={containerRef}>
@@ -273,6 +360,15 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
             <Shuffle className="w-4 h-4" />
           </Button>
           
+          <Button 
+            variant={permanentShuffle ? "default" : "outline"} 
+            size="sm" 
+            onClick={handlePermanentShuffleToggle}
+          >
+            <Shuffle className="w-4 h-4 mr-1" />
+            Auto-Shuffle
+          </Button>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -322,15 +418,16 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
         </div>
         
         <div className="space-y-2">
-          <label className="text-sm font-medium">Preview Scale: {scale[0].toFixed(1)}x</label>
+          <label className="text-sm font-medium">Card Preview Scale: {scale[0].toFixed(1)}x</label>
           <Slider
             value={scale}
             onValueChange={setScale}
             min={0.3}
-            max={1}
+            max={1.2}
             step={0.1}
             className="w-full"
           />
+          <p className="text-xs text-muted-foreground">Use mouse wheel on cards to zoom, drag to pan</p>
         </div>
       </div>
 
@@ -488,6 +585,30 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
           )}
         </div>
       )}
+
+      {/* Permanent Shuffle Warning Dialog */}
+      <AlertDialog open={showShuffleWarning} onOpenChange={setShowShuffleWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              Enable Permanent Shuffle?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will automatically shuffle the cards every time someone studies this deck. 
+              Students and other users won't be able to study the cards in their original order.
+              <br /><br />
+              Are you sure you want to enable this setting?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPermanentShuffle}>
+              Enable Auto-Shuffle
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

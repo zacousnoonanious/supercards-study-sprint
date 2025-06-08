@@ -1,204 +1,159 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface FillInBlankRendererProps {
   element: CanvasElement;
-  onAnswer?: (correct: boolean) => void;
-  showResults?: boolean;
-  userAnswers?: {[blankId: string]: string};
-  requireAnswer?: boolean;
   textScale?: number;
+  onAnswer?: (elementId: string, correct: boolean) => void;
+  showResults?: boolean;
+  userAnswers?: {[elementId: string]: boolean};
+  allowMultipleAttempts?: boolean;
 }
 
 export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   element,
+  textScale = 1,
   onAnswer,
   showResults = false,
   userAnswers = {},
-  requireAnswer = false,
-  textScale = 1
+  allowMultipleAttempts = true,
 }) => {
-  const [answers, setAnswers] = useState<{[blankId: string]: string}>(userAnswers);
+  const [userInputs, setUserInputs] = useState<{[key: number]: string}>({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [currentAttempts, setCurrentAttempts] = useState<{[key: number]: number}>({});
 
-  const blanks = element.fillInBlankBlanks || [];
-  const originalText = element.fillInBlankText || '';
+  const sentences = element.fillInBlankData?.sentences || [];
+  const blanks = element.fillInBlankData?.blanks || [];
 
-  const handleAnswerChange = (blankId: string, value: string) => {
-    setAnswers(prev => ({ ...prev, [blankId]: value }));
+  useEffect(() => {
+    // Reset state when element changes
+    setUserInputs({});
+    setHasSubmitted(false);
+    setCurrentAttempts({});
+  }, [element.id]);
+
+  const handleInputChange = (blankIndex: number, value: string) => {
+    if (hasSubmitted && !allowMultipleAttempts) return;
+    setUserInputs(prev => ({ ...prev, [blankIndex]: value }));
   };
 
-  const checkAnswer = (userAnswer: string, correctAnswer: string) => {
-    if (element.ignoreCase) {
-      return userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
-    }
-    return userAnswer.trim() === correctAnswer.trim();
-  };
-
-  const isAnswerClose = (userAnswer: string, correctAnswer: string) => {
-    const user = element.ignoreCase ? userAnswer.toLowerCase().trim() : userAnswer.trim();
-    const correct = element.ignoreCase ? correctAnswer.toLowerCase().trim() : correctAnswer.trim();
-    
-    if (user === correct) return false; // Exact match, not close
-    if (user.length === 0) return false; // Empty answer, not close
-    
-    // Check if it's a substring or contains most of the correct answer
-    if (user.includes(correct) || correct.includes(user)) return true;
-    
-    // Simple character similarity check
-    const longer = user.length > correct.length ? user : correct;
-    const shorter = user.length > correct.length ? correct : user;
-    const editDistance = calculateEditDistance(user, correct);
-    const similarity = 1 - (editDistance / longer.length);
-    
-    return similarity >= 0.6; // 60% similarity threshold
-  };
-
-  const calculateEditDistance = (str1: string, str2: string): number => {
-    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
-    
-    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
-    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
-    
-    for (let j = 1; j <= str2.length; j++) {
-      for (let i = 1; i <= str1.length; i++) {
-        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-        matrix[j][i] = Math.min(
-          matrix[j][i - 1] + 1,
-          matrix[j - 1][i] + 1,
-          matrix[j - 1][i - 1] + indicator
-        );
-      }
-    }
-    
-    return matrix[str2.length][str1.length];
-  };
-
-  const getAnswerFeedback = (userAnswer: string, correctAnswer: string) => {
-    if (checkAnswer(userAnswer, correctAnswer)) {
-      return { type: 'correct', className: 'border-green-500 bg-green-50 text-green-800' };
-    } else if (isAnswerClose(userAnswer, correctAnswer)) {
-      return { type: 'close', className: 'border-yellow-500 bg-yellow-50 text-yellow-800' };
-    } else {
-      return { type: 'incorrect', className: 'border-red-500 bg-red-50 text-red-800' };
-    }
+  const checkAnswer = (blankIndex: number) => {
+    const userAnswer = userInputs[blankIndex]?.trim().toLowerCase() || '';
+    const correctAnswers = blanks[blankIndex]?.correctAnswers || [];
+    return correctAnswers.some(answer => 
+      answer.toLowerCase() === userAnswer
+    );
   };
 
   const handleSubmit = () => {
     setHasSubmitted(true);
-    const allCorrect = blanks.every(blank => 
-      checkAnswer(answers[blank.id] || '', blank.word)
-    );
-    
-    if (onAnswer) {
-      onAnswer(allCorrect);
-    }
+    const allCorrect = blanks.every((_, index) => checkAnswer(index));
+    onAnswer?.(element.id, allCorrect);
   };
 
-  const renderTextWithInputs = () => {
-    if (!originalText) return null;
+  const handleRetry = (blankIndex: number) => {
+    setCurrentAttempts(prev => ({ 
+      ...prev, 
+      [blankIndex]: (prev[blankIndex] || 0) + 1 
+    }));
+    setUserInputs(prev => ({ ...prev, [blankIndex]: '' }));
+  };
 
-    const words = originalText.split(/(\s+)/);
-    let wordIndex = 0;
+  const renderSentenceWithBlanks = () => {
+    if (sentences.length === 0) {
+      return (
+        <div className="text-center text-muted-foreground p-4">
+          <p style={{ fontSize: `${14 * textScale}px` }}>
+            No sentences configured for this fill-in-the-blank element.
+          </p>
+        </div>
+      );
+    }
 
-    return words.map((segment, index) => {
-      if (segment.trim()) {
-        const currentWordIndex = wordIndex++;
-        const blank = blanks.find(b => b.position === currentWordIndex);
-        
-        if (blank) {
-          const userAnswer = answers[blank.id] || '';
-          const feedback = hasSubmitted && showResults ? getAnswerFeedback(userAnswer, blank.word) : null;
-          
-          return (
-            <span key={index} className="inline-block mx-1">
-              <Input
-                value={userAnswer}
-                onChange={(e) => handleAnswerChange(blank.id, e.target.value)}
-                disabled={hasSubmitted && showResults}
-                className={`inline-block w-auto min-w-[80px] h-6 text-xs text-center ${
-                  feedback ? feedback.className : ''
-                }`}
-                style={{ 
-                  width: `${Math.max(80, blank.word.length * 8 + (element.showLetterCount ? 20 : 0))}px`,
-                  fontSize: `${12 * textScale}px`
-                }}
-                placeholder={element.showLetterCount ? `(${blank.word.length})` : '___'}
-              />
-              {showResults && hasSubmitted && (
-                <span className="ml-1">
-                  {feedback?.type === 'correct' ? (
-                    <CheckCircle className="w-4 h-4 text-green-600 inline" />
-                  ) : feedback?.type === 'close' ? (
-                    <span className="text-xs text-yellow-600 inline">~</span>
-                  ) : (
-                    <>
-                      <XCircle className="w-4 h-4 text-red-600 inline" />
-                      <span className="text-xs text-red-600 ml-1">({blank.word})</span>
-                    </>
+    return sentences.map((sentence, sentenceIndex) => {
+      let blankCounter = 0;
+      const parts = sentence.split(/___+/);
+      
+      return (
+        <div key={sentenceIndex} className="mb-4" style={{ fontSize: `${16 * textScale}px` }}>
+          {parts.map((part, partIndex) => (
+            <React.Fragment key={partIndex}>
+              <span>{part}</span>
+              {partIndex < parts.length - 1 && (
+                <span className="inline-block mx-1">
+                  <Input
+                    className={`inline-block w-32 text-center ${
+                      hasSubmitted 
+                        ? checkAnswer(blankCounter) 
+                          ? 'border-green-500 bg-green-50' 
+                          : 'border-red-500 bg-red-50'
+                        : ''
+                    }`}
+                    style={{ 
+                      fontSize: `${14 * textScale}px`,
+                      height: `${32 * textScale}px`
+                    }}
+                    value={userInputs[blankCounter] || ''}
+                    onChange={(e) => handleInputChange(blankCounter, e.target.value)}
+                    placeholder="Type answer..."
+                    disabled={hasSubmitted && !allowMultipleAttempts}
+                  />
+                  {hasSubmitted && !checkAnswer(blankCounter) && allowMultipleAttempts && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="ml-1"
+                      onClick={() => handleRetry(blankCounter)}
+                      style={{ fontSize: `${12 * textScale}px` }}
+                    >
+                      Retry
+                    </Button>
                   )}
+                  <span style={{ display: 'none' }}>{blankCounter++}</span>
                 </span>
               )}
-            </span>
-          );
-        }
-        
-        return <span key={index} style={{ fontSize: `${12 * textScale}px` }}>{segment}</span>;
-      }
-      return <span key={index}>{segment}</span>;
+            </React.Fragment>
+          ))}
+        </div>
+      );
     });
   };
 
-  if (blanks.length === 0) {
-    return (
-      <Card className="w-full h-full">
-        <CardContent className="p-3 flex items-center justify-center">
-          <p className="text-xs text-gray-500">No blanks configured</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="w-full h-full">
-      <CardContent className="p-3 space-y-3">
-        <div 
-          className="leading-relaxed"
-          style={{ fontSize: `${12 * textScale}px` }}
-        >
-          {renderTextWithInputs()}
-        </div>
+    <div className="w-full h-full p-4 bg-white rounded border">
+      <div className="space-y-4">
+        <h3 className="font-semibold" style={{ fontSize: `${18 * textScale}px` }}>
+          Fill in the blanks:
+        </h3>
         
-        {!hasSubmitted && !showResults && (
-          <Button
+        <div className="space-y-2">
+          {renderSentenceWithBlanks()}
+        </div>
+
+        {!hasSubmitted && (
+          <Button 
             onClick={handleSubmit}
-            size="sm"
-            className="w-full text-xs"
-            disabled={requireAnswer && blanks.some(blank => !answers[blank.id]?.trim())}
+            disabled={Object.keys(userInputs).length !== blanks.length}
+            style={{ fontSize: `${14 * textScale}px` }}
           >
-            Submit
+            Submit Answers
           </Button>
         )}
-        
-        {showResults && hasSubmitted && (
-          <div className="text-center pt-2">
-            <p className={`font-medium text-xs ${
-              blanks.every(blank => checkAnswer(answers[blank.id] || '', blank.word))
-                ? 'text-green-600' 
-                : 'text-red-600'
-            }`}>
-              {blanks.every(blank => checkAnswer(answers[blank.id] || '', blank.word))
-                ? 'All correct!' 
-                : 'Some answers need improvement'}
+
+        {hasSubmitted && (
+          <div className="mt-4 p-3 rounded border bg-muted">
+            <p style={{ fontSize: `${14 * textScale}px` }}>
+              {blanks.every((_, index) => checkAnswer(index))
+                ? '✅ All correct!'
+                : `❌ ${blanks.filter((_, index) => checkAnswer(index)).length}/${blanks.length} correct`
+              }
             </p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
