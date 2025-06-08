@@ -23,6 +23,15 @@ interface YouTubeRendererProps {
   element: CanvasElement;
 }
 
+interface FillInBlankRendererProps {
+  element: CanvasElement;
+  textScale?: number;
+  onAnswer?: (correct: boolean) => void;
+  showResult?: boolean;
+  isCorrect?: boolean;
+  allowMultipleAttempts?: boolean;
+}
+
 export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({ 
   element, 
   isEditing, 
@@ -400,6 +409,75 @@ export const TrueFalseRenderer: React.FC<ElementRendererProps> = ({
           <p className="text-xs text-gray-500">
             Click True or False to set the correct answer
           </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({ 
+  element, 
+  textScale = 1,
+  onAnswer,
+  showResult = false,
+  isCorrect,
+  allowMultipleAttempts = true
+}) => {
+  const [userAnswer, setUserAnswer] = useState('');
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+
+  const handleSubmit = () => {
+    if (!userAnswer.trim()) return;
+    
+    const correct = userAnswer.toLowerCase().trim() === (element.answer || '').toLowerCase().trim();
+    setHasSubmitted(true);
+    
+    if (onAnswer) {
+      onAnswer(correct);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSubmit();
+    }
+  };
+
+  return (
+    <Card className="w-full h-full">
+      <CardContent className="p-3 space-y-3">
+        <div>
+          <Label className="text-xs font-medium">Fill in the blank:</Label>
+          <div className="text-sm" style={{ fontSize: `${14 * textScale}px` }}>
+            {element.content || 'Complete this sentence: ___'}
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Input
+            value={userAnswer}
+            onChange={(e) => setUserAnswer(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your answer here..."
+            disabled={showResult && !allowMultipleAttempts}
+            className="text-sm"
+            style={{ fontSize: `${14 * textScale}px` }}
+          />
+          
+          <Button
+            onClick={handleSubmit}
+            disabled={!userAnswer.trim() || (showResult && !allowMultipleAttempts)}
+            size="sm"
+            className="w-full"
+          >
+            Submit Answer
+          </Button>
+        </div>
+
+        {showResult && hasSubmitted && (
+          <div className={`text-sm font-medium ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+            {isCorrect ? '✓ Correct!' : `✗ Incorrect. The answer was: ${element.answer}`}
+          </div>
         )}
       </CardContent>
     </Card>

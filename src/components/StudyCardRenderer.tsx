@@ -126,13 +126,14 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
           {element.type === 'multiple-choice' && (
             <MultipleChoiceRenderer 
               element={element}
+              isEditing={false}
               textScale={textScale}
-              onAnswer={(correct, answerIndex) => {
+              onAnswer={(elementId, correct, answerIndex) => {
                 if (onQuizAnswer) {
-                  onQuizAnswer(element.id, correct, answerIndex);
+                  onQuizAnswer(elementId, correct, answerIndex);
                 }
               }}
-              showResult={showQuizResults && element.id in quizAnswers}
+              showResults={showQuizResults && element.id in quizAnswers}
               selectedAnswer={quizAnswers[element.id]}
               allowMultipleAttempts={allowMultipleAttempts}
             />
@@ -141,13 +142,14 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
           {element.type === 'true-false' && (
             <TrueFalseRenderer 
               element={element}
+              isEditing={false}
               textScale={textScale}
-              onAnswer={(correct, answerIndex) => {
+              onAnswer={(elementId, correct, answerIndex) => {
                 if (onQuizAnswer) {
-                  onQuizAnswer(element.id, correct, answerIndex);
+                  onQuizAnswer(elementId, correct, answerIndex);
                 }
               }}
-              showResult={showQuizResults && element.id in quizAnswers}
+              showResults={showQuizResults && element.id in quizAnswers}
               selectedAnswer={quizAnswers[element.id]}
               allowMultipleAttempts={allowMultipleAttempts}
             />

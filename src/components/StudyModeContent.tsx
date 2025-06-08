@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -64,7 +63,6 @@ export const StudyModeContent: React.FC<StudyModeContentProps> = ({
       quizAnswers={quizAnswers}
       onFillInBlankAnswer={onFillInBlankAnswer}
       fillInBlankResults={fillInBlankResults}
-      requireAnswer={false}
       textScale={1}
       cardWidth={currentCard.canvas_width || 600}
       cardHeight={currentCard.canvas_height || 400}
