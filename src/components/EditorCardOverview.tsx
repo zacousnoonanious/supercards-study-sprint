@@ -60,15 +60,9 @@ export const EditorCardOverview: React.FC<EditorCardOverviewProps> = ({
     setDraggedCard(index);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', '');
-    
-    // Add visual feedback
-    const target = e.target as HTMLElement;
-    target.style.opacity = '0.5';
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
-    const target = e.target as HTMLElement;
-    target.style.opacity = '1';
     setDraggedCard(null);
     setDragOverCard(null);
   };
@@ -115,16 +109,14 @@ export const EditorCardOverview: React.FC<EditorCardOverviewProps> = ({
     return (
       <div
         key={card.id}
-        className={`card-item relative rounded-lg border shadow-md transition-all duration-300 cursor-pointer bg-background hover:shadow-xl hover:scale-105 ${
+        className={`card-item relative rounded-lg border shadow-sm transition-all duration-200 cursor-pointer bg-background ${
           isCurrentCard ? 'ring-2 ring-primary ring-offset-2 bg-primary/5' : ''
-        } ${isDragging ? 'opacity-50 scale-95 rotate-2' : ''} ${
-          isDragOver ? 'ring-2 ring-blue-400 ring-offset-2 transform scale-105' : ''
+        } ${isDragging ? 'opacity-50 scale-95 z-50' : ''} ${
+          isDragOver ? 'ring-2 ring-blue-400 ring-offset-2 scale-105' : 'hover:shadow-md hover:scale-[1.02]'
         }`}
         style={{ 
           width: '100%', 
           height: viewMode === 'grid' ? '200px' : '120px',
-          transform: isDragOver ? 'translateY(-4px)' : undefined,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
         onClick={(e) => handleCardClick(index, e)}
         draggable
@@ -160,7 +152,7 @@ export const EditorCardOverview: React.FC<EditorCardOverviewProps> = ({
         </div>
         
         {/* Drag indicator */}
-        {draggedCard === index && (
+        {isDragging && (
           <div className="absolute inset-0 bg-primary/10 rounded-lg flex items-center justify-center">
             <div className="text-primary font-medium">Moving...</div>
           </div>
@@ -171,51 +163,22 @@ export const EditorCardOverview: React.FC<EditorCardOverviewProps> = ({
 
   return (
     <div className="min-h-screen bg-background p-6">
-      {/* CSS for animations */}
+      {/* CSS for soft animations */}
       <style>
         {`
           .card-item {
-            animation: card-enter 0.3s ease-out;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           }
           
-          @keyframes card-enter {
-            from {
-              opacity: 0;
-              transform: translateY(20px) scale(0.95);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
+          .card-item:not([draggable="true"]:active):hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.1);
           }
           
-          .card-item:hover {
-            animation: card-hover 0.2s ease-out forwards;
-          }
-          
-          @keyframes card-hover {
-            to {
-              transform: translateY(-4px) scale(1.02);
-            }
-          }
-          
-          .card-inserting {
-            animation: card-insert 0.4s ease-out;
-          }
-          
-          @keyframes card-insert {
-            0% {
-              background-color: rgb(59 130 246 / 0.1);
-              transform: scale(1.05);
-            }
-            50% {
-              background-color: rgb(59 130 246 / 0.2);
-              transform: scale(1.08);
-            }
-            100% {
-              background-color: transparent;
-              transform: scale(1);
-            }
+          .card-item[draggable="true"]:active {
+            transform: rotate(3deg) scale(0.95);
+            z-index: 1000;
+            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.3);
           }
         `}
       </style>

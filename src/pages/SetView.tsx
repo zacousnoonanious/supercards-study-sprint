@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,14 +5,16 @@ import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, Edit, Plus, ArrowLeft, Sparkles } from 'lucide-react';
+import { Play, Edit, ArrowLeft, Sparkles, Grid } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserDropdown } from '@/components/UserDropdown';
 import { Navigation } from '@/components/Navigation';
 import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
 import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
+import { EditorCardOverview } from '@/components/EditorCardOverview';
+import { EnhancedCardButton } from '@/components/EnhancedCardButton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CanvasElement } from '@/types/flashcard';
+import { CanvasElement, CardTemplate } from '@/types/flashcard';
 
 interface FlashcardSet {
   id: string;
@@ -47,6 +48,8 @@ const SetView = () => {
   const [loading, setLoading] = useState(true);
   const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [showCardCreator, setShowCardCreator] = useState(false);
+  const [showCardOverview, setShowCardOverview] = useState(false);
+  const [defaultTemplate, setDefaultTemplate] = useState<CardTemplate | undefined>(undefined);
 
   useEffect(() => {
     if (!user) {
@@ -117,6 +120,141 @@ const SetView = () => {
     fetchSetAndCards();
   };
 
+  const handleCreateCard = async () => {
+    if (!setId) return;
+
+    const newCard = {
+      question: 'New Card',
+      answer: 'Answer',
+      hint: '',
+      front_elements: [] as any,
+      back_elements: [] as any,
+      set_id: setId,
+      card_type: 'normal' as const,
+      countdown_timer: 0,
+      canvas_width: 600,
+      canvas_height: 450,
+    };
+
+    try {
+      const { data, error } = await supabase
+        .from('flashcards')
+        .insert(newCard)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      fetchSetAndCards();
+      toast({
+        title: "Success",
+        description: "New card created successfully!",
+      });
+    } catch (error) {
+      console.error('Error creating card:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create new card.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCreateFromTemplate = async (template: CardTemplate) => {
+    if (!setId) return;
+
+    const newFrontElements = template.front_elements.map(el => ({
+      ...el,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    }));
+    
+    const newBackElements = template.back_elements.map(el => ({
+      ...el,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    }));
+
+    const newCard = {
+      question: template.front_elements.find(el => el.type === 'text')?.content || 'New Card',
+      answer: template.back_elements.find(el => el.type === 'text')?.content || 'Answer',
+      hint: '',
+      front_elements: newFrontElements as any,
+      back_elements: newBackElements as any,
+      set_id: setId,
+      card_type: template.card_type === 'standard' ? 'normal' : template.card_type,
+      countdown_timer: 0,
+      canvas_width: template.canvas_width || 600,
+      canvas_height: template.canvas_height || 450,
+    };
+
+    try {
+      const { data, error } = await supabase
+        .from('flashcards')
+        .insert(newCard)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      fetchSetAndCards();
+      toast({
+        title: "Success",
+        description: `Card created from ${template.name} template!`,
+      });
+    } catch (error) {
+      console.error('Error creating card from template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create card from template.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSetDefaultTemplate = (template: CardTemplate) => {
+    setDefaultTemplate(template);
+    localStorage.setItem('defaultCardTemplate', JSON.stringify(template));
+    toast({
+      title: "Default Template Set",
+      description: `${template.name} is now your default card template.`,
+    });
+  };
+
+  const handleReorderCards = async (reorderedCards: Flashcard[]) => {
+    setCards(reorderedCards);
+    
+    try {
+      const updates = reorderedCards.map((card, index) => 
+        supabase
+          .from('flashcards')
+          .update({ updated_at: new Date(Date.now() + index).toISOString() })
+          .eq('id', card.id)
+      );
+      
+      await Promise.all(updates);
+    } catch (error) {
+      console.error('Error reordering cards:', error);
+    }
+  };
+
+  const handleNavigateToCard = (cardIndex: number) => {
+    const card = cards[cardIndex];
+    if (card) {
+      navigate(`/sets/${setId}/cards/${card.id}`);
+    }
+  };
+
+  // Load default template from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('defaultCardTemplate');
+    if (saved) {
+      try {
+        setDefaultTemplate(JSON.parse(saved));
+      } catch (error) {
+        console.error('Error loading default template:', error);
+      }
+    }
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -152,6 +290,18 @@ const SetView = () => {
     );
   }
 
+  if (showCardOverview) {
+    return (
+      <EditorCardOverview
+        cards={cards}
+        currentCardIndex={0}
+        onReorderCards={handleReorderCards}
+        onNavigateToCard={handleNavigateToCard}
+        onBackToEditor={() => setShowCardOverview(false)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="shadow-sm border-b bg-card">
@@ -184,6 +334,14 @@ const SetView = () => {
           </div>
           
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCardOverview(true)}
+              className="flex items-center gap-2"
+            >
+              <Grid className="w-4 h-4" />
+              Overview
+            </Button>
             <Button
               variant="outline"
               onClick={() => setShowAIGenerator(true)}
@@ -233,14 +391,12 @@ const SetView = () => {
           
           <Card className="border-dashed border-2 hover:border-primary/50 transition-colors">
             <CardContent className="flex items-center justify-center h-full min-h-[200px]">
-              <Button
-                variant="ghost"
-                onClick={() => setShowCardCreator(true)}
-                className="flex flex-col items-center gap-2 h-full w-full"
-              >
-                <Plus className="w-8 h-8 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Add New Card</span>
-              </Button>
+              <EnhancedCardButton
+                onCreateCard={handleCreateCard}
+                onCreateFromTemplate={handleCreateFromTemplate}
+                onSetDefaultTemplate={handleSetDefaultTemplate}
+                defaultTemplate={defaultTemplate}
+              />
             </CardContent>
           </Card>
         </div>
