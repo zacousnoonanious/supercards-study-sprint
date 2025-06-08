@@ -78,14 +78,18 @@ const SetView = () => {
       if (cardsError) throw cardsError;
       
       // Transform the data to match our Flashcard interface
-      const transformedCards = (cardsData || []).map(card => ({
+      const transformedCards: Flashcard[] = (cardsData || []).map((card, index) => ({
         ...card,
-        front_content: card.question || '',
-        back_content: card.answer || '',
         front_elements: (card.front_elements as unknown as CanvasElement[]) || [],
         back_elements: (card.back_elements as unknown as CanvasElement[]) || [],
-        card_type: (card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') || 'normal',
-        interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null
+        hint: card.hint || '',
+        last_reviewed_at: card.last_reviewed_at || null,
+        card_type: (card.card_type === 'standard' ? 'normal' : card.card_type as Flashcard['card_type']) || 'normal',
+        interactive_type: card.interactive_type || null,
+        countdown_timer: card.countdown_timer || 0,
+        password: card.password || null,
+        position: index, // Add position based on array index
+        countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
       }));
       
       setCards(transformedCards);
