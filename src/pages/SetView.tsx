@@ -27,6 +27,7 @@ interface FlashcardSet {
   created_at: string;
   updated_at: string;
   permanent_shuffle?: boolean;
+  user_id: string;
 }
 
 const SetView = () => {

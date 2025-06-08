@@ -6,6 +6,7 @@ import { Flashcard, CardTemplate } from '@/types/flashcard';
 import { EnhancedCardButton } from './EnhancedCardButton';
 import { StudyCardRenderer } from './StudyCardRenderer';
 import { ElementContextMenu } from './ElementContextMenu';
+import { DraggableCardHeader } from './DraggableCardHeader';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -292,6 +293,111 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
 
   const cardTypes = ['all', 'normal', 'simple', 'informational', 'single-sided', 'quiz-only'];
 
+  const renderCard = (card: Flashcard, index: number) => {
+    const isSelected = selectedCards.includes(card.id);
+    const isDragging = draggedCard === index;
+    const isDragOver = dragOverCard === index;
+    
+    return (
+      <ContextMenu key={card.id}>
+        <ContextMenuTrigger asChild>
+          <div
+            className={`card-item relative rounded-lg border shadow-sm cursor-pointer bg-card ${
+              isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
+            } ${isDragging ? 'dragging opacity-50' : ''} ${
+              isDragOver ? 'drag-over' : ''
+            }`}
+            style={{ 
+              height: viewMode === 'grid' ? '300px' : '150px'
+            }}
+            onClick={(e) => handleCardClick(index, e)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, index)}
+          >
+            <div className="p-4 h-full flex flex-col">
+              <DraggableCardHeader
+                cardIndex={index}
+                cardType={card.card_type}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                isDragging={isDragging}
+              />
+              
+              {viewMode === 'grid' && (
+                <div 
+                  className="flex-1 mb-2 bg-muted rounded overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  {getCardPreview(card)}
+                </div>
+              )}
+              
+              <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
+                <h3 className="text-sm font-medium line-clamp-2">{card.question}</h3>
+                {viewMode === 'list' && (
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {card.answer}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-64">
+          <ContextMenuItem onClick={() => onNavigateToCard(index)}>
+            Edit in Visual Editor
+          </ContextMenuItem>
+          {onStudyFromCard && (
+            <ContextMenuItem onClick={() => handleContextMenuAction('study-from-here', card.id, index)}>
+              Study from Here
+            </ContextMenuItem>
+          )}
+          <ContextMenuSeparator />
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>Convert To</ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              <ContextMenuItem onClick={() => handleContextMenuAction('convert-to-quiz', card.id)}>
+                Quiz Card
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => handleContextMenuAction('convert-to-text', card.id)}>
+                Simple Text Card
+              </ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>AI Features</ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              <ContextMenuItem onClick={() => handleContextMenuAction('ai-summarize', card.id)}>
+                Summarize Content
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => handleContextMenuAction('translate', card.id)}>
+                Translate
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => handleContextMenuAction('enhance', card.id)}>
+                Enhance Content
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => handleContextMenuAction('generate-examples', card.id)}>
+                Generate Examples
+              </ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+          <ContextMenuSeparator />
+          <ContextMenuItem onClick={() => handleContextMenuAction('duplicate', card.id)}>
+            Duplicate Card
+          </ContextMenuItem>
+          <ContextMenuItem 
+            onClick={() => handleContextMenuAction('delete', card.id)}
+            className="text-destructive"
+          >
+            Delete Card
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    );
+  };
+
   const handlePermanentShuffleToggle = () => {
     if (permanentShuffle) {
       // If disabling, no warning needed
@@ -462,112 +568,7 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
           : "flex flex-col gap-3"
         }
       >
-        {filteredCards.map((card, index) => {
-          const isSelected = selectedCards.includes(card.id);
-          const isDragging = draggedCard === index;
-          const isDragOver = dragOverCard === index;
-          
-          return (
-            <ContextMenu key={card.id}>
-              <ContextMenuTrigger asChild>
-                <div
-                  className={`card-item relative rounded-lg border shadow-sm cursor-pointer bg-card ${
-                    isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
-                  } ${isDragging ? 'dragging opacity-50' : ''} ${
-                    isDragOver ? 'drag-over' : ''
-                  }`}
-                  style={{ 
-                    height: viewMode === 'grid' ? '300px' : '150px'
-                  }}
-                  onClick={(e) => handleCardClick(index, e)}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, index)}
-                >
-                  <div className="p-4 h-full flex flex-col">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="outline" className="text-xs">
-                        Card {index + 1}
-                      </Badge>
-                      {card.card_type !== 'normal' && (
-                        <Badge variant="secondary" className="text-xs capitalize">
-                          {card.card_type.replace('-', ' ')}
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {viewMode === 'grid' && (
-                      <div className="flex-1 mb-2 bg-muted rounded overflow-hidden">
-                        {getCardPreview(card)}
-                      </div>
-                    )}
-                    
-                    <div className="space-y-1">
-                      <h3 className="text-sm font-medium line-clamp-2">{card.question}</h3>
-                      {viewMode === 'list' && (
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                          {card.answer}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </ContextMenuTrigger>
-              <ContextMenuContent className="w-64">
-                <ContextMenuItem onClick={() => onNavigateToCard(index)}>
-                  Edit in Visual Editor
-                </ContextMenuItem>
-                {onStudyFromCard && (
-                  <ContextMenuItem onClick={() => handleContextMenuAction('study-from-here', card.id, index)}>
-                    Study from Here
-                  </ContextMenuItem>
-                )}
-                <ContextMenuSeparator />
-                <ContextMenuSub>
-                  <ContextMenuSubTrigger>Convert To</ContextMenuSubTrigger>
-                  <ContextMenuSubContent>
-                    <ContextMenuItem onClick={() => handleContextMenuAction('convert-to-quiz', card.id)}>
-                      Quiz Card
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => handleContextMenuAction('convert-to-text', card.id)}>
-                      Simple Text Card
-                    </ContextMenuItem>
-                  </ContextMenuSubContent>
-                </ContextMenuSub>
-                <ContextMenuSub>
-                  <ContextMenuSubTrigger>AI Features</ContextMenuSubTrigger>
-                  <ContextMenuSubContent>
-                    <ContextMenuItem onClick={() => handleContextMenuAction('ai-summarize', card.id)}>
-                      Summarize Content
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => handleContextMenuAction('translate', card.id)}>
-                      Translate
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => handleContextMenuAction('enhance', card.id)}>
-                      Enhance Content
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => handleContextMenuAction('generate-examples', card.id)}>
-                      Generate Examples
-                    </ContextMenuItem>
-                  </ContextMenuSubContent>
-                </ContextMenuSub>
-                <ContextMenuSeparator />
-                <ContextMenuItem onClick={() => handleContextMenuAction('duplicate', card.id)}>
-                  Duplicate Card
-                </ContextMenuItem>
-                <ContextMenuItem 
-                  onClick={() => handleContextMenuAction('delete', card.id)}
-                  className="text-destructive"
-                >
-                  Delete Card
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
-          );
-        })}
+        {filteredCards.map((card, index) => renderCard(card, index))}
       </div>
 
       {/* Empty State */}
