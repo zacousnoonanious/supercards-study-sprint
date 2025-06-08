@@ -39,7 +39,7 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({
         // Transform the data to match FlashcardSet interface
         const transformedSets: FlashcardSet[] = (data || []).map(set => ({
           ...set,
-          is_public: set.is_public ?? false, // Provide default value if missing
+          is_public: (set as any).is_public ?? false, // Provide default value if missing
           permanent_shuffle: set.permanent_shuffle ?? false,
           description: set.description ?? ''
         }));
