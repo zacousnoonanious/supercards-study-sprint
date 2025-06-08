@@ -91,6 +91,7 @@ export interface FlashcardSet {
   created_at: string;
   updated_at: string;
   flashcards?: Flashcard[];
+  permanent_shuffle?: boolean;
 }
 
 export interface CardTemplate {

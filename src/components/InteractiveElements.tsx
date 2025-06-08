@@ -13,6 +13,10 @@ interface ElementRendererProps {
   isEditing: boolean;
   onUpdate?: (updates: Partial<CanvasElement>) => void;
   textScale?: number;
+  onAnswer?: (elementId: string, correct: boolean, answerIndex: number) => void;
+  showResults?: boolean;
+  selectedAnswer?: number;
+  allowMultipleAttempts?: boolean;
 }
 
 interface YouTubeRendererProps {
@@ -23,10 +27,15 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
   element, 
   isEditing, 
   onUpdate,
-  textScale = 1
+  textScale = 1,
+  onAnswer,
+  showResults = false,
+  selectedAnswer,
+  allowMultipleAttempts = true
 }) => {
   const [editingQuestion, setEditingQuestion] = useState(false);
   const [editingOption, setEditingOption] = useState<number | null>(null);
+  const [localSelectedAnswer, setLocalSelectedAnswer] = useState<number | null>(selectedAnswer ?? null);
   const options = element.multipleChoiceOptions || ['Option 1', 'Option 2'];
   
   const addOption = () => {
@@ -63,6 +72,26 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
 
   const setCorrectAnswer = (index: number) => {
     onUpdate?.({ correctAnswer: index });
+  };
+
+  const handleAnswerSelect = (answerIndex: number) => {
+    if (!isEditing && onAnswer) {
+      setLocalSelectedAnswer(answerIndex);
+      const correct = answerIndex === element.correctAnswer;
+      onAnswer(element.id, correct, answerIndex);
+    }
+  };
+
+  const getButtonVariant = (index: number) => {
+    if (showResults && localSelectedAnswer !== null) {
+      if (index === element.correctAnswer) {
+        return 'default'; // Correct answer
+      }
+      if (localSelectedAnswer === index && index !== element.correctAnswer) {
+        return 'destructive'; // Wrong selected answer
+      }
+    }
+    return localSelectedAnswer === index ? 'default' : 'outline';
   };
 
   // Calculate minimum height needed for all content
@@ -127,78 +156,92 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
           <RadioGroup value={element.correctAnswer?.toString() || "0"} onValueChange={(value) => setCorrectAnswer(parseInt(value))}>
             {options.map((option, index) => (
               <div key={index} className="flex items-center space-x-2 group min-h-[32px]">
-                <RadioGroupItem 
-                  value={index.toString()} 
-                  id={`option-${index}`}
-                  disabled={!isEditing}
-                  className="flex-shrink-0"
-                />
-                
-                {editingOption === index ? (
-                  <Input
-                    value={option}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      updateOption(index, e.target.value);
-                    }}
-                    onBlur={() => setEditingOption(null)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        setEditingOption(null);
-                      }
-                      e.stopPropagation();
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex-1 h-7 text-xs"
-                    autoFocus
+                {isEditing ? (
+                  <RadioGroupItem 
+                    value={index.toString()} 
+                    id={`option-${index}`}
+                    disabled={!isEditing}
+                    className="flex-shrink-0"
                   />
                 ) : (
-                  <div 
-                    className="flex-1 text-xs cursor-pointer py-1 px-2 rounded hover:bg-gray-50 border border-transparent min-h-[28px] flex items-center"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (isEditing) setEditingOption(index);
-                    }}
+                  <Button
+                    variant={getButtonVariant(index)}
+                    size="sm"
+                    onClick={() => handleAnswerSelect(index)}
+                    disabled={showResults && !allowMultipleAttempts}
+                    className="w-full justify-start"
                   >
                     {option}
-                  </div>
+                  </Button>
                 )}
-
+                
                 {isEditing && (
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <Button
-                      variant={element.correctAnswer === index ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCorrectAnswer(index);
-                      }}
-                      className="h-6 w-6 p-0"
-                      title="Mark as correct answer"
-                    >
-                      <Check className="w-3 h-3" />
-                    </Button>
-                    
-                    {options.length > 2 && (
+                  <>
+                    {editingOption === index ? (
+                      <Input
+                        value={option}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          updateOption(index, e.target.value);
+                        }}
+                        onBlur={() => setEditingOption(null)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            setEditingOption(null);
+                          }
+                          e.stopPropagation();
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-1 h-7 text-xs"
+                        autoFocus
+                      />
+                    ) : (
+                      <div 
+                        className="flex-1 text-xs cursor-pointer py-1 px-2 rounded hover:bg-gray-50 border border-transparent min-h-[28px] flex items-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isEditing) setEditingOption(index);
+                        }}
+                      >
+                        {option}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       <Button
-                        variant="outline"
+                        variant={element.correctAnswer === index ? 'default' : 'outline'}
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          removeOption(index);
+                          setCorrectAnswer(index);
                         }}
-                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remove option"
+                        className="h-6 w-6 p-0"
+                        title="Mark as correct answer"
                       >
-                        <X className="w-3 h-3" />
+                        <Check className="w-3 h-3" />
                       </Button>
-                    )}
-                  </div>
-                )}
+                      
+                      {options.length > 2 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeOption(index);
+                          }}
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove option"
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
 
-                {isEditing && element.correctAnswer === index && (
-                  <span className="text-xs text-green-600 font-medium flex-shrink-0">✓ Correct</span>
+                    {element.correctAnswer === index && (
+                      <span className="text-xs text-green-600 font-medium flex-shrink-0">✓ Correct</span>
+                    )}
+                  </>
                 )}
               </div>
             ))}
@@ -227,9 +270,34 @@ export const TrueFalseRenderer: React.FC<ElementRendererProps> = ({
   element, 
   isEditing,
   onUpdate,
-  textScale = 1
+  textScale = 1,
+  onAnswer,
+  showResults = false,
+  selectedAnswer,
+  allowMultipleAttempts = true
 }) => {
   const [editingQuestion, setEditingQuestion] = useState(false);
+  const [localSelectedAnswer, setLocalSelectedAnswer] = useState<number | null>(selectedAnswer ?? null);
+
+  const handleAnswerSelect = (answerIndex: number) => {
+    if (!isEditing && onAnswer) {
+      setLocalSelectedAnswer(answerIndex);
+      const correct = answerIndex === element.correctAnswer;
+      onAnswer(element.id, correct, answerIndex);
+    }
+  };
+
+  const getButtonVariant = (index: number) => {
+    if (showResults && localSelectedAnswer !== null) {
+      if (index === element.correctAnswer) {
+        return 'default'; // Correct answer
+      }
+      if (localSelectedAnswer === index && index !== element.correctAnswer) {
+        return 'destructive'; // Wrong selected answer
+      }
+    }
+    return localSelectedAnswer === index ? 'default' : 'outline';
+  };
 
   return (
     <Card className="w-full h-full">
@@ -279,28 +347,53 @@ export const TrueFalseRenderer: React.FC<ElementRendererProps> = ({
 
         {/* True/False Buttons */}
         <div className="flex gap-2">
-          <Button 
-            variant={element.correctAnswer === 1 ? 'default' : 'outline'} 
-            size="sm"
-            className="flex-1 text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isEditing) onUpdate?.({ correctAnswer: 1 });
-            }}
-          >
-            True {isEditing && element.correctAnswer === 1 && '✓'}
-          </Button>
-          <Button 
-            variant={element.correctAnswer === 0 ? 'default' : 'outline'} 
-            size="sm"
-            className="flex-1 text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isEditing) onUpdate?.({ correctAnswer: 0 });
-            }}
-          >
-            False {isEditing && element.correctAnswer === 0 && '✓'}
-          </Button>
+          {isEditing ? (
+            <>
+              <Button 
+                variant={element.correctAnswer === 1 ? 'default' : 'outline'} 
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isEditing) onUpdate?.({ correctAnswer: 1 });
+                }}
+              >
+                True {element.correctAnswer === 1 && '✓'}
+              </Button>
+              <Button 
+                variant={element.correctAnswer === 0 ? 'default' : 'outline'} 
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isEditing) onUpdate?.({ correctAnswer: 0 });
+                }}
+              >
+                False {element.correctAnswer === 0 && '✓'}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                variant={getButtonVariant(1)}
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={() => handleAnswerSelect(1)}
+                disabled={showResults && !allowMultipleAttempts}
+              >
+                True
+              </Button>
+              <Button 
+                variant={getButtonVariant(0)}
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={() => handleAnswerSelect(0)}
+                disabled={showResults && !allowMultipleAttempts}
+              >
+                False
+              </Button>
+            </>
+          )}
         </div>
 
         {isEditing && (
