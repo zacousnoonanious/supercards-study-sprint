@@ -63,7 +63,7 @@ export const useCardEditor = () => {
           countdown_timer: card.countdown_timer || 0,
           password: card.password || null,
           position: index, // Add position based on array index
-          countdown_behavior: card.countdown_behavior as 'flip' | 'next' || 'flip'
+          countdown_behavior: (card.countdown_behavior as 'flip' | 'next') || 'flip'
         }));
         
         setCards(typedCards);
@@ -308,7 +308,7 @@ export const useCardEditor = () => {
         countdown_timer: data.countdown_timer || 0,
         password: data.password || null,
         position: cards.length, // Set position to current array length
-        countdown_behavior: data.countdown_behavior as 'flip' | 'next' || 'flip'
+        countdown_behavior: (data.countdown_behavior as 'flip' | 'next') || 'flip'
       };
 
       const newCardIndex = cards.length;
@@ -380,7 +380,7 @@ export const useCardEditor = () => {
         countdown_timer: data.countdown_timer || 0,
         password: data.password || null,
         position: cards.length, // Set position to current array length
-        countdown_behavior: data.countdown_behavior as 'flip' | 'next' || 'flip'
+        countdown_behavior: (data.countdown_behavior as 'flip' | 'next') || 'flip'
       };
 
       const newCardIndex = cards.length;
@@ -446,7 +446,7 @@ export const useCardEditor = () => {
         countdown_timer: data.countdown_timer || 0,
         password: data.password || null,
         position: cards.length, // Set position to current array length
-        countdown_behavior: data.countdown_behavior as 'flip' | 'next' || 'flip'
+        countdown_behavior: (data.countdown_behavior as 'flip' | 'next') || 'flip'
       };
 
       // Calculate the new index before updating state
