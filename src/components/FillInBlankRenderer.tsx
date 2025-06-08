@@ -25,8 +25,12 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [currentAttempts, setCurrentAttempts] = useState<{[key: number]: number}>({});
 
-  const sentences = element.fillInBlankData?.sentences || [];
-  const blanks = element.fillInBlankData?.blanks || [];
+  // Extract sentences from fillInBlankText and blanks from fillInBlankBlanks
+  const text = element.fillInBlankText || '';
+  const blanks = element.fillInBlankBlanks || [];
+  
+  // Split text by blanks (represented by ___) to create sentences
+  const sentences = text ? [text] : [];
 
   useEffect(() => {
     // Reset state when element changes
@@ -42,10 +46,11 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
 
   const checkAnswer = (blankIndex: number) => {
     const userAnswer = userInputs[blankIndex]?.trim().toLowerCase() || '';
-    const correctAnswers = blanks[blankIndex]?.correctAnswers || [];
-    return correctAnswers.some(answer => 
-      answer.toLowerCase() === userAnswer
-    );
+    const blank = blanks[blankIndex];
+    if (!blank) return false;
+    
+    // Check against the word stored in the blank
+    return blank.word.toLowerCase() === userAnswer;
   };
 
   const handleSubmit = () => {
@@ -63,63 +68,62 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   };
 
   const renderSentenceWithBlanks = () => {
-    if (sentences.length === 0) {
+    if (!text || blanks.length === 0) {
       return (
         <div className="text-center text-muted-foreground p-4">
           <p style={{ fontSize: `${14 * textScale}px` }}>
-            No sentences configured for this fill-in-the-blank element.
+            No fill-in-the-blank content configured for this element.
           </p>
         </div>
       );
     }
 
-    return sentences.map((sentence, sentenceIndex) => {
-      let blankCounter = 0;
-      const parts = sentence.split(/___+/);
-      
-      return (
-        <div key={sentenceIndex} className="mb-4" style={{ fontSize: `${16 * textScale}px` }}>
-          {parts.map((part, partIndex) => (
-            <React.Fragment key={partIndex}>
-              <span>{part}</span>
-              {partIndex < parts.length - 1 && (
-                <span className="inline-block mx-1">
-                  <Input
-                    className={`inline-block w-32 text-center ${
-                      hasSubmitted 
-                        ? checkAnswer(blankCounter) 
-                          ? 'border-green-500 bg-green-50' 
-                          : 'border-red-500 bg-red-50'
-                        : ''
-                    }`}
-                    style={{ 
-                      fontSize: `${14 * textScale}px`,
-                      height: `${32 * textScale}px`
-                    }}
-                    value={userInputs[blankCounter] || ''}
-                    onChange={(e) => handleInputChange(blankCounter, e.target.value)}
-                    placeholder="Type answer..."
-                    disabled={hasSubmitted && !allowMultipleAttempts}
-                  />
-                  {hasSubmitted && !checkAnswer(blankCounter) && allowMultipleAttempts && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="ml-1"
-                      onClick={() => handleRetry(blankCounter)}
-                      style={{ fontSize: `${12 * textScale}px` }}
-                    >
-                      Retry
-                    </Button>
-                  )}
-                  <span style={{ display: 'none' }}>{blankCounter++}</span>
-                </span>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      );
-    });
+    // Split text by ___ patterns and replace with input fields
+    const parts = text.split(/___+/);
+    let blankCounter = 0;
+    
+    return (
+      <div className="mb-4" style={{ fontSize: `${16 * textScale}px` }}>
+        {parts.map((part, partIndex) => (
+          <React.Fragment key={partIndex}>
+            <span>{part}</span>
+            {partIndex < parts.length - 1 && blankCounter < blanks.length && (
+              <span className="inline-block mx-1">
+                <Input
+                  className={`inline-block w-32 text-center ${
+                    hasSubmitted 
+                      ? checkAnswer(blankCounter) 
+                        ? 'border-green-500 bg-green-50' 
+                        : 'border-red-500 bg-red-50'
+                      : ''
+                  }`}
+                  style={{ 
+                    fontSize: `${14 * textScale}px`,
+                    height: `${32 * textScale}px`
+                  }}
+                  value={userInputs[blankCounter] || ''}
+                  onChange={(e) => handleInputChange(blankCounter, e.target.value)}
+                  placeholder="Type answer..."
+                  disabled={hasSubmitted && !allowMultipleAttempts}
+                />
+                {hasSubmitted && !checkAnswer(blankCounter) && allowMultipleAttempts && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-1"
+                    onClick={() => handleRetry(blankCounter)}
+                    style={{ fontSize: `${12 * textScale}px` }}
+                  >
+                    Retry
+                  </Button>
+                )}
+                <span style={{ display: 'none' }}>{blankCounter++}</span>
+              </span>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    );
   };
 
   return (
