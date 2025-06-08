@@ -61,18 +61,42 @@ export const CardEditor = () => {
     }
   }, [set?.title]);
 
-  // Handle keyboard events for delete functionality
+  // Handle keyboard events for delete functionality and navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if user is typing in an input/textarea
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Delete selected element
       if (e.key === 'Delete' && selectedElement) {
         e.preventDefault();
         handleDeleteElement(selectedElement);
+        return;
+      }
+
+      // Navigate between cards with left/right arrows
+      if (e.key === 'ArrowLeft' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        if (currentCardIndex > 0) {
+          navigateCard('prev');
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowRight' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        if (currentCardIndex < cards.length - 1) {
+          navigateCard('next');
+        }
+        return;
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedElement]);
+  }, [selectedElement, currentCardIndex, cards.length, navigateCard]);
 
   const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     updateElement(elementId, updates);

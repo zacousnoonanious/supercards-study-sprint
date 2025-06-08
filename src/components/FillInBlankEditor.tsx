@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,7 @@ interface FillInBlankEditorProps {
   textScale?: number;
 }
 
-type FillInBlankMode = 'every-nth' | 'random' | 'sentence-start' | 'manual';
+type FillInBlankMode = 'every-nth' | 'random' | 'sentence-start' | 'manual' | 'significant-words';
 
 export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   element,
@@ -33,10 +32,39 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
     onUpdate(updates);
   }, [onUpdate]);
 
+  // Function to identify significant words (nouns, verbs, adjectives, etc.)
+  const isSignificantWord = (word: string): boolean => {
+    const cleanWord = word.toLowerCase().replace(/[^a-z]/g, '');
+    
+    // Skip very short words
+    if (cleanWord.length < 3) return false;
+    
+    // Skip common function words
+    const functionWords = new Set([
+      'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 
+      'by', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 
+      'after', 'above', 'below', 'between', 'among', 'this', 'that', 'these', 
+      'those', 'his', 'her', 'its', 'their', 'our', 'your', 'can', 'will', 
+      'would', 'could', 'should', 'may', 'might', 'must', 'shall', 'have', 
+      'has', 'had', 'been', 'being', 'was', 'were', 'are', 'is', 'am'
+    ]);
+    
+    return !functionWords.has(cleanWord);
+  };
+
+  const processAIGeneratedText = (text: string): string => {
+    // Remove any underscore placeholders that might have been added by AI
+    return text.replace(/_+/g, '').replace(/\s+/g, ' ').trim();
+  };
+
   const generateBlanks = () => {
     if (!originalText.trim()) return;
 
-    const words = originalText.split(/(\s+)/);
+    // Clean the text first to remove any AI-generated underscores
+    const cleanedText = processAIGeneratedText(originalText);
+    setOriginalText(cleanedText);
+
+    const words = cleanedText.split(/(\s+)/);
     const wordIndices: number[] = [];
     let wordIndex = 0;
 
@@ -60,8 +88,26 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
         blanksToCreate = shuffled.slice(0, numBlanks);
         break;
       
+      case 'significant-words':
+        const significantIndices: number[] = [];
+        let currentWordIndex = 0;
+        
+        words.forEach((segment) => {
+          if (segment.trim() && isSignificantWord(segment)) {
+            significantIndices.push(currentWordIndex);
+          }
+          if (segment.trim()) {
+            currentWordIndex++;
+          }
+        });
+        
+        const numSignificantBlanks = Math.ceil((significantIndices.length * percentage) / 100);
+        const shuffledSignificant = [...significantIndices].sort(() => Math.random() - 0.5);
+        blanksToCreate = shuffledSignificant.slice(0, numSignificantBlanks);
+        break;
+      
       case 'sentence-start':
-        const sentences = originalText.split(/[.!?]+/);
+        const sentences = cleanedText.split(/[.!?]+/);
         let currentWordIndex = 0;
         blanksToCreate = [];
         
@@ -77,7 +123,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
 
     // Create blank objects
     const newBlanks = blanksToCreate.map(wordPos => {
-      const wordSegments = originalText.split(/(\s+)/);
+      const wordSegments = cleanedText.split(/(\s+)/);
       let currentWordIndex = 0;
       let word = '';
       
@@ -100,7 +146,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
 
     setBlanks(newBlanks);
     updateParent({
-      fillInBlankText: originalText,
+      fillInBlankText: cleanedText,
       fillInBlankBlanks: newBlanks,
       fillInBlankMode: mode,
       fillInBlankInterval: interval,
@@ -109,11 +155,13 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   };
 
   const handleTextChange = (text: string) => {
-    setOriginalText(text);
+    // Process AI-generated text to remove underscores
+    const cleanedText = processAIGeneratedText(text);
+    setOriginalText(cleanedText);
     // Reset blanks when text changes significantly
     setBlanks([]);
     updateParent({
-      fillInBlankText: text,
+      fillInBlankText: cleanedText,
       fillInBlankBlanks: [],
       fillInBlankMode: mode,
       fillInBlankInterval: interval,
@@ -244,6 +292,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
               <SelectItem value="manual">Manual (double-click words)</SelectItem>
               <SelectItem value="every-nth">Every Nth word</SelectItem>
               <SelectItem value="random">Random percentage</SelectItem>
+              <SelectItem value="significant-words">Significant words only</SelectItem>
               <SelectItem value="sentence-start">Start of sentences</SelectItem>
             </SelectContent>
           </Select>
@@ -254,7 +303,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
             <Label className="text-xs font-medium">Every {interval} words:</Label>
             <Slider
               value={[interval]}
-              onValueChange={(values) => handleIntervalChange(values[0])}
+              onValueChange={(values) => setInterval(values[0])}
               min={2}
               max={10}
               step={1}
@@ -263,12 +312,14 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
           </div>
         )}
 
-        {mode === 'random' && (
+        {(mode === 'random' || mode === 'significant-words') && (
           <div>
-            <Label className="text-xs font-medium">Percentage to blank: {percentage}%</Label>
+            <Label className="text-xs font-medium">
+              {mode === 'significant-words' ? 'Percentage of significant words' : 'Percentage to blank'}: {percentage}%
+            </Label>
             <Slider
               value={[percentage]}
-              onValueChange={(values) => handlePercentageChange(values[0])}
+              onValueChange={(values) => setPercentage(values[0])}
               min={10}
               max={80}
               step={5}
