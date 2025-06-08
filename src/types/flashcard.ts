@@ -1,4 +1,5 @@
 
+
 export interface CanvasElement {
   id: string;
   type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'fill-in-blank' | 'youtube' | 'deck-embed' | 'drawing' | 'audio';
@@ -16,7 +17,7 @@ export interface CanvasElement {
   textDecoration?: 'none' | 'underline' | 'line-through';
   color?: string;
   backgroundColor?: string;
-  textAlign?: 'left' | 'center' | 'right';
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
   hyperlink?: string;
   mcOptions?: string[];
   mcCorrectAnswer?: number;
@@ -44,6 +45,9 @@ export interface CanvasElement {
   strokeWidth?: number;
   zIndex?: number;
   rotation?: number;
+  showImmediateFeedback?: boolean;
+  autoAdvanceOnAnswer?: boolean;
+  autoplay?: boolean;
 }
 
 export interface Flashcard {
@@ -51,13 +55,18 @@ export interface Flashcard {
   set_id: string;
   question?: string;
   answer?: string;
+  hint?: string;
   front_elements: CanvasElement[];
   back_elements: CanvasElement[];
   card_type?: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
   countdown_timer?: number;
+  countdown_behavior?: 'flip' | 'next';
   canvas_width?: number;
   canvas_height?: number;
   position: number;
+  password?: string;
+  interactive_type?: string;
+  last_reviewed_at?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -68,6 +77,7 @@ export interface FlashcardSet {
   description?: string;
   user_id: string;
   is_public: boolean;
+  permanent_shuffle?: boolean;
   created_at: string;
   updated_at: string;
   cards?: Flashcard[];
@@ -77,8 +87,9 @@ export interface CardTemplate {
   id: string;
   name: string;
   description: string;
-  thumbnail: string;
-  category: string;
+  thumbnail?: string;
+  category?: string;
+  card_type?: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
   front_elements: CanvasElement[];
   back_elements: CanvasElement[];
   canvas_width?: number;
@@ -102,3 +113,4 @@ export interface StudyProgress {
   time_spent: number;
   attempts: number;
 }
+
