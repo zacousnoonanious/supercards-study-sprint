@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Plus, Minus } from 'lucide-react';
@@ -261,11 +260,11 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
               
               <div className="aspect-[4/3] bg-gray-50 rounded border overflow-hidden">
                 <StudyCardRenderer
-                  card={card}
-                  showFront={true}
-                  onAnswer={() => {}}
-                  disabled={true}
-                  zoom={1}
+                  elements={card.front_elements || []}
+                  textScale={1}
+                  cardWidth={400}
+                  cardHeight={300}
+                  isInformationalCard={card.card_type === 'informational'}
                 />
               </div>
               

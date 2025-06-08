@@ -10,13 +10,15 @@ interface FillInBlankRendererProps {
   onAnswer?: (isCorrect: boolean, userAnswers: string[]) => void;
   showAnswers?: boolean;
   disabled?: boolean;
+  textScale?: number;
 }
 
 export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   element,
   onAnswer,
   showAnswers = false,
-  disabled = false
+  disabled = false,
+  textScale = 1
 }) => {
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
@@ -100,7 +102,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   const parts = contentWithInputs.split(/(<input-placeholder[^>]*\/>|<span class="answer-shown">[^<]*<\/span>)/);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" style={{ fontSize: `${14 * textScale}px` }}>
       <div className="text-base leading-relaxed">
         {parts.map((part, index) => {
           if (part.includes('<input-placeholder')) {
@@ -124,6 +126,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
                     'border-gray-300'
                   }`}
                   placeholder={showLetterCount ? `(${word.length} letters)` : ''}
+                  style={{ fontSize: `${12 * textScale}px` }}
                 />
                 {submitted && (
                   <span className="ml-1">
@@ -152,11 +155,19 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
 
       {!showAnswers && !disabled && (
         <div className="flex gap-2">
-          <Button onClick={checkAnswers} disabled={submitted || userAnswers.every(answer => !answer.trim())}>
+          <Button 
+            onClick={checkAnswers} 
+            disabled={submitted || userAnswers.every(answer => !answer.trim())}
+            style={{ fontSize: `${12 * textScale}px` }}
+          >
             Check Answers
           </Button>
           {submitted && (
-            <Button variant="outline" onClick={resetAnswers}>
+            <Button 
+              variant="outline" 
+              onClick={resetAnswers}
+              style={{ fontSize: `${12 * textScale}px` }}
+            >
               <RotateCcw className="w-4 h-4 mr-2" />
               Try Again
             </Button>
@@ -165,7 +176,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
       )}
 
       {submitted && (
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600" style={{ fontSize: `${11 * textScale}px` }}>
           Score: {results.filter(r => r).length} / {results.length} correct
         </div>
       )}

@@ -309,14 +309,13 @@ const StudyMode = () => {
 
             <div className="aspect-[4/3] bg-gray-50 rounded border overflow-hidden">
               <StudyCardRenderer
-                card={currentCard}
-                showAnswer={showAnswer}
-                userAnswer={userAnswer}
-                onAnswer={handleAnswerSubmit}
-                disabled={hasAnswered && singleAttempt}
-                hideHints={hideHints}
-                autoFlip={autoFlip}
-                countdownTimer={countdownTimer}
+                elements={showAnswer ? currentCard.back_elements : currentCard.front_elements}
+                textScale={1}
+                cardWidth={600}
+                cardHeight={400}
+                allowMultipleAttempts={!singleAttempt}
+                onQuizAnswer={(elementId, correct, answerIndex) => handleAnswerSubmit(correct)}
+                onFillInBlankAnswer={(elementId, correct) => handleAnswerSubmit(correct)}
               />
             </div>
 

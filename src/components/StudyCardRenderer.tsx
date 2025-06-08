@@ -46,9 +46,9 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
     onQuizAnswer?.(elementId, correct, answerIndex);
   };
 
-  const handleFillInBlankAnswer = (elementId: string, correct: boolean) => {
-    setLocalFillInBlankResults(prev => ({ ...prev, [elementId]: correct }));
-    onFillInBlankAnswer?.(elementId, correct);
+  const handleFillInBlankAnswer = (elementId: string) => (isCorrect: boolean, userAnswers: string[]) => {
+    setLocalFillInBlankResults(prev => ({ ...prev, [elementId]: isCorrect }));
+    onFillInBlankAnswer?.(elementId, isCorrect);
   };
 
   const renderElement = (element: CanvasElement) => {
@@ -100,10 +100,9 @@ export const StudyCardRenderer: React.FC<StudyCardRendererProps> = ({
             <FillInBlankRenderer
               element={element}
               textScale={textScale}
-              onAnswer={handleFillInBlankAnswer}
-              showResults={showQuizResults}
-              userAnswers={fillInBlankResults}
-              allowMultipleAttempts={allowMultipleAttempts}
+              onAnswer={handleFillInBlankAnswer(element.id)}
+              showAnswers={showQuizResults}
+              disabled={!allowMultipleAttempts && fillInBlankResults[element.id] !== undefined}
             />
           </div>
         );
