@@ -426,10 +426,22 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   const [userAnswer, setUserAnswer] = useState('');
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
+  // Get the correct answer from fillInBlankBlanks array or use content as fallback
+  const getCorrectAnswer = () => {
+    if (element.fillInBlankBlanks && element.fillInBlankBlanks.length > 0) {
+      return element.fillInBlankBlanks[0].word;
+    }
+    return element.content || '';
+  };
+
   const handleSubmit = () => {
     if (!userAnswer.trim()) return;
     
-    const correct = userAnswer.toLowerCase().trim() === (element.answer || '').toLowerCase().trim();
+    const correctAnswer = getCorrectAnswer();
+    const correct = element.ignoreCase 
+      ? userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim()
+      : userAnswer.trim() === correctAnswer.trim();
+    
     setHasSubmitted(true);
     
     if (onAnswer) {
@@ -449,7 +461,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
         <div>
           <Label className="text-xs font-medium">Fill in the blank:</Label>
           <div className="text-sm" style={{ fontSize: `${14 * textScale}px` }}>
-            {element.content || 'Complete this sentence: ___'}
+            {element.fillInBlankText || element.content || 'Complete this sentence: ___'}
           </div>
         </div>
         
@@ -476,7 +488,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
 
         {showResult && hasSubmitted && (
           <div className={`text-sm font-medium ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-            {isCorrect ? '✓ Correct!' : `✗ Incorrect. The answer was: ${element.answer}`}
+            {isCorrect ? '✓ Correct!' : `✗ Incorrect. The answer was: ${getCorrectAnswer()}`}
           </div>
         )}
       </CardContent>
