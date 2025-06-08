@@ -317,6 +317,30 @@ const SetView = () => {
     }
   }, []);
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey) {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          // Navigate to first card in editor
+          if (cards.length > 0) {
+            navigate(`/sets/${setId}/cards/${cards[0].id}`);
+          }
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          // Navigate to last card in editor
+          if (cards.length > 0) {
+            navigate(`/sets/${setId}/cards/${cards[cards.length - 1].id}`);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cards, setId, navigate]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
