@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +15,7 @@ import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
 import { EditorCardOverview } from '@/components/EditorCardOverview';
 import { EnhancedCardButton } from '@/components/EnhancedCardButton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CanvasElement, CardTemplate } from '@/types/flashcard';
+import { CanvasElement, CardTemplate, Flashcard } from '@/types/flashcard';
 
 interface FlashcardSet {
   id: string;
@@ -22,19 +23,6 @@ interface FlashcardSet {
   description: string;
   created_at: string;
   updated_at: string;
-}
-
-interface Flashcard {
-  id: string;
-  front_content: string;
-  back_content: string;
-  created_at: string;
-  front_elements: CanvasElement[];
-  back_elements: CanvasElement[];
-  question: string;
-  answer: string;
-  card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
-  interactive_type?: 'multiple-choice' | 'true-false' | 'fill-in-blank' | null;
 }
 
 const SetView = () => {
@@ -180,7 +168,7 @@ const SetView = () => {
       front_elements: newFrontElements as any,
       back_elements: newBackElements as any,
       set_id: setId,
-      card_type: template.card_type === 'standard' ? 'normal' : template.card_type,
+      card_type: template.card_type === 'normal' ? 'normal' : template.card_type,
       countdown_timer: 0,
       canvas_width: template.canvas_width || 600,
       canvas_height: template.canvas_height || 450,

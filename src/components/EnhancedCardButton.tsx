@@ -110,8 +110,7 @@ export const EnhancedCardButton: React.FC<EnhancedCardButtonProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     <div 
-                      className="w-3 h-3 rounded border" 
-                      style={{ backgroundColor: template.color || '#f3f4f6' }}
+                      className="w-3 h-3 rounded border bg-muted"
                     />
                     <span>{template.name}</span>
                   </div>
