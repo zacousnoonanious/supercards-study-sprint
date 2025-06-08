@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,6 +58,7 @@ const StudyMode = () => {
   const [hideHints, setHideHints] = useState(hideHintsParam);
   const [singleAttempt, setSingleAttempt] = useState(singleAttemptParam);
 
+  // Move all useEffect hooks to the top, before any conditional logic
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -72,6 +74,62 @@ const StudyMode = () => {
       applyStudySettings();
     }
   }, [cards, shuffle, mode]);
+
+  // Keyboard navigation useEffect - moved to top to maintain hooks order
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent navigation if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const currentCard = shuffledCards[currentCardIndex];
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (currentCardIndex > 0) {
+            setCurrentCardIndex(currentCardIndex - 1);
+            setShowAnswer(false);
+            setUserAnswer('');
+            setAnswerResult(null);
+            setHasAnswered(false);
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          if (currentCardIndex < shuffledCards.length - 1) {
+            setCurrentCardIndex(currentCardIndex + 1);
+            setShowAnswer(false);
+            setUserAnswer('');
+            setAnswerResult(null);
+            setHasAnswered(false);
+          }
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          if (!showAnswer && currentCard?.card_type !== 'quiz-only') {
+            setShowAnswer(true);
+          }
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          if (showAnswer && currentCard?.card_type !== 'quiz-only') {
+            setShowAnswer(false);
+          }
+          break;
+        case ' ': // Spacebar
+          e.preventDefault();
+          if (currentCard?.card_type !== 'quiz-only') {
+            setShowAnswer(!showAnswer);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentCardIndex, shuffledCards.length, showAnswer, shuffledCards]);
 
   const fetchSetAndCards = async () => {
     try {
@@ -204,60 +262,6 @@ const StudyMode = () => {
       </div>
     );
   }
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent navigation if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-
-      switch (e.key) {
-        case 'ArrowLeft':
-          e.preventDefault();
-          if (currentCardIndex > 0) {
-            setCurrentCardIndex(currentCardIndex - 1);
-            setShowAnswer(false);
-            setUserAnswer('');
-            setAnswerResult(null);
-            setHasAnswered(false);
-          }
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          if (currentCardIndex < shuffledCards.length - 1) {
-            setCurrentCardIndex(currentCardIndex + 1);
-            setShowAnswer(false);
-            setUserAnswer('');
-            setAnswerResult(null);
-            setHasAnswered(false);
-          }
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          if (!showAnswer && currentCard?.card_type !== 'quiz-only') {
-            setShowAnswer(true);
-          }
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          if (showAnswer && currentCard?.card_type !== 'quiz-only') {
-            setShowAnswer(false);
-          }
-          break;
-        case ' ': // Spacebar
-          e.preventDefault();
-          if (currentCard?.card_type !== 'quiz-only') {
-            setShowAnswer(!showAnswer);
-          }
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentCardIndex, shuffledCards.length, showAnswer, currentCard]);
 
   return (
     <div className="min-h-screen bg-background">
