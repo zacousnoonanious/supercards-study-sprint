@@ -1,144 +1,151 @@
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus } from 'lucide-react';
-import { StudyCardRenderer } from './StudyCardRenderer';
+import { Edit, Play, Trash2 } from 'lucide-react';
 import { Flashcard } from '@/types/flashcard';
+import { StudyCardRenderer } from './StudyCardRenderer';
+import { DragHandle } from './DragHandle';
 
 interface CardPreviewWithControlsProps {
   card: Flashcard;
   cardIndex: number;
   onClick: () => void;
   isDragging?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  onStudyFromCard?: (cardIndex: number) => void;
+  onDeleteCard?: (cardId: string) => void;
 }
 
 export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = ({
   card,
   cardIndex,
   onClick,
-  isDragging = false
+  isDragging = false,
+  onDragStart = () => {},
+  onDragEnd = () => {},
+  onStudyFromCard,
+  onDeleteCard
 }) => {
-  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(0.5); // Reduced initial zoom to fit content better
-  const [isPanning, setIsPanning] = useState(false);
-  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
-  const previewRef = useRef<HTMLDivElement>(null);
+  const [showAnswer, setShowAnswer] = useState(false);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (e.button === 0) {
-      setIsPanning(true);
-      setLastMousePos({ x: e.clientX, y: e.clientY });
-    }
-  };
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isPanning) return;
-    
-    const deltaX = (e.clientX - lastMousePos.x) * 0.5;
-    const deltaY = (e.clientY - lastMousePos.y) * 0.5;
-    
-    setPanPosition(prev => ({
-      x: prev.x + deltaX,
-      y: prev.y + deltaY
-    }));
-    
-    setLastMousePos({ x: e.clientX, y: e.clientY });
-  }, [isPanning, lastMousePos]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsPanning(false);
-  }, []);
-
-  useEffect(() => {
-    if (isPanning) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isPanning, handleMouseMove, handleMouseUp]);
-
-  const handleZoomIn = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setZoom(prev => Math.min(prev + 0.1, 2));
-  };
-
-  const handleZoomOut = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setZoom(prev => Math.max(prev - 0.1, 0.1));
-  };
-
-  const resetView = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setPanPosition({ x: 0, y: 0 });
-    setZoom(0.5); // Reset to better fitting zoom
-  };
-
-  // Calculate card dimensions to fit within preview
+  const currentElements = showAnswer ? card.back_elements : card.front_elements;
   const cardWidth = card.canvas_width || 600;
   const cardHeight = card.canvas_height || 450;
-  const aspectRatio = cardWidth / cardHeight;
+  
+  // Calculate scale to fit preview (max 300px width)
+  const maxPreviewWidth = 300;
+  const scale = Math.min(maxPreviewWidth / cardWidth, 1);
+  const previewWidth = cardWidth * scale;
+  const previewHeight = cardHeight * scale;
 
   return (
-    <div
-      className={`bg-white border-2 rounded-lg shadow-lg hover:shadow-xl transition-all select-none relative ${
-        isDragging ? 'opacity-50 transform rotate-2' : ''
+    <Card 
+      className={`group relative hover:shadow-lg transition-all duration-300 ${
+        isDragging ? 'shadow-2xl scale-105 rotate-2 z-50' : 'hover:scale-[1.02]'
       }`}
-      onClick={onClick}
+      style={{
+        transform: isDragging ? 'rotate(3deg) scale(1.05)' : undefined,
+        transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      }}
     >
-      {/* Card Header */}
-      <div className="p-3 border-b bg-gray-50 rounded-t-lg">
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-700">Card {cardIndex + 1}</span>
-          <div className="flex items-center gap-1 bg-white rounded-lg p-1 shadow-sm">
-            <Button variant="ghost" size="sm" onClick={handleZoomOut} className="h-6 w-6 p-0">
-              <Minus className="w-3 h-3" />
-            </Button>
-            <span className="text-xs px-1 min-w-[35px] text-center">
-              {Math.round(zoom * 100)}%
-            </span>
-            <Button variant="ghost" size="sm" onClick={handleZoomIn} className="h-6 w-6 p-0">
-              <Plus className="w-3 h-3" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={resetView} className="h-6 w-6 p-0 text-xs">
-              ⌂
-            </Button>
+      <DragHandle
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        isDragging={isDragging}
+      />
+      
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Card {cardIndex + 1}</CardTitle>
+      </CardHeader>
+      
+      <CardContent className="space-y-3">
+        {/* Card Preview */}
+        <div 
+          className="border rounded overflow-hidden cursor-pointer bg-white"
+          style={{ width: previewWidth, height: previewHeight }}
+          onClick={() => setShowAnswer(!showAnswer)}
+        >
+          <div 
+            style={{ 
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+              width: cardWidth,
+              height: cardHeight
+            }}
+          >
+            <StudyCardRenderer
+              elements={currentElements}
+              textScale={scale}
+              cardWidth={cardWidth}
+              cardHeight={cardHeight}
+              className="w-full h-full"
+            />
           </div>
         </div>
-      </div>
-      
-      {/* Card Preview Area - Increased height to show more content */}
-      <div 
-        className="h-80 bg-gray-50 rounded-b-lg overflow-hidden cursor-grab active:cursor-grabbing relative flex items-center justify-center"
-        onMouseDown={handleMouseDown}
-        ref={previewRef}
-      >
-        <div 
-          className="transition-transform flex items-center justify-center"
-          style={{
-            transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoom})`,
-            transformOrigin: 'center center'
-          }}
-        >
-          <StudyCardRenderer
-            elements={card.front_elements || []}
-            textScale={1}
-            cardWidth={cardWidth}
-            cardHeight={cardHeight}
-            isInformationalCard={card.card_type === 'informational'}
-            className="border border-gray-200 shadow-sm"
-          />
+        
+        {/* Card Info */}
+        <div className="text-xs text-muted-foreground">
+          <p>Front: {card.front_elements?.length || 0} elements</p>
+          <p>Back: {card.back_elements?.length || 0} elements</p>
+          {card.card_type && card.card_type !== 'normal' && (
+            <p className="capitalize">Type: {card.card_type}</p>
+          )}
         </div>
-      </div>
+        
+        {/* Controls */}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
+            className="flex-1"
+          >
+            <Edit className="w-3 h-3 mr-1" />
+            Edit
+          </Button>
+          
+          {onStudyFromCard && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onStudyFromCard(cardIndex);
+              }}
+              className="flex-1"
+            >
+              <Play className="w-3 h-3 mr-1" />
+              Study
+            </Button>
+          )}
+          
+          {onDeleteCard && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteCard(card.id);
+              }}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          )}
+        </div>
+      </CardContent>
       
-      {/* Card Info Footer */}
-      <div className="p-2 bg-gray-50 text-xs text-gray-500 border-t">
-        <div className="truncate">Q: {card.question?.substring(0, 40)}...</div>
-        <div className="truncate">A: {card.answer?.substring(0, 40)}...</div>
-      </div>
-    </div>
+      {/* Dragging overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 bg-primary/10 rounded-lg flex items-center justify-center">
+          <div className="text-primary font-medium">Moving...</div>
+        </div>
+      )}
+    </Card>
   );
 };

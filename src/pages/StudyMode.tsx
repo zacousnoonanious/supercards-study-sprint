@@ -314,22 +314,32 @@ const StudyMode = () => {
               </h2>
             </div>
 
-            <div className="aspect-[4/3] bg-gray-50 rounded border overflow-hidden">
-              <StudyCardRenderer
-                elements={showAnswer ? currentCard.back_elements : currentCard.front_elements}
-                textScale={1}
-                cardWidth={600}
-                cardHeight={400}
-                allowMultipleAttempts={!singleAttempt}
-                onQuizAnswer={(elementId, correct, answerIndex) => handleAnswerSubmit(correct)}
-                onFillInBlankAnswer={(elementId, correct) => handleAnswerSubmit(correct)}
-              />
+            <div className="flex justify-center">
+              <div 
+                className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-lg"
+                style={{ 
+                  width: `${currentCard.canvas_width || 600}px`,
+                  height: `${currentCard.canvas_height || 450}px`,
+                }}
+              >
+                <StudyCardRenderer
+                  elements={showAnswer ? currentCard.back_elements : currentCard.front_elements}
+                  textScale={1}
+                  cardWidth={currentCard.canvas_width || 600}
+                  cardHeight={currentCard.canvas_height || 450}
+                  allowMultipleAttempts={!singleAttempt}
+                  onQuizAnswer={(elementId, correct, answerIndex) => handleAnswerSubmit(correct)}
+                  onFillInBlankAnswer={(elementId, correct) => handleAnswerSubmit(correct)}
+                />
+              </div>
             </div>
 
             {currentCard.hint && !hideHints && (
-              <div className="text-sm text-muted-foreground">
-                <Lightbulb className="w-4 h-4 inline mr-1" />
-                Hint: {currentCard.hint}
+              <div className="text-sm text-muted-foreground flex justify-center">
+                <div className="flex items-center">
+                  <Lightbulb className="w-4 h-4 mr-1" />
+                  Hint: {currentCard.hint}
+                </div>
               </div>
             )}
 

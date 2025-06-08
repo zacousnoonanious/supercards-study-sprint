@@ -46,6 +46,7 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [setTitle, setSetTitle] = useState('');
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const { toast } = useToast();
 
   // Fetch set title
@@ -105,15 +106,45 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
     setDraggedIndex(index);
     setIsDragging(true);
     e.dataTransfer.effectAllowed = 'move';
+    
+    // Add physics-like effect
+    const cardElement = e.currentTarget.closest('.card-container') as HTMLElement;
+    if (cardElement) {
+      cardElement.style.transition = 'none';
+      cardElement.style.transform = 'rotate(3deg) scale(1.05)';
+      cardElement.style.zIndex = '1000';
+    }
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = (e: React.DragEvent) => {
     setDraggedIndex(null);
     setIsDragging(false);
+    setDragOverIndex(null);
+    
+    // Animate drop
+    const cardElement = e.currentTarget.closest('.card-container') as HTMLElement;
+    if (cardElement) {
+      cardElement.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      cardElement.style.transform = 'none';
+      cardElement.style.zIndex = 'auto';
+      
+      // Add bounce effect
+      setTimeout(() => {
+        cardElement.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+          cardElement.style.transform = 'none';
+        }, 150);
+      }, 50);
+    }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
   };
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
@@ -128,6 +159,12 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
     onReorderCards(newCards);
     setDraggedIndex(null);
     setIsDragging(false);
+    setDragOverIndex(null);
+    
+    toast({
+      title: "Card moved",
+      description: `Card moved from position ${draggedIndex + 1} to ${dropIndex + 1}`,
+    });
   };
 
   return (
@@ -172,10 +209,11 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
           {cards.map((card, index) => (
             <div
               key={card.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
+              className={`card-container transition-all duration-300 ${
+                dragOverIndex === index ? 'transform scale-105' : ''
+              }`}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
             >
               <CardPreviewWithControls
@@ -183,6 +221,10 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
                 cardIndex={index}
                 onClick={() => onNavigateToCard(index)}
                 isDragging={draggedIndex === index}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragEnd={handleDragEnd}
+                onStudyFromCard={onStudyFromCard}
+                onDeleteCard={onDeleteCard}
               />
             </div>
           ))}
