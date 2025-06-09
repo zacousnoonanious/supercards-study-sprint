@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -226,6 +227,12 @@ export const CardEditor = () => {
     }
   }, [currentCard, updateCard]);
 
+  const handleCardUpdate = useCallback((updates: Partial<typeof currentCard>) => {
+    if (currentCard) {
+      updateCard(currentCard.id, updates);
+    }
+  }, [currentCard, updateCard]);
+
   // Set canvas dimensions based on card data
   useEffect(() => {
     if (currentCard) {
@@ -300,6 +307,8 @@ export const CardEditor = () => {
         canvasHeight={cardHeight}
         onCanvasSizeChange={handleCanvasSizeChange}
         cardType={currentCard?.card_type}
+        currentCard={currentCard}
+        onUpdateCard={handleCardUpdate}
       />
 
       {/* Main Content Area */}

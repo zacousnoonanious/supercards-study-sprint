@@ -1,23 +1,25 @@
 
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
-import { Trash2, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { CanvasElement } from '@/types/flashcard';
-import { AspectRatioSelector } from './AspectRatioSelector';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { CanvasElement, Flashcard } from '@/types/flashcard';
+import { AdvancedCountdownSettings } from './AdvancedCountdownSettings';
 
 interface ElementOptionsPanelProps {
-  selectedElement: CanvasElement | string | null;
-  onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
-  onDeleteElement: (id: string) => void;
+  selectedElement: CanvasElement | null;
+  onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => void;
+  onDeleteElement: (elementId: string) => void;
   canvasWidth: number;
   canvasHeight: number;
-  onCanvasSizeChange?: (width: number, height: number) => void;
+  onCanvasSizeChange: (width: number, height: number) => void;
   cardType?: string;
+  currentCard?: Flashcard;
+  onUpdateCard?: (updates: Partial<Flashcard>) => void;
 }
 
 export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
@@ -27,271 +29,264 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
   canvasWidth,
   canvasHeight,
   onCanvasSizeChange,
-  cardType = 'normal',
+  cardType,
+  currentCard,
+  onUpdateCard,
 }) => {
-  const handleTextUpdate = useCallback((field: string, value: string | number) => {
-    if (typeof selectedElement === 'string' || !selectedElement) return;
-    onUpdateElement(selectedElement.id, { [field]: value });
-  }, [selectedElement, onUpdateElement]);
-
-  const handleSliderChange = useCallback((value: number[]) => {
-    if (typeof selectedElement === 'string' || !selectedElement) return;
-    onUpdateElement(selectedElement.id, { fontSize: value[0] });
-  }, [selectedElement, onUpdateElement]);
-
-  const handleDelete = useCallback(() => {
-    if (typeof selectedElement === 'string' || !selectedElement) return;
-    onDeleteElement(selectedElement.id);
-  }, [selectedElement, onDeleteElement]);
-
-  const handleStyleToggle = useCallback((style: 'bold' | 'italic' | 'underline') => {
-    if (typeof selectedElement === 'string' || !selectedElement) return;
-    
-    switch (style) {
-      case 'bold':
-        onUpdateElement(selectedElement.id, { 
-          fontWeight: selectedElement.fontWeight === 'bold' ? 'normal' : 'bold' 
-        });
-        break;
-      case 'italic':
-        onUpdateElement(selectedElement.id, { 
-          fontStyle: selectedElement.fontStyle === 'italic' ? 'normal' : 'italic' 
-        });
-        break;
-      case 'underline':
-        onUpdateElement(selectedElement.id, { 
-          textDecoration: selectedElement.textDecoration === 'underline' ? 'none' : 'underline' 
-        });
-        break;
-    }
-  }, [selectedElement, onUpdateElement]);
-
-  const handleAlignmentChange = useCallback((alignment: 'left' | 'center' | 'right') => {
-    if (typeof selectedElement === 'string' || !selectedElement) return;
-    onUpdateElement(selectedElement.id, { textAlign: alignment });
-  }, [selectedElement, onUpdateElement]);
-
-  const handleFontFamilyChange = useCallback((fontFamily: string) => {
-    if (typeof selectedElement === 'string' || !selectedElement) return;
-    onUpdateElement(selectedElement.id, { fontFamily });
-  }, [selectedElement, onUpdateElement]);
-
-  const fontOptions = [
-    { value: 'Arial, sans-serif', label: 'Arial' },
-    { value: 'Helvetica, sans-serif', label: 'Helvetica' },
-    { value: 'Georgia, serif', label: 'Georgia' },
-    { value: 'Times New Roman, serif', label: 'Times New Roman' },
-    { value: 'Courier New, monospace', label: 'Courier New' },
-    { value: 'Verdana, sans-serif', label: 'Verdana' },
-    { value: 'Impact, sans-serif', label: 'Impact' },
-    { value: 'Comic Sans MS, cursive', label: 'Comic Sans MS' },
-  ];
+  if (!selectedElement && !currentCard) return null;
 
   return (
-    <div className="w-full bg-white/90 backdrop-blur-sm border-b shadow-sm">
-      <div className="px-4 py-2">
-        <div className="flex items-center gap-4 flex-wrap">
-          <h3 className="font-medium text-sm whitespace-nowrap">Element Options</h3>
-          
-          {/* Canvas Size Controls - Always show */}
-          {onCanvasSizeChange && (
-            <>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs whitespace-nowrap">Canvas Width:</Label>
-                <Input
-                  type="number"
-                  value={canvasWidth}
-                  onChange={(e) => onCanvasSizeChange(parseInt(e.target.value) || canvasWidth, canvasHeight)}
-                  min={200}
-                  max={2000}
-                  className="w-20 h-7 text-xs"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs whitespace-nowrap">Canvas Height:</Label>
-                <Input
-                  type="number"
-                  value={canvasHeight}
-                  onChange={(e) => onCanvasSizeChange(canvasWidth, parseInt(e.target.value) || canvasHeight)}
-                  min={200}
-                  max={2000}
-                  className="w-20 h-7 text-xs"
-                />
-              </div>
-            </>
-          )}
-          
-          {selectedElement && selectedElement !== 'canvas' && typeof selectedElement !== 'string' ? (
-            <>
-              {selectedElement.type === 'text' && (
-                <>
-                  {/* Text Content */}
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs whitespace-nowrap">Content:</Label>
-                    <Input
-                      type="text"
-                      value={selectedElement.content || ''}
-                      onChange={(e) => handleTextUpdate('content', e.target.value)}
-                      className="w-32 h-7 text-xs"
-                    />
-                  </div>
-
-                  {/* Font Family */}
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs whitespace-nowrap">Font:</Label>
-                    <Select 
-                      value={selectedElement.fontFamily || 'Arial, sans-serif'} 
-                      onValueChange={handleFontFamilyChange}
-                    >
-                      <SelectTrigger className="w-32 h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {fontOptions.map((font) => (
-                          <SelectItem key={font.value} value={font.value}>
-                            {font.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Font Size */}
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs whitespace-nowrap">Size:</Label>
-                    <div className="w-16">
-                      <Slider
-                        value={[selectedElement.fontSize || 16]}
-                        max={72}
-                        min={8}
-                        step={1}
-                        onValueChange={handleSliderChange}
-                        className="w-full"
-                      />
-                    </div>
-                    <span className="text-xs text-gray-500 w-6">{selectedElement.fontSize || 16}</span>
-                  </div>
-
-                  {/* Color */}
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs whitespace-nowrap">Color:</Label>
-                    <Input
-                      type="color"
-                      value={selectedElement.color || '#000000'}
-                      onChange={(e) => handleTextUpdate('color', e.target.value)}
-                      className="w-12 h-7 p-1"
-                    />
-                  </div>
-
-                  {/* Text Formatting */}
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant={selectedElement.fontWeight === 'bold' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleStyleToggle('bold')}
-                      className="h-7 w-7 p-0"
-                      title="Bold"
-                    >
-                      <Bold className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant={selectedElement.fontStyle === 'italic' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleStyleToggle('italic')}
-                      className="h-7 w-7 p-0"
-                      title="Italic"
-                    >
-                      <Italic className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant={selectedElement.textDecoration === 'underline' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleStyleToggle('underline')}
-                      className="h-7 w-7 p-0"
-                      title="Underline"
-                    >
-                      <Underline className="w-3 h-3" />
-                    </Button>
-                  </div>
-
-                  {/* Text Alignment */}
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant={selectedElement.textAlign === 'left' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleAlignmentChange('left')}
-                      className="h-7 w-7 p-0"
-                      title="Align Left"
-                    >
-                      <AlignLeft className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant={selectedElement.textAlign === 'center' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleAlignmentChange('center')}
-                      className="h-7 w-7 p-0"
-                      title="Align Center"
-                    >
-                      <AlignCenter className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant={selectedElement.textAlign === 'right' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleAlignmentChange('right')}
-                      className="h-7 w-7 p-0"
-                      title="Align Right"
-                    >
-                      <AlignRight className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </>
-              )}
-
-              {selectedElement.type === 'image' && (
-                <>
-                  {/* Image URL Input */}
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs whitespace-nowrap">Image URL:</Label>
-                    <Input
-                      type="url"
-                      value={selectedElement.imageUrl || ''}
-                      onChange={(e) => handleTextUpdate('imageUrl', e.target.value)}
-                      placeholder="https://example.com/image.jpg"
-                      className="w-48 h-7 text-xs"
-                    />
-                  </div>
-
-                  {/* Aspect Ratio Selector */}
-                  <div className="flex items-center gap-2">
-                    <AspectRatioSelector
-                      element={selectedElement}
-                      onUpdateElement={onUpdateElement}
-                    />
-                  </div>
-                </>
-              )}
-
-              {selectedElement.type === 'youtube' && (
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs whitespace-nowrap">YouTube URL:</Label>
+    <div className="fixed right-4 top-20 w-80 max-h-[calc(100vh-200px)] overflow-y-auto bg-background border rounded-lg shadow-lg z-50">
+      {/* Card Settings Section */}
+      {currentCard && onUpdateCard && (
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle className="text-lg">Card Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Canvas Size */}
+            <div>
+              <Label className="text-sm font-medium">Canvas Size</Label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <div>
+                  <Label className="text-xs text-gray-500">Width</Label>
                   <Input
-                    type="url"
-                    value={selectedElement.youtubeUrl || ''}
-                    onChange={(e) => handleTextUpdate('youtubeUrl', e.target.value)}
-                    placeholder="https://youtube.com/watch?v=..."
-                    className="w-48 h-7 text-xs"
+                    type="number"
+                    value={canvasWidth}
+                    onChange={(e) => onCanvasSizeChange(parseInt(e.target.value) || 600, canvasHeight)}
+                    className="h-8"
                   />
                 </div>
-              )}
+                <div>
+                  <Label className="text-xs text-gray-500">Height</Label>
+                  <Input
+                    type="number"
+                    value={canvasHeight}
+                    onChange={(e) => onCanvasSizeChange(canvasWidth, parseInt(e.target.value) || 450)}
+                    className="h-8"
+                  />
+                </div>
+              </div>
+            </div>
 
-              <Button variant="destructive" size="sm" onClick={handleDelete} className="h-7 px-2">
-                <Trash2 className="w-3 h-3 mr-1" />
-                <span className="text-xs">Delete</span>
-              </Button>
-            </>
-          ) : null}
-        </div>
-      </div>
+            <Separator />
+
+            {/* Advanced Timer Settings */}
+            <AdvancedCountdownSettings
+              card={currentCard}
+              onUpdateCard={onUpdateCard}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Element Settings Section */}
+      {selectedElement && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Element Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Common Properties */}
+            <div>
+              <Label className="text-sm font-medium">Position & Size</Label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <div>
+                  <Label className="text-xs text-gray-500">X Position</Label>
+                  <Input
+                    type="number"
+                    value={Math.round(selectedElement.x)}
+                    onChange={(e) => onUpdateElement(selectedElement.id, { x: parseInt(e.target.value) || 0 })}
+                    className="h-8"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-500">Y Position</Label>
+                  <Input
+                    type="number"
+                    value={Math.round(selectedElement.y)}
+                    onChange={(e) => onUpdateElement(selectedElement.id, { y: parseInt(e.target.value) || 0 })}
+                    className="h-8"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-500">Width</Label>
+                  <Input
+                    type="number"
+                    value={Math.round(selectedElement.width)}
+                    onChange={(e) => onUpdateElement(selectedElement.id, { width: parseInt(e.target.value) || 0 })}
+                    className="h-8"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-500">Height</Label>
+                  <Input
+                    type="number"
+                    value={Math.round(selectedElement.height)}
+                    onChange={(e) => onUpdateElement(selectedElement.id, { height: parseInt(e.target.value) || 0 })}
+                    className="h-8"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Text Element Properties */}
+            {selectedElement.type === 'text' && (
+              <>
+                <div>
+                  <Label className="text-sm font-medium">Text Content</Label>
+                  <Input
+                    value={selectedElement.content || ''}
+                    onChange={(e) => onUpdateElement(selectedElement.id, { content: e.target.value })}
+                    className="mt-1"
+                    placeholder="Enter text content"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Text Style</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <div>
+                      <Label className="text-xs text-gray-500">Font Size</Label>
+                      <Input
+                        type="number"
+                        value={selectedElement.fontSize || 16}
+                        onChange={(e) => onUpdateElement(selectedElement.id, { fontSize: parseInt(e.target.value) || 16 })}
+                        className="h-8"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-500">Color</Label>
+                      <Input
+                        type="color"
+                        value={selectedElement.color || '#000000'}
+                        onChange={(e) => onUpdateElement(selectedElement.id, { color: e.target.value })}
+                        className="h-8"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Text Alignment</Label>
+                  <Select
+                    value={selectedElement.textAlign || 'left'}
+                    onValueChange={(value) => onUpdateElement(selectedElement.id, { textAlign: value as 'left' | 'center' | 'right' | 'justify' })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                      <SelectItem value="justify">Justify</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+
+            {/* Image Element Properties */}
+            {selectedElement.type === 'image' && (
+              <div>
+                <Label className="text-sm font-medium">Image URL</Label>
+                <Input
+                  value={selectedElement.imageUrl || ''}
+                  onChange={(e) => onUpdateElement(selectedElement.id, { imageUrl: e.target.value })}
+                  className="mt-1"
+                  placeholder="Enter image URL"
+                />
+              </div>
+            )}
+
+            {/* Multiple Choice Properties */}
+            {selectedElement.type === 'multiple-choice' && (
+              <>
+                <div>
+                  <Label className="text-sm font-medium">Question</Label>
+                  <Input
+                    value={selectedElement.content || ''}
+                    onChange={(e) => onUpdateElement(selectedElement.id, { content: e.target.value })}
+                    className="mt-1"
+                    placeholder="Enter question"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Quiz Settings</Label>
+                  <div className="space-y-2 mt-1">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={selectedElement.showImmediateFeedback !== false}
+                        onCheckedChange={(checked) => onUpdateElement(selectedElement.id, { showImmediateFeedback: checked })}
+                      />
+                      <Label className="text-xs">Show immediate feedback</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={selectedElement.autoAdvanceOnAnswer === true}
+                        onCheckedChange={(checked) => onUpdateElement(selectedElement.id, { autoAdvanceOnAnswer: checked })}
+                      />
+                      <Label className="text-xs">Auto advance on answer</Label>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Answer Options</Label>
+                  <div className="space-y-2 mt-1">
+                    {(selectedElement.multipleChoiceOptions || []).map((option, index) => (
+                      <div key={index} className="flex gap-2 items-center">
+                        <Input
+                          value={option}
+                          onChange={(e) => {
+                            const newOptions = [...(selectedElement.multipleChoiceOptions || [])];
+                            newOptions[index] = e.target.value;
+                            onUpdateElement(selectedElement.id, { multipleChoiceOptions: newOptions });
+                          }}
+                          className="flex-1 h-8"
+                          placeholder={`Option ${index + 1}`}
+                        />
+                        <Button
+                          variant={selectedElement.correctAnswer === index ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => onUpdateElement(selectedElement.id, { correctAnswer: index })}
+                          className="h-8 w-8 p-0"
+                        >
+                          ✓
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const currentOptions = selectedElement.multipleChoiceOptions || [];
+                        const newOptions = [...currentOptions, `Option ${currentOptions.length + 1}`];
+                        onUpdateElement(selectedElement.id, { multipleChoiceOptions: newOptions });
+                      }}
+                      className="w-full h-8"
+                    >
+                      + Add Option
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <Separator />
+
+            <Button
+              variant="destructive"
+              onClick={() => onDeleteElement(selectedElement.id)}
+              className="w-full"
+            >
+              Delete Element
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
