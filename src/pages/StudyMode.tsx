@@ -42,6 +42,9 @@ const StudyMode = () => {
   const [userAnswer, setUserAnswer] = useState('');
   const [answerResult, setAnswerResult] = useState<boolean | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [flipCount, setFlipCount] = useState(0);
+  const [maxFlips, setMaxFlips] = useState(2);
+  const [currentTimer, setCurrentTimer] = useState<NodeJS.Timeout | null>(null);
 
   const shuffleParam = searchParams.get('shuffle') === 'true';
   const modeParam = searchParams.get('mode') || 'flashcard';
@@ -73,6 +76,62 @@ const StudyMode = () => {
       applyStudySettings();
     }
   }, [cards, shuffle, mode]);
+
+  // Timer effect for advanced countdown functionality
+  useEffect(() => {
+    if (!currentCard) return;
+
+    const frontTimer = currentCard.countdown_timer_front || 0;
+    const backTimer = currentCard.countdown_timer_back || 0;
+    const currentTimerValue = showAnswer ? backTimer : frontTimer;
+
+    if (currentTimerValue > 0) {
+      const timer = setTimeout(() => {
+        const behavior = showAnswer ? 
+          (currentCard.countdown_behavior_back || 'next') : 
+          (currentCard.countdown_behavior_front || 'flip');
+
+        if (behavior === 'flip') {
+          if (!showAnswer) {
+            // Front side timer expired, flip to back
+            setShowAnswer(true);
+            setFlipCount(prev => prev + 1);
+          } else {
+            // Back side timer expired, check if we should continue flipping
+            const maxFlipsForCard = currentCard.flips_before_next || 2;
+            if (flipCount < maxFlipsForCard - 1) {
+              setShowAnswer(false);
+              setFlipCount(prev => prev + 1);
+            } else {
+              // Max flips reached, go to next card
+              handleNextCard();
+              setFlipCount(0);
+            }
+          }
+        } else {
+          // behavior === 'next'
+          handleNextCard();
+          setFlipCount(0);
+        }
+      }, currentTimerValue * 1000);
+
+      setCurrentTimer(timer);
+
+      return () => {
+        clearTimeout(timer);
+        setCurrentTimer(null);
+      };
+    }
+  }, [currentCard, showAnswer, flipCount, currentCardIndex]);
+
+  // Reset flip count when card changes
+  useEffect(() => {
+    setFlipCount(0);
+    if (currentTimer) {
+      clearTimeout(currentTimer);
+      setCurrentTimer(null);
+    }
+  }, [currentCardIndex]);
 
   // Keyboard navigation useEffect - moved to top to maintain hooks order
   useEffect(() => {
@@ -226,6 +285,7 @@ const StudyMode = () => {
       setUserAnswer('');
       setAnswerResult(null);
       setHasAnswered(false);
+      setFlipCount(0);
     } else {
       toast({
         title: "Deck Complete",

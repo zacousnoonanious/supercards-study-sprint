@@ -1,9 +1,8 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
 import { EditorHeader } from './EditorHeader';
-import { ElementOptionsPanel } from './ElementOptionsPanel';
+import { TopSettingsBar } from './TopSettingsBar';
 import { CardCanvas } from './CardCanvas';
 import { ConsolidatedToolbar } from './ConsolidatedToolbar';
 import { SimpleEditorFooter } from './SimpleEditorFooter';
@@ -298,15 +297,14 @@ export const CardEditor = () => {
         onCancelEdit={() => {}}
       />
 
-      {/* Element Options Panel */}
-      <ElementOptionsPanel
+      {/* Top Settings Bar */}
+      <TopSettingsBar
         selectedElement={getSelectedElementData()}
         onUpdateElement={handleUpdateElement}
         onDeleteElement={(id) => handleDeleteElement(id)}
         canvasWidth={cardWidth}
         canvasHeight={cardHeight}
         onCanvasSizeChange={handleCanvasSizeChange}
-        cardType={currentCard?.card_type}
         currentCard={currentCard}
         onUpdateCard={handleCardUpdate}
       />
@@ -345,7 +343,7 @@ export const CardEditor = () => {
               style={{ width: cardWidth, height: cardHeight }}
             />
 
-            {/* Bottom Footer */}
+            {/* Bottom Footer - simplified */}
             <SimpleEditorFooter
               currentCard={currentCard}
               currentCardIndex={currentCardIndex}
