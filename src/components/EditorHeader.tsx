@@ -63,8 +63,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
       <div className="flex items-center space-x-4">
         <EditableDeckTitle
           title={deckName}
-          onTitleChange={onDeckNameChange}
-          onSave={onUpdateDeckTitle}
+          onTitleUpdate={onUpdateDeckTitle}
           className="text-lg font-semibold"
         />
         

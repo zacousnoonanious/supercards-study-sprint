@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -68,7 +67,7 @@ export const CardEditor = () => {
   const getLayoutOffset = () => {
     if (toolbarIsDocked && toolbarPosition === 'left') {
       // Use wider margin when showing text labels
-      const leftMargin = toolbarShowText ? '9rem' : '4.5rem'; // w-36 vs w-18 equivalent
+      const leftMargin = toolbarShowText ? '12rem' : '4.5rem'; // Increased margin for text mode
       return { marginLeft: leftMargin };
     }
     return {};
@@ -129,7 +128,7 @@ export const CardEditor = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedElement, currentCardIndex, cards.length, navigateCard]);
 
-  // Handle zoom and pan with left-click dragging
+  // Handle zoom and pan with left-click dragging - only for canvas background
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       if (!canvasViewportRef.current?.contains(e.target as Node)) return;
@@ -167,7 +166,10 @@ export const CardEditor = () => {
       if (e.button === 0 && canvasViewportRef.current?.contains(e.target as Node)) {
         // Check if we clicked on the canvas background, not an element
         const target = e.target as HTMLElement;
-        if (target === canvasViewportRef.current || target.closest('[data-canvas-background]')) {
+        const isCanvasBackground = target.hasAttribute('data-canvas-background') || 
+                                 target.closest('[data-canvas-background]');
+        
+        if (isCanvasBackground && !target.closest('[data-element]')) {
           e.preventDefault();
           e.stopPropagation();
           setIsPanning(true);
@@ -217,7 +219,10 @@ export const CardEditor = () => {
       
       if (e.touches.length === 1) {
         const target = e.target as HTMLElement;
-        if (target === canvasViewportRef.current || target.closest('[data-canvas-background]')) {
+        const isCanvasBackground = target.hasAttribute('data-canvas-background') || 
+                                 target.closest('[data-canvas-background]');
+        
+        if (isCanvasBackground && !target.closest('[data-element]')) {
           e.preventDefault();
           setIsPanning(true);
           setPanStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });

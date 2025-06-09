@@ -35,9 +35,17 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [snapZone, setSnapZone] = useState<SnapZone>(null);
+  const [showText, setShowText] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
+
+  // Handle text toggle
+  const handleTextToggle = () => {
+    const newShowText = !showText;
+    setShowText(newShowText);
+    props.onTextToggle?.(newShowText);
+  };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -188,6 +196,8 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
           position={position}
           isDocked={isDocked}
           onToggleDock={handleToggleDock}
+          showText={showText}
+          onTextToggle={handleTextToggle}
         />
         
         {/* Snap zone indicators */}
@@ -218,6 +228,8 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
           position="floating"
           isDocked={isDocked}
           onToggleDock={handleToggleDock}
+          showText={showText}
+          onTextToggle={handleTextToggle}
           className={`shadow-xl ${isDarkTheme ? 'border-gray-500' : 'border-gray-400'}`}
         />
       </div>
