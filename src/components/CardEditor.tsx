@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -7,15 +7,18 @@ import { Navigation } from './Navigation';
 import { EditorHeader } from './EditorHeader';
 import { TopSettingsBar } from './TopSettingsBar';
 import { CardCanvas } from './CardCanvas';
-import { ConsolidatedToolbar } from './ConsolidatedToolbar';
+import { UndockableToolbar } from './UndockableToolbar';
 import { SimpleEditorFooter } from './SimpleEditorFooter';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { EditorCardOverview } from './EditorCardOverview';
 import { CanvasElement } from '@/types/flashcard';
+import { updateFlashcardSet } from '@/lib/api/sets';
+import { useToast } from '@/hooks/use-toast';
 
 export const CardEditor = () => {
   const { t } = useI18n();
   const { theme } = useTheme();
+  const { toast } = useToast();
   const {
     set,
     cards,
@@ -43,6 +46,9 @@ export const CardEditor = () => {
   const [deckName, setDeckName] = useState(set?.title || '');
   const [cardWidth, setCardWidth] = useState(600);
   const [cardHeight, setCardHeight] = useState(450);
+  const [zoom, setZoom] = useState(1);
+  
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   // Get current card early in the component
   const currentCard = cards[currentCardIndex];
@@ -136,6 +142,27 @@ export const CardEditor = () => {
   const handleSave = async () => {
     if (cards.length > 0 && currentCard) {
       await updateCard(currentCard.id, currentCard);
+    }
+  };
+
+  const handleUpdateDeckTitle = async (newTitle: string) => {
+    if (!set) return;
+    
+    try {
+      await updateFlashcardSet(set.id, { title: newTitle });
+      setDeckName(newTitle);
+      toast({
+        title: "Success",
+        description: "Deck title updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating deck title:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to update deck title",
+        variant: "destructive"
+      });
+      throw error;
     }
   };
 
@@ -310,6 +337,9 @@ export const CardEditor = () => {
         onStartEdit={() => {}}
         onSaveEdit={() => {}}
         onCancelEdit={() => {}}
+        onUpdateDeckTitle={handleUpdateDeckTitle}
+        zoom={zoom}
+        onZoomChange={setZoom}
       />
 
       {/* Top Settings Bar */}
@@ -325,10 +355,10 @@ export const CardEditor = () => {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="flex items-start gap-0">
-          {/* Left Toolbar - directly adjacent to canvas */}
-          <ConsolidatedToolbar
+      <div className="flex-1 flex items-center justify-center p-4 relative">
+        <div className="flex items-start gap-0" ref={canvasContainerRef}>
+          {/* Undockable Toolbar */}
+          <UndockableToolbar
             onAddElement={addElement}
             onAutoArrange={handleAutoArrange}
             currentCard={currentCard}
@@ -343,7 +373,7 @@ export const CardEditor = () => {
             onDeleteCard={() => deleteCard(currentCard.id)}
             onCardTypeChange={(type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
             onShowCardOverview={() => setShowCardOverview(true)}
-            position="left"
+            canvasRef={canvasContainerRef}
           />
 
           {/* Card Canvas and Footer */}
@@ -351,10 +381,15 @@ export const CardEditor = () => {
             <div 
               className={`shadow-lg border ${
                 isDarkTheme 
-                  ? 'bg-gray-700 border-gray-500' 
+                  ? 'bg-gray-800 border-gray-600' 
                   : 'bg-white border-gray-300'
               }`}
-              style={{ width: cardWidth, height: cardHeight }}
+              style={{ 
+                width: cardWidth * zoom, 
+                height: cardHeight * zoom,
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top left'
+              }}
             >
               <CardCanvas
                 elements={getCurrentElements()}
@@ -375,7 +410,7 @@ export const CardEditor = () => {
               selectedElement={getSelectedElementData()}
               onUpdateCard={updateCard}
               onNavigateCard={navigateCard}
-              cardWidth={cardWidth}
+              cardWidth={cardWidth * zoom}
             />
           </div>
         </div>

@@ -8,7 +8,8 @@ import {
   ChevronLeft, ChevronRight, RotateCcw,
   Plus, Copy, Trash2, Grid3X3, AlignCenter, AlignJustify, 
   AlignLeft, AlignRight, Layers, FlipHorizontal, FlipVertical,
-  CheckSquare, HelpCircle, Shuffle, List, Grid, Eye, FileText
+  CheckSquare, HelpCircle, Shuffle, List, Grid, Eye, FileText,
+  Menu, Move, Pin, PinOff
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -32,7 +33,11 @@ interface ConsolidatedToolbarProps {
   onDeleteCard: () => void;
   onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
   onShowCardOverview?: () => void;
-  position?: 'left' | 'right';
+  position?: 'left' | 'right' | 'top' | 'bottom';
+  isDocked?: boolean;
+  onToggleDock?: () => void;
+  style?: React.CSSProperties;
+  className?: string;
 }
 
 export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
@@ -50,13 +55,22 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   onDeleteCard,
   onCardTypeChange,
   onShowCardOverview,
-  position = 'left'
+  position = 'left',
+  isDocked = true,
+  onToggleDock,
+  style,
+  className
 }) => {
   const { t } = useI18n();
   const { theme } = useTheme();
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showText, setShowText] = useState(false);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
+  const isHorizontal = position === 'top' || position === 'bottom';
+
+  // Force icon mode for horizontal layout
+  const displayText = !isHorizontal && showText;
 
   const ToolbarButton = ({ 
     icon: Icon, 
@@ -77,62 +91,102 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           <Button
             variant={variant}
             size="sm"
-            className="w-8 h-8 p-0"
+            className={displayText ? "w-auto h-8 px-2" : "w-8 h-8 p-0"}
             onClick={onClick}
             disabled={disabled}
             title={label}
           >
             <Icon className="w-4 h-4" />
+            {displayText && <span className="ml-1 text-xs">{label}</span>}
           </Button>
         </TooltipTrigger>
-        <TooltipContent side={position === 'left' ? 'right' : 'left'}>
+        <TooltipContent side={position === 'left' ? 'right' : position === 'right' ? 'left' : 'bottom'}>
           {label}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
 
+  const containerClass = `border rounded-lg shadow-sm p-2 ${
+    isDarkTheme
+      ? 'bg-gray-800 border-gray-600 text-white' 
+      : 'bg-background border text-foreground'
+  } ${isHorizontal 
+    ? 'flex flex-row items-center gap-2 w-auto max-w-full overflow-x-auto' 
+    : `flex flex-col items-center space-y-1 ${displayText ? 'w-32' : 'w-12'} max-h-[calc(100vh-120px)] overflow-y-auto`
+  } ${className || ''}`;
+
   return (
-    <div className={`border rounded-lg shadow-sm p-2 w-12 max-h-[calc(100vh-120px)] overflow-y-auto ${
-      isDarkTheme
-        ? 'bg-gray-800 border-gray-600 text-white' 
-        : 'bg-background border text-foreground'
-    }`}>
-      <div className="flex flex-col items-center space-y-1">
-        {/* Navigation */}
+    <div className={containerClass} style={style}>
+      {/* Dock/Undock and Text/Icon Toggle */}
+      <div className={isHorizontal ? "flex items-center gap-1" : "flex flex-col items-center space-y-1"}>
+        {onToggleDock && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className={displayText ? "w-auto h-6 px-2" : "w-6 h-6 p-0"}
+            onClick={onToggleDock}
+            title={isDocked ? "Undock" : "Dock"}
+          >
+            {isDocked ? <PinOff className="w-3 h-3" /> : <Pin className="w-3 h-3" />}
+            {displayText && <span className="ml-1 text-[10px]">Dock</span>}
+          </Button>
+        )}
+        
+        {!isHorizontal && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className={displayText ? "w-auto h-6 px-2" : "w-6 h-6 p-0"}
+            onClick={() => setShowText(!showText)}
+            title={showText ? "Show Icons" : "Show Text"}
+          >
+            <Menu className="w-3 h-3" />
+            {displayText && <span className="ml-1 text-[10px]">Text</span>}
+          </Button>
+        )}
+
+        {!isHorizontal && <div className={`w-6 h-px my-1 ${isDarkTheme ? 'bg-gray-600' : 'bg-border'}`} />}
+      </div>
+
+      {/* Navigation */}
+      <div className={isHorizontal ? "flex items-center gap-1" : "flex flex-col items-center space-y-1"}>
         <Button
           variant="ghost"
           size="sm"
-          className="w-8 h-8 p-0"
+          className={displayText ? "w-auto h-8 px-2" : "w-8 h-8 p-0"}
           onClick={() => onNavigateCard('prev')}
           disabled={currentCardIndex === 0}
           title="Previous"
         >
           <ChevronLeft className="w-4 h-4" />
+          {displayText && <span className="ml-1 text-xs">Prev</span>}
         </Button>
         
         <Button
           variant="ghost"
           size="sm"
-          className="w-8 h-8 p-0"
+          className={displayText ? "w-auto h-8 px-2" : "w-8 h-8 p-0"}
           onClick={() => onNavigateCard('next')}
           disabled={currentCardIndex >= totalCards - 1}
           title="Next"
         >
           <ChevronRight className="w-4 h-4" />
+          {displayText && <span className="ml-1 text-xs">Next</span>}
         </Button>
 
         <div className={`text-[10px] text-center leading-tight ${
           isDarkTheme ? 'text-gray-300' : 'text-muted-foreground'
-        }`}>
+        } ${displayText ? 'px-2' : ''}`}>
           {currentCardIndex + 1}<br/>{totalCards}
         </div>
 
-        <div className={`w-6 h-px my-1 ${
-          isDarkTheme ? 'bg-gray-600' : 'bg-border'
-        }`} />
+        {!isHorizontal && <div className={`w-6 h-px my-1 ${isDarkTheme ? 'bg-gray-600' : 'bg-border'}`} />}
+        {isHorizontal && <Separator orientation="vertical" className="h-6" />}
+      </div>
 
-        {/* Card Management */}
+      {/* Card Management */}
+      <div className={isHorizontal ? "flex items-center gap-1" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={Plus}
           label={t('newCard') || 'New Card'}
@@ -152,33 +206,39 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           disabled={totalCards <= 1}
         />
 
-        <div className="w-6 h-px my-1" />
+        {!isHorizontal && <div className="w-6 h-px my-1" />}
+        {isHorizontal && <Separator orientation="vertical" className="h-6" />}
+      </div>
 
-        {/* Front/Back Toggle */}
+      {/* Front/Back Toggle */}
+      <div className={isHorizontal ? "flex items-center gap-1" : "flex flex-col items-center space-y-1"}>
         <Button
           variant={currentSide === 'front' ? 'default' : 'ghost'}
           size="sm"
-          className="w-8 h-8 p-0 text-[10px]"
+          className={displayText ? "w-auto h-8 px-2 text-[10px]" : "w-8 h-8 p-0 text-[10px]"}
           onClick={() => onSideChange('front')}
           title="Front Side"
         >
-          F
+          F{displayText && <span className="ml-1">ront</span>}
         </Button>
         
         <Button
           variant={currentSide === 'back' ? 'default' : 'ghost'}
           size="sm"
-          className="w-8 h-8 p-0 text-[10px]"
+          className={displayText ? "w-auto h-8 px-2 text-[10px]" : "w-8 h-8 p-0 text-[10px]"}
           onClick={() => onSideChange('back')}
           disabled={currentCard?.card_type === 'single-sided'}
           title="Back Side"
         >
-          B
+          B{displayText && <span className="ml-1">ack</span>}
         </Button>
 
-        <div className="w-6 h-px my-1" />
+        {!isHorizontal && <div className="w-6 h-px my-1" />}
+        {isHorizontal && <Separator orientation="vertical" className="h-6" />}
+      </div>
 
-        {/* Elements */}
+      {/* Elements */}
+      <div className={isHorizontal ? "flex items-center gap-1" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={Type}
           label={t('text') || 'Text'}
@@ -209,9 +269,12 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           onClick={() => onAddElement('drawing')}
         />
 
-        <div className="w-6 h-px my-1" />
+        {!isHorizontal && <div className="w-6 h-px my-1" />}
+        {isHorizontal && <Separator orientation="vertical" className="h-6" />}
+      </div>
 
-        {/* Interactive Elements */}
+      {/* Interactive Elements */}
+      <div className={isHorizontal ? "flex items-center gap-1" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={CheckSquare}
           label={t('multipleChoice') || 'Multiple Choice'}
@@ -230,9 +293,12 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           onClick={() => onAddElement('fill-in-blank')}
         />
 
-        <div className="w-6 h-px my-1" />
+        {!isHorizontal && <div className="w-6 h-px my-1" />}
+        {isHorizontal && <Separator orientation="vertical" className="h-6" />}
+      </div>
 
-        {/* Auto Arrange */}
+      {/* Auto Arrange */}
+      <div className={isHorizontal ? "flex items-center gap-1" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={Grid3X3}
           label={t('grid') || 'Grid'}
@@ -253,7 +319,8 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
         {onShowCardOverview && (
           <>
-            <div className="w-6 h-px my-1" />
+            {!isHorizontal && <div className="w-6 h-px my-1" />}
+            {isHorizontal && <Separator orientation="vertical" className="h-6" />}
             <ToolbarButton
               icon={Grid}
               label="Card Overview"
