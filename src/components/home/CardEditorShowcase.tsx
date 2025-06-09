@@ -24,58 +24,76 @@ export const CardEditorShowcase = () => {
 
   return (
     <section className="relative py-20 overflow-hidden">
-      {/* Parallax Background with floating elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-100 via-yellow-50 to-purple-100">
-        {/* Floating geometric shapes */}
+      {/* Background with gradient and confetti pattern */}
+      <div className="absolute inset-0">
+        <img 
+          src="/lovable-uploads/cde65775-f1a2-4929-bb18-bfcd62809fca.png" 
+          alt="Background" 
+          className="absolute inset-0 w-full h-full object-cover opacity-60"
+        />
+        
+        {/* Floating confetti elements underneath */}
         <div 
-          className="absolute top-10 left-20 w-14 h-14 bg-orange-300 rounded-full opacity-60"
+          className="absolute top-10 left-20 w-14 h-14 opacity-60"
           style={{ transform: `translateY(${scrollY * 0.12}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-24 right-16 w-10 h-10 bg-yellow-300 opacity-70"
-          style={{ 
-            transform: `translateY(${scrollY * 0.18}px) rotate(45deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
+          className="absolute top-24 right-16 w-10 h-10 opacity-70"
+          style={{ transform: `translateY(${scrollY * 0.18}px) rotate(45deg)` }}
+        >
+          <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-48 left-1/5 w-8 h-8 bg-purple-300 opacity-60"
-          style={{ 
-            transform: `translateY(${scrollY * 0.1}px) rotate(12deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
-        <div 
-          className="absolute bottom-32 right-12 w-16 h-16 bg-orange-300 rounded-full opacity-50"
+          className="absolute bottom-32 right-12 w-16 h-16 opacity-50"
           style={{ transform: `translateY(${scrollY * 0.14}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute bottom-48 left-12 w-12 h-12 bg-yellow-300 opacity-60"
-          style={{ 
-            transform: `translateY(${scrollY * 0.22}px) rotate(45deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
+          className="absolute bottom-48 left-12 w-12 h-12 opacity-60"
+          style={{ transform: `translateY(${scrollY * 0.22}px) rotate(45deg)` }}
+        >
+          <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-2/3 right-1/4 w-12 h-12 bg-purple-300 opacity-50"
-          style={{ 
-            transform: `translateY(${scrollY * 0.16}px) rotate(12deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
+          className="absolute top-2/3 right-1/4 w-12 h-12 opacity-50"
+          style={{ transform: `translateY(${scrollY * 0.16}px) rotate(12deg)` }}
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-orange-300 rounded-full opacity-40"
+          className="absolute bottom-1/4 left-1/3 w-20 h-20 opacity-40"
           style={{ transform: `translateY(${scrollY * 0.11}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-1/5 left-2/3 w-6 h-6 bg-yellow-400 rounded-full opacity-70"
+          className="absolute top-1/5 left-2/3 w-6 h-6 opacity-70"
           style={{ transform: `translateY(${scrollY * 0.25}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
+      </div>
+
+      {/* Floating confetti elements over content */}
+      <div 
+        className="absolute top-16 left-1/3 w-8 h-8 opacity-30 z-20"
+        style={{ transform: `translateY(${scrollY * 0.12}px) rotate(45deg)` }}
+      >
+        <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+      </div>
+      <div 
+        className="absolute bottom-24 right-1/5 w-6 h-6 opacity-30 z-20"
+        style={{ transform: `translateY(${scrollY * 0.18}px)` }}
+      >
+        <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
       </div>
 
       {/* Owl character positioned on the right */}
       <div 
-        className="absolute top-20 right-8 z-10"
+        className="absolute bottom-8 right-8 z-10"
         style={{ transform: `translateY(${scrollY * 0.06}px)` }}
       >
         <img 
@@ -102,7 +120,7 @@ export const CardEditorShowcase = () => {
           <div className="space-y-8">
             <div className="grid md:grid-cols-2 gap-6">
               {features.map((feature, index) => (
-                <div key={index} className="flex items-start space-x-3 bg-white/70 backdrop-blur-sm p-4 rounded-lg">
+                <div key={index} className="flex items-start space-x-3 bg-white/50 backdrop-blur-sm p-4 rounded-lg">
                   <feature.icon className="w-6 h-6 text-purple-600 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">{feature.title}</h3>
@@ -123,7 +141,7 @@ export const CardEditorShowcase = () => {
 
           {/* Editor Preview */}
           <div className="relative">
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-2xl p-6 border">
+            <div className="bg-white/70 backdrop-blur-sm rounded-lg shadow-2xl p-6 border">
               {/* Mock Editor Interface */}
               <div className="flex items-center justify-between mb-4 pb-4 border-b">
                 <div className="flex items-center space-x-2">

@@ -47,53 +47,71 @@ export const CoreFeatures = () => {
 
   return (
     <section className="relative py-20 overflow-hidden">
-      {/* Parallax Background with floating elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-blue-50 to-pink-100">
-        {/* Floating geometric shapes */}
+      {/* Background with gradient and confetti pattern */}
+      <div className="absolute inset-0">
+        <img 
+          src="/lovable-uploads/cde65775-f1a2-4929-bb18-bfcd62809fca.png" 
+          alt="Background" 
+          className="absolute inset-0 w-full h-full object-cover opacity-60"
+        />
+        
+        {/* Floating confetti elements underneath */}
         <div 
-          className="absolute top-20 left-10 w-16 h-16 bg-purple-300 rounded-full opacity-60"
+          className="absolute top-20 left-10 w-16 h-16 opacity-40"
           style={{ transform: `translateY(${scrollY * 0.1}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-32 right-20 w-12 h-12 bg-blue-300 opacity-50"
-          style={{ 
-            transform: `translateY(${scrollY * 0.15}px) rotate(45deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
+          className="absolute top-32 right-20 w-12 h-12 opacity-50"
+          style={{ transform: `translateY(${scrollY * 0.15}px) rotate(45deg)` }}
+        >
+          <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-40 left-1/4 w-8 h-8 bg-pink-300 opacity-70"
-          style={{ 
-            transform: `translateY(${scrollY * 0.08}px) rotate(12deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
-        <div 
-          className="absolute bottom-40 right-10 w-20 h-20 bg-blue-300 rounded-full opacity-40"
+          className="absolute bottom-40 right-10 w-20 h-20 opacity-40"
           style={{ transform: `translateY(${scrollY * 0.12}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute bottom-60 left-16 w-10 h-10 bg-cyan-300 opacity-60"
-          style={{ 
-            transform: `translateY(${scrollY * 0.2}px) rotate(45deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
+          className="absolute bottom-60 left-16 w-10 h-10 opacity-60"
+          style={{ transform: `translateY(${scrollY * 0.2}px) rotate(45deg)` }}
+        >
+          <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-1/3 right-1/4 w-14 h-14 bg-pink-300 opacity-50"
-          style={{ 
-            transform: `translateY(${scrollY * 0.18}px) rotate(12deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
+          className="absolute top-1/3 right-1/4 w-14 h-14 opacity-50"
+          style={{ transform: `translateY(${scrollY * 0.18}px) rotate(12deg)` }}
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute bottom-1/3 left-1/3 w-18 h-18 bg-purple-300 rounded-full opacity-50"
+          className="absolute bottom-1/3 left-1/3 w-18 h-18 opacity-50"
           style={{ transform: `translateY(${scrollY * 0.14}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-1/4 left-1/2 w-6 h-6 bg-cyan-400 rounded-full opacity-60"
+          className="absolute top-1/4 left-1/2 w-6 h-6 opacity-60"
           style={{ transform: `translateY(${scrollY * 0.25}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
+      </div>
+
+      {/* Floating confetti elements over content */}
+      <div 
+        className="absolute top-10 right-1/3 w-8 h-8 opacity-30 z-20"
+        style={{ transform: `translateY(${scrollY * 0.1}px) rotate(45deg)` }}
+      >
+        <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+      </div>
+      <div 
+        className="absolute bottom-20 left-1/4 w-6 h-6 opacity-30 z-20"
+        style={{ transform: `translateY(${scrollY * 0.15}px)` }}
+      >
+        <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
       </div>
 
       {/* Purple character positioned on the left */}
@@ -122,7 +140,7 @@ export const CoreFeatures = () => {
           {features.map((feature, index) => (
             <Card 
               key={index} 
-              className="text-center hover:shadow-lg transition-all duration-300 bg-white/80 backdrop-blur-sm border-gray-200 hover:border-purple-200 hover:scale-105"
+              className="text-center hover:shadow-lg transition-all duration-300 bg-white/60 backdrop-blur-sm border-gray-200 hover:border-purple-200 hover:scale-105"
             >
               <CardHeader>
                 <feature.icon className="w-12 h-12 text-purple-600 mx-auto mb-4" />

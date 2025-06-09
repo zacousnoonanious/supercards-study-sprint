@@ -71,53 +71,71 @@ export const PricingPlans = () => {
 
   return (
     <section className="relative py-20 overflow-hidden">
-      {/* Parallax Background with floating elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-yellow-100 via-orange-50 to-pink-100">
-        {/* Floating geometric shapes */}
+      {/* Background with gradient and confetti pattern */}
+      <div className="absolute inset-0">
+        <img 
+          src="/lovable-uploads/cde65775-f1a2-4929-bb18-bfcd62809fca.png" 
+          alt="Background" 
+          className="absolute inset-0 w-full h-full object-cover opacity-60"
+        />
+        
+        {/* Floating confetti elements underneath */}
         <div 
-          className="absolute top-16 left-16 w-16 h-16 bg-yellow-300 rounded-full opacity-60"
+          className="absolute top-16 left-16 w-16 h-16 opacity-60"
           style={{ transform: `translateY(${scrollY * 0.1}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-32 right-24 w-12 h-12 bg-orange-300 opacity-50"
-          style={{ 
-            transform: `translateY(${scrollY * 0.15}px) rotate(45deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
+          className="absolute top-32 right-24 w-12 h-12 opacity-50"
+          style={{ transform: `translateY(${scrollY * 0.15}px) rotate(45deg)` }}
+        >
+          <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-40 left-1/3 w-8 h-8 bg-pink-300 opacity-70"
-          style={{ 
-            transform: `translateY(${scrollY * 0.08}px) rotate(12deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
-        <div 
-          className="absolute bottom-40 right-12 w-20 h-20 bg-yellow-300 rounded-full opacity-40"
+          className="absolute bottom-40 right-12 w-20 h-20 opacity-40"
           style={{ transform: `translateY(${scrollY * 0.12}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute bottom-60 left-20 w-10 h-10 bg-orange-300 opacity-60"
-          style={{ 
-            transform: `translateY(${scrollY * 0.2}px) rotate(45deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
+          className="absolute bottom-60 left-20 w-10 h-10 opacity-60"
+          style={{ transform: `translateY(${scrollY * 0.2}px) rotate(45deg)` }}
+        >
+          <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-1/3 right-1/5 w-14 h-14 bg-pink-300 opacity-50"
-          style={{ 
-            transform: `translateY(${scrollY * 0.18}px) rotate(12deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
+          className="absolute top-1/3 right-1/5 w-14 h-14 opacity-50"
+          style={{ transform: `translateY(${scrollY * 0.18}px) rotate(12deg)` }}
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute bottom-1/3 left-1/4 w-18 h-18 bg-yellow-300 rounded-full opacity-50"
+          className="absolute bottom-1/3 left-1/4 w-18 h-18 opacity-50"
           style={{ transform: `translateY(${scrollY * 0.14}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
         <div 
-          className="absolute top-1/4 left-3/5 w-6 h-6 bg-orange-400 rounded-full opacity-60"
+          className="absolute top-1/4 left-3/5 w-6 h-6 opacity-60"
           style={{ transform: `translateY(${scrollY * 0.25}px)` }}
-        ></div>
+        >
+          <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
+        </div>
+      </div>
+
+      {/* Floating confetti elements over content */}
+      <div 
+        className="absolute top-12 right-2/5 w-8 h-8 opacity-30 z-20"
+        style={{ transform: `translateY(${scrollY * 0.1}px) rotate(45deg)` }}
+      >
+        <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
+      </div>
+      <div 
+        className="absolute bottom-32 left-2/5 w-6 h-6 opacity-30 z-20"
+        style={{ transform: `translateY(${scrollY * 0.15}px)` }}
+      >
+        <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
       </div>
 
       {/* Yellow mascot character positioned on the right */}
@@ -149,7 +167,7 @@ export const PricingPlans = () => {
           {plans.map((plan, index) => (
             <Card 
               key={index} 
-              className={`relative bg-white/90 backdrop-blur-sm transition-all duration-300 hover:shadow-xl ${
+              className={`relative bg-white/70 backdrop-blur-sm transition-all duration-300 hover:shadow-xl ${
                 plan.isPopular 
                   ? 'border-2 border-purple-200 shadow-lg scale-105' 
                   : 'border border-gray-200 hover:border-purple-200'
