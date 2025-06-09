@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -137,7 +138,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
       if (currentCardIndex > 0) {
-        navigateCard(currentCardIndex - 1);
+        navigateCard('prev');
       }
       return;
     }
@@ -145,7 +146,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     if (e.key === 'ArrowRight') {
       e.preventDefault();
       if (currentCardIndex < cards.length - 1) {
-        navigateCard(currentCardIndex + 1);
+        navigateCard('next');
       }
       return;
     }

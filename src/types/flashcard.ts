@@ -1,3 +1,4 @@
+
 export interface FlashcardSet {
   id: string;
   title: string;
@@ -26,14 +27,34 @@ export interface Flashcard {
   card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
   canvas_width?: number;
   canvas_height?: number;
+  
+  // Additional properties used throughout the app
+  question?: string;
+  answer?: string;
+  hint?: string;
+  countdown_timer?: number;
+  countdown_timer_front?: number;
+  countdown_timer_back?: number;
+  countdown_behavior?: 'flip' | 'next';
+  countdown_behavior_front?: 'flip' | 'next';
+  countdown_behavior_back?: 'flip' | 'next';
+  flips_before_next?: number;
+  password?: string;
+  interactive_type?: string;
+  last_reviewed_at?: string;
+  metadata?: any;
 }
 
 export interface CardTemplate {
   id: string;
   name: string;
+  description?: string;
   image: string;
   front_elements: CanvasElement[];
   back_elements: CanvasElement[];
+  card_type?: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
+  canvas_width?: number;
+  canvas_height?: number;
 }
 
 export interface CanvasElement {
@@ -85,6 +106,11 @@ export interface CanvasElement {
   explanation?: string;
   isCorrect?: boolean;
   
+  // Multiple choice properties
+  multipleChoiceOptions?: string[];
+  showImmediateFeedback?: boolean;
+  autoAdvanceOnAnswer?: boolean;
+  
   // Fill-in-blank properties
   blanks?: Array<{
     id: string;
@@ -92,6 +118,14 @@ export interface CanvasElement {
     startIndex: number;
     endIndex: number;
   }>;
+  fillInBlankText?: string;
+  fillInBlankBlanks?: Array<{
+    id: string;
+    word: string;
+    position: number;
+  }>;
+  ignoreCase?: boolean;
+  showLetterCount?: boolean;
   
   // YouTube properties
   youtubeUrl?: string;
