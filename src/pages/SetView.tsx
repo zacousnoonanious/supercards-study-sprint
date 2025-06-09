@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, Edit, ArrowLeft, Sparkles, Grid, Settings, Shuffle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { UserDropdown } from '@/components/UserDropdown';
 import { Navigation } from '@/components/Navigation';
 import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
 import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
@@ -361,17 +360,7 @@ const SetView = () => {
   if (!set) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="shadow-sm border-b bg-card">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-8">
-                <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
-                <Navigation />
-              </div>
-              <UserDropdown />
-            </div>
-          </div>
-        </header>
+        <Navigation />
         <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-foreground">Set not found</h2>
@@ -407,17 +396,7 @@ const SetView = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="shadow-sm border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
-              <Navigation />
-            </div>
-            <UserDropdown />
-          </div>
-        </div>
-      </header>
+      <Navigation />
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-6">
