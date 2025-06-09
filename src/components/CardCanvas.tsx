@@ -37,6 +37,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragElementId, setDragElementId] = useState<string | null>(null);
+  const [dragElementStart, setDragElementStart] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
@@ -51,12 +52,22 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
+      // Store the initial mouse position
       setDragStart({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: e.clientX,
+        y: e.clientY,
       });
+      
+      // Store the initial element position
+      const element = elements.find(el => el.id === elementId);
+      if (element) {
+        setDragElementStart({
+          x: element.x,
+          y: element.y,
+        });
+      }
     }
-  }, [onSelectElement]);
+  }, [onSelectElement, elements]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDragging || !dragElementId) return;
@@ -64,31 +75,40 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
     
-    const currentX = e.clientX - rect.left;
-    const currentY = e.clientY - rect.top;
+    // Calculate the raw mouse movement
+    const deltaX = e.clientX - dragStart.x;
+    const deltaY = e.clientY - dragStart.y;
     
-    const deltaX = currentX - dragStart.x;
-    const deltaY = currentY - dragStart.y;
+    // Adjust for zoom - divide by zoom to get actual canvas movement
+    const adjustedDeltaX = deltaX / zoom;
+    const adjustedDeltaY = deltaY / zoom;
     
     const element = elements.find(el => el.id === dragElementId);
     if (!element) return;
     
-    let newX = Math.max(0, Math.min(element.x + deltaX, (style?.width as number || 600) - element.width));
-    let newY = Math.max(0, Math.min(element.y + deltaY, (style?.height as number || 450) - element.height));
+    // Calculate new position based on initial element position + adjusted delta
+    let newX = dragElementStart.x + adjustedDeltaX;
+    let newY = dragElementStart.y + adjustedDeltaY;
     
+    // Apply grid snapping if enabled
     if (snapToGrid) {
       newX = Math.round(newX / gridSize) * gridSize;
       newY = Math.round(newY / gridSize) * gridSize;
     }
     
-    onUpdateElement(dragElementId, { x: newX, y: newY });
+    // Constrain to canvas bounds
+    const canvasWidth = style?.width as number || 600;
+    const canvasHeight = style?.height as number || 450;
+    newX = Math.max(0, Math.min(newX, canvasWidth - element.width));
+    newY = Math.max(0, Math.min(newY, canvasHeight - element.height));
     
-    setDragStart({ x: currentX, y: currentY });
-  }, [isDragging, dragElementId, dragStart, elements, style, snapToGrid, gridSize, onUpdateElement]);
+    onUpdateElement(dragElementId, { x: newX, y: newY });
+  }, [isDragging, dragElementId, dragStart, dragElementStart, elements, style, snapToGrid, gridSize, zoom, onUpdateElement]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
     setDragElementId(null);
+    setDragElementStart({ x: 0, y: 0 });
   }, []);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
