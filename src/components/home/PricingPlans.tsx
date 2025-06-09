@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,64 +68,57 @@ export const PricingPlans = () => {
     }
   ];
 
-  const floatingCards = [
-    { text: "Free Plan", x: 5, y: 20, delay: 0 },
-    { text: "Pro Features", x: 92, y: 30, delay: 2.5 },
-    { text: "$12/month", x: 8, y: 75, delay: 1 },
-    { text: "Enterprise", x: 88, y: 85, delay: 3.5 },
+  const flashcards = [
+    { front: "Free Plan", back: "Get started with basic features", x: 5, y: 20, delay: 0 },
+    { front: "Pro Features", back: "Unlock unlimited potential", x: 92, y: 30, delay: 2.5 },
+    { front: "$12/month", back: "Best value for power users", x: 8, y: 75, delay: 1 },
+    { front: "Enterprise", back: "Custom solutions for teams", x: 88, y: 85, delay: 3.5 },
   ];
 
   return (
     <section className="relative min-h-screen w-full overflow-hidden">
-      {/* Prismatic crystal background */}
+      {/* Prismatic crystal background with subtle motion */}
       <div className="absolute inset-0 bg-gradient-to-bl from-yellow-200 via-green-100 to-teal-200">
-        {/* Large prismatic formations that shift and change */}
+        {/* Large prismatic formations that shift and change with subtle motion */}
         <div 
           className="absolute -top-40 left-1/6 w-[600px] h-[600px] bg-gradient-to-br from-yellow-400/20 to-green-400/20"
           style={{ 
-            transform: `translateY(${scrollY * 0.5}px) rotate(${scrollY * 0.18}deg) scale(${1.2 + Math.sin(scrollY * 0.01) * 0.4})`,
-            clipPath: `polygon(${30 + Math.sin(scrollY * 0.015) * 20}% 0%, ${70 + Math.cos(scrollY * 0.02) * 30}% 0%, ${100 + Math.sin(scrollY * 0.012) * 0}% ${50 + Math.cos(scrollY * 0.018) * 30}%, ${70 + Math.sin(scrollY * 0.015) * 30}% 100%, ${30 + Math.cos(scrollY * 0.01) * 20}% 100%, ${0 + Math.sin(scrollY * 0.008) * 10}% ${50 + Math.cos(scrollY * 0.022) * 20}%)`,
+            transform: `translateY(${scrollY * 0.5 + Math.sin(Date.now() * 0.0007) * 12}px) rotate(${scrollY * 0.18 + Date.now() * 0.0003}deg) scale(${1.2 + Math.sin(scrollY * 0.01 + Date.now() * 0.0005) * 0.4})`,
+            clipPath: `polygon(${30 + Math.sin(scrollY * 0.015 + Date.now() * 0.0008) * 20}% 0%, ${70 + Math.cos(scrollY * 0.02 + Date.now() * 0.001) * 30}% 0%, ${100 + Math.sin(scrollY * 0.012 + Date.now() * 0.0006) * 0}% ${50 + Math.cos(scrollY * 0.018 + Date.now() * 0.0009) * 30}%, ${70 + Math.sin(scrollY * 0.015 + Date.now() * 0.0007) * 30}% 100%, ${30 + Math.cos(scrollY * 0.01 + Date.now() * 0.0011) * 20}% 100%, ${0 + Math.sin(scrollY * 0.008 + Date.now() * 0.0004) * 10}% ${50 + Math.cos(scrollY * 0.022 + Date.now() * 0.0012) * 20}%)`,
             filter: 'blur(100px)'
           }}
         ></div>
         <div 
           className="absolute top-1/4 -right-60 w-[800px] h-[800px] bg-gradient-to-br from-green-400/25 to-teal-400/25"
           style={{ 
-            transform: `translateY(${scrollY * -0.6}px) rotate(${scrollY * -0.12}deg) scale(${1.4 + Math.cos(scrollY * 0.008) * 0.3})`,
-            clipPath: `polygon(${25 + Math.cos(scrollY * 0.02) * 25}% 0%, ${75 + Math.sin(scrollY * 0.015) * 25}% 0%, ${100 + Math.cos(scrollY * 0.01) * 0}% ${40 + Math.sin(scrollY * 0.018) * 35}%, ${80 + Math.cos(scrollY * 0.012) * 20}% 100%, ${20 + Math.sin(scrollY * 0.015) * 30}% 100%, ${0 + Math.cos(scrollY * 0.008) * 15}% ${60 + Math.sin(scrollY * 0.02) * 25}%)`,
+            transform: `translateY(${scrollY * -0.6 + Math.cos(Date.now() * 0.0009) * 15}px) rotate(${scrollY * -0.12 + Date.now() * 0.0004}deg) scale(${1.4 + Math.cos(scrollY * 0.008 + Date.now() * 0.0006) * 0.3})`,
+            clipPath: `polygon(${25 + Math.cos(scrollY * 0.02 + Date.now() * 0.001) * 25}% 0%, ${75 + Math.sin(scrollY * 0.015 + Date.now() * 0.0008) * 25}% 0%, ${100 + Math.cos(scrollY * 0.01 + Date.now() * 0.0005) * 0}% ${40 + Math.sin(scrollY * 0.018 + Date.now() * 0.0011) * 35}%, ${80 + Math.cos(scrollY * 0.012 + Date.now() * 0.0007) * 20}% 100%, ${20 + Math.sin(scrollY * 0.015 + Date.now() * 0.0009) * 30}% 100%, ${0 + Math.cos(scrollY * 0.008 + Date.now() * 0.0004) * 15}% ${60 + Math.sin(scrollY * 0.02 + Date.now() * 0.001) * 25}%)`,
             filter: 'blur(130px)'
           }}
         ></div>
         <div 
           className="absolute bottom-10 left-1/3 w-[500px] h-[500px] bg-gradient-to-br from-teal-400/30 to-blue-400/30"
           style={{ 
-            transform: `translateY(${scrollY * 0.8}px) rotate(${scrollY * 0.25}deg) scale(${0.9 + Math.sin(scrollY * 0.015) * 0.5})`,
-            clipPath: `polygon(${40 + Math.sin(scrollY * 0.025) * 30}% 0%, ${60 + Math.cos(scrollY * 0.02) * 40}% 0%, ${100 + Math.sin(scrollY * 0.01) * 0}% ${35 + Math.cos(scrollY * 0.015) * 30}%, ${85 + Math.sin(scrollY * 0.018) * 15}% 100%, ${15 + Math.cos(scrollY * 0.012) * 25}% 100%, ${0 + Math.sin(scrollY * 0.008) * 12}% ${65 + Math.cos(scrollY * 0.02) * 20}%)`,
+            transform: `translateY(${scrollY * 0.8 + Math.sin(Date.now() * 0.001) * 10}px) rotate(${scrollY * 0.25 + Date.now() * 0.0005}deg) scale(${0.9 + Math.sin(scrollY * 0.015 + Date.now() * 0.0008) * 0.5})`,
+            clipPath: `polygon(${40 + Math.sin(scrollY * 0.025 + Date.now() * 0.0012) * 30}% 0%, ${60 + Math.cos(scrollY * 0.02 + Date.now() * 0.001) * 40}% 0%, ${100 + Math.sin(scrollY * 0.01 + Date.now() * 0.0006) * 0}% ${35 + Math.cos(scrollY * 0.015 + Date.now() * 0.0009) * 30}%, ${85 + Math.sin(scrollY * 0.018 + Date.now() * 0.0007) * 15}% 100%, ${15 + Math.cos(scrollY * 0.012 + Date.now() * 0.0011) * 25}% 100%, ${0 + Math.sin(scrollY * 0.008 + Date.now() * 0.0004) * 12}% ${65 + Math.cos(scrollY * 0.02 + Date.now() * 0.001) * 20}%)`,
             filter: 'blur(110px)'
           }}
         ></div>
 
-        {/* Dynamic diamond elements with morphing */}
+        {/* Dynamic diamond elements with morphing and subtle motion */}
         <div 
           className="absolute top-32 right-1/5 w-16 h-16 bg-yellow-500/50"
           style={{ 
-            transform: `translateY(${scrollY * 1.8}px) rotate(${45 + scrollY * 1.2}deg) scale(${0.7 + Math.sin(scrollY * 0.03) * 0.8})`,
-            clipPath: `polygon(50% ${0 + Math.sin(scrollY * 0.02) * 20}%, ${100 + Math.cos(scrollY * 0.015) * 0}% 50%, 50% ${100 + Math.sin(scrollY * 0.018) * 0}%, ${0 + Math.cos(scrollY * 0.012) * 20}% 50%)`
-          }}
-        ></div>
-        <div 
-          className="absolute bottom-40 left-1/5 w-20 h-20 bg-green-500/60"
-          style={{ 
-            transform: `translateY(${scrollY * -1.5}px) rotate(${45 + scrollY * -0.8}deg) scale(${1.1 + Math.cos(scrollY * 0.02) * 0.4})`,
-            clipPath: `polygon(50% ${10 + Math.cos(scrollY * 0.025) * 15}%, ${90 + Math.sin(scrollY * 0.02) * 10}% 50%, 50% ${90 + Math.cos(scrollY * 0.015) * 10}%, ${10 + Math.sin(scrollY * 0.018) * 15}% 50%)`
+            transform: `translateY(${scrollY * 1.8 + Math.sin(Date.now() * 0.002) * 7}px) rotate(${45 + scrollY * 1.2 + Date.now() * 0.0008}deg) scale(${0.7 + Math.sin(scrollY * 0.03 + Date.now() * 0.0015) * 0.8})`,
+            clipPath: `polygon(50% ${0 + Math.sin(scrollY * 0.02 + Date.now() * 0.001) * 20}%, ${100 + Math.cos(scrollY * 0.015 + Date.now() * 0.0008) * 0}% 50%, 50% ${100 + Math.sin(scrollY * 0.018 + Date.now() * 0.0012) * 0}%, ${0 + Math.cos(scrollY * 0.012 + Date.now() * 0.0006) * 20}% 50%)`
           }}
         ></div>
 
-        {/* Enhanced confetti with complex motion */}
+        {/* Enhanced confetti with subtle motion */}
         <div 
           className="absolute top-48 left-2/5 w-20 h-20 opacity-50"
           style={{ 
-            transform: `translateY(${scrollY * 2.0}px) rotate(${scrollY * 1.5}deg) translateX(${Math.sin(scrollY * 0.025) * 60}px) scale(${0.6 + Math.cos(scrollY * 0.02) * 0.8})`
+            transform: `translateY(${scrollY * 2.0 + Math.sin(Date.now() * 0.0015) * 8}px) rotate(${scrollY * 1.5 + Date.now() * 0.001}deg) translateX(${Math.sin(scrollY * 0.025 + Date.now() * 0.0012) * 60}px) scale(${0.6 + Math.cos(scrollY * 0.02 + Date.now() * 0.0008) * 0.8})`
           }}
         >
           <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
@@ -134,42 +126,63 @@ export const PricingPlans = () => {
         <div 
           className="absolute bottom-60 right-2/5 w-16 h-16 opacity-60"
           style={{ 
-            transform: `translateY(${scrollY * -1.8}px) rotate(${scrollY * -1.3}deg) translateX(${Math.cos(scrollY * 0.02) * 45}px) scale(${0.8 + Math.sin(scrollY * 0.018) * 0.6})`
+            transform: `translateY(${scrollY * -1.8 + Math.cos(Date.now() * 0.0018) * 9}px) rotate(${scrollY * -1.3 + Date.now() * 0.0009}deg) translateX(${Math.cos(scrollY * 0.02 + Date.now() * 0.001) * 45}px) scale(${0.8 + Math.sin(scrollY * 0.018 + Date.now() * 0.0006) * 0.6})`
           }}
         >
           <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
         </div>
       </div>
 
-      {/* Floating pricing cards */}
-      {floatingCards.map((card, index) => (
+      {/* Floating pricing flashcards with realistic flip animations */}
+      {flashcards.map((card, index) => (
         <div
           key={index}
           className="absolute z-30 pointer-events-none"
           style={{
             left: `${card.x}%`,
             top: `${card.y}%`,
-            transform: `translateY(${Math.sin((scrollY + card.delay * 140) * 0.015) * 40}px) rotate(${Math.cos((scrollY + card.delay * 70) * 0.012) * 15}deg) scale(${0.6 + Math.sin((scrollY + card.delay * 110) * 0.018) * 0.5})`,
-            opacity: 0.25 + Math.sin((scrollY + card.delay * 120) * 0.01) * 0.45
+            transform: `translateY(${Math.sin((scrollY + card.delay * 140 + Date.now() * 0.001) * 0.015) * 30}px) rotate(${Math.cos((scrollY + card.delay * 70 + Date.now() * 0.0008) * 0.012) * 8}deg)`,
+            opacity: 0.2 + Math.sin((scrollY + card.delay * 120 + Date.now() * 0.0012) * 0.01) * 0.35
           }}
         >
-          <div className="bg-yellow-100/40 backdrop-blur-sm rounded-2xl p-5 shadow-lg border border-yellow-200/50 text-sm font-bold text-yellow-800">
-            {card.text}
+          <div 
+            className="relative w-32 h-20 [perspective:1000px]"
+            style={{
+              transform: `rotateY(${Math.sin((scrollY + card.delay * 200 + Date.now() * 0.0018) * 0.006) > 0 ? 0 : 180}deg)`,
+              transformStyle: 'preserve-3d',
+              transition: 'transform 0.8s ease-in-out'
+            }}
+          >
+            {/* Front of card */}
+            <div className="absolute inset-0 w-full h-full bg-yellow-100/70 backdrop-blur-sm rounded-2xl shadow-lg border border-yellow-200/50 p-4 flex items-center justify-center [backface-visibility:hidden]">
+              <p className="text-xs font-bold text-yellow-800 text-center">{card.front}</p>
+            </div>
+            {/* Back of card */}
+            <div 
+              className="absolute inset-0 w-full h-full bg-green-100/70 backdrop-blur-sm rounded-2xl shadow-lg border border-green-200/50 p-4 flex items-center justify-center [backface-visibility:hidden]"
+              style={{ transform: 'rotateY(180deg)' }}
+            >
+              <p className="text-xs text-green-800 text-center">{card.back}</p>
+            </div>
           </div>
         </div>
       ))}
 
-      {/* Yellow mascot character with wave motion */}
+      {/* Yellow mascot character with subtle wave motion */}
       <div 
         className="absolute bottom-12 right-12 z-20"
         style={{ 
-          transform: `translateY(${scrollY * 0.3}px) rotate(${Math.sin(scrollY * 0.02) * 7}deg) translateX(${Math.cos(scrollY * 0.015) * 25}px) scale(${1 + Math.sin(scrollY * 0.012) * 0.15})`
+          transform: `translateY(${scrollY * 0.3 + Math.sin(Date.now() * 0.002) * 7}px) rotate(${Math.sin(scrollY * 0.02 + Date.now() * 0.001) * 5}deg) translateX(${Math.cos(scrollY * 0.015 + Date.now() * 0.0008) * 15}px) scale(${1 + Math.sin(scrollY * 0.012 + Date.now() * 0.0006) * 0.12})`
         }}
       >
         <img 
           src="/lovable-uploads/eaed28d5-3f56-44a6-a03c-4fd8d513b11a.png" 
           alt="Yellow monster with flashcards" 
-          className="w-36 h-36 md:w-44 md:h-44 object-contain animate-float"
+          className="w-36 h-36 md:w-44 md:h-44 object-contain"
+          style={{
+            animation: 'float 4.5s ease-in-out infinite',
+            animationDelay: '2s'
+          }}
         />
       </div>
 
@@ -197,8 +210,8 @@ export const PricingPlans = () => {
                     : 'hover:border-yellow-300/50 hover:scale-105'
                 }`}
                 style={{
-                  transform: `translateY(${Math.sin((scrollY + index * 120) * 0.01) * 12}px) ${plan.isPopular ? 'scale(1.1)' : ''}`,
-                  borderRadius: `${25 + Math.sin((scrollY + index * 60) * 0.018) * 12}px`
+                  transform: `translateY(${Math.sin((scrollY + index * 120 + Date.now() * 0.0008) * 0.01) * 8}px) ${plan.isPopular ? 'scale(1.1)' : ''}`,
+                  borderRadius: `${25 + Math.sin((scrollY + index * 60 + Date.now() * 0.001) * 0.018) * 8}px`
                 }}
               >
                 {plan.isPopular && (

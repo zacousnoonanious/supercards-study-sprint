@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,64 +22,57 @@ export const CardEditorShowcase = () => {
     { icon: MousePointer, title: "Interactive", desc: "Add quizzes, polls, and interactive elements" }
   ];
 
-  const floatingCards = [
-    { text: "Card Editor", x: 8, y: 15, delay: 0 },
-    { text: "Design Tools", x: 88, y: 25, delay: 3 },
-    { text: "Templates", x: 12, y: 85, delay: 1.5 },
-    { text: "Rich Media", x: 85, y: 75, delay: 4.5 },
+  const flashcards = [
+    { front: "Card Editor", back: "Powerful visual editor for flashcards", x: 8, y: 15, delay: 0 },
+    { front: "Design Tools", back: "Professional design tools at your fingertips", x: 88, y: 25, delay: 3 },
+    { front: "Templates", back: "Beautiful templates to get started quickly", x: 12, y: 85, delay: 1.5 },
+    { front: "Rich Media", back: "Add images, videos, and audio easily", x: 85, y: 75, delay: 4.5 },
   ];
 
   return (
     <section className="relative min-h-screen w-full overflow-hidden">
-      {/* Liquid-like flowing background */}
+      {/* Liquid-like flowing background with subtle motion */}
       <div className="absolute inset-0 bg-gradient-to-tr from-orange-200 via-red-100 to-pink-200">
-        {/* Flowing liquid shapes */}
+        {/* Flowing liquid shapes with constant subtle motion */}
         <div 
           className="absolute -top-60 left-1/5 w-[700px] h-[700px] bg-gradient-to-br from-orange-400/25 to-red-400/25"
           style={{ 
-            transform: `translateY(${scrollY * 0.6}px) rotate(${scrollY * 0.2}deg) scale(${1.1 + Math.sin(scrollY * 0.008) * 0.4})`,
-            borderRadius: `${70 + Math.sin(scrollY * 0.015) * 30}% ${30 + Math.cos(scrollY * 0.02) * 40}% ${60 + Math.sin(scrollY * 0.018) * 25}% ${80 + Math.cos(scrollY * 0.01) * 20}%`,
+            transform: `translateY(${scrollY * 0.6 + Math.sin(Date.now() * 0.0008) * 15}px) rotate(${scrollY * 0.2 + Date.now() * 0.0004}deg) scale(${1.1 + Math.sin(scrollY * 0.008 + Date.now() * 0.0006) * 0.4})`,
+            borderRadius: `${70 + Math.sin(scrollY * 0.015 + Date.now() * 0.001) * 30}% ${30 + Math.cos(scrollY * 0.02 + Date.now() * 0.0012) * 40}% ${60 + Math.sin(scrollY * 0.018 + Date.now() * 0.0009) * 25}% ${80 + Math.cos(scrollY * 0.01 + Date.now() * 0.0007) * 20}%`,
             filter: 'blur(120px)'
           }}
         ></div>
         <div 
           className="absolute top-1/4 -right-80 w-[800px] h-[800px] bg-gradient-to-br from-red-400/30 to-pink-400/30"
           style={{ 
-            transform: `translateY(${scrollY * -0.4}px) rotate(${scrollY * -0.15}deg) scale(${1.3 + Math.cos(scrollY * 0.01) * 0.3})`,
-            borderRadius: `${40 + Math.cos(scrollY * 0.02) * 35}% ${85 + Math.sin(scrollY * 0.015) * 15}% ${25 + Math.cos(scrollY * 0.018) * 45}% ${95 + Math.sin(scrollY * 0.012) * 5}%`,
+            transform: `translateY(${scrollY * -0.4 + Math.cos(Date.now() * 0.001) * 12}px) rotate(${scrollY * -0.15 + Date.now() * 0.0005}deg) scale(${1.3 + Math.cos(scrollY * 0.01 + Date.now() * 0.0008) * 0.3})`,
+            borderRadius: `${40 + Math.cos(scrollY * 0.02 + Date.now() * 0.0009) * 35}% ${85 + Math.sin(scrollY * 0.015 + Date.now() * 0.0011) * 15}% ${25 + Math.cos(scrollY * 0.018 + Date.now() * 0.0006) * 45}% ${95 + Math.sin(scrollY * 0.012 + Date.now() * 0.001) * 5}%`,
             filter: 'blur(110px)'
           }}
         ></div>
         <div 
           className="absolute bottom-20 left-1/6 w-[500px] h-[500px] bg-gradient-to-br from-pink-400/40 to-orange-400/40"
           style={{ 
-            transform: `translateY(${scrollY * 0.7}px) rotate(${scrollY * 0.25}deg) scale(${0.9 + Math.sin(scrollY * 0.012) * 0.5})`,
-            borderRadius: `${90 + Math.sin(scrollY * 0.02) * 10}% ${20 + Math.cos(scrollY * 0.025) * 50}% ${75 + Math.sin(scrollY * 0.015) * 25}% ${45 + Math.cos(scrollY * 0.018) * 35}%`,
+            transform: `translateY(${scrollY * 0.7 + Math.sin(Date.now() * 0.0009) * 10}px) rotate(${scrollY * 0.25 + Date.now() * 0.0006}deg) scale(${0.9 + Math.sin(scrollY * 0.012 + Date.now() * 0.0004) * 0.5})`,
+            borderRadius: `${90 + Math.sin(scrollY * 0.02 + Date.now() * 0.001) * 10}% ${20 + Math.cos(scrollY * 0.025 + Date.now() * 0.0008) * 50}% ${75 + Math.sin(scrollY * 0.015 + Date.now() * 0.0012) * 25}% ${45 + Math.cos(scrollY * 0.018 + Date.now() * 0.0007) * 35}%`,
             filter: 'blur(95px)'
           }}
         ></div>
 
-        {/* Morphing crystalline elements */}
+        {/* Morphing crystalline elements with subtle motion */}
         <div 
           className="absolute top-20 left-1/4 w-24 h-24 bg-orange-500/50"
           style={{ 
-            transform: `translateY(${scrollY * 1.4}px) rotate(${scrollY * 0.9}deg) scale(${0.8 + Math.sin(scrollY * 0.025) * 0.6})`,
-            clipPath: `polygon(50% 0%, ${80 + Math.sin(scrollY * 0.02) * 20}% 38%, ${82 + Math.cos(scrollY * 0.015) * 18}% 100%, ${18 + Math.sin(scrollY * 0.018) * 20}% 100%, ${0 + Math.cos(scrollY * 0.01) * 15}% 38%)`
-          }}
-        ></div>
-        <div 
-          className="absolute bottom-32 right-1/4 w-20 h-20 bg-red-500/60"
-          style={{ 
-            transform: `translateY(${scrollY * -1.1}px) rotate(${scrollY * -0.7}deg)`,
-            borderRadius: `${30 + Math.sin(scrollY * 0.03) * 40}% ${70 + Math.cos(scrollY * 0.02) * 30}%`
+            transform: `translateY(${scrollY * 1.4 + Math.sin(Date.now() * 0.002) * 8}px) rotate(${scrollY * 0.9 + Date.now() * 0.001}deg) scale(${0.8 + Math.sin(scrollY * 0.025 + Date.now() * 0.0015) * 0.6})`,
+            clipPath: `polygon(50% 0%, ${80 + Math.sin(scrollY * 0.02 + Date.now() * 0.001) * 20}% 38%, ${82 + Math.cos(scrollY * 0.015 + Date.now() * 0.0012) * 18}% 100%, ${18 + Math.sin(scrollY * 0.018 + Date.now() * 0.0009) * 20}% 100%, ${0 + Math.cos(scrollY * 0.01 + Date.now() * 0.0008) * 15}% 38%)`
           }}
         ></div>
 
-        {/* Enhanced confetti with wave motion */}
+        {/* Enhanced confetti with subtle floating */}
         <div 
           className="absolute top-32 right-1/3 w-18 h-18 opacity-50"
           style={{ 
-            transform: `translateY(${scrollY * 1.6}px) rotate(${scrollY * 1.2}deg) translateX(${Math.sin(scrollY * 0.02) * 50}px) scale(${0.8 + Math.cos(scrollY * 0.015) * 0.4})`
+            transform: `translateY(${scrollY * 1.6 + Math.sin(Date.now() * 0.0018) * 6}px) rotate(${scrollY * 1.2 + Date.now() * 0.001}deg) translateX(${Math.sin(scrollY * 0.02 + Date.now() * 0.0012) * 50}px) scale(${0.8 + Math.cos(scrollY * 0.015 + Date.now() * 0.0008) * 0.4})`
           }}
         >
           <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
@@ -86,43 +80,63 @@ export const CardEditorShowcase = () => {
         <div 
           className="absolute bottom-48 left-1/5 w-14 h-14 opacity-60"
           style={{ 
-            transform: `translateY(${scrollY * -1.4}px) rotate(${scrollY * -1.0}deg) translateX(${Math.cos(scrollY * 0.018) * 35}px)`
+            transform: `translateY(${scrollY * -1.4 + Math.cos(Date.now() * 0.0015) * 7}px) rotate(${scrollY * -1.0 + Date.now() * 0.0009}deg) translateX(${Math.cos(scrollY * 0.018 + Date.now() * 0.001) * 35}px)`
           }}
         >
           <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
         </div>
       </div>
 
-      {/* Floating editor cards */}
-      {floatingCards.map((card, index) => (
+      {/* Floating editor flashcards with realistic flip animations */}
+      {flashcards.map((card, index) => (
         <div
           key={index}
           className="absolute z-30 pointer-events-none"
           style={{
             left: `${card.x}%`,
             top: `${card.y}%`,
-            transform: `translateY(${Math.sin((scrollY + card.delay * 120) * 0.012) * 35}px) rotate(${Math.cos((scrollY + card.delay * 60) * 0.01) * 12}deg) scale(${0.7 + Math.sin((scrollY + card.delay * 90) * 0.015) * 0.4})`,
-            opacity: 0.3 + Math.sin((scrollY + card.delay * 100) * 0.008) * 0.4
+            transform: `translateY(${Math.sin((scrollY + card.delay * 120 + Date.now() * 0.001) * 0.012) * 25}px) rotate(${Math.cos((scrollY + card.delay * 60 + Date.now() * 0.0008) * 0.01) * 6}deg)`,
+            opacity: 0.25 + Math.sin((scrollY + card.delay * 100 + Date.now() * 0.0012) * 0.008) * 0.35
           }}
         >
-          <div className="bg-orange-100/30 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-orange-200/40 text-sm font-semibold text-orange-800">
-            {card.text}
+          <div 
+            className="relative w-28 h-18 [perspective:1000px]"
+            style={{
+              transform: `rotateY(${Math.sin((scrollY + card.delay * 180 + Date.now() * 0.0016) * 0.004) > 0 ? 0 : 180}deg)`,
+              transformStyle: 'preserve-3d',
+              transition: 'transform 0.8s ease-in-out'
+            }}
+          >
+            {/* Front of card */}
+            <div className="absolute inset-0 w-full h-full bg-orange-100/60 backdrop-blur-sm rounded-xl shadow-lg border border-orange-200/40 p-3 flex items-center justify-center [backface-visibility:hidden]">
+              <p className="text-xs font-semibold text-orange-800 text-center">{card.front}</p>
+            </div>
+            {/* Back of card */}
+            <div 
+              className="absolute inset-0 w-full h-full bg-red-100/60 backdrop-blur-sm rounded-xl shadow-lg border border-red-200/40 p-3 flex items-center justify-center [backface-visibility:hidden]"
+              style={{ transform: 'rotateY(180deg)' }}
+            >
+              <p className="text-xs text-red-800 text-center">{card.back}</p>
+            </div>
           </div>
         </div>
       ))}
 
-      {/* Owl character with enhanced floating */}
+      {/* Owl character with subtle enhanced floating */}
       <div 
         className="absolute bottom-16 right-16 z-20"
         style={{ 
-          transform: `translateY(${scrollY * 0.2}px) rotate(${Math.sin(scrollY * 0.018) * 6}deg) translateX(${Math.cos(scrollY * 0.012) * 20}px) scale(${1 + Math.sin(scrollY * 0.01) * 0.1})`
+          transform: `translateY(${scrollY * 0.2 + Math.sin(Date.now() * 0.0018) * 6}px) rotate(${Math.sin(scrollY * 0.018 + Date.now() * 0.001) * 4}deg) translateX(${Math.cos(scrollY * 0.012 + Date.now() * 0.0008) * 12}px) scale(${1 + Math.sin(scrollY * 0.01 + Date.now() * 0.0006) * 0.08})`
         }}
       >
         <img 
           src="/lovable-uploads/a6282a15-30cb-4623-9be5-1d696af06c06.png" 
           alt="Orange owl character" 
-          className="w-32 h-32 md:w-40 md:h-40 object-contain animate-float"
-          style={{ animationDelay: '1.5s' }}
+          className="w-32 h-32 md:w-40 md:h-40 object-contain"
+          style={{ 
+            animation: 'float 3.5s ease-in-out infinite',
+            animationDelay: '1.5s'
+          }}
         />
       </div>
 
@@ -147,8 +161,8 @@ export const CardEditorShowcase = () => {
                     key={index} 
                     className="flex items-start space-x-4 bg-white/10 backdrop-blur-lg p-6 rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 group"
                     style={{
-                      transform: `translateY(${Math.sin((scrollY + index * 80) * 0.008) * 8}px)`,
-                      borderRadius: `${25 + Math.sin((scrollY + index * 40) * 0.015) * 10}px`
+                      transform: `translateY(${Math.sin((scrollY + index * 80 + Date.now() * 0.0008) * 0.008) * 6}px)`,
+                      borderRadius: `${25 + Math.sin((scrollY + index * 40 + Date.now() * 0.001) * 0.015) * 10}px`
                     }}
                   >
                     <feature.icon className="w-8 h-8 text-orange-600 mt-1 flex-shrink-0 group-hover:scale-125 transition-transform duration-300" />
@@ -169,13 +183,13 @@ export const CardEditorShowcase = () => {
               </div>
             </div>
 
-            {/* Enhanced Editor Preview */}
+            {/* Reduced movement Editor Preview */}
             <div className="relative">
               <div 
                 className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/30"
                 style={{
-                  transform: `translateY(${Math.sin(scrollY * 0.01) * 15}px) rotate(${Math.cos(scrollY * 0.008) * 2}deg)`,
-                  borderRadius: `${30 + Math.sin(scrollY * 0.015) * 10}px`
+                  transform: `translateY(${Math.sin(scrollY * 0.003 + Date.now() * 0.0005) * 8}px) rotate(${Math.cos(scrollY * 0.002 + Date.now() * 0.0003) * 1}deg)`,
+                  borderRadius: `${30 + Math.sin(scrollY * 0.005 + Date.now() * 0.0008) * 8}px`
                 }}
               >
                 {/* Mock Editor Interface */}
@@ -191,7 +205,7 @@ export const CardEditorShowcase = () => {
                 <div 
                   className="bg-gradient-to-br from-orange-50/80 to-yellow-50/80 rounded-2xl p-10 border-2 border-dashed border-orange-300/60 min-h-[350px] flex flex-col justify-center items-center text-center"
                   style={{
-                    borderRadius: `${20 + Math.sin(scrollY * 0.02) * 10}px`
+                    borderRadius: `${20 + Math.sin(scrollY * 0.008 + Date.now() * 0.0006) * 6}px`
                   }}
                 >
                   <div className="w-20 h-20 bg-orange-200/80 rounded-full flex items-center justify-center mb-6">
@@ -226,17 +240,17 @@ export const CardEditorShowcase = () => {
                 </div>
               </div>
               
-              {/* Enhanced floating elements */}
+              {/* Reduced floating elements */}
               <div 
                 className="absolute -top-6 -right-6 w-12 h-12 bg-orange-500 rounded-full opacity-80"
                 style={{ 
-                  transform: `translateY(${Math.sin(scrollY * 0.02) * 20}px) rotate(${scrollY * 0.5}deg) scale(${1 + Math.cos(scrollY * 0.015) * 0.3})`
+                  transform: `translateY(${Math.sin(scrollY * 0.008 + Date.now() * 0.0012) * 8}px) rotate(${scrollY * 0.1 + Date.now() * 0.0006}deg) scale(${1 + Math.cos(scrollY * 0.006 + Date.now() * 0.0008) * 0.15})`
                 }}
               ></div>
               <div 
                 className="absolute -bottom-6 -left-6 w-8 h-8 bg-yellow-500 rounded-full opacity-80"
                 style={{ 
-                  transform: `translateY(${Math.cos(scrollY * 0.018) * 15}px) rotate(${scrollY * -0.3}deg)`
+                  transform: `translateY(${Math.cos(scrollY * 0.006 + Date.now() * 0.001) * 6}px) rotate(${scrollY * -0.08 + Date.now() * 0.0004}deg)`
                 }}
               ></div>
             </div>
