@@ -1,6 +1,8 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
+import { EditorThemeProvider, useEditorTheme } from '@/contexts/EditorThemeContext';
 import { EditorHeader } from './EditorHeader';
 import { TopSettingsBar } from './TopSettingsBar';
 import { CardCanvas } from './CardCanvas';
@@ -10,8 +12,9 @@ import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { EditorCardOverview } from './EditorCardOverview';
 import { CanvasElement } from '@/types/flashcard';
 
-export const CardEditor = () => {
+const CardEditorContent = () => {
   const { t } = useI18n();
+  const { editorTheme } = useEditorTheme();
   const {
     set,
     cards,
@@ -284,7 +287,7 @@ export const CardEditor = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className={`min-h-screen flex flex-col ${editorTheme === 'dark' ? 'bg-gray-900' : 'bg-white'} editor-theme-override`}>
       {/* Header */}
       <EditorHeader
         set={set}
@@ -361,5 +364,13 @@ export const CardEditor = () => {
         <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />
       )}
     </div>
+  );
+};
+
+export const CardEditor = () => {
+  return (
+    <EditorThemeProvider>
+      <CardEditorContent />
+    </EditorThemeProvider>
   );
 };

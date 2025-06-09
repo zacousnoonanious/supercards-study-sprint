@@ -9,6 +9,7 @@ import { DeckSelector } from './DeckSelector';
 import { EmbeddedDeckViewer } from './EmbeddedDeckViewer';
 import { RichTextEditor } from './RichTextEditor';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useEditorTheme } from '@/contexts/EditorThemeContext';
 
 interface CanvasElementRendererProps {
   element: CanvasElement;
@@ -34,6 +35,26 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   onElementSelect,
 }) => {
   const { theme } = useTheme();
+  const { editorTheme } = useEditorTheme();
+
+  // Use editor theme for canvas elements when in editor mode
+  const getTextColor = () => {
+    if (isStudyMode) {
+      // In study mode, use the global theme
+      return element.color || (theme === 'dark' ? '#ffffff' : '#000000');
+    } else {
+      // In editor mode, use editor theme
+      return element.color || (editorTheme === 'dark' ? '#ffffff' : '#000000');
+    }
+  };
+
+  const getBackgroundColor = () => {
+    if (isStudyMode) {
+      return theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300';
+    } else {
+      return editorTheme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300';
+    }
+  };
 
   const handleMultipleChoiceUpdate = (updates: Partial<CanvasElement>) => {
     onUpdateElement(element.id, updates);
@@ -265,7 +286,10 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           onClick={handleElementClick}
         >
           <RichTextEditor
-            element={element}
+            element={{
+              ...element,
+              color: getTextColor() // Override color based on editor theme
+            }}
             onUpdate={(updates) => onUpdateElement(element.id, updates)}
             onEditingChange={(editing) => onEditingChange(editing ? element.id : null)}
             textScale={textScale}
@@ -292,20 +316,23 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           src={element.imageUrl}
           alt="Element"
           className={`w-full h-full object-cover rounded border ${
-            theme === 'dark' ? 'border-gray-600' : 'border-gray-300'
+            getBackgroundColor().includes('dark') ? 'border-gray-600' : 'border-gray-300'
           } ${isStudyMode ? 'cursor-pointer hover:opacity-80' : ''}`}
           draggable={false}
           onClick={handleElementClick}
         />
       ) : (
         <div className={`w-full h-full flex flex-col items-center justify-center rounded border ${
-          theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+          getBackgroundColor()
         } ${isStudyMode ? 'cursor-pointer hover:bg-gray-50' : ''}`}
         onClick={handleElementClick}
         >
           {!isStudyMode && (
             <div className="text-center">
-              <div className="text-sm text-gray-500 mb-2" style={{ fontSize: `${12 * textScale}px` }}>
+              <div 
+                className={`text-sm mb-2 ${editorTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}
+                style={{ fontSize: `${12 * textScale}px` }}
+              >
                 No image
               </div>
               <input

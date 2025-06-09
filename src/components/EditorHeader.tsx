@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Save, Check, X, Edit, Grid3x3 } from 'lucide-react';
 import { FlashcardSet } from '@/types/flashcard';
+import { EditorThemeToggle } from './EditorThemeToggle';
 
 interface EditorHeaderProps {
   set: FlashcardSet;
@@ -34,7 +35,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   const navigate = useNavigate();
 
   return (
-    <header className="bg-card shadow-sm border-b">
+    <header className="bg-card shadow-sm border-b editor-header">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -97,6 +98,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            <EditorThemeToggle />
             {onShowCardOverview && (
               <Button onClick={onShowCardOverview} variant="outline">
                 <Grid3x3 className="w-4 h-4 mr-2" />
