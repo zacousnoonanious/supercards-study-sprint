@@ -1,11 +1,19 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
 
 export const PricingPlans = () => {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const plans = [
     {
       name: "Free",
@@ -62,76 +70,139 @@ export const PricingPlans = () => {
   ];
 
   return (
-    <section className="py-20">
-      <div className="text-center mb-16">
-        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-          Choose Your Plan
-        </h2>
-        <p className="text-xl text-gray-600 mb-4">
-          Start free, upgrade when you need more power
-        </p>
-        <p className="text-sm text-gray-500">
-          No credit card required • Cancel anytime • 14-day free trial on Pro
-        </p>
+    <section className="relative py-20 overflow-hidden">
+      {/* Parallax Background with floating elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-yellow-100 via-orange-50 to-pink-100">
+        {/* Floating geometric shapes */}
+        <div 
+          className="absolute top-16 left-16 w-16 h-16 bg-yellow-300 rounded-full opacity-60"
+          style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+        ></div>
+        <div 
+          className="absolute top-32 right-24 w-12 h-12 bg-orange-300 opacity-50"
+          style={{ 
+            transform: `translateY(${scrollY * 0.15}px) rotate(45deg)`,
+            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+          }}
+        ></div>
+        <div 
+          className="absolute top-40 left-1/3 w-8 h-8 bg-pink-300 opacity-70"
+          style={{ 
+            transform: `translateY(${scrollY * 0.08}px) rotate(12deg)`,
+            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+          }}
+        ></div>
+        <div 
+          className="absolute bottom-40 right-12 w-20 h-20 bg-yellow-300 rounded-full opacity-40"
+          style={{ transform: `translateY(${scrollY * 0.12}px)` }}
+        ></div>
+        <div 
+          className="absolute bottom-60 left-20 w-10 h-10 bg-orange-300 opacity-60"
+          style={{ 
+            transform: `translateY(${scrollY * 0.2}px) rotate(45deg)`,
+            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+          }}
+        ></div>
+        <div 
+          className="absolute top-1/3 right-1/5 w-14 h-14 bg-pink-300 opacity-50"
+          style={{ 
+            transform: `translateY(${scrollY * 0.18}px) rotate(12deg)`,
+            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+          }}
+        ></div>
+        <div 
+          className="absolute bottom-1/3 left-1/4 w-18 h-18 bg-yellow-300 rounded-full opacity-50"
+          style={{ transform: `translateY(${scrollY * 0.14}px)` }}
+        ></div>
+        <div 
+          className="absolute top-1/4 left-3/5 w-6 h-6 bg-orange-400 rounded-full opacity-60"
+          style={{ transform: `translateY(${scrollY * 0.25}px)` }}
+        ></div>
       </div>
-      
-      <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {plans.map((plan, index) => (
-          <Card 
-            key={index} 
-            className={`relative bg-white transition-all duration-300 hover:shadow-xl ${
-              plan.isPopular 
-                ? 'border-2 border-purple-200 shadow-lg scale-105' 
-                : 'border border-gray-200 hover:border-purple-200'
-            }`}
-          >
-            {plan.isPopular && (
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                  Most Popular
-                </span>
-              </div>
-            )}
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-2xl text-gray-900">{plan.name}</CardTitle>
-              <div className="text-4xl font-bold text-gray-900 mt-2">
-                {plan.price}
-                {plan.priceSubtext && <span className="text-lg font-normal text-gray-600">{plan.priceSubtext}</span>}
-              </div>
-              <CardDescription className="text-gray-600">{plan.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                {plan.features.map((feature, featureIndex) => (
-                  <div key={featureIndex} className="flex items-start">
-                    <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-700">{feature}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="pt-6">
-                <Link to="/auth" className="block">
-                  <Button 
-                    className={`w-full ${
-                      plan.isPopular 
-                        ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                        : ''
-                    }`} 
-                    variant={plan.variant}
-                  >
-                    {plan.buttonText}
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+
+      {/* Yellow mascot character positioned on the right */}
+      <div 
+        className="absolute bottom-8 right-8 z-10"
+        style={{ transform: `translateY(${scrollY * 0.05}px)` }}
+      >
+        <img 
+          src="/lovable-uploads/eaed28d5-3f56-44a6-a03c-4fd8d513b11a.png" 
+          alt="Yellow monster with flashcards" 
+          className="w-32 h-32 md:w-40 md:h-40 object-contain animate-float"
+        />
       </div>
-      
-      <div className="text-center mt-12">
-        <p className="text-sm text-gray-500">
-          All plans include access to our mobile app and 24/7 customer support.
-        </p>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Choose Your Plan
+          </h2>
+          <p className="text-xl text-gray-600 mb-4">
+            Start free, upgrade when you need more power
+          </p>
+          <p className="text-sm text-gray-500">
+            No credit card required • Cancel anytime • 14-day free trial on Pro
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {plans.map((plan, index) => (
+            <Card 
+              key={index} 
+              className={`relative bg-white/90 backdrop-blur-sm transition-all duration-300 hover:shadow-xl ${
+                plan.isPopular 
+                  ? 'border-2 border-purple-200 shadow-lg scale-105' 
+                  : 'border border-gray-200 hover:border-purple-200'
+              }`}
+            >
+              {plan.isPopular && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+                    Most Popular
+                  </span>
+                </div>
+              )}
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="text-2xl text-gray-900">{plan.name}</CardTitle>
+                <div className="text-4xl font-bold text-gray-900 mt-2">
+                  {plan.price}
+                  {plan.priceSubtext && <span className="text-lg font-normal text-gray-600">{plan.priceSubtext}</span>}
+                </div>
+                <CardDescription className="text-gray-600">{plan.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  {plan.features.map((feature, featureIndex) => (
+                    <div key={featureIndex} className="flex items-start">
+                      <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-gray-700">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="pt-6">
+                  <Link to="/auth" className="block">
+                    <Button 
+                      className={`w-full ${
+                        plan.isPopular 
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                          : ''
+                      }`} 
+                      variant={plan.variant}
+                    >
+                      {plan.buttonText}
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        <div className="text-center mt-12">
+          <p className="text-sm text-gray-500">
+            All plans include access to our mobile app and 24/7 customer support.
+          </p>
+        </div>
       </div>
     </section>
   );
