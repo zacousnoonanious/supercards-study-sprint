@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCardEditor } from '@/hooks/useCardEditor';
 import { EditorHeader } from './EditorHeader';
 import { CardCanvas } from './CardCanvas';
@@ -30,6 +30,18 @@ export const CardEditor: React.FC = () => {
     deleteCard,
     reorderCards,
   } = useCardEditor();
+
+  // State for editor-specific functionality
+  const [isEditingDeckName, setIsEditingDeckName] = useState(false);
+  const [deckName, setDeckName] = useState(set?.title || '');
+  const [zoom, setZoom] = useState(1);
+
+  // Update deck name when set changes
+  useEffect(() => {
+    if (set?.title) {
+      setDeckName(set.title);
+    }
+  }, [set?.title]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -100,6 +112,18 @@ export const CardEditor: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [saveCard, createNewCard, navigateCard, setCurrentSide, setSelectedElement]);
 
+  const handleUpdateDeckTitle = async (title: string) => {
+    setDeckName(title);
+    // Add logic to save deck title to database if needed
+  };
+
+  const handleStartEdit = () => setIsEditingDeckName(true);
+  const handleSaveEdit = () => setIsEditingDeckName(false);
+  const handleCancelEdit = () => {
+    setIsEditingDeckName(false);
+    setDeckName(set?.title || '');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -120,6 +144,7 @@ export const CardEditor: React.FC = () => {
   }
 
   const currentCard = cards[currentCardIndex];
+  const currentElements = currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -128,13 +153,16 @@ export const CardEditor: React.FC = () => {
       {/* Editor Header */}
       <EditorHeader
         set={set}
-        cards={cards}
-        currentCardIndex={currentCardIndex}
-        onCreateNewCard={createNewCard}
-        onCreateNewCardFromTemplate={createNewCardFromTemplate}
-        onCreateNewCardWithLayout={createNewCardWithLayout}
-        onDeleteCard={deleteCard}
-        onReorderCards={reorderCards}
+        onSave={saveCard}
+        isEditingDeckName={isEditingDeckName}
+        deckName={deckName}
+        onDeckNameChange={setDeckName}
+        onStartEdit={handleStartEdit}
+        onSaveEdit={handleSaveEdit}
+        onCancelEdit={handleCancelEdit}
+        onUpdateDeckTitle={handleUpdateDeckTitle}
+        zoom={zoom}
+        onZoomChange={setZoom}
       />
 
       {/* Main Editor Content */}
@@ -155,8 +183,8 @@ export const CardEditor: React.FC = () => {
         <div className="flex-1 flex flex-col">
           {/* Card Navigation */}
           <CardNavigation
-            cards={cards}
             currentCardIndex={currentCardIndex}
+            totalCards={cards.length}
             onNavigate={navigateCard}
             currentSide={currentSide}
             onSideChange={setCurrentSide}
@@ -167,12 +195,19 @@ export const CardEditor: React.FC = () => {
           {/* Canvas */}
           <div className="flex-1 p-4">
             <CardCanvas
-              card={currentCard}
-              currentSide={currentSide}
+              elements={currentElements || []}
               selectedElement={selectedElement}
               onSelectElement={setSelectedElement}
               onUpdateElement={updateElement}
               onDeleteElement={deleteElement}
+              cardSide={currentSide}
+              style={{
+                width: currentCard.canvas_width || 600,
+                height: currentCard.canvas_height || 450,
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+              }}
+              zoom={zoom}
             />
           </div>
         </div>
@@ -181,7 +216,6 @@ export const CardEditor: React.FC = () => {
       {/* Footer */}
       <EditorFooter
         currentCard={currentCard}
-        onSave={saveCard}
       />
     </div>
   );
