@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
@@ -7,6 +8,8 @@ import { DrawingCanvas } from './DrawingCanvas';
 import { DeckSelector } from './DeckSelector';
 import { EmbeddedDeckViewer } from './EmbeddedDeckViewer';
 import { RichTextEditor } from './RichTextEditor';
+import { ImageElementEditor } from './ImageElementEditor';
+import { YouTubeElementEditor } from './YouTubeElementEditor';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CanvasElementRendererProps {
@@ -50,30 +53,6 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
 
   const handleMultipleChoiceUpdate = (updates: Partial<CanvasElement>) => {
     onUpdateElement(element.id, updates);
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        onUpdateElement(element.id, { imageUrl: result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        onUpdateElement(element.id, { audioUrl: result });
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const handleElementClick = (e: React.MouseEvent) => {
@@ -127,26 +106,21 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
         </div>
       );
     case 'youtube':
-      const youtubeContent = (
+      return (
         <div 
           className={`w-full h-full ${isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
           onClick={handleElementClick}
         >
-          <YouTubeRenderer element={element} />
+          {isStudyMode ? (
+            <YouTubeRenderer element={element} />
+          ) : (
+            <YouTubeElementEditor
+              element={element}
+              onUpdate={(updates) => onUpdateElement(element.id, updates)}
+              textScale={textScale}
+            />
+          )}
         </div>
-      );
-
-      return element.hyperlink ? (
-        <a 
-          href={element.hyperlink} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="w-full h-full block"
-        >
-          {youtubeContent}
-        </a>
-      ) : (
-        youtubeContent
       );
     case 'deck-embed':
       return (
@@ -252,7 +226,17 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
                 <input
                   type="file"
                   accept="audio/*"
-                  onChange={handleAudioUpload}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (e) => {
+                        const result = e.target?.result as string;
+                        onUpdateElement(element.id, { audioUrl: result });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
                   className="text-xs"
                   style={{ fontSize: `${10 * textScale}px` }}
                 />
@@ -306,53 +290,47 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
         textContent
       );
     case 'image':
-      const imageElement = element.imageUrl ? (
-        <img
-          src={element.imageUrl}
-          alt="Element"
-          className={`w-full h-full object-cover rounded border ${
-            getBackgroundColor().includes('dark') ? 'border-gray-600' : 'border-gray-300'
-          } ${isStudyMode ? 'cursor-pointer hover:opacity-80' : ''}`}
-          draggable={false}
+      return (
+        <div 
+          className={`w-full h-full ${isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
           onClick={handleElementClick}
-        />
-      ) : (
-        <div className={`w-full h-full flex flex-col items-center justify-center rounded border ${
-          getBackgroundColor()
-        } ${isStudyMode ? 'cursor-pointer hover:bg-gray-50' : ''}`}
-        onClick={handleElementClick}
         >
-          {!isStudyMode && (
-            <div className="text-center">
-              <div 
-                className={`text-sm mb-2 ${isDarkTheme ? 'text-gray-300' : 'text-gray-500'}`}
-                style={{ fontSize: `${12 * textScale}px` }}
-              >
-                No image
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="text-xs"
-                style={{ fontSize: `${10 * textScale}px` }}
-              />
+          {isStudyMode ? (
+            <div 
+              className="w-full h-full"
+              style={{
+                opacity: element.opacity || 1,
+                transform: `rotate(${element.rotation || 0}deg)`,
+              }}
+            >
+              {element.imageUrl ? (
+                <img
+                  src={element.imageUrl}
+                  alt="Element"
+                  className={`w-full h-full object-cover ${
+                    element.borderStyle ? `border-2 border-${element.borderColor || 'gray-300'}` : ''
+                  } ${element.borderRadius ? 'rounded' : ''}`}
+                  style={{
+                    borderWidth: element.borderWidth || 0,
+                    borderColor: element.borderColor || '#d1d5db',
+                    borderStyle: element.borderStyle || 'none',
+                  }}
+                  draggable={false}
+                />
+              ) : (
+                <div className={`w-full h-full flex items-center justify-center ${getBackgroundColor()}`}>
+                  <span className="text-gray-400">No image</span>
+                </div>
+              )}
             </div>
+          ) : (
+            <ImageElementEditor
+              element={element}
+              onUpdate={(updates) => onUpdateElement(element.id, updates)}
+              textScale={textScale}
+            />
           )}
         </div>
-      );
-
-      return element.hyperlink ? (
-        <a 
-          href={element.hyperlink} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="w-full h-full block"
-        >
-          {imageElement}
-        </a>
-      ) : (
-        imageElement
       );
     default:
       return null;

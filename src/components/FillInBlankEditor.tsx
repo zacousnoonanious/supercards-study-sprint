@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronRight, Settings } from 'lucide-react';
 import { TextInputModal } from './TextInputModal';
 import { CanvasElement } from '@/types/flashcard';
 
@@ -28,6 +30,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   const [mode, setMode] = useState<FillInBlankMode>(element.fillInBlankMode || 'manual');
   const [interval, setInterval] = useState(element.fillInBlankInterval || 3);
   const [percentage, setPercentage] = useState(element.fillInBlankPercentage || 25);
+  const [showSettings, setShowSettings] = useState(false);
 
   const updateParent = useCallback((updates: Partial<CanvasElement>) => {
     onUpdate(updates);
@@ -172,40 +175,6 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
     });
   };
 
-  const handleModeChange = (newMode: string) => {
-    const typedMode = newMode as FillInBlankMode;
-    setMode(typedMode);
-    updateParent({
-      fillInBlankText: originalText,
-      fillInBlankBlanks: blanks,
-      fillInBlankMode: typedMode,
-      fillInBlankInterval: interval,
-      fillInBlankPercentage: percentage
-    });
-  };
-
-  const handleIntervalChange = (newInterval: number) => {
-    setInterval(newInterval);
-    updateParent({
-      fillInBlankText: originalText,
-      fillInBlankBlanks: blanks,
-      fillInBlankMode: mode,
-      fillInBlankInterval: newInterval,
-      fillInBlankPercentage: percentage
-    });
-  };
-
-  const handlePercentageChange = (newPercentage: number) => {
-    setPercentage(newPercentage);
-    updateParent({
-      fillInBlankText: originalText,
-      fillInBlankBlanks: blanks,
-      fillInBlankMode: mode,
-      fillInBlankInterval: interval,
-      fillInBlankPercentage: newPercentage
-    });
-  };
-
   const handleWordDoubleClick = (word: string, position: number) => {
     if (mode !== 'manual') return;
     
@@ -285,61 +254,90 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
           </div>
         </div>
 
-        <div>
-          <Label className="text-xs font-medium">Blank creation mode:</Label>
-          <Select value={mode} onValueChange={handleModeChange}>
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="manual">Manual (double-click words)</SelectItem>
-              <SelectItem value="every-nth">Every Nth word</SelectItem>
-              <SelectItem value="random">Random percentage</SelectItem>
-              <SelectItem value="significant-words">Significant words only</SelectItem>
-              <SelectItem value="sentence-start">Start of sentences</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Collapsible Settings */}
+        <Collapsible open={showSettings} onOpenChange={setShowSettings}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="flex items-center gap-2 p-0 h-auto text-xs">
+              {showSettings ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              <Settings className="w-3 h-3" />
+              Blank Generation Settings
+            </Button>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="space-y-3 mt-2">
+            <div>
+              <Label className="text-xs font-medium">Blank creation mode:</Label>
+              <Select value={mode} onValueChange={(value) => setMode(value as FillInBlankMode)}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">Manual (double-click words)</SelectItem>
+                  <SelectItem value="every-nth">Every Nth word</SelectItem>
+                  <SelectItem value="random">Random percentage</SelectItem>
+                  <SelectItem value="significant-words">Significant words only</SelectItem>
+                  <SelectItem value="sentence-start">Start of sentences</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        {mode === 'every-nth' && (
-          <div>
-            <Label className="text-xs font-medium">Every {interval} words:</Label>
-            <Slider
-              value={[interval]}
-              onValueChange={(values) => setInterval(values[0])}
-              min={2}
-              max={10}
-              step={1}
-              className="w-full"
-            />
-          </div>
-        )}
+            {mode === 'every-nth' && (
+              <div>
+                <Label className="text-xs font-medium">Every {interval} words:</Label>
+                <Slider
+                  value={[interval]}
+                  onValueChange={(values) => setInterval(values[0])}
+                  min={2}
+                  max={10}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+            )}
 
-        {(mode === 'random' || mode === 'significant-words') && (
-          <div>
-            <Label className="text-xs font-medium">
-              {mode === 'significant-words' ? 'Percentage of significant words' : 'Percentage to blank'}: {percentage}%
-            </Label>
-            <Slider
-              value={[percentage]}
-              onValueChange={(values) => setPercentage(values[0])}
-              min={10}
-              max={80}
-              step={5}
-              className="w-full"
-            />
-          </div>
-        )}
+            {(mode === 'random' || mode === 'significant-words') && (
+              <div>
+                <Label className="text-xs font-medium">
+                  {mode === 'significant-words' ? 'Percentage of significant words' : 'Percentage to blank'}: {percentage}%
+                </Label>
+                <Slider
+                  value={[percentage]}
+                  onValueChange={(values) => setPercentage(values[0])}
+                  min={10}
+                  max={80}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+            )}
 
-        {mode !== 'manual' && originalText && (
-          <Button
-            onClick={generateBlanks}
-            size="sm"
-            className="w-full text-xs"
-          >
-            Generate Blanks
-          </Button>
-        )}
+            {mode !== 'manual' && originalText && (
+              <Button
+                onClick={generateBlanks}
+                size="sm"
+                className="w-full text-xs"
+              >
+                Generate Blanks
+              </Button>
+            )}
+
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium">Show letter count</Label>
+              <Switch
+                checked={element.showLetterCount || false}
+                onCheckedChange={(checked) => updateParent({ showLetterCount: checked })}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium">Ignore case</Label>
+              <Switch
+                checked={element.ignoreCase || false}
+                onCheckedChange={(checked) => updateParent({ ignoreCase: checked })}
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         {originalText && (
           <div>
@@ -359,22 +357,6 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
             )}
           </div>
         )}
-
-        <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium">Show letter count</Label>
-          <Switch
-            checked={element.showLetterCount || false}
-            onCheckedChange={(checked) => updateParent({ showLetterCount: checked })}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium">Ignore case</Label>
-          <Switch
-            checked={element.ignoreCase || false}
-            onCheckedChange={(checked) => updateParent({ ignoreCase: checked })}
-          />
-        </div>
 
         {blanks.length > 0 && (
           <div className="text-xs text-gray-600">

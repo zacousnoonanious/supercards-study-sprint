@@ -1,15 +1,12 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Label } from '@/components/ui/label';
-import { Paintbrush, Eraser, RotateCcw, Move, Maximize2, Minimize2, X } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { Eraser, Undo2, RotateCcw, GripHorizontal } from 'lucide-react';
 
 interface DrawingCanvasProps {
   width: number;
   height: number;
-  onDrawingComplete: (drawingData: string) => void;
+  onDrawingComplete?: (drawingData: string) => void;
   initialDrawing?: string;
   strokeColor?: string;
   strokeWidth?: number;
@@ -34,17 +31,16 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   onDeactivate,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
-  const isDarkTheme = theme === 'dark' || theme === 'darcula' || theme === 'console';
-  
   const [isDrawing, setIsDrawing] = useState(false);
-  const [currentStrokeWidth, setCurrentStrokeWidth] = useState(strokeWidth);
-  const [currentColor, setCurrentColor] = useState(strokeColor);
-  const [tool, setTool] = useState<'brush' | 'eraser'>('brush');
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [currentPath, setCurrentPath] = useState<Array<{x: number, y: number}>>([]);
+  const [paths, setPaths] = useState<Array<{
+    points: Array<{x: number, y: number}>,
+    color: string,
+    width: number
+  }>>([]);
+  const [isErasing, setIsErasing] = useState(false);
 
-  // Load initial drawing when component mounts or initialDrawing changes
+  // Load initial drawing
   useEffect(() => {
     if (initialDrawing && canvasRef.current) {
       const canvas = canvasRef.current;
@@ -60,241 +56,228 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     }
   }, [initialDrawing]);
 
-  const startDrawing = (e: React.MouseEvent) => {
-    if (isDragging || !isActive) return;
-    
-    setIsDrawing(true);
+  const getCanvasCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    let clientX, clientY;
 
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineWidth = currentStrokeWidth;
-      ctx.strokeStyle = tool === 'eraser' ? 'rgba(0,0,0,0)' : currentColor;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      
-      if (tool === 'eraser') {
-        ctx.globalCompositeOperation = 'destination-out';
-      } else {
-        ctx.globalCompositeOperation = 'source-over';
-      }
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
     }
+
+    return {
+      x: (clientX - rect.left) * (canvas.width / rect.width),
+      y: (clientY - rect.top) * (canvas.height / rect.height),
+    };
   };
 
-  const draw = (e: React.MouseEvent) => {
-    if (!isDrawing || isDragging || !isActive) return;
+  const startDrawing = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!isActive || isDragging) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const coords = getCanvasCoordinates(e);
+    setIsDrawing(true);
+    setCurrentPath([coords]);
+  }, [isActive, isDragging]);
+
+  const draw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDrawing || !isActive || isDragging) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const coords = getCanvasCoordinates(e);
+    setCurrentPath(prev => [...prev, coords]);
 
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const ctx = canvas?.getContext('2d');
+    if (!ctx || !canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    ctx.lineWidth = strokeWidth;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    if (isErasing) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = strokeColor;
+    }
 
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.lineTo(x, y);
+    ctx.beginPath();
+    const lastPoint = currentPath[currentPath.length - 2];
+    if (lastPoint) {
+      ctx.moveTo(lastPoint.x, lastPoint.y);
+      ctx.lineTo(coords.x, coords.y);
       ctx.stroke();
     }
-  };
+  }, [isDrawing, currentPath, strokeColor, strokeWidth, isErasing, isActive, isDragging]);
 
-  const stopDrawing = () => {
+  const stopDrawing = useCallback(() => {
     if (!isDrawing) return;
+    
     setIsDrawing(false);
-
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const dataURL = canvas.toDataURL('image/png');
-      onDrawingComplete(dataURL);
+    
+    if (currentPath.length > 0) {
+      const newPath = {
+        points: currentPath,
+        color: isErasing ? 'erase' : strokeColor,
+        width: strokeWidth
+      };
+      setPaths(prev => [...prev, newPath]);
+      setCurrentPath([]);
+      
+      // Save drawing
+      const canvas = canvasRef.current;
+      if (canvas && onDrawingComplete) {
+        onDrawingComplete(canvas.toDataURL());
+      }
     }
-  };
+  }, [isDrawing, currentPath, strokeColor, strokeWidth, isErasing, onDrawingComplete]);
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const ctx = canvas?.getContext('2d');
+    if (ctx && canvas) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      setPaths([]);
+      setCurrentPath([]);
+      if (onDrawingComplete) {
         onDrawingComplete('');
       }
     }
   };
 
-  const handleCanvasClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!isActive && onActivate) {
-      onActivate();
+  const undoLastStroke = () => {
+    if (paths.length === 0) return;
+    
+    const newPaths = paths.slice(0, -1);
+    setPaths(newPaths);
+    
+    // Redraw canvas
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (ctx && canvas) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Redraw all remaining paths
+      newPaths.forEach(path => {
+        if (path.points.length < 2) return;
+        
+        ctx.lineWidth = path.width;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        if (path.color === 'erase') {
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.strokeStyle = 'rgba(0,0,0,1)';
+        } else {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = path.color;
+        }
+        
+        ctx.beginPath();
+        ctx.moveTo(path.points[0].x, path.points[0].y);
+        path.points.slice(1).forEach(point => {
+          ctx.lineTo(point.x, point.y);
+        });
+        ctx.stroke();
+      });
+      
+      if (onDrawingComplete) {
+        onDrawingComplete(canvas.toDataURL());
+      }
     }
   };
 
-  const handleClose = () => {
-    if (onDeactivate) {
-      onDeactivate();
-    }
-  };
-
-  const expandedWidth = Math.min(600, window.innerWidth - 40);
-  const expandedHeight = Math.min(400, window.innerHeight - 200);
-  const canvasWidth = isExpanded ? expandedWidth - 40 : Math.min(width, 400);
-  const canvasHeight = isExpanded ? expandedHeight - 120 : Math.min(height, 200);
-
-  // Simple view when not active - just the canvas
-  if (!isActive) {
-    return (
-      <div 
-        ref={containerRef}
-        className={`relative overflow-hidden rounded-lg border cursor-pointer hover:border-blue-400 transition-colors ${
-          isDarkTheme ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
-        }`}
-        onMouseDown={onDragStart}
-        onClick={handleCanvasClick}
-      >
-        <canvas
-          ref={canvasRef}
-          width={width}
-          height={height}
-          className="block max-w-full max-h-full"
-          style={{ backgroundColor: 'transparent' }}
-        />
-        {!initialDrawing && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <Paintbrush className="w-8 h-8 mx-auto mb-2" />
-              <p className="text-sm">Click to draw</p>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Full editor view when active
   return (
-    <div 
-      ref={containerRef}
-      className={`relative overflow-hidden rounded-lg border ${
-        isDarkTheme ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
-      } ${isExpanded ? 'fixed z-50 shadow-2xl' : ''}`}
-      style={isExpanded ? { 
-        top: '50%', 
-        left: '50%', 
-        transform: 'translate(-50%, -50%)',
-        width: expandedWidth,
-        height: expandedHeight
-      } : {}}
-    >
-      {/* Drag Handle and Controls */}
+    <div className="w-full h-full bg-white border border-gray-300 rounded shadow-sm flex flex-col">
+      {/* Simplified toolbar with drag handle */}
       <div 
-        className={`flex items-center justify-between p-2 cursor-move ${
-          isDarkTheme ? 'bg-gray-700 border-b border-gray-600' : 'bg-gray-100 border-b border-gray-200'
-        } select-none`}
+        className="flex items-center justify-between p-1 bg-gray-50 border-b cursor-move select-none"
         onMouseDown={onDragStart}
-        style={{ cursor: isDrawing ? 'default' : 'move' }}
       >
-        <div className="flex items-center gap-2">
-          <Move className="w-4 h-4" />
-          <span className="text-sm font-medium">Drawing Tools</span>
+        <div className="flex items-center gap-1">
+          <GripHorizontal className="w-3 h-3 text-gray-400" />
+          <span className="text-xs text-gray-600">Drawing</span>
         </div>
+        
         <div className="flex items-center gap-1">
           <Button
-            variant="ghost"
+            variant={isErasing ? "default" : "ghost"}
             size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => setIsErasing(!isErasing)}
             className="h-6 w-6 p-0"
+            title="Toggle Eraser"
           >
-            {isExpanded ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
+            <Eraser className="w-3 h-3" />
           </Button>
+          
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleClose}
+            onClick={undoLastStroke}
             className="h-6 w-6 p-0"
+            title="Undo"
+            disabled={paths.length === 0}
           >
-            <X className="w-3 h-3" />
+            <Undo2 className="w-3 h-3" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearCanvas}
+            className="h-6 w-6 p-0"
+            title="Clear All"
+          >
+            <RotateCcw className="w-3 h-3" />
           </Button>
         </div>
       </div>
 
-      {/* Tools */}
-      <div className="p-3 space-y-3" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            variant={tool === 'brush' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTool('brush')}
-            className="flex items-center gap-1 h-7"
-          >
-            <Paintbrush className="w-3 h-3" />
-            Brush
-          </Button>
-          <Button
-            variant={tool === 'eraser' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTool('eraser')}
-            className="flex items-center gap-1 h-7"
-          >
-            <Eraser className="w-3 h-3" />
-            Eraser
-          </Button>
-
-          <div className="flex items-center gap-2">
-            <Label className="text-xs">Size:</Label>
-            <Slider
-              value={[currentStrokeWidth]}
-              onValueChange={(value) => setCurrentStrokeWidth(value[0])}
-              max={20}
-              min={1}
-              step={1}
-              className="w-16"
-            />
-            <span className="text-xs w-4">{currentStrokeWidth}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Label className="text-xs">Color:</Label>
-            <input
-              type="color"
-              value={currentColor}
-              onChange={(e) => setCurrentColor(e.target.value)}
-              className="w-6 h-6 rounded border cursor-pointer"
-              disabled={tool === 'eraser'}
-            />
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={clearCanvas}
-            className="flex items-center gap-1 h-7"
-          >
-            <RotateCcw className="w-3 h-3" />
-            Clear
-          </Button>
-        </div>
-
-        {/* Canvas */}
-        <div className="flex justify-center">
-          <canvas
-            ref={canvasRef}
-            width={canvasWidth}
-            height={canvasHeight}
-            className={`border rounded cursor-crosshair ${
-              isDarkTheme ? 'border-gray-600' : 'border-gray-300'
-            }`}
-            style={{ backgroundColor: 'transparent', maxWidth: '100%', maxHeight: '100%' }}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
+      {/* Drawing area */}
+      <div className="flex-1 relative">
+        <canvas
+          ref={canvasRef}
+          width={width - 2}
+          height={height - 32}
+          className="absolute inset-0 cursor-crosshair"
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
+          onClick={(e) => {
+            e.stopPropagation();
+            onActivate?.();
+          }}
+          style={{
+            cursor: isErasing ? 'crosshair' : 'crosshair',
+            pointerEvents: isActive ? 'auto' : 'none'
+          }}
+        />
+        
+        {!isActive && (
+          <div 
+            className="absolute inset-0 bg-transparent cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onActivate?.();
+            }}
           />
-        </div>
+        )}
       </div>
     </div>
   );
