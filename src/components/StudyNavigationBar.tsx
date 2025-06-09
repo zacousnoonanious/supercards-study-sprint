@@ -27,15 +27,18 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
 }) => {
   const [timeLeft, setTimeLeft] = useState(countdownTimer);
   const [isActive, setIsActive] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
 
   useEffect(() => {
-    if (countdownTimer > 0 && !showAnswer) {
+    if (countdownTimer > 0) {
       setTimeLeft(countdownTimer);
       setIsActive(true);
+      // Force re-render of progress bar with new animation
+      setAnimationKey(prev => prev + 1);
     } else {
       setIsActive(false);
     }
-  }, [countdownTimer, showAnswer, currentIndex]);
+  }, [countdownTimer, currentIndex, showAnswer]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -66,11 +69,9 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const progressPercentage = countdownTimer > 0 ? ((countdownTimer - timeLeft) / countdownTimer) * 100 : 0;
-
   return (
     <div className="bg-card border-t border-border p-4">
-      {countdownTimer > 0 && !showAnswer && (
+      {countdownTimer > 0 && (
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -78,7 +79,27 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
               <span>Time remaining: {formatTime(timeLeft)}</span>
             </div>
           </div>
-          <Progress value={progressPercentage} className="h-2" />
+          <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+            <div 
+              key={animationKey}
+              className="h-full bg-primary rounded-full transition-all ease-linear"
+              style={{
+                width: '100%',
+                transform: 'translateX(-100%)',
+                animation: isActive ? `slideProgress ${countdownTimer}s linear forwards` : 'none'
+              }}
+            />
+          </div>
+          <style jsx>{`
+            @keyframes slideProgress {
+              from {
+                transform: translateX(-100%);
+              }
+              to {
+                transform: translateX(0%);
+              }
+            }
+          `}</style>
         </div>
       )}
       

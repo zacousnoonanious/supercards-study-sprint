@@ -64,7 +64,7 @@ const StudyMode = () => {
   // Define currentCard before using it in useEffect hooks
   const currentCard = shuffledCards[currentCardIndex];
 
-  // Get the active timer for the current card side
+  // Get the active timer for the current card side - this will be passed to StudyNavigationBar
   const getActiveTimer = () => {
     if (!currentCard) return 0;
     
