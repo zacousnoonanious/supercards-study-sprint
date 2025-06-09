@@ -3,13 +3,6 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { HeroSection } from '@/components/home/HeroSection';
-import { CoreFeatures } from '@/components/home/CoreFeatures';
-import { CardTypes } from '@/components/home/CardTypes';
-import { AdvancedFeatures } from '@/components/home/AdvancedFeatures';
-import { PricingPlans } from '@/components/home/PricingPlans';
-import { Testimonials } from '@/components/home/Testimonials';
-import { FinalCTA } from '@/components/home/FinalCTA';
-import { GlobalStyles } from '@/components/home/GlobalStyles';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -35,15 +28,8 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <GlobalStyles />
+    <div className="min-h-screen">
       <HeroSection />
-      <CoreFeatures />
-      <CardTypes />
-      <AdvancedFeatures />
-      <PricingPlans />
-      <Testimonials />
-      <FinalCTA />
     </div>
   );
 };
