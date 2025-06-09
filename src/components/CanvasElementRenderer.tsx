@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
@@ -16,6 +15,7 @@ interface CanvasElementRendererProps {
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
   onEditingChange: (id: string | null) => void;
   textScale?: number;
+  zoom?: number;
   onElementDragStart?: (e: React.MouseEvent, elementId: string) => void;
   isDragging?: boolean;
   isStudyMode?: boolean;
@@ -28,6 +28,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   onUpdateElement,
   onEditingChange,
   textScale = 1,
+  zoom = 1,
   onElementDragStart,
   isDragging = false,
   isStudyMode = false,

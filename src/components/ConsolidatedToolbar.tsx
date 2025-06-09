@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -36,6 +35,7 @@ interface ConsolidatedToolbarProps {
   position?: 'left' | 'very-top' | 'canvas-left' | 'floating';
   isDocked?: boolean;
   onToggleDock?: () => void;
+  showText?: boolean;
   onTextToggle?: (showText: boolean) => void;
   style?: React.CSSProperties;
   className?: string;
@@ -59,6 +59,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   position = 'left',
   isDocked = true,
   onToggleDock,
+  showText = false,
   onTextToggle,
   style,
   className
@@ -66,7 +67,6 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   const { t } = useI18n();
   const { theme } = useTheme();
   const [showTemplates, setShowTemplates] = useState(false);
-  const [showText, setShowText] = useState(false);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
   const isHorizontal = position === 'very-top';
@@ -77,7 +77,6 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
   const handleTextToggle = () => {
     const newShowText = !showText;
-    setShowText(newShowText);
     onTextToggle?.(newShowText);
   };
 
@@ -207,7 +206,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
             title={showText ? "Show Icons" : "Show Text"}
           >
             <Menu className="w-3 h-3" />
-            {displayText && <span className="ml-1 text-[10px] whitespace-nowrap">Text</span>}
+            {displayText && <span className="ml-1 text-[10px] whitespace-nowrap">{showText ? "Icons" : "Text"}</span>}
           </Button>
         )}
       </div>
