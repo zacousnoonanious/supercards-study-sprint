@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -11,6 +10,7 @@ import {
   CheckSquare, HelpCircle, Shuffle, List, Grid, Eye, FileText
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
+import { useEditorTheme } from '@/contexts/EditorThemeContext';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
 import { CardSideToggle } from './CardSideToggle';
 import { CardTypeSelector } from './CardTypeSelector';
@@ -52,6 +52,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   position = 'left'
 }) => {
   const { t } = useI18n();
+  const { editorTheme } = useEditorTheme();
   const [showTemplates, setShowTemplates] = useState(false);
 
   const ToolbarButton = ({ 
@@ -89,7 +90,11 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   );
 
   return (
-    <div className="bg-background border rounded-lg shadow-sm p-2 w-12 max-h-[calc(100vh-120px)] overflow-y-auto">
+    <div className={`border rounded-lg shadow-sm p-2 w-12 max-h-[calc(100vh-120px)] overflow-y-auto ${
+      editorTheme === 'dark' 
+        ? 'bg-gray-800 border-gray-600 text-white' 
+        : 'bg-background border text-foreground'
+    }`}>
       <div className="flex flex-col items-center space-y-1">
         {/* Navigation */}
         <Button
@@ -114,11 +119,15 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           <ChevronRight className="w-4 h-4" />
         </Button>
 
-        <div className="text-[10px] text-muted-foreground text-center leading-tight">
+        <div className={`text-[10px] text-center leading-tight ${
+          editorTheme === 'dark' ? 'text-gray-300' : 'text-muted-foreground'
+        }`}>
           {currentCardIndex + 1}<br/>{totalCards}
         </div>
 
-        <div className="w-6 h-px bg-border my-1" />
+        <div className={`w-6 h-px my-1 ${
+          editorTheme === 'dark' ? 'bg-gray-600' : 'bg-border'
+        }`} />
 
         {/* Card Management */}
         <ToolbarButton
@@ -140,7 +149,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           disabled={totalCards <= 1}
         />
 
-        <div className="w-6 h-px bg-border my-1" />
+        <div className="w-6 h-px my-1" />
 
         {/* Front/Back Toggle */}
         <Button
@@ -164,7 +173,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           B
         </Button>
 
-        <div className="w-6 h-px bg-border my-1" />
+        <div className="w-6 h-px my-1" />
 
         {/* Elements */}
         <ToolbarButton
@@ -197,7 +206,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           onClick={() => onAddElement('drawing')}
         />
 
-        <div className="w-6 h-px bg-border my-1" />
+        <div className="w-6 h-px my-1" />
 
         {/* Interactive Elements */}
         <ToolbarButton
@@ -218,7 +227,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           onClick={() => onAddElement('fill-in-blank')}
         />
 
-        <div className="w-6 h-px bg-border my-1" />
+        <div className="w-6 h-px my-1" />
 
         {/* Auto Arrange */}
         <ToolbarButton
@@ -241,7 +250,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
         {onShowCardOverview && (
           <>
-            <div className="w-6 h-px bg-border my-1" />
+            <div className="w-6 h-px my-1" />
             <ToolbarButton
               icon={Grid}
               label="Card Overview"

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { useEditorTheme } from '@/contexts/EditorThemeContext';
 import { FlashcardSet, Flashcard, CanvasElement } from '@/types/flashcard';
 import { 
   Type, Image, Video, Music, Square, CheckSquare, 
@@ -55,6 +56,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
   cardDimensions = { width: 600, height: 400 },
   onCardDimensionsChange,
 }) => {
+  const { editorTheme } = useEditorTheme();
   const [showDimensionsEdit, setShowDimensionsEdit] = useState(false);
   const [tempDimensions, setTempDimensions] = useState(cardDimensions);
 
@@ -64,7 +66,11 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 bg-background border-b z-40 p-2">
+    <div className={`fixed top-0 left-0 right-0 border-b z-40 p-2 ${
+      editorTheme === 'dark' 
+        ? 'bg-gray-800 border-gray-600 text-white' 
+        : 'bg-background border text-foreground'
+    }`}>
       <div className="flex items-center gap-2 flex-wrap">
         {/* Navigation */}
         <div className="flex items-center gap-2">

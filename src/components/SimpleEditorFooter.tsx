@@ -3,7 +3,7 @@ import React from 'react';
 import { Flashcard, CanvasElement } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useEditorTheme } from '@/contexts/EditorThemeContext';
 
 interface SimpleEditorFooterProps {
   currentCard: Flashcard;
@@ -24,7 +24,7 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
   onNavigateCard,
   cardWidth,
 }) => {
-  const { theme } = useTheme();
+  const { editorTheme } = useEditorTheme();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -39,7 +39,9 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
   return (
     <div 
       className={`border-t p-3 ${
-        theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+        editorTheme === 'dark' 
+          ? 'bg-gray-800 border-gray-600 text-white' 
+          : 'bg-white border-gray-300 text-gray-900'
       }`}
       style={{ width: cardWidth }}
     >
@@ -56,7 +58,9 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
             <ChevronLeft className="w-4 h-4" />
           </Button>
           
-          <span className="text-sm text-muted-foreground">
+          <span className={`text-sm ${
+            editorTheme === 'dark' ? 'text-gray-300' : 'text-muted-foreground'
+          }`}>
             {currentCardIndex + 1} of {totalCards}
           </span>
           
@@ -73,7 +77,9 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
 
         {/* Element Position/Size Display */}
         {selectedElement && (
-          <div className="flex items-center gap-3 text-xs">
+          <div className={`flex items-center gap-3 text-xs ${
+            editorTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+          }`}>
             <span>X: {Math.round(selectedElement.x)}</span>
             <span>Y: {Math.round(selectedElement.y)}</span>
             <span>W: {Math.round(selectedElement.width)}</span>
@@ -82,7 +88,9 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
         )}
 
         {/* Creation Date */}
-        <div className="text-xs text-muted-foreground">
+        <div className={`text-xs ${
+          editorTheme === 'dark' ? 'text-gray-400' : 'text-muted-foreground'
+        }`}>
           Created: {formatDate(currentCard.created_at)}
         </div>
       </div>

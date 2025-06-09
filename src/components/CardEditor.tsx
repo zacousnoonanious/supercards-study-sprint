@@ -287,7 +287,9 @@ const CardEditorContent = () => {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col ${editorTheme === 'dark' ? 'bg-gray-900' : 'bg-white'} editor-theme-override`}>
+    <div className={`min-h-screen flex flex-col editor-theme-override ${
+      editorTheme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
+    }`}>
       {/* Header */}
       <EditorHeader
         set={set}
@@ -336,15 +338,22 @@ const CardEditorContent = () => {
 
           {/* Card Canvas and Footer */}
           <div className="flex flex-col">
-            <CardCanvas
-              elements={getCurrentElements()}
-              selectedElement={selectedElement}
-              onSelectElement={handleElementSelect}
-              onUpdateElement={handleUpdateElement}
-              onDeleteElement={handleDeleteElement}
-              cardSide={currentSide}
+            <div 
+              className={`shadow-lg border ${
+                editorTheme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+              }`}
               style={{ width: cardWidth, height: cardHeight }}
-            />
+            >
+              <CardCanvas
+                elements={getCurrentElements()}
+                selectedElement={selectedElement}
+                onSelectElement={handleElementSelect}
+                onUpdateElement={handleUpdateElement}
+                onDeleteElement={handleDeleteElement}
+                cardSide={currentSide}
+                style={{ width: cardWidth, height: cardHeight }}
+              />
+            </div>
 
             {/* Bottom Footer - simplified */}
             <SimpleEditorFooter
