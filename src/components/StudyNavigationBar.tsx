@@ -71,6 +71,18 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
 
   return (
     <div className="bg-card border-t border-border p-4">
+      <style>
+        {`
+          @keyframes slideProgress {
+            from {
+              transform: translateX(-100%);
+            }
+            to {
+              transform: translateX(0%);
+            }
+          }
+        `}
+      </style>
       {countdownTimer > 0 && (
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
@@ -90,16 +102,6 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
               }}
             />
           </div>
-          <style jsx>{`
-            @keyframes slideProgress {
-              from {
-                transform: translateX(-100%);
-              }
-              to {
-                transform: translateX(0%);
-              }
-            }
-          `}</style>
         </div>
       )}
       
