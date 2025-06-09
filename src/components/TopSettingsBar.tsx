@@ -129,8 +129,8 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
               <Label className="text-xs whitespace-nowrap">Timer (s):</Label>
               <Input
                 type="number"
-                value={currentCard?.timer_duration || 0}
-                onChange={(e) => onUpdateCard({ timer_duration: Number(e.target.value) })}
+                value={currentCard?.countdown_timer || 0}
+                onChange={(e) => onUpdateCard({ countdown_timer: Number(e.target.value) })}
                 className="w-20 h-7 text-xs"
                 min="0"
                 max="300"
@@ -139,8 +139,8 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
               <div className="flex items-center gap-1">
                 <Label className="text-xs">Auto:</Label>
                 <Switch
-                  checked={currentCard?.timer_auto_advance || false}
-                  onCheckedChange={(checked) => onUpdateCard({ timer_auto_advance: checked })}
+                  checked={currentCard?.countdown_behavior === 'next'}
+                  onCheckedChange={(checked) => onUpdateCard({ countdown_behavior: checked ? 'next' : 'flip' })}
                   className="scale-75"
                 />
               </div>
