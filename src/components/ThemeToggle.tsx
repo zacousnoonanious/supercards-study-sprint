@@ -19,6 +19,7 @@ const allThemes = [
   { value: 'darcula', label: 'Darcula' },
   { value: 'console', label: 'Console' },
   { value: 'high-contrast', label: 'High Contrast' },
+  { value: 'aurora', label: 'Aurora' },
 ] as const;
 
 const sizes = [

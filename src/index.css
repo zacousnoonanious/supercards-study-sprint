@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -238,6 +239,28 @@
     --border: 0 0% 0%;
     --input: 0 0% 90%;
     --ring: 0 0% 0%;
+  }
+
+  .aurora {
+    --background: 258 100% 98%;
+    --foreground: 258 30% 15%;
+    --card: 258 100% 96%;
+    --card-foreground: 258 30% 15%;
+    --popover: 258 100% 96%;
+    --popover-foreground: 258 30% 15%;
+    --primary: 258 90% 60%;
+    --primary-foreground: 258 100% 98%;
+    --secondary: 258 40% 90%;
+    --secondary-foreground: 258 30% 15%;
+    --muted: 258 40% 90%;
+    --muted-foreground: 258 20% 45%;
+    --accent: 45 100% 70%;
+    --accent-foreground: 258 30% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 258 100% 98%;
+    --border: 258 40% 85%;
+    --input: 258 40% 85%;
+    --ring: 258 90% 60%;
   }
 
   /* Homepage specific overrides for light/dark only */

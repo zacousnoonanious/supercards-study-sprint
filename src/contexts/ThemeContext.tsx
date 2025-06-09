@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Theme = 'light' | 'dark' | 'blue' | 'green' | 'red' | 'winterland' | 'cobalt' | 'darcula' | 'console' | 'high-contrast';
+type Theme = 'light' | 'dark' | 'blue' | 'green' | 'red' | 'winterland' | 'cobalt' | 'darcula' | 'console' | 'high-contrast' | 'aurora';
 type Size = 'small' | 'medium' | 'large';
 
 interface ThemeContextType {
@@ -36,7 +36,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const root = document.documentElement;
     
     // Remove all theme classes
-    root.classList.remove('light', 'dark', 'blue', 'green', 'red', 'winterland', 'cobalt', 'darcula', 'console', 'high-contrast');
+    root.classList.remove('light', 'dark', 'blue', 'green', 'red', 'winterland', 'cobalt', 'darcula', 'console', 'high-contrast', 'aurora');
     root.classList.remove('size-small', 'size-medium', 'size-large');
     
     // Add current theme and size classes
