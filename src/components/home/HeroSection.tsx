@@ -129,33 +129,8 @@ export const HeroSection = () => {
           </Link>
         </div>
 
-        {/* Character Assets positioned like in homepage.png */}
+        {/* Character Assets positioned like in homepage.png - only teal robot and owl */}
         <div className="absolute bottom-0 left-0 right-0">
-          {/* Yellow monster character (left side) */}
-          <div 
-            className="absolute bottom-8 left-8 md:left-16"
-            style={{ transform: `translateY(${scrollY * 0.05}px)` }}
-          >
-            <img 
-              src="/lovable-uploads/eaed28d5-3f56-44a6-a03c-4fd8d513b11a.png" 
-              alt="Yellow monster with flashcards" 
-              className="w-32 h-32 md:w-40 md:h-40 object-contain animate-float"
-            />
-          </div>
-
-          {/* Purple character at desk (center) */}
-          <div 
-            className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-            style={{ transform: `translateX(-50%) translateY(${scrollY * 0.03}px)` }}
-          >
-            <img 
-              src="/lovable-uploads/c20a6973-ab9f-4e49-b8e9-e4da785bd109.png" 
-              alt="Purple character studying" 
-              className="w-28 h-28 md:w-36 md:h-36 object-contain animate-float"
-              style={{ animationDelay: '0.5s' }}
-            />
-          </div>
-
           {/* Teal robot character (right side) */}
           <div 
             className="absolute bottom-8 right-8 md:right-16"
