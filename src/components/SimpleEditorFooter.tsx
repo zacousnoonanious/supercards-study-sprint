@@ -3,7 +3,7 @@ import React from 'react';
 import { Flashcard, CanvasElement } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEditorTheme } from '@/contexts/EditorThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface SimpleEditorFooterProps {
   currentCard: Flashcard;
@@ -24,7 +24,9 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
   onNavigateCard,
   cardWidth,
 }) => {
-  const { editorTheme } = useEditorTheme();
+  const { theme } = useTheme();
+
+  const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -39,7 +41,7 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
   return (
     <div 
       className={`border-t p-3 ${
-        editorTheme === 'dark' 
+        isDarkTheme
           ? 'bg-gray-800 border-gray-600 text-white' 
           : 'bg-white border-gray-300 text-gray-900'
       }`}
@@ -59,7 +61,7 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
           </Button>
           
           <span className={`text-sm ${
-            editorTheme === 'dark' ? 'text-gray-300' : 'text-muted-foreground'
+            isDarkTheme ? 'text-gray-300' : 'text-muted-foreground'
           }`}>
             {currentCardIndex + 1} of {totalCards}
           </span>
@@ -78,7 +80,7 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
         {/* Element Position/Size Display */}
         {selectedElement && (
           <div className={`flex items-center gap-3 text-xs ${
-            editorTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+            isDarkTheme ? 'text-gray-300' : 'text-gray-600'
           }`}>
             <span>X: {Math.round(selectedElement.x)}</span>
             <span>Y: {Math.round(selectedElement.y)}</span>
@@ -89,7 +91,7 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
 
         {/* Creation Date */}
         <div className={`text-xs ${
-          editorTheme === 'dark' ? 'text-gray-400' : 'text-muted-foreground'
+          isDarkTheme ? 'text-gray-400' : 'text-muted-foreground'
         }`}>
           Created: {formatDate(currentCard.created_at)}
         </div>

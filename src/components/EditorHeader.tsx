@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Save, Check, X, Edit, Grid3x3 } from 'lucide-react';
 import { FlashcardSet } from '@/types/flashcard';
-import { EditorThemeToggle } from './EditorThemeToggle';
+import { ThemeToggle } from './ThemeToggle';
 
 interface EditorHeaderProps {
   set: FlashcardSet;
@@ -98,7 +98,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <EditorThemeToggle />
+            <ThemeToggle />
             {onShowCardOverview && (
               <Button onClick={onShowCardOverview} variant="outline">
                 <Grid3x3 className="w-4 h-4 mr-2" />

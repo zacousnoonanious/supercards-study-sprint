@@ -1,8 +1,9 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
-import { EditorThemeProvider, useEditorTheme } from '@/contexts/EditorThemeContext';
+import { Navigation } from './Navigation';
 import { EditorHeader } from './EditorHeader';
 import { TopSettingsBar } from './TopSettingsBar';
 import { CardCanvas } from './CardCanvas';
@@ -12,9 +13,9 @@ import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { EditorCardOverview } from './EditorCardOverview';
 import { CanvasElement } from '@/types/flashcard';
 
-const CardEditorContent = () => {
+export const CardEditor = () => {
   const { t } = useI18n();
-  const { editorTheme } = useEditorTheme();
+  const { theme } = useTheme();
   const {
     set,
     cards,
@@ -45,6 +46,9 @@ const CardEditorContent = () => {
 
   // Get current card early in the component
   const currentCard = cards[currentCardIndex];
+
+  // Determine if we should use dark styling for the editor
+  const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
   // Save card when switching cards or sides
   useEffect(() => {
@@ -259,15 +263,18 @@ const CardEditorContent = () => {
 
   if (!set || cards.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg mb-4">{t('dashboard.noSets')}</p>
-          <button 
-            onClick={createNewCard}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-          >
-            {t('dashboard.createFirst')}
-          </button>
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-lg mb-4">{t('dashboard.noSets')}</p>
+            <button 
+              onClick={createNewCard}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+            >
+              {t('dashboard.createFirst')}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -276,20 +283,23 @@ const CardEditorContent = () => {
   // Show card overview if toggled
   if (showCardOverview) {
     return (
-      <EditorCardOverview
-        cards={cards}
-        currentCardIndex={currentCardIndex}
-        onReorderCards={reorderCards}
-        onNavigateToCard={handleNavigateToCard}
-        onBackToEditor={() => setShowCardOverview(false)}
-      />
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <EditorCardOverview
+          cards={cards}
+          currentCardIndex={currentCardIndex}
+          onReorderCards={reorderCards}
+          onNavigateToCard={handleNavigateToCard}
+          onBackToEditor={() => setShowCardOverview(false)}
+        />
+      </div>
     );
   }
 
   return (
-    <div className={`min-h-screen flex flex-col editor-theme-override ${
-      editorTheme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
-    }`}>
+    <div className="min-h-screen flex flex-col">
+      <Navigation />
+      
       {/* Header */}
       <EditorHeader
         set={set}
@@ -340,7 +350,9 @@ const CardEditorContent = () => {
           <div className="flex flex-col">
             <div 
               className={`shadow-lg border ${
-                editorTheme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+                isDarkTheme 
+                  ? 'bg-gray-700 border-gray-500' 
+                  : 'bg-white border-gray-300'
               }`}
               style={{ width: cardWidth, height: cardHeight }}
             >
@@ -373,13 +385,5 @@ const CardEditorContent = () => {
         <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />
       )}
     </div>
-  );
-};
-
-export const CardEditor = () => {
-  return (
-    <EditorThemeProvider>
-      <CardEditorContent />
-    </EditorThemeProvider>
   );
 };

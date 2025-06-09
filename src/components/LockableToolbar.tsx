@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { useEditorTheme } from '@/contexts/EditorThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { FlashcardSet, Flashcard, CanvasElement } from '@/types/flashcard';
 import { 
   Type, Image, Video, Music, Square, CheckSquare, 
@@ -56,9 +56,11 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
   cardDimensions = { width: 600, height: 400 },
   onCardDimensionsChange,
 }) => {
-  const { editorTheme } = useEditorTheme();
+  const { theme } = useTheme();
   const [showDimensionsEdit, setShowDimensionsEdit] = useState(false);
   const [tempDimensions, setTempDimensions] = useState(cardDimensions);
+
+  const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
   const handleDimensionsSubmit = () => {
     onCardDimensionsChange?.(tempDimensions.width, tempDimensions.height);
@@ -67,7 +69,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
 
   return (
     <div className={`fixed top-0 left-0 right-0 border-b z-40 p-2 ${
-      editorTheme === 'dark' 
+      isDarkTheme
         ? 'bg-gray-800 border-gray-600 text-white' 
         : 'bg-background border text-foreground'
     }`}>

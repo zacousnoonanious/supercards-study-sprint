@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -10,7 +11,7 @@ import {
   CheckSquare, HelpCircle, Shuffle, List, Grid, Eye, FileText
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
-import { useEditorTheme } from '@/contexts/EditorThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
 import { CardSideToggle } from './CardSideToggle';
 import { CardTypeSelector } from './CardTypeSelector';
@@ -52,8 +53,10 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   position = 'left'
 }) => {
   const { t } = useI18n();
-  const { editorTheme } = useEditorTheme();
+  const { theme } = useTheme();
   const [showTemplates, setShowTemplates] = useState(false);
+
+  const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
   const ToolbarButton = ({ 
     icon: Icon, 
@@ -91,7 +94,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
   return (
     <div className={`border rounded-lg shadow-sm p-2 w-12 max-h-[calc(100vh-120px)] overflow-y-auto ${
-      editorTheme === 'dark' 
+      isDarkTheme
         ? 'bg-gray-800 border-gray-600 text-white' 
         : 'bg-background border text-foreground'
     }`}>
@@ -120,13 +123,13 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
         </Button>
 
         <div className={`text-[10px] text-center leading-tight ${
-          editorTheme === 'dark' ? 'text-gray-300' : 'text-muted-foreground'
+          isDarkTheme ? 'text-gray-300' : 'text-muted-foreground'
         }`}>
           {currentCardIndex + 1}<br/>{totalCards}
         </div>
 
         <div className={`w-6 h-px my-1 ${
-          editorTheme === 'dark' ? 'bg-gray-600' : 'bg-border'
+          isDarkTheme ? 'bg-gray-600' : 'bg-border'
         }`} />
 
         {/* Card Management */}
