@@ -124,11 +124,27 @@ export const CardEditor = () => {
         }
         return;
       }
+
+      // Navigate between card sides with up/down arrows
+      if (e.key === 'ArrowUp' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        // Only switch to back if current card supports it (not single-sided)
+        if (currentCard?.card_type !== 'single-sided') {
+          setCurrentSide('back');
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowDown' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        setCurrentSide('front');
+        return;
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedElement, currentCardIndex, cards.length, navigateCard]);
+  }, [selectedElement, currentCardIndex, cards.length, navigateCard, currentCard, setCurrentSide]);
 
   // Handle zoom and pan with left-click dragging - only for canvas background
   useEffect(() => {
