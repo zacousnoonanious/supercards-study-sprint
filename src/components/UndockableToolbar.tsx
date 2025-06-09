@@ -23,12 +23,12 @@ interface UndockableToolbarProps {
   topSettingsBarRef?: React.RefObject<HTMLDivElement>;
 }
 
-type SnapZone = 'left' | 'right' | 'top' | 'bottom' | 'above-canvas' | 'below-settings' | null;
+type SnapZone = 'left' | 'very-top' | null;
 
 export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
   const { theme } = useTheme();
   const [isDocked, setIsDocked] = useState(true);
-  const [position, setPosition] = useState<'left' | 'right' | 'top' | 'bottom' | 'above-canvas' | 'below-settings'>('left');
+  const [position, setPosition] = useState<'left' | 'very-top' | 'floating'>('left');
   const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -46,63 +46,29 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       
       setDragPosition({ x: newX, y: newY });
 
-      // Check for snap zones with improved proximity detection
-      if (props.canvasRef?.current) {
-        const canvasRect = props.canvasRef.current.getBoundingClientRect();
-        const snapThreshold = 40;
-        const toolbarRect = toolbarRef.current?.getBoundingClientRect();
-        const toolbarCenterX = newX + (toolbarRect?.width || 0) / 2;
-        const toolbarCenterY = newY + (toolbarRect?.height || 0) / 2;
-        
-        let currentSnapZone: SnapZone = null;
+      // Check for snap zones - only left and very-top
+      const snapThreshold = 60;
+      const toolbarRect = toolbarRef.current?.getBoundingClientRect();
+      const toolbarCenterX = newX + (toolbarRect?.width || 0) / 2;
+      const toolbarCenterY = newY + (toolbarRect?.height || 0) / 2;
+      
+      let currentSnapZone: SnapZone = null;
 
-        // Check proximity to canvas for snapping
-        const distanceToLeft = Math.abs(newX - (canvasRect.left - 60));
-        const distanceToRight = Math.abs(newX - canvasRect.right);
-        const distanceToTop = Math.abs(newY - (canvasRect.top - 60));
-        const distanceToBottom = Math.abs(newY - canvasRect.bottom);
+      // Left snap zone - check if close to left edge of screen
+      const distanceToLeft = Math.abs(newX);
+      if (distanceToLeft < snapThreshold && toolbarCenterY > 100) { // Avoid very top area
+        currentSnapZone = 'left';
+      }
+      
+      // Very top snap zone - check if close to top edge of screen
+      const distanceToTop = Math.abs(newY);
+      if (distanceToTop < snapThreshold && toolbarCenterX > 50 && toolbarCenterX < window.innerWidth - 50) {
+        currentSnapZone = 'very-top';
+      }
 
-        // Left snap zone - must be within vertical bounds of canvas
-        if (distanceToLeft < snapThreshold && 
-            toolbarCenterY > canvasRect.top - 20 && 
-            toolbarCenterY < canvasRect.bottom + 20) {
-          currentSnapZone = 'left';
-        }
-        // Right snap zone - must be within vertical bounds of canvas  
-        else if (distanceToRight < snapThreshold && 
-                 toolbarCenterY > canvasRect.top - 20 && 
-                 toolbarCenterY < canvasRect.bottom + 20) {
-          currentSnapZone = 'right';
-        }
-        // Top snap zone (above canvas) - must be within horizontal bounds
-        else if (distanceToTop < snapThreshold && 
-                 toolbarCenterX > canvasRect.left - 20 && 
-                 toolbarCenterX < canvasRect.right + 20) {
-          currentSnapZone = 'above-canvas';
-        }
-        // Bottom snap zone - must be within horizontal bounds
-        else if (distanceToBottom < snapThreshold && 
-                 toolbarCenterX > canvasRect.left - 20 && 
-                 toolbarCenterX < canvasRect.right + 20) {
-          currentSnapZone = 'bottom';
-        }
-
-        // Check for below-settings snap zone
-        if (props.topSettingsBarRef?.current) {
-          const settingsRect = props.topSettingsBarRef.current.getBoundingClientRect();
-          const distanceToSettings = Math.abs(toolbarCenterY - settingsRect.bottom);
-          
-          if (distanceToSettings < snapThreshold && 
-              toolbarCenterX > settingsRect.left && 
-              toolbarCenterX < settingsRect.right) {
-            currentSnapZone = 'below-settings';
-          }
-        }
-
-        setSnapZone(currentSnapZone);
-        if (currentSnapZone) {
-          setPosition(currentSnapZone);
-        }
+      setSnapZone(currentSnapZone);
+      if (currentSnapZone) {
+        setPosition(currentSnapZone);
       }
     };
 
@@ -129,7 +95,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset, props.canvasRef, props.topSettingsBarRef, isDocked, snapZone]);
+  }, [isDragging, dragOffset, isDocked, snapZone]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isDocked || !toolbarRef.current) return;
@@ -151,9 +117,8 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
   };
 
   const getSnapZoneStyle = (zone: SnapZone) => {
-    if (!props.canvasRef?.current || snapZone !== zone) return { display: 'none' };
+    if (snapZone !== zone) return { display: 'none' };
     
-    const canvasRect = props.canvasRef.current.getBoundingClientRect();
     const baseStyle = {
       position: 'fixed' as const,
       backgroundColor: isDarkTheme ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)',
@@ -167,47 +132,19 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       case 'left':
         return {
           ...baseStyle,
-          left: canvasRect.left - 70,
-          top: canvasRect.top,
+          left: 0,
+          top: 100,
           width: 60,
-          height: canvasRect.height,
+          height: window.innerHeight - 100,
         };
-      case 'right':
+      case 'very-top':
         return {
           ...baseStyle,
-          left: canvasRect.right + 10,
-          top: canvasRect.top,
-          width: 60,
-          height: canvasRect.height,
-        };
-      case 'above-canvas':
-        return {
-          ...baseStyle,
-          left: canvasRect.left,
-          top: canvasRect.top - 70,
-          width: canvasRect.width,
+          left: 0,
+          top: 0,
+          width: window.innerWidth,
           height: 60,
         };
-      case 'bottom':
-        return {
-          ...baseStyle,
-          left: canvasRect.left,
-          top: canvasRect.bottom + 10,
-          width: canvasRect.width,
-          height: 60,
-        };
-      case 'below-settings':
-        if (props.topSettingsBarRef?.current) {
-          const settingsRect = props.topSettingsBarRef.current.getBoundingClientRect();
-          return {
-            ...baseStyle,
-            left: settingsRect.left,
-            top: settingsRect.bottom + 5,
-            width: settingsRect.width,
-            height: 50,
-          };
-        }
-        return { display: 'none' };
       default:
         return { display: 'none' };
     }
@@ -223,14 +160,11 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
           onToggleDock={handleToggleDock}
         />
         
-        {/* Snap zone indicators */}
+        {/* Snap zone indicators - only left and very-top */}
         {isDragging && (
           <>
             <div style={getSnapZoneStyle('left')} />
-            <div style={getSnapZoneStyle('right')} />
-            <div style={getSnapZoneStyle('above-canvas')} />
-            <div style={getSnapZoneStyle('bottom')} />
-            <div style={getSnapZoneStyle('below-settings')} />
+            <div style={getSnapZoneStyle('very-top')} />
           </>
         )}
       </>
@@ -257,14 +191,11 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
         />
       </div>
       
-      {/* Snap zone indicators */}
+      {/* Snap zone indicators - only left and very-top */}
       {isDragging && (
         <>
           <div style={getSnapZoneStyle('left')} />
-          <div style={getSnapZoneStyle('right')} />
-          <div style={getSnapZoneStyle('above-canvas')} />
-          <div style={getSnapZoneStyle('bottom')} />
-          <div style={getSnapZoneStyle('below-settings')} />
+          <div style={getSnapZoneStyle('very-top')} />
         </>
       )}
     </>

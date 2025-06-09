@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -32,7 +33,7 @@ interface ConsolidatedToolbarProps {
   onDeleteCard: () => void;
   onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
   onShowCardOverview?: () => void;
-  position?: 'left' | 'right' | 'top' | 'bottom' | 'above-canvas' | 'below-settings' | 'floating';
+  position?: 'left' | 'very-top' | 'floating';
   isDocked?: boolean;
   onToggleDock?: () => void;
   style?: React.CSSProperties;
@@ -66,7 +67,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   const [showText, setShowText] = useState(false);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
-  const isHorizontal = position === 'top' || position === 'bottom' || position === 'above-canvas' || position === 'below-settings';
+  const isHorizontal = position === 'very-top';
   const isFloating = position === 'floating';
 
   // Force icon mode for horizontal layout
@@ -100,7 +101,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
             {displayText && <span className="ml-1 text-xs whitespace-nowrap">{label}</span>}
           </Button>
         </TooltipTrigger>
-        <TooltipContent side={position === 'left' ? 'right' : position === 'right' ? 'left' : 'bottom'}>
+        <TooltipContent side={position === 'left' ? 'right' : 'bottom'}>
           {label}
         </TooltipContent>
       </Tooltip>
@@ -131,34 +132,18 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
     switch (position) {
       case 'left':
         return {
-          marginRight: '8px'
+          position: 'fixed' as const,
+          left: '8px',
+          top: '100px',
+          zIndex: 50
         };
-      case 'right':
+      case 'very-top':
         return {
-          marginLeft: '8px'
-        };
-      case 'top':
-        return {
-          marginBottom: '8px',
-          alignSelf: 'center'
-        };
-      case 'bottom':
-        return {
-          marginTop: '8px',
-          alignSelf: 'center'
-        };
-      case 'above-canvas':
-        return {
-          position: 'absolute' as const,
-          top: '-80px',
+          position: 'fixed' as const,
+          top: '8px',
           left: '50%',
           transform: 'translateX(-50%)',
-          zIndex: 10
-        };
-      case 'below-settings':
-        return {
-          width: '100%',
-          marginTop: '8px'
+          zIndex: 60
         };
       default:
         return {};
