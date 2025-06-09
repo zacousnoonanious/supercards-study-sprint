@@ -48,9 +48,9 @@ export const Navigation: React.FC = () => {
   );
 
   return (
-    <nav className="bg-background border-b border-border h-12 px-4 flex items-center justify-between">
+    <nav className="bg-background border-b border-border h-12 px-4 flex items-center justify-between w-full">
       {/* Left side - Logo and Navigation */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4 flex-shrink-0">
         <h1 
           className="text-xl font-bold text-indigo-600 cursor-pointer" 
           onClick={() => navigate('/dashboard')}
@@ -64,8 +64,11 @@ export const Navigation: React.FC = () => {
         </div>
       </div>
 
-      {/* Right side - User Dropdown and Mobile Menu */}
-      <div className="flex items-center space-x-2">
+      {/* Spacer to push right content all the way to the right */}
+      <div className="flex-1"></div>
+
+      {/* Right side - User Dropdown and Mobile Menu - pushed all the way right */}
+      <div className="flex items-center space-x-2 flex-shrink-0 ml-auto">
         {user && <UserDropdown />}
         
         {/* Mobile Menu Button */}
