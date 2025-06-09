@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -254,13 +253,36 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
           </div>
         </div>
 
-        {/* Collapsible Settings */}
+        {originalText && (
+          <div>
+            <Label className="text-xs font-medium">
+              Double-click words to turn into blanks:
+            </Label>
+            <div 
+              className="p-2 border rounded min-h-[60px] max-h-[200px] overflow-y-auto text-xs leading-relaxed bg-gray-50 dark:bg-gray-900"
+              style={{ fontSize: `${10 * textScale}px` }}
+            >
+              {renderTextWithBlanks()}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Tip: Double-click any word to toggle it as a blank
+            </p>
+          </div>
+        )}
+
+        {blanks.length > 0 && (
+          <div className="text-xs text-gray-600">
+            {blanks.length} blank(s) created
+          </div>
+        )}
+
+        {/* Collapsible Settings - Hidden by default */}
         <Collapsible open={showSettings} onOpenChange={setShowSettings}>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 p-0 h-auto text-xs">
               {showSettings ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
               <Settings className="w-3 h-3" />
-              Blank Generation Settings
+              Advanced Settings
             </Button>
           </CollapsibleTrigger>
           
@@ -338,31 +360,6 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
             </div>
           </CollapsibleContent>
         </Collapsible>
-
-        {originalText && (
-          <div>
-            <Label className="text-xs font-medium">
-              {mode === 'manual' ? 'Double-click words to turn into blanks:' : 'Preview:'}
-            </Label>
-            <div 
-              className="p-2 border rounded min-h-[60px] max-h-[200px] overflow-y-auto text-xs leading-relaxed bg-gray-50 dark:bg-gray-900"
-              style={{ fontSize: `${10 * textScale}px` }}
-            >
-              {renderTextWithBlanks()}
-            </div>
-            {mode === 'manual' && (
-              <p className="text-xs text-gray-500 mt-1">
-                Tip: Double-click any word to toggle it as a blank
-              </p>
-            )}
-          </div>
-        )}
-
-        {blanks.length > 0 && (
-          <div className="text-xs text-gray-600">
-            {blanks.length} blank(s) created
-          </div>
-        )}
       </CardContent>
     </Card>
   );

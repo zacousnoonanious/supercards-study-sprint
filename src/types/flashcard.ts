@@ -1,4 +1,3 @@
-
 export interface CanvasElement {
   id: string;
   type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'fill-in-blank' | 'youtube' | 'deck-embed' | 'drawing' | 'audio';
@@ -37,6 +36,10 @@ export interface CanvasElement {
   showLetterCount?: boolean;
   ignoreCase?: boolean;
   youtubeUrl?: string;
+  youtubeVideoId?: string;
+  youtubeAutoplay?: boolean;
+  youtubeMuted?: boolean;
+  youtubeStartTime?: number;
   deckId?: string;
   deckTitle?: string;
   drawingData?: string;
@@ -47,6 +50,11 @@ export interface CanvasElement {
   showImmediateFeedback?: boolean;
   autoAdvanceOnAnswer?: boolean;
   autoplay?: boolean;
+  opacity?: number;
+  borderWidth?: number;
+  borderColor?: string;
+  borderStyle?: string;
+  borderRadius?: boolean;
 }
 
 export interface Flashcard {
@@ -117,4 +125,3 @@ export interface StudyProgress {
   time_spent: number;
   attempts: number;
 }
-
