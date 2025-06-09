@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { AuroraThemeEffects } from '@/components/AuroraThemeEffects';
 
 type Theme = 'light' | 'dark' | 'blue' | 'green' | 'red' | 'winterland' | 'cobalt' | 'darcula' | 'console' | 'high-contrast' | 'aurora';
 type Size = 'small' | 'medium' | 'large';
@@ -55,5 +56,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setSize,
   };
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>
+      {theme === 'aurora' && <AuroraThemeEffects />}
+      {children}
+    </ThemeContext.Provider>
+  );
 };

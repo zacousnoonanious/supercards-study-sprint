@@ -272,6 +272,37 @@
     --background: 222.2 84% 4.9%;
   }
 
+  /* Aurora theme parallax effects */
+  .aurora .parallax-element {
+    transform-style: preserve-3d;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+  }
+
+  /* Enhanced parallax movement for Aurora theme */
+  @keyframes auroraFloat {
+    0% { 
+      transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+    }
+    25% { 
+      transform: translateY(-10px) translateX(5px) rotate(1deg) scale(1.02);
+    }
+    50% { 
+      transform: translateY(-20px) translateX(0px) rotate(0deg) scale(1.05);
+    }
+    75% { 
+      transform: translateY(-10px) translateX(-5px) rotate(-1deg) scale(1.02);
+    }
+    100% { 
+      transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+    }
+  }
+
+  .aurora .parallax-element {
+    animation-name: auroraFloat;
+  }
+
   /* Size scaling */
   .size-small {
     font-size: 14px;
