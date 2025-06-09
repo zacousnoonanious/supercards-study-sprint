@@ -76,7 +76,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     let newX = Math.max(0, Math.min(element.x + deltaX, (style?.width as number || 600) - element.width));
     let newY = Math.max(0, Math.min(element.y + deltaY, (style?.height as number || 450) - element.height));
     
-    // Apply grid snapping if enabled
     if (snapToGrid) {
       newX = Math.round(newX / gridSize) * gridSize;
       newY = Math.round(newY / gridSize) * gridSize;
@@ -115,6 +114,15 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         isDarkTheme={isDarkTheme}
       />
       
+      {/* Card side indicator */}
+      <div className="absolute top-2 left-2 z-10 pointer-events-none">
+        <div className={`px-2 py-1 rounded text-xs font-medium ${
+          isDarkTheme ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+        }`}>
+          {cardSide === 'front' ? 'Front' : 'Back'}
+        </div>
+      </div>
+      
       {elements.map((element) => (
         <div
           key={element.id}
@@ -148,14 +156,12 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             isDragging={isDragging && dragElementId === element.id}
           />
           
-          {/* Resize handle for selected element */}
           {selectedElement === element.id && (
             <div
               className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 cursor-se-resize"
               onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // Handle resize logic here if needed
               }}
             />
           )}

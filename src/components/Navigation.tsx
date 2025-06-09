@@ -18,7 +18,6 @@ export const Navigation: React.FC = () => {
 
   const handleGoBack = () => {
     if (isEditor) {
-      // Go back to set view
       const setId = location.pathname.split('/sets/')[1]?.split('/cards/')[0];
       if (setId) {
         navigate(`/sets/${setId}`);
@@ -45,7 +44,7 @@ export const Navigation: React.FC = () => {
         >
           <ArrowLeft className="h-4 w-4" />
           <span className="text-sm">
-            {isEditor ? t('nav.backToSet') : t('nav.backToDashboard')}
+            {isEditor ? 'Back to Set' : 'Back'}
           </span>
         </Button>
 
@@ -59,7 +58,7 @@ export const Navigation: React.FC = () => {
               className="flex items-center space-x-2 h-8"
             >
               <Home className="h-4 w-4" />
-              <span className="text-sm">{t('nav.dashboard')}</span>
+              <span className="text-sm">Dashboard</span>
             </Button>
           </>
         )}

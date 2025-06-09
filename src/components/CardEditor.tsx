@@ -52,6 +52,8 @@ export const CardEditor = () => {
   const [toolbarPosition, setToolbarPosition] = useState<'left' | 'very-top' | 'canvas-left' | 'floating'>('left');
   const [toolbarIsDocked, setToolbarIsDocked] = useState(true);
   const [toolbarShowText, setToolbarShowText] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
+  const [snapToGrid, setSnapToGrid] = useState(false);
   
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const topSettingsBarRef = useRef<HTMLDivElement>(null);
@@ -67,7 +69,7 @@ export const CardEditor = () => {
   const getLayoutOffset = () => {
     if (toolbarIsDocked && toolbarPosition === 'left') {
       // Use wider margin when showing text labels
-      const leftMargin = toolbarShowText ? '12rem' : '4.5rem'; // Increased margin for text mode
+      const leftMargin = toolbarShowText ? '14rem' : '4.5rem'; // Increased margin for text mode
       return { marginLeft: leftMargin };
     }
     return {};
@@ -553,6 +555,10 @@ export const CardEditor = () => {
           onCanvasSizeChange={handleCanvasSizeChange}
           currentCard={currentCard}
           onUpdateCard={handleCardUpdate}
+          showGrid={showGrid}
+          onShowGridChange={setShowGrid}
+          snapToGrid={snapToGrid}
+          onSnapToGridChange={setSnapToGrid}
         />
       </div>
 
@@ -589,7 +595,7 @@ export const CardEditor = () => {
               {/* Canvas Viewport with zoom and pan */}
               <div 
                 ref={canvasViewportRef}
-                className={`shadow-lg border overflow-hidden flex-1 ${
+                className={`shadow-lg border overflow-hidden flex-1 relative ${
                   isDarkTheme 
                     ? 'bg-gray-800 border-gray-600' 
                     : 'bg-white border-gray-300'
@@ -619,7 +625,16 @@ export const CardEditor = () => {
                     onUpdateElement={handleUpdateElement}
                     onDeleteElement={handleDeleteElement}
                     cardSide={currentSide}
-                    style={{ width: cardWidth, height: cardHeight }}
+                    style={{ 
+                      width: cardWidth, 
+                      height: cardHeight,
+                      border: `2px solid ${isDarkTheme ? '#6b7280' : '#d1d5db'}`,
+                      backgroundColor: isDarkTheme ? '#1f2937' : '#ffffff'
+                    }}
+                    showGrid={showGrid}
+                    gridSize={20}
+                    snapToGrid={snapToGrid}
+                    zoom={zoom}
                   />
                 </div>
               </div>
