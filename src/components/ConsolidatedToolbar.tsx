@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -33,7 +32,7 @@ interface ConsolidatedToolbarProps {
   onDeleteCard: () => void;
   onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
   onShowCardOverview?: () => void;
-  position?: 'left' | 'right' | 'top' | 'bottom' | 'floating';
+  position?: 'left' | 'right' | 'top' | 'bottom' | 'above-canvas' | 'below-settings' | 'floating';
   isDocked?: boolean;
   onToggleDock?: () => void;
   style?: React.CSSProperties;
@@ -67,7 +66,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   const [showText, setShowText] = useState(false);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
-  const isHorizontal = position === 'top' || position === 'bottom';
+  const isHorizontal = position === 'top' || position === 'bottom' || position === 'above-canvas' || position === 'below-settings';
   const isFloating = position === 'floating';
 
   // Force icon mode for horizontal layout
@@ -116,14 +115,40 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
     } ${className || ''}`;
 
     if (isFloating) {
-      return `${baseClass} grid grid-cols-2 gap-1 w-20 max-h-[calc(100vh-120px)] overflow-y-auto`;
+      return `${baseClass} grid grid-cols-2 gap-1 w-24 max-h-[calc(100vh-120px)] overflow-y-auto`;
     }
 
     if (isHorizontal) {
       return `${baseClass} flex flex-row items-center gap-2 w-auto max-w-full overflow-x-auto`;
     }
 
-    return `${baseClass} flex flex-col items-center space-y-1 ${displayText ? 'w-36' : 'w-14'} max-h-[calc(100vh-120px)] overflow-y-auto`;
+    return `${baseClass} flex flex-col items-center space-y-1 ${displayText ? 'w-36' : 'w-16'} max-h-[calc(100vh-120px)] overflow-y-auto`;
+  };
+
+  const getPositioning = () => {
+    if (!isDocked) return {};
+    
+    switch (position) {
+      case 'above-canvas':
+        return {
+          position: 'absolute' as const,
+          top: '-70px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10
+        };
+      case 'below-settings':
+        return {
+          position: 'absolute' as const,
+          top: '100%',
+          left: '0',
+          right: '0',
+          zIndex: 10,
+          marginTop: '8px'
+        };
+      default:
+        return {};
+    }
   };
 
   const getSeparator = () => {
@@ -147,7 +172,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   };
 
   return (
-    <div className={getContainerClass()} style={style}>
+    <div className={getContainerClass()} style={{ ...style, ...getPositioning() }}>
       {/* Dock/Undock and Text/Icon Toggle */}
       <div className={getButtonGroupClass()}>
         {onToggleDock && (

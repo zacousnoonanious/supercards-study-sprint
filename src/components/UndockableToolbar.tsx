@@ -20,14 +20,15 @@ interface UndockableToolbarProps {
   onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
   onShowCardOverview?: () => void;
   canvasRef?: React.RefObject<HTMLDivElement>;
+  topSettingsBarRef?: React.RefObject<HTMLDivElement>;
 }
 
-type SnapZone = 'left' | 'right' | 'top' | 'bottom' | null;
+type SnapZone = 'left' | 'right' | 'top' | 'bottom' | 'above-canvas' | 'below-settings' | null;
 
 export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
   const { theme } = useTheme();
   const [isDocked, setIsDocked] = useState(true);
-  const [position, setPosition] = useState<'left' | 'right' | 'top' | 'bottom'>('left');
+  const [position, setPosition] = useState<'left' | 'right' | 'top' | 'bottom' | 'above-canvas' | 'below-settings'>('left');
   const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -45,27 +46,50 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       
       setDragPosition({ x: newX, y: newY });
 
-      // Check for snap zones
+      // Check for snap zones with improved proximity detection
       if (props.canvasRef?.current) {
         const canvasRect = props.canvasRef.current.getBoundingClientRect();
-        const snapThreshold = 80;
+        const snapThreshold = 60; // Reduced from 80 for closer proximity
+        const toolbarRect = toolbarRef.current?.getBoundingClientRect();
+        const toolbarCenterX = newX + (toolbarRect?.width || 0) / 2;
+        const toolbarCenterY = newY + (toolbarRect?.height || 0) / 2;
+        
         let currentSnapZone: SnapZone = null;
 
-        // Left snap zone
-        if (newX < canvasRect.left + snapThreshold && newY > canvasRect.top - 50 && newY < canvasRect.bottom + 50) {
-          currentSnapZone = 'left';
+        // Check proximity to canvas for snapping
+        const distanceToCanvas = Math.min(
+          Math.abs(newX - canvasRect.left),
+          Math.abs(newX - canvasRect.right),
+          Math.abs(newY - canvasRect.top),
+          Math.abs(newY - canvasRect.bottom)
+        );
+
+        if (distanceToCanvas < snapThreshold) {
+          // Left snap zone
+          if (newX < canvasRect.left && toolbarCenterY > canvasRect.top - 50 && toolbarCenterY < canvasRect.bottom + 50) {
+            currentSnapZone = 'left';
+          }
+          // Right snap zone
+          else if (newX > canvasRect.right - 50 && toolbarCenterY > canvasRect.top - 50 && toolbarCenterY < canvasRect.bottom + 50) {
+            currentSnapZone = 'right';
+          }
+          // Above canvas snap zone
+          else if (toolbarCenterY < canvasRect.top && toolbarCenterX > canvasRect.left - 50 && toolbarCenterX < canvasRect.right + 50) {
+            currentSnapZone = 'above-canvas';
+          }
+          // Below canvas snap zone
+          else if (toolbarCenterY > canvasRect.bottom && toolbarCenterX > canvasRect.left - 50 && toolbarCenterX < canvasRect.right + 50) {
+            currentSnapZone = 'bottom';
+          }
         }
-        // Right snap zone
-        else if (newX > canvasRect.right - snapThreshold && newY > canvasRect.top - 50 && newY < canvasRect.bottom + 50) {
-          currentSnapZone = 'right';
-        }
-        // Top snap zone
-        else if (newY < canvasRect.top + snapThreshold && newX > canvasRect.left - 50 && newX < canvasRect.right + 50) {
-          currentSnapZone = 'top';
-        }
-        // Bottom snap zone
-        else if (newY > canvasRect.bottom - snapThreshold && newX > canvasRect.left - 50 && newX < canvasRect.right + 50) {
-          currentSnapZone = 'bottom';
+
+        // Check for below-settings snap zone
+        if (props.topSettingsBarRef?.current) {
+          const settingsRect = props.topSettingsBarRef.current.getBoundingClientRect();
+          if (toolbarCenterY > settingsRect.bottom && toolbarCenterY < settingsRect.bottom + 40 && 
+              toolbarCenterX > settingsRect.left && toolbarCenterX < settingsRect.right) {
+            currentSnapZone = 'below-settings';
+          }
         }
 
         setSnapZone(currentSnapZone);
@@ -98,7 +122,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset, props.canvasRef, isDocked, snapZone]);
+  }, [isDragging, dragOffset, props.canvasRef, props.topSettingsBarRef, isDocked, snapZone]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isDocked || !toolbarRef.current) return;
@@ -149,7 +173,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
           width: 50,
           height: canvasRect.height,
         };
-      case 'top':
+      case 'above-canvas':
         return {
           ...baseStyle,
           left: canvasRect.left,
@@ -165,6 +189,18 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
           width: canvasRect.width,
           height: 50,
         };
+      case 'below-settings':
+        if (props.topSettingsBarRef?.current) {
+          const settingsRect = props.topSettingsBarRef.current.getBoundingClientRect();
+          return {
+            ...baseStyle,
+            left: settingsRect.left,
+            top: settingsRect.bottom + 5,
+            width: settingsRect.width,
+            height: 40,
+          };
+        }
+        return { display: 'none' };
       default:
         return { display: 'none' };
     }
@@ -185,8 +221,9 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
           <>
             <div style={getSnapZoneStyle('left')} />
             <div style={getSnapZoneStyle('right')} />
-            <div style={getSnapZoneStyle('top')} />
+            <div style={getSnapZoneStyle('above-canvas')} />
             <div style={getSnapZoneStyle('bottom')} />
+            <div style={getSnapZoneStyle('below-settings')} />
           </>
         )}
       </>
@@ -218,8 +255,9 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
         <>
           <div style={getSnapZoneStyle('left')} />
           <div style={getSnapZoneStyle('right')} />
-          <div style={getSnapZoneStyle('top')} />
+          <div style={getSnapZoneStyle('above-canvas')} />
           <div style={getSnapZoneStyle('bottom')} />
+          <div style={getSnapZoneStyle('below-settings')} />
         </>
       )}
     </>

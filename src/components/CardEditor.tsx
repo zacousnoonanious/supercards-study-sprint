@@ -49,6 +49,7 @@ export const CardEditor = () => {
   const [zoom, setZoom] = useState(1);
   
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const topSettingsBarRef = useRef<HTMLDivElement>(null);
 
   // Get current card early in the component
   const currentCard = cards[currentCardIndex];
@@ -150,6 +151,7 @@ export const CardEditor = () => {
     
     try {
       await updateFlashcardSet(set.id, { title: newTitle });
+      // Update local state immediately for real-time update
       setDeckName(newTitle);
       toast({
         title: "Success",
@@ -329,7 +331,7 @@ export const CardEditor = () => {
       
       {/* Header */}
       <EditorHeader
-        set={set}
+        set={{ ...set, title: deckName }}
         onSave={handleSave}
         isEditingDeckName={false}
         deckName={deckName}
@@ -343,16 +345,18 @@ export const CardEditor = () => {
       />
 
       {/* Top Settings Bar */}
-      <TopSettingsBar
-        selectedElement={getSelectedElementData()}
-        onUpdateElement={handleUpdateElement}
-        onDeleteElement={(id) => handleDeleteElement(id)}
-        canvasWidth={cardWidth}
-        canvasHeight={cardHeight}
-        onCanvasSizeChange={handleCanvasSizeChange}
-        currentCard={currentCard}
-        onUpdateCard={handleCardUpdate}
-      />
+      <div ref={topSettingsBarRef}>
+        <TopSettingsBar
+          selectedElement={getSelectedElementData()}
+          onUpdateElement={handleUpdateElement}
+          onDeleteElement={(id) => handleDeleteElement(id)}
+          canvasWidth={cardWidth}
+          canvasHeight={cardHeight}
+          onCanvasSizeChange={handleCanvasSizeChange}
+          currentCard={currentCard}
+          onUpdateCard={handleCardUpdate}
+        />
+      </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex items-center justify-center p-4 relative">
@@ -374,6 +378,7 @@ export const CardEditor = () => {
             onCardTypeChange={(type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
             onShowCardOverview={() => setShowCardOverview(true)}
             canvasRef={canvasContainerRef}
+            topSettingsBarRef={topSettingsBarRef}
           />
 
           {/* Card Canvas and Footer */}
