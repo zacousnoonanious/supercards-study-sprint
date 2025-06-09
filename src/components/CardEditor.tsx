@@ -381,33 +381,41 @@ export const CardEditor = () => {
             topSettingsBarRef={topSettingsBarRef}
           />
 
-          {/* Card Canvas and Footer */}
+          {/* Card Canvas and Footer Container */}
           <div className="flex flex-col">
+            {/* Canvas Container with proper zoom containment */}
             <div 
-              className={`shadow-lg border ${
+              className={`shadow-lg border overflow-hidden ${
                 isDarkTheme 
                   ? 'bg-gray-800 border-gray-600' 
                   : 'bg-white border-gray-300'
               }`}
               style={{ 
-                width: cardWidth * zoom, 
-                height: cardHeight * zoom,
-                transform: `scale(${zoom})`,
-                transformOrigin: 'top left'
+                width: cardWidth,
+                height: cardHeight,
               }}
             >
-              <CardCanvas
-                elements={getCurrentElements()}
-                selectedElement={selectedElement}
-                onSelectElement={handleElementSelect}
-                onUpdateElement={handleUpdateElement}
-                onDeleteElement={handleDeleteElement}
-                cardSide={currentSide}
-                style={{ width: cardWidth, height: cardHeight }}
-              />
+              <div
+                style={{
+                  width: cardWidth,
+                  height: cardHeight,
+                  transform: `scale(${zoom})`,
+                  transformOrigin: 'top left',
+                }}
+              >
+                <CardCanvas
+                  elements={getCurrentElements()}
+                  selectedElement={selectedElement}
+                  onSelectElement={handleElementSelect}
+                  onUpdateElement={handleUpdateElement}
+                  onDeleteElement={handleDeleteElement}
+                  cardSide={currentSide}
+                  style={{ width: cardWidth, height: cardHeight }}
+                />
+              </div>
             </div>
 
-            {/* Bottom Footer - simplified */}
+            {/* Bottom Footer - fixed width, not affected by zoom */}
             <SimpleEditorFooter
               currentCard={currentCard}
               currentCardIndex={currentCardIndex}
@@ -415,7 +423,7 @@ export const CardEditor = () => {
               selectedElement={getSelectedElementData()}
               onUpdateCard={updateCard}
               onNavigateCard={navigateCard}
-              cardWidth={cardWidth * zoom}
+              cardWidth={cardWidth}
             />
           </div>
         </div>
