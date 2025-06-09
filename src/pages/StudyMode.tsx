@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserDropdown } from '@/components/UserDropdown';
 import { Navigation } from '@/components/Navigation';
 import { StudyCardRenderer } from '@/components/StudyCardRenderer';
+import { StudyNavigationBar } from '@/components/StudyNavigationBar';
 import { Flashcard } from '@/types/flashcard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -62,6 +63,21 @@ const StudyMode = () => {
 
   // Define currentCard before using it in useEffect hooks
   const currentCard = shuffledCards[currentCardIndex];
+
+  // Get the active timer for the current card side
+  const getActiveTimer = () => {
+    if (!currentCard) return 0;
+    
+    const frontTimer = currentCard.countdown_timer_front || 0;
+    const backTimer = currentCard.countdown_timer_back || 0;
+    const globalTimer = countdownTimer || 0;
+    
+    if (showAnswer) {
+      return backTimer || globalTimer;
+    } else {
+      return frontTimer || globalTimer;
+    }
+  };
 
   // Move all useEffect hooks to the top, before any conditional logic
   useEffect(() => {
@@ -150,21 +166,13 @@ const StudyMode = () => {
         case 'ArrowLeft':
           e.preventDefault();
           if (currentCardIndex > 0) {
-            setCurrentCardIndex(currentCardIndex - 1);
-            setShowAnswer(false);
-            setUserAnswer('');
-            setAnswerResult(null);
-            setHasAnswered(false);
+            handleNavigate('prev');
           }
           break;
         case 'ArrowRight':
           e.preventDefault();
           if (currentCardIndex < shuffledCards.length - 1) {
-            setCurrentCardIndex(currentCardIndex + 1);
-            setShowAnswer(false);
-            setUserAnswer('');
-            setAnswerResult(null);
-            setHasAnswered(false);
+            handleNavigate('next');
           }
           break;
         case 'ArrowUp':
@@ -182,7 +190,7 @@ const StudyMode = () => {
         case ' ': // Spacebar
           e.preventDefault();
           if (currentCard?.card_type !== 'quiz-only') {
-            setShowAnswer(!showAnswer);
+            handleFlipCard();
           }
           break;
       }
@@ -270,6 +278,55 @@ const StudyMode = () => {
     return newArray;
   };
 
+  const handleNavigate = (direction: 'prev' | 'next') => {
+    if (direction === 'prev' && currentCardIndex > 0) {
+      setCurrentCardIndex(currentCardIndex - 1);
+      setShowAnswer(false);
+      setUserAnswer('');
+      setAnswerResult(null);
+      setHasAnswered(false);
+      setFlipCount(0);
+    } else if (direction === 'next' && currentCardIndex < shuffledCards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1);
+      setShowAnswer(false);
+      setUserAnswer('');
+      setAnswerResult(null);
+      setHasAnswered(false);
+      setFlipCount(0);
+    }
+  };
+
+  const handleFlipCard = () => {
+    setShowAnswer(!showAnswer);
+  };
+
+  const handleTimeUp = () => {
+    if (!currentCard) return;
+    
+    const behavior = showAnswer ? 
+      (currentCard.countdown_behavior_back || 'next') : 
+      (currentCard.countdown_behavior_front || 'flip');
+
+    if (behavior === 'flip') {
+      if (!showAnswer) {
+        setShowAnswer(true);
+        setFlipCount(prev => prev + 1);
+      } else {
+        const maxFlipsForCard = currentCard.flips_before_next || 2;
+        if (flipCount < maxFlipsForCard - 1) {
+          setShowAnswer(false);
+          setFlipCount(prev => prev + 1);
+        } else {
+          handleNextCard();
+          setFlipCount(0);
+        }
+      }
+    } else {
+      handleNextCard();
+      setFlipCount(0);
+    }
+  };
+
   const handleSettingsChange = (newSettings: { shuffle: boolean; mode: 'flashcard' | 'quiz' | 'mixed' }) => {
     setShuffle(newSettings.shuffle);
     setMode(newSettings.mode);
@@ -333,7 +390,7 @@ const StudyMode = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <header className="shadow-sm border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -346,7 +403,7 @@ const StudyMode = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 flex flex-col max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <Button
@@ -373,63 +430,64 @@ const StudyMode = () => {
         </div>
 
         {currentCard ? (
-          <div className="space-y-4">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-foreground">
-                Card {currentCardIndex + 1} / {shuffledCards.length}
-              </h2>
-            </div>
-
-            <div className="flex justify-center">
-              <div 
-                className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-lg"
-                style={{ 
-                  width: `${currentCard.canvas_width || 600}px`,
-                  height: `${currentCard.canvas_height || 450}px`,
-                }}
-              >
-                <StudyCardRenderer
-                  elements={showAnswer ? currentCard.back_elements : currentCard.front_elements}
-                  textScale={1}
-                  cardWidth={currentCard.canvas_width || 600}
-                  cardHeight={currentCard.canvas_height || 450}
-                  allowMultipleAttempts={!singleAttempt}
-                  onQuizAnswer={(elementId, correct, answerIndex) => handleAnswerSubmit(correct)}
-                  onFillInBlankAnswer={(elementId, correct) => handleAnswerSubmit(correct)}
-                />
-              </div>
-            </div>
-
-            {currentCard.hint && !hideHints && (
-              <div className="text-sm text-muted-foreground flex justify-center">
-                <div className="flex items-center">
-                  <Lightbulb className="w-4 h-4 mr-1" />
-                  Hint: {currentCard.hint}
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="flex justify-center mb-8">
+                <div 
+                  className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-lg"
+                  style={{ 
+                    width: `${currentCard.canvas_width || 600}px`,
+                    height: `${currentCard.canvas_height || 450}px`,
+                  }}
+                >
+                  <StudyCardRenderer
+                    elements={showAnswer ? currentCard.back_elements : currentCard.front_elements}
+                    textScale={1}
+                    cardWidth={currentCard.canvas_width || 600}
+                    cardHeight={currentCard.canvas_height || 450}
+                    allowMultipleAttempts={!singleAttempt}
+                    onQuizAnswer={(elementId, correct, answerIndex) => handleAnswerSubmit(correct)}
+                    onFillInBlankAnswer={(elementId, correct) => handleAnswerSubmit(correct)}
+                  />
                 </div>
               </div>
-            )}
 
-            {answerResult !== null && (
-              <div className={`flex items-center justify-center text-lg font-semibold ${answerResult ? 'text-green-500' : 'text-red-500'}`}>
-                {answerResult ? (
-                  <>
-                    <CheckCircle className="w-6 h-6 mr-2" />
-                    Correct!
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="w-6 h-6 mr-2" />
-                    Incorrect.
-                  </>
-                )}
-              </div>
-            )}
+              {currentCard.hint && !hideHints && (
+                <div className="text-sm text-muted-foreground flex justify-center mb-4">
+                  <div className="flex items-center">
+                    <Lightbulb className="w-4 h-4 mr-1" />
+                    Hint: {currentCard.hint}
+                  </div>
+                </div>
+              )}
 
-            <div className="flex justify-center">
-              <Button onClick={handleNextCard} disabled={!showAnswer && currentCard.card_type !== 'quiz-only'}>
-                {t('next')}
-              </Button>
+              {answerResult !== null && (
+                <div className={`flex items-center justify-center text-lg font-semibold mb-4 ${answerResult ? 'text-green-500' : 'text-red-500'}`}>
+                  {answerResult ? (
+                    <>
+                      <CheckCircle className="w-6 h-6 mr-2" />
+                      Correct!
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-6 h-6 mr-2" />
+                      Incorrect.
+                    </>
+                  )}
+                </div>
+              )}
             </div>
+
+            <StudyNavigationBar
+              currentIndex={currentCardIndex}
+              totalCards={shuffledCards.length}
+              onNavigate={handleNavigate}
+              onFlipCard={handleFlipCard}
+              showAnswer={showAnswer}
+              countdownTimer={getActiveTimer()}
+              onTimeUp={handleTimeUp}
+              allowNavigation={true}
+            />
           </div>
         ) : (
           <div className="text-center">
