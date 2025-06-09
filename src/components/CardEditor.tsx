@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -14,6 +15,10 @@ import { CanvasElement } from '@/types/flashcard';
 import { updateFlashcardSet } from '@/lib/api/sets';
 import { useToast } from '@/hooks/use-toast';
 
+interface CardEditorProps {
+  setId?: string;
+}
+
 export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const { t } = useI18n();
   const { theme } = useTheme();
@@ -23,10 +28,10 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     cards,
     currentCardIndex,
     currentSide,
-    selectedElementId,
+    selectedElement: selectedElementId,
     loading,
     setCurrentSide,
-    setSelectedElementId,
+    setSelectedElement: setSelectedElementId,
     setCurrentCardIndex,
     addElement,
     updateElement,
@@ -75,6 +80,25 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     return {};
   };
 
+  // Define callback functions first, before they're used in other functions
+  const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
+    updateElement(elementId, updates);
+  }, [updateElement]);
+
+  const handleDeleteElement = useCallback((elementId: string) => {
+    deleteElement(elementId);
+    setSelectedElementId(null);
+  }, [deleteElement, setSelectedElementId]);
+
+  const handleElementSelect = useCallback((elementId: string | null) => {
+    setSelectedElementId(elementId);
+  }, [setSelectedElementId]);
+
+  const handleNavigateToCard = useCallback((cardIndex: number) => {
+    setCurrentCardIndex(cardIndex);
+    setSelectedElementId(null);
+  }, [setCurrentCardIndex, setSelectedElementId]);
+
   // Save card when switching cards or sides
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -113,7 +137,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
       if (currentCardIndex > 0) {
-        navigateToCard(currentCardIndex - 1);
+        navigateCard(currentCardIndex - 1);
       }
       return;
     }
@@ -121,7 +145,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     if (e.key === 'ArrowRight') {
       e.preventDefault();
       if (currentCardIndex < cards.length - 1) {
-        navigateToCard(currentCardIndex + 1);
+        navigateCard(currentCardIndex + 1);
       }
       return;
     }
@@ -140,7 +164,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
       setCurrentSide('front');
       return;
     }
-  }, [selectedElementId, currentCardIndex, cards.length, currentCard, handleDeleteElement, navigateToCard, setCurrentSide]);
+  }, [selectedElementId, currentCardIndex, cards.length, currentCard, handleDeleteElement, navigateCard, setCurrentSide, setSelectedElementId]);
 
   // Add keyboard event listener
   useEffect(() => {
@@ -319,24 +343,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     setZoom(newZoom);
     setPanOffset({ x: centerX, y: centerY });
   }, [cardWidth, cardHeight]);
-
-  const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
-    updateElement(elementId, updates);
-  }, [updateElement]);
-
-  const handleDeleteElement = useCallback((elementId: string) => {
-    deleteElement(elementId);
-    setSelectedElementId(null);
-  }, [deleteElement, setSelectedElementId]);
-
-  const handleElementSelect = useCallback((elementId: string | null) => {
-    setSelectedElementId(elementId);
-  }, [setSelectedElementId]);
-
-  const handleNavigateToCard = useCallback((cardIndex: number) => {
-    setCurrentCardIndex(cardIndex);
-    setSelectedElementId(null);
-  }, [setCurrentCardIndex, setSelectedElementId]);
 
   const getCurrentElements = () => {
     if (!currentCard) return [];
@@ -519,7 +525,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     if (e.target === e.currentTarget || (e.target as Element).hasAttribute('data-canvas-background')) {
       setSelectedElementId(null);
     }
-  }, []);
+  }, [setSelectedElementId]);
 
   if (loading) {
     return (
