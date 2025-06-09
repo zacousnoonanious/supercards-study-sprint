@@ -22,6 +22,8 @@ interface UndockableToolbarProps {
   canvasRef?: React.RefObject<HTMLDivElement>;
 }
 
+type SnapZone = 'left' | 'right' | 'top' | 'bottom' | null;
+
 export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
   const { theme } = useTheme();
   const [isDocked, setIsDocked] = useState(true);
@@ -29,6 +31,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
   const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [snapZone, setSnapZone] = useState<SnapZone>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
@@ -45,23 +48,29 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       // Check for snap zones
       if (props.canvasRef?.current) {
         const canvasRect = props.canvasRef.current.getBoundingClientRect();
-        const snapThreshold = 50;
+        const snapThreshold = 80;
+        let currentSnapZone: SnapZone = null;
 
         // Left snap zone
-        if (newX < canvasRect.left + snapThreshold && newY > canvasRect.top && newY < canvasRect.bottom) {
-          setPosition('left');
+        if (newX < canvasRect.left + snapThreshold && newY > canvasRect.top - 50 && newY < canvasRect.bottom + 50) {
+          currentSnapZone = 'left';
         }
         // Right snap zone
-        else if (newX > canvasRect.right - snapThreshold && newY > canvasRect.top && newY < canvasRect.bottom) {
-          setPosition('right');
+        else if (newX > canvasRect.right - snapThreshold && newY > canvasRect.top - 50 && newY < canvasRect.bottom + 50) {
+          currentSnapZone = 'right';
         }
         // Top snap zone
-        else if (newY < canvasRect.top + snapThreshold && newX > canvasRect.left && newX < canvasRect.right) {
-          setPosition('top');
+        else if (newY < canvasRect.top + snapThreshold && newX > canvasRect.left - 50 && newX < canvasRect.right + 50) {
+          currentSnapZone = 'top';
         }
         // Bottom snap zone
-        else if (newY > canvasRect.bottom - snapThreshold && newX > canvasRect.left && newX < canvasRect.right) {
-          setPosition('bottom');
+        else if (newY > canvasRect.bottom - snapThreshold && newX > canvasRect.left - 50 && newX < canvasRect.right + 50) {
+          currentSnapZone = 'bottom';
+        }
+
+        setSnapZone(currentSnapZone);
+        if (currentSnapZone) {
+          setPosition(currentSnapZone);
         }
       }
     };
@@ -70,26 +79,13 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       if (isDragging) {
         setIsDragging(false);
         
-        // Check if we should dock based on final position
-        if (props.canvasRef?.current) {
-          const canvasRect = props.canvasRef.current.getBoundingClientRect();
-          const snapThreshold = 100;
-          const toolbarRect = toolbarRef.current?.getBoundingClientRect();
-          
-          if (toolbarRect) {
-            const centerX = toolbarRect.left + toolbarRect.width / 2;
-            const centerY = toolbarRect.top + toolbarRect.height / 2;
-            
-            if (
-              (Math.abs(centerX - canvasRect.left) < snapThreshold) ||
-              (Math.abs(centerX - canvasRect.right) < snapThreshold) ||
-              (Math.abs(centerY - canvasRect.top) < snapThreshold) ||
-              (Math.abs(centerY - canvasRect.bottom) < snapThreshold)
-            ) {
-              setIsDocked(true);
-            }
-          }
+        // Dock if we're in a snap zone
+        if (snapZone) {
+          setIsDocked(true);
+          setPosition(snapZone);
         }
+        
+        setSnapZone(null);
       }
     };
 
@@ -102,7 +98,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset, props.canvasRef, isDocked]);
+  }, [isDragging, dragOffset, props.canvasRef, isDocked, snapZone]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isDocked || !toolbarRef.current) return;
@@ -120,36 +116,112 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
     if (!isDocked) {
       setPosition('left'); // Default to left when docking
     }
+    setSnapZone(null);
+  };
+
+  const getSnapZoneStyle = (zone: SnapZone) => {
+    if (!props.canvasRef?.current || snapZone !== zone) return { display: 'none' };
+    
+    const canvasRect = props.canvasRef.current.getBoundingClientRect();
+    const baseStyle = {
+      position: 'fixed' as const,
+      backgroundColor: isDarkTheme ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)',
+      border: `2px dashed ${isDarkTheme ? '#60a5fa' : '#3b82f6'}`,
+      pointerEvents: 'none' as const,
+      zIndex: 40,
+      borderRadius: '8px',
+    };
+
+    switch (zone) {
+      case 'left':
+        return {
+          ...baseStyle,
+          left: canvasRect.left - 60,
+          top: canvasRect.top,
+          width: 50,
+          height: canvasRect.height,
+        };
+      case 'right':
+        return {
+          ...baseStyle,
+          left: canvasRect.right + 10,
+          top: canvasRect.top,
+          width: 50,
+          height: canvasRect.height,
+        };
+      case 'top':
+        return {
+          ...baseStyle,
+          left: canvasRect.left,
+          top: canvasRect.top - 60,
+          width: canvasRect.width,
+          height: 50,
+        };
+      case 'bottom':
+        return {
+          ...baseStyle,
+          left: canvasRect.left,
+          top: canvasRect.bottom + 10,
+          width: canvasRect.width,
+          height: 50,
+        };
+      default:
+        return { display: 'none' };
+    }
   };
 
   if (isDocked) {
     return (
-      <ConsolidatedToolbar
-        {...props}
-        position={position}
-        isDocked={isDocked}
-        onToggleDock={handleToggleDock}
-      />
+      <>
+        <ConsolidatedToolbar
+          {...props}
+          position={position}
+          isDocked={isDocked}
+          onToggleDock={handleToggleDock}
+        />
+        
+        {/* Snap zone indicators */}
+        {isDragging && (
+          <>
+            <div style={getSnapZoneStyle('left')} />
+            <div style={getSnapZoneStyle('right')} />
+            <div style={getSnapZoneStyle('top')} />
+            <div style={getSnapZoneStyle('bottom')} />
+          </>
+        )}
+      </>
     );
   }
 
   return (
-    <div
-      ref={toolbarRef}
-      className={`fixed z-50 ${isDragging ? 'cursor-move' : 'cursor-grab'}`}
-      style={{
-        left: dragPosition.x,
-        top: dragPosition.y,
-      }}
-      onMouseDown={handleMouseDown}
-    >
-      <ConsolidatedToolbar
-        {...props}
-        position="left"
-        isDocked={isDocked}
-        onToggleDock={handleToggleDock}
-        className={`shadow-xl ${isDarkTheme ? 'border-gray-500' : 'border-gray-400'}`}
-      />
-    </div>
+    <>
+      <div
+        ref={toolbarRef}
+        className={`fixed z-50 ${isDragging ? 'cursor-move' : 'cursor-grab'}`}
+        style={{
+          left: dragPosition.x,
+          top: dragPosition.y,
+        }}
+        onMouseDown={handleMouseDown}
+      >
+        <ConsolidatedToolbar
+          {...props}
+          position="floating"
+          isDocked={isDocked}
+          onToggleDock={handleToggleDock}
+          className={`shadow-xl ${isDarkTheme ? 'border-gray-500' : 'border-gray-400'}`}
+        />
+      </div>
+      
+      {/* Snap zone indicators */}
+      {isDragging && (
+        <>
+          <div style={getSnapZoneStyle('left')} />
+          <div style={getSnapZoneStyle('right')} />
+          <div style={getSnapZoneStyle('top')} />
+          <div style={getSnapZoneStyle('bottom')} />
+        </>
+      )}
+    </>
   );
 };
