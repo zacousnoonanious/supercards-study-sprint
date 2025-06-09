@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
@@ -9,7 +8,6 @@ import { DeckSelector } from './DeckSelector';
 import { EmbeddedDeckViewer } from './EmbeddedDeckViewer';
 import { RichTextEditor } from './RichTextEditor';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useEditorTheme } from '@/contexts/EditorThemeContext';
 
 interface CanvasElementRendererProps {
   element: CanvasElement;
@@ -35,25 +33,16 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   onElementSelect,
 }) => {
   const { theme } = useTheme();
-  const { editorTheme } = useEditorTheme();
 
-  // Use editor theme for canvas elements when in editor mode
+  const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
+
+  // Use global theme for canvas elements
   const getTextColor = () => {
-    if (isStudyMode) {
-      // In study mode, use the global theme
-      return element.color || (theme === 'dark' ? '#ffffff' : '#000000');
-    } else {
-      // In editor mode, use editor theme
-      return element.color || (editorTheme === 'dark' ? '#ffffff' : '#000000');
-    }
+    return element.color || (isDarkTheme ? '#ffffff' : '#000000');
   };
 
   const getBackgroundColor = () => {
-    if (isStudyMode) {
-      return theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300';
-    } else {
-      return editorTheme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300';
-    }
+    return isDarkTheme ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300';
   };
 
   const handleMultipleChoiceUpdate = (updates: Partial<CanvasElement>) => {
@@ -159,7 +148,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
     case 'deck-embed':
       return (
         <div className={`w-full h-full flex items-center justify-center p-2 rounded border ${
-          theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+          isDarkTheme ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
         } ${isStudyMode ? 'cursor-pointer hover:bg-gray-50' : ''}`}
         onClick={handleElementClick}
         >
@@ -239,7 +228,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
     case 'audio':
       const audioContent = (
         <div className={`w-full h-full flex flex-col items-center justify-center rounded border p-2 ${
-          theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+          isDarkTheme ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
         } ${isStudyMode ? 'cursor-pointer hover:bg-gray-50' : ''}`}
         onClick={handleElementClick}
         >
@@ -288,7 +277,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           <RichTextEditor
             element={{
               ...element,
-              color: getTextColor() // Override color based on editor theme
+              color: getTextColor() // Override color based on global theme
             }}
             onUpdate={(updates) => onUpdateElement(element.id, updates)}
             onEditingChange={(editing) => onEditingChange(editing ? element.id : null)}
@@ -330,7 +319,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           {!isStudyMode && (
             <div className="text-center">
               <div 
-                className={`text-sm mb-2 ${editorTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}
+                className={`text-sm mb-2 ${isDarkTheme ? 'text-gray-300' : 'text-gray-500'}`}
                 style={{ fontSize: `${12 * textScale}px` }}
               >
                 No image
