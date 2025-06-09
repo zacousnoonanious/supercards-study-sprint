@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -214,21 +213,11 @@ export const PricingPlans = () => {
                 }}
               >
                 {plan.isPopular && (
-                  <>
-                    {/* Flame animation around Pro plan */}
-                    <div className="absolute -inset-2 bg-gradient-to-r from-orange-400 via-red-500 to-yellow-400 rounded-3xl opacity-20 animate-pulse"></div>
-                    <div 
-                      className="absolute -inset-1 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 rounded-3xl opacity-30"
-                      style={{
-                        animation: 'pulse 2s ease-in-out infinite alternate'
-                      }}
-                    ></div>
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-yellow-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                        Most Popular
-                      </span>
-                    </div>
-                  </>
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-yellow-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                      Most Popular
+                    </span>
+                  </div>
                 )}
                 <CardHeader className="text-center pb-6">
                   <CardTitle className="text-3xl text-gray-900 group-hover:text-yellow-700 transition-colors">{plan.name}</CardTitle>

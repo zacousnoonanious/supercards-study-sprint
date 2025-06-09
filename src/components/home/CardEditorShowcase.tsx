@@ -9,6 +9,8 @@ export const CardEditorShowcase = () => {
   const [animationStep, setAnimationStep] = useState(0);
   const [typingText, setTypingText] = useState('');
   const [cursorPosition, setCursorPosition] = useState({ x: 20, y: 20 });
+  const [isClicked, setIsClicked] = useState(false);
+  const [imageSize, setImageSize] = useState({ width: 120, height: 80 });
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -22,6 +24,18 @@ export const CardEditorShowcase = () => {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+
+  // Mouse click animation for step 1
+  useEffect(() => {
+    if (animationStep === 1) {
+      setIsClicked(false);
+      const clickTimeout = setTimeout(() => {
+        setIsClicked(true);
+        setTimeout(() => setIsClicked(false), 200);
+      }, 500);
+      return () => clearTimeout(clickTimeout);
+    }
+  }, [animationStep]);
 
   // Typing animation for step 1
   useEffect(() => {
@@ -39,24 +53,40 @@ export const CardEditorShowcase = () => {
         }
       }, 100);
 
+      setTimeout(() => {
+        const startTyping = setInterval(() => {
+          if (currentIndex <= text.length) {
+            setTypingText(text.slice(0, currentIndex));
+            currentIndex++;
+          } else {
+            clearInterval(startTyping);
+          }
+        }, 100);
+      }, 800);
+
       return () => clearInterval(typingInterval);
     }
   }, [animationStep]);
 
-  // Cursor dragging animation for step 2
+  // Image resize animation for step 2
   useEffect(() => {
     if (animationStep === 2) {
-      setCursorPosition({ x: 20, y: 20 });
+      setImageSize({ width: 120, height: 80 });
+      setCursorPosition({ x: 85, y: 60 });
       
-      const dragInterval = setInterval(() => {
-        setCursorPosition(prev => ({
-          x: Math.min(prev.x + 2, 80),
-          y: Math.min(prev.y + 1, 60)
+      const resizeInterval = setInterval(() => {
+        setImageSize(prev => ({
+          width: Math.min(prev.width + 3, 200),
+          height: Math.min(prev.height + 2, 120)
         }));
-      }, 50);
+        setCursorPosition(prev => ({
+          x: Math.min(prev.x + 1, 95),
+          y: Math.min(prev.y + 0.5, 70)
+        }));
+      }, 80);
 
-      setTimeout(() => clearInterval(dragInterval), 2000);
-      return () => clearInterval(dragInterval);
+      setTimeout(() => clearInterval(resizeInterval), 2500);
+      return () => clearInterval(resizeInterval);
     }
   }, [animationStep]);
 
@@ -261,9 +291,9 @@ export const CardEditorShowcase = () => {
                     className={`absolute w-6 h-6 transition-all duration-1000 pointer-events-none z-20 ${
                       animationStep === 0 ? 'top-4 left-4' : 
                       animationStep === 1 ? 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2' :
-                      animationStep === 2 ? `top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2` :
+                      animationStep === 2 ? `bottom-1/4 right-1/4` :
                       'bottom-4 right-4'
-                    }`}
+                    } ${isClicked ? 'scale-90' : 'scale-100'}`}
                     style={animationStep === 2 ? {
                       left: `${cursorPosition.x}%`,
                       top: `${cursorPosition.y}%`
@@ -272,7 +302,7 @@ export const CardEditorShowcase = () => {
                     <MousePointer className="w-6 h-6 text-orange-600" />
                   </div>
 
-                  {/* Step 1: Empty state */}
+                  {/* Step 0: Empty state */}
                   {animationStep === 0 && (
                     <div className="animate-fade-in">
                       <div className="w-20 h-20 bg-orange-200/80 rounded-full flex items-center justify-center mb-6">
@@ -282,7 +312,7 @@ export const CardEditorShowcase = () => {
                     </div>
                   )}
 
-                  {/* Step 2: Adding title with typing animation */}
+                  {/* Step 1: Adding title with click then typing animation */}
                   {animationStep === 1 && (
                     <div className="animate-scale-in">
                       <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -292,7 +322,7 @@ export const CardEditorShowcase = () => {
                     </div>
                   )}
 
-                  {/* Step 3: Adding image with dragging animation */}
+                  {/* Step 2: Adding image with resizing animation */}
                   {animationStep === 2 && (
                     <div className="animate-fade-in">
                       <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -301,17 +331,19 @@ export const CardEditorShowcase = () => {
                       <div 
                         className="relative bg-orange-100 rounded-lg border-2 border-dashed border-orange-300 transition-all duration-100"
                         style={{
-                          width: `${Math.min(120 + (cursorPosition.x - 20) * 2, 200)}px`,
-                          height: `${Math.min(80 + (cursorPosition.y - 20) * 1.5, 120)}px`
+                          width: `${imageSize.width}px`,
+                          height: `${imageSize.height}px`
                         }}
                       >
                         <Image className="w-8 h-8 text-orange-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                        {/* Resize handle */}
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-orange-500 rounded-tl cursor-nw-resize"></div>
                       </div>
                       <p className="text-sm text-gray-500 mt-2">Drag to resize</p>
                     </div>
                   )}
 
-                  {/* Step 4: Completed card preview */}
+                  {/* Step 3: Completed card preview with styling */}
                   {animationStep === 3 && (
                     <div className="animate-scale-in">
                       <div className="bg-white/90 rounded-xl p-6 shadow-lg border border-green-200 max-w-xs">
@@ -326,9 +358,15 @@ export const CardEditorShowcase = () => {
                         <p className="text-gray-700 text-sm mb-4">
                           The process by which plants convert sunlight into energy
                         </p>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                          <span className="text-sm text-green-600 font-medium">Card Ready!</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span className="text-sm text-green-600 font-medium">Card Ready!</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Palette className="w-4 h-4 text-purple-500" />
+                            <span className="text-xs text-purple-600">Styled</span>
+                          </div>
                         </div>
                       </div>
                     </div>
