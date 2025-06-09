@@ -174,8 +174,10 @@ export const CardEditor = () => {
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (isPanning) {
+      if (isPanning && canvasViewportRef.current?.contains(e.target as Node)) {
         e.preventDefault();
+        e.stopPropagation();
+        
         const deltaX = e.clientX - panStart.x;
         const deltaY = e.clientY - panStart.y;
         
@@ -191,6 +193,7 @@ export const CardEditor = () => {
     const handleMouseUp = (e: MouseEvent) => {
       if (e.button === 1 && isPanning) {
         e.preventDefault();
+        e.stopPropagation();
         setIsPanning(false);
         
         // Reset cursor style
@@ -202,23 +205,32 @@ export const CardEditor = () => {
 
     // Prevent context menu on middle click
     const handleContextMenu = (e: MouseEvent) => {
-      if (e.button === 1) {
+      if (e.button === 1 || isPanning) {
+        e.preventDefault();
+      }
+    };
+
+    // Prevent drag start events that might interfere
+    const handleDragStart = (e: DragEvent) => {
+      if (isPanning) {
         e.preventDefault();
       }
     };
 
     document.addEventListener('wheel', handleWheel, { passive: false });
-    document.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousedown', handleMouseDown, { capture: true });
+    document.addEventListener('mousemove', handleMouseMove, { capture: true });
+    document.addEventListener('mouseup', handleMouseUp, { capture: true });
     document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('dragstart', handleDragStart);
 
     return () => {
       document.removeEventListener('wheel', handleWheel);
-      document.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousedown', handleMouseDown, { capture: true });
+      document.removeEventListener('mousemove', handleMouseMove, { capture: true });
+      document.removeEventListener('mouseup', handleMouseUp, { capture: true });
       document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('dragstart', handleDragStart);
     };
   }, [zoom, panOffset, isPanning, panStart]);
 
@@ -476,8 +488,8 @@ export const CardEditor = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex min-h-0">
-        <div className="flex-1 flex items-center justify-center p-2" ref={canvasContainerRef}>
-          <div className="flex items-start gap-2 h-full w-full max-w-none">
+        <div className="flex-1 flex items-center justify-center p-1" ref={canvasContainerRef}>
+          <div className="flex items-start gap-1 h-full w-full max-w-none">
             {/* Canvas-Left Toolbar Position */}
             {toolbarIsDocked && toolbarPosition === 'canvas-left' && (
               <UndockableToolbar
@@ -510,10 +522,17 @@ export const CardEditor = () => {
                   isDarkTheme 
                     ? 'bg-gray-800 border-gray-600' 
                     : 'bg-white border-gray-300'
-                } ${zoom > 1 ? 'cursor-grab' : 'cursor-default'}`}
+                } ${zoom > 1 && !isPanning ? 'cursor-grab' : ''} ${isPanning ? 'cursor-grabbing' : ''}`}
                 style={{ 
                   minWidth: Math.max(cardWidth * 0.5, 400),
                   minHeight: Math.max(cardHeight * 0.5, 300),
+                  userSelect: isPanning ? 'none' : 'auto',
+                }}
+                onMouseDown={(e) => {
+                  // Prevent default browser drag behavior
+                  if (e.button === 1) {
+                    e.preventDefault();
+                  }
                 }}
               >
                 <div
@@ -523,6 +542,7 @@ export const CardEditor = () => {
                     transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
                     transformOrigin: '0 0',
                     transition: isPanning ? 'none' : 'transform 0.1s ease-out',
+                    pointerEvents: isPanning ? 'none' : 'auto',
                   }}
                 >
                   <CardCanvas
