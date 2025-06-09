@@ -1,5 +1,4 @@
 
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -60,6 +59,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const [toolbarShowText, setToolbarShowText] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(false);
+  const [isTextSelecting, setIsTextSelecting] = useState(false);
   
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const topSettingsBarRef = useRef<HTMLDivElement>(null);
@@ -92,13 +92,27 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   }, [deleteElement, setSelectedElementId]);
 
   const handleElementSelect = useCallback((elementId: string | null) => {
+    // Don't change selection during text selection
+    if (isTextSelecting) return;
     setSelectedElementId(elementId);
-  }, [setSelectedElementId]);
+  }, [setSelectedElementId, isTextSelecting]);
 
   const handleNavigateToCard = useCallback((cardIndex: number) => {
     setCurrentCardIndex(cardIndex);
     setSelectedElementId(null);
   }, [setCurrentCardIndex, setSelectedElementId]);
+
+  // Handle text selection state changes
+  const handleTextSelectionStart = useCallback(() => {
+    setIsTextSelecting(true);
+  }, []);
+
+  const handleTextSelectionEnd = useCallback(() => {
+    // Delay clearing the selection state to allow for proper event handling
+    setTimeout(() => {
+      setIsTextSelecting(false);
+    }, 100);
+  }, []);
 
   // Save card when switching cards or sides
   useEffect(() => {
@@ -120,6 +134,9 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
 
   // Handle keyboard events for delete functionality and navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Don't handle keyboard shortcuts during text selection
+    if (isTextSelecting) return;
+
     // Delete key - delete selected element
     if (e.key === 'Delete' && selectedElementId) {
       e.preventDefault();
@@ -165,7 +182,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
       setCurrentSide('front');
       return;
     }
-  }, [selectedElementId, currentCardIndex, cards.length, currentCard, handleDeleteElement, navigateCard, setCurrentSide, setSelectedElementId]);
+  }, [selectedElementId, currentCardIndex, cards.length, currentCard, handleDeleteElement, navigateCard, setCurrentSide, setSelectedElementId, isTextSelecting]);
 
   // Add keyboard event listener
   useEffect(() => {
@@ -174,6 +191,26 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleKeyDown]);
+
+  // Monitor text selection globally
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (selection && selection.toString().length > 0) {
+        setIsTextSelecting(true);
+      } else {
+        // Delay clearing to allow for proper event handling
+        setTimeout(() => {
+          setIsTextSelecting(false);
+        }, 100);
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, []);
 
   // Handle zoom and pan with left-click dragging - only for canvas background
   useEffect(() => {
@@ -209,6 +246,9 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     };
 
     const handleMouseDown = (e: MouseEvent) => {
+      // Don't handle panning during text selection
+      if (isTextSelecting) return;
+
       // Only handle left mouse button and only within canvas viewport
       if (e.button === 0 && canvasViewportRef.current?.contains(e.target as Node)) {
         // Check if we clicked on the canvas background, not an element
@@ -319,7 +359,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [zoom, panOffset, isPanning, panStart]);
+  }, [zoom, panOffset, isPanning, panStart, isTextSelecting]);
 
   // Fit to area function
   const handleFitToArea = useCallback(() => {
@@ -522,11 +562,14 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   }, [addElement]);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
+    // Don't deselect during text selection
+    if (isTextSelecting) return;
+    
     // Only deselect if clicking directly on the canvas background
     if (e.target === e.currentTarget || (e.target as Element).hasAttribute('data-canvas-background')) {
       setSelectedElementId(null);
     }
-  }, [setSelectedElementId]);
+  }, [setSelectedElementId, isTextSelecting]);
 
   if (loading) {
     return (
@@ -608,6 +651,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
           snapToGrid={snapToGrid}
           onSnapToGridChange={setSnapToGrid}
           currentSide={currentSide}
+          isTextSelecting={isTextSelecting}
         />
       </div>
 
@@ -655,6 +699,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
                   userSelect: isPanning ? 'none' : 'auto',
                 }}
                 data-canvas-background="true"
+                onClick={handleCanvasClick}
               >
                 <div
                   style={{
@@ -684,6 +729,8 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
                     gridSize={20}
                     snapToGrid={snapToGrid}
                     zoom={zoom}
+                    onTextSelectionStart={handleTextSelectionStart}
+                    onTextSelectionEnd={handleTextSelectionEnd}
                   />
                 </div>
               </div>

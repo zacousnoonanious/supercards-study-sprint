@@ -75,6 +75,8 @@ export interface CanvasElement {
   textDecoration?: string;
   color?: string;
   textAlign?: 'left' | 'center' | 'right';
+  fontFamily?: string;
+  backgroundColor?: string;
   
   // TTS properties
   hasTTS?: boolean;
@@ -94,6 +96,7 @@ export interface CanvasElement {
   
   // Audio properties
   audioUrl?: string;
+  autoplay?: boolean;
   
   // Drawing properties
   drawingData?: string;
@@ -126,10 +129,15 @@ export interface CanvasElement {
   }>;
   ignoreCase?: boolean;
   showLetterCount?: boolean;
+  fillInBlankMode?: boolean;
   
   // YouTube properties
   youtubeUrl?: string;
   youtubeId?: string;
+  youtubeVideoId?: string;
+  youtubeAutoplay?: boolean;
+  youtubeMuted?: boolean;
+  youtubeStartTime?: number;
   
   // Deck embed properties
   deckId?: string;

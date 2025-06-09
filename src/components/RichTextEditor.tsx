@@ -9,6 +9,8 @@ interface RichTextEditorProps {
   onEditingChange: (editing: boolean) => void;
   textScale?: number;
   isStudyMode?: boolean;
+  onTextSelectionStart?: () => void;
+  onTextSelectionEnd?: () => void;
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -17,9 +19,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   onEditingChange,
   textScale = 1,
   isStudyMode = false,
+  onTextSelectionStart,
+  onTextSelectionEnd,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textDisplayRef = useRef<HTMLDivElement>(null);
 
   const handleContentChange = (content: string) => {
     onUpdate({ content });
@@ -59,6 +64,28 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       textareaRef.current.select();
     }
   }, [isEditing]);
+
+  // Handle text selection monitoring
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (selection && textDisplayRef.current) {
+        const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+        const isWithinElement = range && textDisplayRef.current.contains(range.commonAncestorContainer);
+        
+        if (isWithinElement && selection.toString().length > 0) {
+          onTextSelectionStart?.();
+        } else if (selection.toString().length === 0) {
+          onTextSelectionEnd?.();
+        }
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, [onTextSelectionStart, onTextSelectionEnd]);
 
   const textStyle = {
     fontSize: `${(element.fontSize || 16) * textScale}px`,
@@ -118,11 +145,16 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               padding: '0',
             }}
             placeholder="Enter your text..."
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
           />
         ) : (
           <div
+            ref={textDisplayRef}
             className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words"
             style={textStyle}
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
           >
             {element.content || 'Click to edit text'}
           </div>
