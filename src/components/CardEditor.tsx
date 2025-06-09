@@ -418,75 +418,79 @@ export const CardEditor = () => {
         />
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex items-center justify-center p-4 relative">
-        <div className="flex items-start gap-0" ref={canvasContainerRef}>
-          {/* Undockable Toolbar */}
-          <UndockableToolbar
-            onAddElement={addElement}
-            onAutoArrange={handleAutoArrange}
-            currentCard={currentCard}
-            currentCardIndex={currentCardIndex}
-            totalCards={cards.length}
-            currentSide={currentSide}
-            onNavigateCard={navigateCard}
-            onSideChange={setCurrentSide}
-            onCreateNewCard={createNewCard}
-            onCreateNewCardWithLayout={createNewCardWithLayout}
-            onCreateNewCardFromTemplate={createNewCardFromTemplate}
-            onDeleteCard={() => deleteCard(currentCard.id)}
-            onCardTypeChange={(type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
-            onShowCardOverview={() => setShowCardOverview(true)}
-            canvasRef={canvasContainerRef}
-            topSettingsBarRef={topSettingsBarRef}
-          />
-
-          {/* Card Canvas and Footer Container */}
-          <div className="flex flex-col">
-            {/* Canvas Viewport with zoom and pan */}
-            <div 
-              ref={canvasViewportRef}
-              className={`shadow-lg border overflow-hidden ${
-                isDarkTheme 
-                  ? 'bg-gray-800 border-gray-600' 
-                  : 'bg-white border-gray-300'
-              } ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
-              style={{ 
-                width: Math.max(cardWidth, 400),
-                height: Math.max(cardHeight, 300),
-              }}
-            >
-              <div
-                style={{
-                  width: cardWidth,
-                  height: cardHeight,
-                  transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
-                  transformOrigin: '0 0',
-                  transition: isPanning ? 'none' : 'transform 0.1s ease-out',
-                }}
-              >
-                <CardCanvas
-                  elements={getCurrentElements()}
-                  selectedElement={selectedElement}
-                  onSelectElement={handleElementSelect}
-                  onUpdateElement={handleUpdateElement}
-                  onDeleteElement={handleDeleteElement}
-                  cardSide={currentSide}
-                  style={{ width: cardWidth, height: cardHeight }}
-                />
-              </div>
-            </div>
-
-            {/* Bottom Footer - fixed width, not affected by zoom */}
-            <SimpleEditorFooter
+      {/* Main Content Area - Expanded to fill more space */}
+      <div className="flex-1 flex min-h-0">
+        <div className="flex-1 flex items-center justify-center p-2" ref={canvasContainerRef}>
+          <div className="flex items-start gap-2 h-full w-full max-w-none">
+            {/* Undockable Toolbar */}
+            <UndockableToolbar
+              onAddElement={addElement}
+              onAutoArrange={handleAutoArrange}
               currentCard={currentCard}
               currentCardIndex={currentCardIndex}
               totalCards={cards.length}
-              selectedElement={getSelectedElementData()}
-              onUpdateCard={updateCard}
+              currentSide={currentSide}
               onNavigateCard={navigateCard}
-              cardWidth={Math.max(cardWidth, 400)}
+              onSideChange={setCurrentSide}
+              onCreateNewCard={createNewCard}
+              onCreateNewCardWithLayout={createNewCardWithLayout}
+              onCreateNewCardFromTemplate={createNewCardFromTemplate}
+              onDeleteCard={() => deleteCard(currentCard.id)}
+              onCardTypeChange={(type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
+              onShowCardOverview={() => setShowCardOverview(true)}
+              canvasRef={canvasContainerRef}
+              topSettingsBarRef={topSettingsBarRef}
             />
+
+            {/* Card Canvas and Footer Container - Expanded to fill remaining space */}
+            <div className="flex flex-col flex-1 min-h-0 h-full">
+              {/* Canvas Viewport with zoom and pan - Expanded */}
+              <div 
+                ref={canvasViewportRef}
+                className={`shadow-lg border overflow-hidden flex-1 ${
+                  isDarkTheme 
+                    ? 'bg-gray-800 border-gray-600' 
+                    : 'bg-white border-gray-300'
+                } ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+                style={{ 
+                  minWidth: Math.max(cardWidth * 0.5, 400),
+                  minHeight: Math.max(cardHeight * 0.5, 300),
+                }}
+              >
+                <div
+                  style={{
+                    width: cardWidth,
+                    height: cardHeight,
+                    transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
+                    transformOrigin: '0 0',
+                    transition: isPanning ? 'none' : 'transform 0.1s ease-out',
+                  }}
+                >
+                  <CardCanvas
+                    elements={getCurrentElements()}
+                    selectedElement={selectedElement}
+                    onSelectElement={handleElementSelect}
+                    onUpdateElement={handleUpdateElement}
+                    onDeleteElement={handleDeleteElement}
+                    cardSide={currentSide}
+                    style={{ width: cardWidth, height: cardHeight }}
+                  />
+                </div>
+              </div>
+
+              {/* Bottom Footer - fixed to footer width */}
+              <div className="flex-shrink-0">
+                <SimpleEditorFooter
+                  currentCard={currentCard}
+                  currentCardIndex={currentCardIndex}
+                  totalCards={cards.length}
+                  selectedElement={getSelectedElementData()}
+                  onUpdateCard={updateCard}
+                  onNavigateCard={navigateCard}
+                  cardWidth={Math.max(cardWidth * 0.5, 400)}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
