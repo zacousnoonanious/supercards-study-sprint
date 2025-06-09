@@ -69,177 +69,186 @@ export const PricingPlans = () => {
     }
   ];
 
+  const floatingCards = [
+    { text: "Free Plan", x: 5, y: 20, delay: 0 },
+    { text: "Pro Features", x: 92, y: 30, delay: 2.5 },
+    { text: "$12/month", x: 8, y: 75, delay: 1 },
+    { text: "Enterprise", x: 88, y: 85, delay: 3.5 },
+  ];
+
   return (
-    <section className="relative py-20 overflow-hidden">
-      {/* Unique crystalline background pattern */}
-      <div className="absolute inset-0 bg-gradient-to-bl from-yellow-100 via-green-50 to-teal-100">
-        {/* Large crystal formations */}
+    <section className="relative min-h-screen w-full overflow-hidden">
+      {/* Prismatic crystal background */}
+      <div className="absolute inset-0 bg-gradient-to-bl from-yellow-200 via-green-100 to-teal-200">
+        {/* Large prismatic formations that shift and change */}
         <div 
-          className="absolute -top-20 left-1/4 w-40 h-40 bg-gradient-to-br from-yellow-300/30 to-green-300/30"
+          className="absolute -top-40 left-1/6 w-[600px] h-[600px] bg-gradient-to-br from-yellow-400/20 to-green-400/20"
           style={{ 
-            transform: `translateY(${scrollY * 0.25}px) rotate(${scrollY * 0.1}deg)`,
-            clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)'
+            transform: `translateY(${scrollY * 0.5}px) rotate(${scrollY * 0.18}deg) scale(${1.2 + Math.sin(scrollY * 0.01) * 0.4})`,
+            clipPath: `polygon(${30 + Math.sin(scrollY * 0.015) * 20}% 0%, ${70 + Math.cos(scrollY * 0.02) * 30}% 0%, ${100 + Math.sin(scrollY * 0.012) * 0}% ${50 + Math.cos(scrollY * 0.018) * 30}%, ${70 + Math.sin(scrollY * 0.015) * 30}% 100%, ${30 + Math.cos(scrollY * 0.01) * 20}% 100%, ${0 + Math.sin(scrollY * 0.008) * 10}% ${50 + Math.cos(scrollY * 0.022) * 20}%)`,
+            filter: 'blur(100px)'
           }}
         ></div>
         <div 
-          className="absolute top-1/3 -right-32 w-64 h-64 bg-gradient-to-br from-green-300/40 to-teal-300/40"
+          className="absolute top-1/4 -right-60 w-[800px] h-[800px] bg-gradient-to-br from-green-400/25 to-teal-400/25"
           style={{ 
-            transform: `translateY(${scrollY * -0.35}px) rotate(${scrollY * -0.08}deg)`,
-            clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)'
+            transform: `translateY(${scrollY * -0.6}px) rotate(${scrollY * -0.12}deg) scale(${1.4 + Math.cos(scrollY * 0.008) * 0.3})`,
+            clipPath: `polygon(${25 + Math.cos(scrollY * 0.02) * 25}% 0%, ${75 + Math.sin(scrollY * 0.015) * 25}% 0%, ${100 + Math.cos(scrollY * 0.01) * 0}% ${40 + Math.sin(scrollY * 0.018) * 35}%, ${80 + Math.cos(scrollY * 0.012) * 20}% 100%, ${20 + Math.sin(scrollY * 0.015) * 30}% 100%, ${0 + Math.cos(scrollY * 0.008) * 15}% ${60 + Math.sin(scrollY * 0.02) * 25}%)`,
+            filter: 'blur(130px)'
           }}
         ></div>
         <div 
-          className="absolute bottom-10 left-1/5 w-48 h-48 bg-gradient-to-br from-teal-300/50 to-blue-300/50"
+          className="absolute bottom-10 left-1/3 w-[500px] h-[500px] bg-gradient-to-br from-teal-400/30 to-blue-400/30"
           style={{ 
-            transform: `translateY(${scrollY * 0.45}px) rotate(${scrollY * 0.12}deg)`,
-            clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)'
-          }}
-        ></div>
-
-        {/* Floating triangular elements */}
-        <div 
-          className="absolute top-16 right-1/5 w-10 h-10 bg-yellow-400/60"
-          style={{ 
-            transform: `translateY(${scrollY * 0.9}px) rotate(${scrollY * 0.6}deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
-        <div 
-          className="absolute top-40 left-1/6 w-8 h-8 bg-green-400/70"
-          style={{ 
-            transform: `translateY(${scrollY * 1.1}px) rotate(${scrollY * -0.4}deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-          }}
-        ></div>
-        <div 
-          className="absolute bottom-32 right-1/6 w-12 h-12 bg-teal-400/50"
-          style={{ 
-            transform: `translateY(${scrollY * -0.8}px) rotate(${scrollY * 0.5}deg)`,
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+            transform: `translateY(${scrollY * 0.8}px) rotate(${scrollY * 0.25}deg) scale(${0.9 + Math.sin(scrollY * 0.015) * 0.5})`,
+            clipPath: `polygon(${40 + Math.sin(scrollY * 0.025) * 30}% 0%, ${60 + Math.cos(scrollY * 0.02) * 40}% 0%, ${100 + Math.sin(scrollY * 0.01) * 0}% ${35 + Math.cos(scrollY * 0.015) * 30}%, ${85 + Math.sin(scrollY * 0.018) * 15}% 100%, ${15 + Math.cos(scrollY * 0.012) * 25}% 100%, ${0 + Math.sin(scrollY * 0.008) * 12}% ${65 + Math.cos(scrollY * 0.02) * 20}%)`,
+            filter: 'blur(110px)'
           }}
         ></div>
 
-        {/* Confetti with unique spiraling motion */}
+        {/* Dynamic diamond elements with morphing */}
         <div 
-          className="absolute top-24 left-2/5 w-14 h-14 opacity-60"
+          className="absolute top-32 right-1/5 w-16 h-16 bg-yellow-500/50"
           style={{ 
-            transform: `translateY(${scrollY * 1.2}px) rotate(${scrollY * 0.8}deg) translateX(${Math.sin(scrollY * 0.01) * 20}px)`
+            transform: `translateY(${scrollY * 1.8}px) rotate(${45 + scrollY * 1.2}deg) scale(${0.7 + Math.sin(scrollY * 0.03) * 0.8})`,
+            clipPath: `polygon(50% ${0 + Math.sin(scrollY * 0.02) * 20}%, ${100 + Math.cos(scrollY * 0.015) * 0}% 50%, 50% ${100 + Math.sin(scrollY * 0.018) * 0}%, ${0 + Math.cos(scrollY * 0.012) * 20}% 50%)`
+          }}
+        ></div>
+        <div 
+          className="absolute bottom-40 left-1/5 w-20 h-20 bg-green-500/60"
+          style={{ 
+            transform: `translateY(${scrollY * -1.5}px) rotate(${45 + scrollY * -0.8}deg) scale(${1.1 + Math.cos(scrollY * 0.02) * 0.4})`,
+            clipPath: `polygon(50% ${10 + Math.cos(scrollY * 0.025) * 15}%, ${90 + Math.sin(scrollY * 0.02) * 10}% 50%, 50% ${90 + Math.cos(scrollY * 0.015) * 10}%, ${10 + Math.sin(scrollY * 0.018) * 15}% 50%)`
+          }}
+        ></div>
+
+        {/* Enhanced confetti with complex motion */}
+        <div 
+          className="absolute top-48 left-2/5 w-20 h-20 opacity-50"
+          style={{ 
+            transform: `translateY(${scrollY * 2.0}px) rotate(${scrollY * 1.5}deg) translateX(${Math.sin(scrollY * 0.025) * 60}px) scale(${0.6 + Math.cos(scrollY * 0.02) * 0.8})`
           }}
         >
           <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
         </div>
         <div 
-          className="absolute bottom-40 right-2/5 w-10 h-10 opacity-50"
+          className="absolute bottom-60 right-2/5 w-16 h-16 opacity-60"
           style={{ 
-            transform: `translateY(${scrollY * -1.0}px) rotate(${scrollY * -0.7}deg) translateX(${Math.cos(scrollY * 0.008) * 15}px)`
+            transform: `translateY(${scrollY * -1.8}px) rotate(${scrollY * -1.3}deg) translateX(${Math.cos(scrollY * 0.02) * 45}px) scale(${0.8 + Math.sin(scrollY * 0.018) * 0.6})`
           }}
         >
           <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
         </div>
       </div>
 
-      {/* Overlay confetti with spiraling effects */}
-      <div 
-        className="absolute top-12 left-3/5 w-7 h-7 opacity-30 z-20"
-        style={{ 
-          transform: `translateY(${scrollY * 1.4}px) rotate(${scrollY * 1.0}deg) translateX(${Math.sin(scrollY * 0.012) * 25}px)`
-        }}
-      >
-        <img src="/lovable-uploads/e69b608a-21ef-4079-a2bb-d3eb308bf7d7.png" alt="Confetti" className="w-full h-full object-contain" />
-      </div>
-      <div 
-        className="absolute bottom-28 left-1/3 w-5 h-5 opacity-40 z-20"
-        style={{ 
-          transform: `translateY(${scrollY * -1.3}px) rotate(${scrollY * 1.2}deg) translateX(${Math.cos(scrollY * 0.009) * 20}px)`
-        }}
-      >
-        <img src="/lovable-uploads/fa7f4349-db22-4c04-9c52-c7f01c093a26.png" alt="Confetti" className="w-full h-full object-contain" />
-      </div>
+      {/* Floating pricing cards */}
+      {floatingCards.map((card, index) => (
+        <div
+          key={index}
+          className="absolute z-30 pointer-events-none"
+          style={{
+            left: `${card.x}%`,
+            top: `${card.y}%`,
+            transform: `translateY(${Math.sin((scrollY + card.delay * 140) * 0.015) * 40}px) rotate(${Math.cos((scrollY + card.delay * 70) * 0.012) * 15}deg) scale(${0.6 + Math.sin((scrollY + card.delay * 110) * 0.018) * 0.5})`,
+            opacity: 0.25 + Math.sin((scrollY + card.delay * 120) * 0.01) * 0.45
+          }}
+        >
+          <div className="bg-yellow-100/40 backdrop-blur-sm rounded-2xl p-5 shadow-lg border border-yellow-200/50 text-sm font-bold text-yellow-800">
+            {card.text}
+          </div>
+        </div>
+      ))}
 
       {/* Yellow mascot character with wave motion */}
       <div 
-        className="absolute bottom-8 right-8 z-10"
+        className="absolute bottom-12 right-12 z-20"
         style={{ 
-          transform: `translateY(${scrollY * 0.18}px) rotate(${Math.sin(scrollY * 0.012) * 4}deg) translateX(${Math.cos(scrollY * 0.008) * 10}px)`
+          transform: `translateY(${scrollY * 0.3}px) rotate(${Math.sin(scrollY * 0.02) * 7}deg) translateX(${Math.cos(scrollY * 0.015) * 25}px) scale(${1 + Math.sin(scrollY * 0.012) * 0.15})`
         }}
       >
         <img 
           src="/lovable-uploads/eaed28d5-3f56-44a6-a03c-4fd8d513b11a.png" 
           alt="Yellow monster with flashcards" 
-          className="w-32 h-32 md:w-40 md:h-40 object-contain animate-float"
+          className="w-36 h-36 md:w-44 md:h-44 object-contain animate-float"
         />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Choose Your Plan
-          </h2>
-          <p className="text-xl text-gray-600 mb-4">
-            Start free, upgrade when you need more power
-          </p>
-          <p className="text-sm text-gray-500">
-            No credit card required • Cancel anytime • 14-day free trial on Pro
-          </p>
-        </div>
-        
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {plans.map((plan, index) => (
-            <Card 
-              key={index} 
-              className={`relative bg-white/25 backdrop-blur-lg transition-all duration-300 hover:shadow-xl border-white/40 ${
-                plan.isPopular 
-                  ? 'border-2 border-yellow-200/60 shadow-lg scale-105' 
-                  : 'hover:border-yellow-200/60'
-              }`}
-            >
-              {plan.isPopular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-yellow-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                    Most Popular
-                  </span>
-                </div>
-              )}
-              <CardHeader className="text-center pb-4">
-                <CardTitle className="text-2xl text-gray-900">{plan.name}</CardTitle>
-                <div className="text-4xl font-bold text-gray-900 mt-2">
-                  {plan.price}
-                  {plan.priceSubtext && <span className="text-lg font-normal text-gray-600">{plan.priceSubtext}</span>}
-                </div>
-                <CardDescription className="text-gray-700">{plan.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {plan.features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-gray-800">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="pt-6">
-                  <Link to="/auth" className="block">
-                    <Button 
-                      className={`w-full ${
-                        plan.isPopular 
-                          ? 'bg-yellow-500 hover:bg-yellow-600 text-white' 
-                          : ''
-                      }`} 
-                      variant={plan.variant}
-                    >
-                      {plan.buttonText}
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        
-        <div className="text-center mt-12">
-          <p className="text-sm text-gray-600">
-            All plans include access to our mobile app and 24/7 customer support.
-          </p>
+      <div className="relative z-10 w-full px-8 py-24">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+              Choose Your Plan
+            </h2>
+            <p className="text-2xl text-gray-700 mb-6">
+              Start free, upgrade when you need more power
+            </p>
+            <p className="text-lg text-gray-600">
+              No credit card required • Cancel anytime • 14-day free trial on Pro
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto">
+            {plans.map((plan, index) => (
+              <Card 
+                key={index} 
+                className={`relative bg-white/12 backdrop-blur-xl transition-all duration-500 hover:shadow-2xl border-white/30 group ${
+                  plan.isPopular 
+                    ? 'border-2 border-yellow-300/50 shadow-xl scale-110' 
+                    : 'hover:border-yellow-300/50 hover:scale-105'
+                }`}
+                style={{
+                  transform: `translateY(${Math.sin((scrollY + index * 120) * 0.01) * 12}px) ${plan.isPopular ? 'scale(1.1)' : ''}`,
+                  borderRadius: `${25 + Math.sin((scrollY + index * 60) * 0.018) * 12}px`
+                }}
+              >
+                {plan.isPopular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-yellow-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+                <CardHeader className="text-center pb-6">
+                  <CardTitle className="text-3xl text-gray-900 group-hover:text-yellow-700 transition-colors">{plan.name}</CardTitle>
+                  <div className="text-5xl font-bold text-gray-900 mt-4">
+                    {plan.price}
+                    {plan.priceSubtext && <span className="text-xl font-normal text-gray-600">{plan.priceSubtext}</span>}
+                  </div>
+                  <CardDescription className="text-gray-800 text-lg">{plan.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    {plan.features.map((feature, featureIndex) => (
+                      <div key={featureIndex} className="flex items-start">
+                        <CheckCircle className="w-6 h-6 text-green-500 mr-4 mt-1 flex-shrink-0" />
+                        <span className="text-gray-800 text-lg">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-8">
+                    <Link to="/auth" className="block">
+                      <Button 
+                        className={`w-full text-lg py-6 rounded-2xl transition-all duration-300 ${
+                          plan.isPopular 
+                            ? 'bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg hover:shadow-xl' 
+                            : 'hover:scale-105'
+                        }`} 
+                        variant={plan.variant}
+                      >
+                        {plan.buttonText}
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          <div className="text-center mt-16">
+            <p className="text-lg text-gray-700">
+              All plans include access to our mobile app and 24/7 customer support.
+            </p>
+          </div>
         </div>
       </div>
     </section>
