@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -153,11 +154,9 @@ export const PricingPlans = () => {
               transition: 'transform 0.8s ease-in-out'
             }}
           >
-            {/* Front of card */}
             <div className="absolute inset-0 w-full h-full bg-yellow-100/70 backdrop-blur-sm rounded-2xl shadow-lg border border-yellow-200/50 p-4 flex items-center justify-center [backface-visibility:hidden]">
               <p className="text-xs font-bold text-yellow-800 text-center">{card.front}</p>
             </div>
-            {/* Back of card */}
             <div 
               className="absolute inset-0 w-full h-full bg-green-100/70 backdrop-blur-sm rounded-2xl shadow-lg border border-green-200/50 p-4 flex items-center justify-center [backface-visibility:hidden]"
               style={{ transform: 'rotateY(180deg)' }}
@@ -215,11 +214,21 @@ export const PricingPlans = () => {
                 }}
               >
                 {plan.isPopular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-yellow-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                      Most Popular
-                    </span>
-                  </div>
+                  <>
+                    {/* Flame animation around Pro plan */}
+                    <div className="absolute -inset-2 bg-gradient-to-r from-orange-400 via-red-500 to-yellow-400 rounded-3xl opacity-20 animate-pulse"></div>
+                    <div 
+                      className="absolute -inset-1 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 rounded-3xl opacity-30"
+                      style={{
+                        animation: 'pulse 2s ease-in-out infinite alternate'
+                      }}
+                    ></div>
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <span className="bg-yellow-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                        Most Popular
+                      </span>
+                    </div>
+                  </>
                 )}
                 <CardHeader className="text-center pb-6">
                   <CardTitle className="text-3xl text-gray-900 group-hover:text-yellow-700 transition-colors">{plan.name}</CardTitle>
@@ -264,6 +273,22 @@ export const PricingPlans = () => {
           </div>
         </div>
       </div>
+
+      {/* Flame animation styles */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes flame {
+            0%, 100% { 
+              transform: scale(1) rotate(0deg);
+              opacity: 0.3;
+            }
+            50% { 
+              transform: scale(1.05) rotate(1deg);
+              opacity: 0.5;
+            }
+          }
+        `
+      }} />
     </section>
   );
 };
