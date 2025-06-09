@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { MultipleChoiceRenderer, TrueFalseRenderer, YouTubeRenderer } from './InteractiveElements';
 import { FillInBlankEditor } from './FillInBlankEditor';
@@ -33,6 +34,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   onElementSelect,
 }) => {
   const { theme } = useTheme();
+  const [activeDrawingElement, setActiveDrawingElement] = useState<string | null>(null);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
@@ -222,6 +224,9 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
             strokeWidth={element.strokeWidth}
             onDragStart={(e) => onElementDragStart?.(e, element.id)}
             isDragging={isDragging}
+            isActive={activeDrawingElement === element.id}
+            onActivate={() => setActiveDrawingElement(element.id)}
+            onDeactivate={() => setActiveDrawingElement(null)}
           />
         </div>
       );
