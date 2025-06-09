@@ -143,6 +143,11 @@ export const useCardEditor = () => {
       if (updates.hint !== undefined) updateData.hint = updates.hint;
       if (updates.card_type !== undefined) updateData.card_type = updates.card_type;
       if (updates.countdown_timer !== undefined) updateData.countdown_timer = updates.countdown_timer;
+      if (updates.countdown_timer_front !== undefined) updateData.countdown_timer_front = updates.countdown_timer_front;
+      if (updates.countdown_timer_back !== undefined) updateData.countdown_timer_back = updates.countdown_timer_back;
+      if (updates.countdown_behavior_front !== undefined) updateData.countdown_behavior_front = updates.countdown_behavior_front;
+      if (updates.countdown_behavior_back !== undefined) updateData.countdown_behavior_back = updates.countdown_behavior_back;
+      if (updates.flips_before_next !== undefined) updateData.flips_before_next = updates.flips_before_next;
       if (updates.password !== undefined) updateData.password = updates.password;
       if (updates.front_elements !== undefined) updateData.front_elements = updates.front_elements as any;
       if (updates.back_elements !== undefined) updateData.back_elements = updates.back_elements as any;

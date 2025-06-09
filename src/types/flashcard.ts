@@ -1,5 +1,4 @@
 
-
 export interface CanvasElement {
   id: string;
   type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'fill-in-blank' | 'youtube' | 'deck-embed' | 'drawing' | 'audio';
@@ -61,6 +60,11 @@ export interface Flashcard {
   card_type?: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
   countdown_timer?: number;
   countdown_behavior?: 'flip' | 'next';
+  countdown_timer_front?: number;
+  countdown_behavior_front?: 'flip' | 'next';
+  countdown_timer_back?: number;
+  countdown_behavior_back?: 'flip' | 'next';
+  flips_before_next?: number;
   canvas_width?: number;
   canvas_height?: number;
   position: number;

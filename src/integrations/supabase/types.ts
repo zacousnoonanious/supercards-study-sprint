@@ -87,8 +87,13 @@ export type Database = {
           canvas_height: number | null
           canvas_width: number | null
           card_type: string | null
+          countdown_behavior_back: string | null
+          countdown_behavior_front: string | null
           countdown_timer: number | null
+          countdown_timer_back: number | null
+          countdown_timer_front: number | null
           created_at: string
+          flips_before_next: number | null
           front_elements: Json | null
           hint: string | null
           id: string
@@ -106,8 +111,13 @@ export type Database = {
           canvas_height?: number | null
           canvas_width?: number | null
           card_type?: string | null
+          countdown_behavior_back?: string | null
+          countdown_behavior_front?: string | null
           countdown_timer?: number | null
+          countdown_timer_back?: number | null
+          countdown_timer_front?: number | null
           created_at?: string
+          flips_before_next?: number | null
           front_elements?: Json | null
           hint?: string | null
           id?: string
@@ -125,8 +135,13 @@ export type Database = {
           canvas_height?: number | null
           canvas_width?: number | null
           card_type?: string | null
+          countdown_behavior_back?: string | null
+          countdown_behavior_front?: string | null
           countdown_timer?: number | null
+          countdown_timer_back?: number | null
+          countdown_timer_front?: number | null
           created_at?: string
+          flips_before_next?: number | null
           front_elements?: Json | null
           hint?: string | null
           id?: string

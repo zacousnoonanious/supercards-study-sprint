@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { CountdownBehaviorSelector } from '@/components/CountdownBehaviorSelector';
+import { AdvancedCountdownSettings } from '@/components/AdvancedCountdownSettings';
 import { Flashcard } from '@/types/flashcard';
 
 interface CardTypeSelectorProps {
@@ -50,8 +51,9 @@ export const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({
         </Select>
       </div>
 
+      {/* Legacy single timer (kept for backwards compatibility) */}
       <div>
-        <Label className="text-sm font-medium">Countdown Timer (seconds)</Label>
+        <Label className="text-sm font-medium">Legacy Timer (both sides)</Label>
         <Input
           type="number"
           min="0"
@@ -61,7 +63,7 @@ export const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({
           className="w-full"
         />
         <p className="text-xs text-gray-500 mt-1">
-          0 means no countdown. When timer expires, card will either flip or advance based on setting below.
+          This applies the same timer to both sides. Use Advanced Timer Settings below for more control.
         </p>
       </div>
 
@@ -71,6 +73,12 @@ export const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({
           onUpdateCard={onUpdateCard}
         />
       )}
+
+      {/* Advanced Timer Settings */}
+      <AdvancedCountdownSettings
+        card={card}
+        onUpdateCard={onUpdateCard}
+      />
 
       <div>
         <Label className="text-sm font-medium">Hint</Label>
