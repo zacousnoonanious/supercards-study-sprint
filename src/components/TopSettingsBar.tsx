@@ -99,6 +99,10 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
     }
   };
 
+  const bothSidesHaveTimers = (currentCard?.countdown_timer_front || 0) > 0 && (currentCard?.countdown_timer_back || 0) > 0;
+  const bothSidesFlip = currentCard?.countdown_behavior_front === 'flip' && currentCard?.countdown_behavior_back === 'flip';
+  const showFlipCount = bothSidesHaveTimers && bothSidesFlip;
+
   return (
     <div className={`border-b p-2 ${isDarkTheme ? 'bg-gray-800 border-gray-600' : 'bg-background border-border'}`}>
       <div className="flex items-center gap-4 flex-wrap">
@@ -176,17 +180,48 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
                 max="300"
                 placeholder="0"
               />
-              <div className="flex items-center gap-1">
-                <Label className="text-xs">Auto:</Label>
-                <Switch
-                  checked={getCurrentBehavior() === 'next'}
-                  onCheckedChange={(checked) => handleBehaviorUpdate(checked ? 'next' : 'flip')}
-                  className="scale-75"
-                />
-              </div>
+              {getCurrentTimer() > 0 && (
+                <div className="flex items-center gap-1">
+                  <Label className="text-xs">Action:</Label>
+                  <Select
+                    value={getCurrentBehavior()}
+                    onValueChange={(value: 'flip' | 'next') => handleBehaviorUpdate(value)}
+                  >
+                    <SelectTrigger className="w-20 h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="flip">Flip</SelectItem>
+                      <SelectItem value="next">Next</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
+
+        {/* Flip Count - Only show when both sides have timers and both are set to flip */}
+        {showFlipCount && (
+          <>
+            <Separator orientation="vertical" className="h-8" />
+            <Card className="flex-shrink-0">
+              <CardContent className="p-2">
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs whitespace-nowrap">Flips before next:</Label>
+                  <Input
+                    type="number"
+                    value={currentCard.flips_before_next || 2}
+                    onChange={(e) => onUpdateCard({ flips_before_next: Number(e.target.value) || 2 })}
+                    className="w-16 h-7 text-xs"
+                    min="1"
+                    max="10"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
         <Separator orientation="vertical" className="h-8" />
 
