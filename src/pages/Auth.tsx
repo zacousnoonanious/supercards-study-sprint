@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { Navigation } from '@/components/Navigation';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -63,8 +64,10 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      <Navigation />
+      
       {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-background">
+      <div className="absolute inset-0 bg-background pt-12">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10">
           {/* Floating gradient orbs */}
           <div 
@@ -87,7 +90,7 @@ const Auth = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 pt-16">
         <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border/50 shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-primary">SuperCards</CardTitle>

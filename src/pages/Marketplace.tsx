@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -8,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Star, Download, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { UserDropdown } from '@/components/UserDropdown';
 import { Navigation } from '@/components/Navigation';
 
 interface MarketplaceSet {
@@ -75,17 +73,7 @@ const Marketplace = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="shadow-sm border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
-              <Navigation />
-            </div>
-            <UserDropdown />
-          </div>
-        </div>
-      </header>
+      <Navigation />
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">

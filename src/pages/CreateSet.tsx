@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Save, Sparkles, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { UserDropdown } from '@/components/UserDropdown';
 import { Navigation } from '@/components/Navigation';
 import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
 
@@ -82,17 +81,7 @@ const CreateSet = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="shadow-sm border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-indigo-600">SuperCards</h1>
-              <Navigation />
-            </div>
-            <UserDropdown />
-          </div>
-        </div>
-      </header>
+      <Navigation />
 
       <main className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center space-x-4 mb-6">

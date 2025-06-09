@@ -7,6 +7,7 @@ import { CoreFeatures } from '@/components/home/CoreFeatures';
 import { CardEditorShowcase } from '@/components/home/CardEditorShowcase';
 import { PricingPlans } from '@/components/home/PricingPlans';
 import { FinalCTA } from '@/components/home/FinalCTA';
+import { Navigation } from '@/components/Navigation';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -33,6 +34,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      <Navigation />
       <HeroSection />
       <div className="max-w-7xl mx-auto px-4 py-20 space-y-32">
         <CoreFeatures />
