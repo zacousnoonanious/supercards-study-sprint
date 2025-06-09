@@ -49,6 +49,8 @@ export const CardEditor = () => {
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [toolbarPosition, setToolbarPosition] = useState<'left' | 'very-top' | 'canvas-left' | 'floating'>('left');
+  const [toolbarIsDocked, setToolbarIsDocked] = useState(true);
   
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const topSettingsBarRef = useRef<HTMLDivElement>(null);
@@ -59,6 +61,14 @@ export const CardEditor = () => {
 
   // Determine if we should use dark styling for the editor
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
+
+  // Calculate layout offset based on toolbar position
+  const getLayoutOffset = () => {
+    if (toolbarIsDocked && toolbarPosition === 'left') {
+      return { marginLeft: '4.5rem' }; // w-18 equivalent
+    }
+    return {};
+  };
 
   // Save card when switching cards or sides
   useEffect(() => {
@@ -115,7 +125,7 @@ export const CardEditor = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedElement, currentCardIndex, cards.length, navigateCard]);
 
-  // Handle zoom and pan
+  // Handle zoom and pan with improved middle mouse button handling
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       if (!canvasViewportRef.current?.contains(e.target as Node)) return;
@@ -124,38 +134,76 @@ export const CardEditor = () => {
       
       if (e.ctrlKey || e.metaKey) {
         // Zoom with Ctrl+scroll or pinch
+        const rect = canvasViewportRef.current.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
         const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
         const newZoom = Math.max(0.1, Math.min(3, zoom * zoomFactor));
+        
+        // Adjust pan to zoom towards center
+        const zoomRatio = newZoom / zoom;
+        setPanOffset(prev => ({
+          x: centerX - (centerX - prev.x) * zoomRatio,
+          y: centerY - (centerY - prev.y) * zoomRatio
+        }));
+        
         setZoom(newZoom);
       } else {
         // Pan with scroll
         setPanOffset(prev => ({
-          x: prev.x - e.deltaX,
-          y: prev.y - e.deltaY
+          x: prev.x - e.deltaX * 0.5,
+          y: prev.y - e.deltaY * 0.5
         }));
       }
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      if (e.button === 1 && canvasViewportRef.current?.contains(e.target as Node)) { // Middle mouse button
+      // Only handle middle mouse button and only within canvas viewport
+      if (e.button === 1 && canvasViewportRef.current?.contains(e.target as Node)) {
         e.preventDefault();
+        e.stopPropagation();
         setIsPanning(true);
-        setPanStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+        setPanStart({ x: e.clientX, y: e.clientY });
+        
+        // Add cursor style
+        if (canvasViewportRef.current) {
+          canvasViewportRef.current.style.cursor = 'grabbing';
+        }
       }
     };
 
     const handleMouseMove = (e: MouseEvent) => {
       if (isPanning) {
-        setPanOffset({
-          x: e.clientX - panStart.x,
-          y: e.clientY - panStart.y
-        });
+        e.preventDefault();
+        const deltaX = e.clientX - panStart.x;
+        const deltaY = e.clientY - panStart.y;
+        
+        setPanOffset(prev => ({
+          x: prev.x + deltaX,
+          y: prev.y + deltaY
+        }));
+        
+        setPanStart({ x: e.clientX, y: e.clientY });
       }
     };
 
     const handleMouseUp = (e: MouseEvent) => {
-      if (e.button === 1) {
+      if (e.button === 1 && isPanning) {
+        e.preventDefault();
         setIsPanning(false);
+        
+        // Reset cursor style
+        if (canvasViewportRef.current) {
+          canvasViewportRef.current.style.cursor = zoom > 1 ? 'grab' : 'default';
+        }
+      }
+    };
+
+    // Prevent context menu on middle click
+    const handleContextMenu = (e: MouseEvent) => {
+      if (e.button === 1) {
+        e.preventDefault();
       }
     };
 
@@ -163,12 +211,14 @@ export const CardEditor = () => {
     document.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('contextmenu', handleContextMenu);
 
     return () => {
       document.removeEventListener('wheel', handleWheel);
       document.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('contextmenu', handleContextMenu);
     };
   }, [zoom, panOffset, isPanning, panStart]);
 
@@ -339,6 +389,12 @@ export const CardEditor = () => {
     }
   }, [currentCard]);
 
+  // Handle toolbar position changes
+  const handleToolbarPositionChange = useCallback((position: 'left' | 'very-top' | 'canvas-left' | 'floating', isDocked: boolean) => {
+    setToolbarPosition(position);
+    setToolbarIsDocked(isDocked);
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -352,7 +408,7 @@ export const CardEditor = () => {
 
   if (!set || cards.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col" style={getLayoutOffset()}>
         <Navigation />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -372,7 +428,7 @@ export const CardEditor = () => {
   // Show card overview if toggled
   if (showCardOverview) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col" style={getLayoutOffset()}>
         <Navigation />
         <EditorCardOverview
           cards={cards}
@@ -386,7 +442,7 @@ export const CardEditor = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" style={getLayoutOffset()}>
       <Navigation />
       
       {/* Header */}
@@ -418,40 +474,43 @@ export const CardEditor = () => {
         />
       </div>
 
-      {/* Main Content Area - Expanded to fill more space */}
+      {/* Main Content Area */}
       <div className="flex-1 flex min-h-0">
         <div className="flex-1 flex items-center justify-center p-2" ref={canvasContainerRef}>
           <div className="flex items-start gap-2 h-full w-full max-w-none">
-            {/* Undockable Toolbar */}
-            <UndockableToolbar
-              onAddElement={addElement}
-              onAutoArrange={handleAutoArrange}
-              currentCard={currentCard}
-              currentCardIndex={currentCardIndex}
-              totalCards={cards.length}
-              currentSide={currentSide}
-              onNavigateCard={navigateCard}
-              onSideChange={setCurrentSide}
-              onCreateNewCard={createNewCard}
-              onCreateNewCardWithLayout={createNewCardWithLayout}
-              onCreateNewCardFromTemplate={createNewCardFromTemplate}
-              onDeleteCard={() => deleteCard(currentCard.id)}
-              onCardTypeChange={(type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
-              onShowCardOverview={() => setShowCardOverview(true)}
-              canvasRef={canvasContainerRef}
-              topSettingsBarRef={topSettingsBarRef}
-            />
+            {/* Canvas-Left Toolbar Position */}
+            {toolbarIsDocked && toolbarPosition === 'canvas-left' && (
+              <UndockableToolbar
+                onAddElement={addElement}
+                onAutoArrange={handleAutoArrange}
+                currentCard={currentCard}
+                currentCardIndex={currentCardIndex}
+                totalCards={cards.length}
+                currentSide={currentSide}
+                onNavigateCard={navigateCard}
+                onSideChange={setCurrentSide}
+                onCreateNewCard={createNewCard}
+                onCreateNewCardWithLayout={createNewCardWithLayout}
+                onCreateNewCardFromTemplate={createNewCardFromTemplate}
+                onDeleteCard={() => deleteCard(currentCard.id)}
+                onCardTypeChange={(type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
+                onShowCardOverview={() => setShowCardOverview(true)}
+                canvasRef={canvasContainerRef}
+                topSettingsBarRef={topSettingsBarRef}
+                onPositionChange={handleToolbarPositionChange}
+              />
+            )}
 
-            {/* Card Canvas and Footer Container - Expanded to fill remaining space */}
+            {/* Card Canvas and Footer Container */}
             <div className="flex flex-col flex-1 min-h-0 h-full">
-              {/* Canvas Viewport with zoom and pan - Expanded */}
+              {/* Canvas Viewport with zoom and pan */}
               <div 
                 ref={canvasViewportRef}
                 className={`shadow-lg border overflow-hidden flex-1 ${
                   isDarkTheme 
                     ? 'bg-gray-800 border-gray-600' 
                     : 'bg-white border-gray-300'
-                } ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+                } ${zoom > 1 ? 'cursor-grab' : 'cursor-default'}`}
                 style={{ 
                   minWidth: Math.max(cardWidth * 0.5, 400),
                   minHeight: Math.max(cardHeight * 0.5, 300),
@@ -478,7 +537,7 @@ export const CardEditor = () => {
                 </div>
               </div>
 
-              {/* Bottom Footer - fixed to footer width */}
+              {/* Bottom Footer */}
               <div className="flex-shrink-0">
                 <SimpleEditorFooter
                   currentCard={currentCard}
@@ -494,6 +553,29 @@ export const CardEditor = () => {
           </div>
         </div>
       </div>
+
+      {/* Other Toolbar Positions */}
+      {(!toolbarIsDocked || toolbarPosition !== 'canvas-left') && (
+        <UndockableToolbar
+          onAddElement={addElement}
+          onAutoArrange={handleAutoArrange}
+          currentCard={currentCard}
+          currentCardIndex={currentCardIndex}
+          totalCards={cards.length}
+          currentSide={currentSide}
+          onNavigateCard={navigateCard}
+          onSideChange={setCurrentSide}
+          onCreateNewCard={createNewCard}
+          onCreateNewCardWithLayout={createNewCardWithLayout}
+          onCreateNewCardFromTemplate={createNewCardFromTemplate}
+          onDeleteCard={() => deleteCard(currentCard.id)}
+          onCardTypeChange={(type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => updateCard(currentCard.id, { card_type: type })}
+          onShowCardOverview={() => setShowCardOverview(true)}
+          canvasRef={canvasContainerRef}
+          topSettingsBarRef={topSettingsBarRef}
+          onPositionChange={handleToolbarPositionChange}
+        />
+      )}
 
       {showShortcuts && (
         <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />

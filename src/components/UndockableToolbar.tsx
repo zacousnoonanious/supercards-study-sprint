@@ -21,14 +21,15 @@ interface UndockableToolbarProps {
   onShowCardOverview?: () => void;
   canvasRef?: React.RefObject<HTMLDivElement>;
   topSettingsBarRef?: React.RefObject<HTMLDivElement>;
+  onPositionChange?: (position: 'left' | 'very-top' | 'canvas-left' | 'floating', isDocked: boolean) => void;
 }
 
-type SnapZone = 'left' | 'very-top' | null;
+type SnapZone = 'left' | 'very-top' | 'canvas-left' | null;
 
 export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
   const { theme } = useTheme();
   const [isDocked, setIsDocked] = useState(true);
-  const [position, setPosition] = useState<'left' | 'very-top' | 'floating'>('left');
+  const [position, setPosition] = useState<'left' | 'very-top' | 'canvas-left' | 'floating'>('left');
   const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -46,7 +47,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       
       setDragPosition({ x: newX, y: newY });
 
-      // Check for snap zones - only left and very-top
+      // Check for snap zones
       const snapThreshold = 60;
       const toolbarRect = toolbarRef.current?.getBoundingClientRect();
       const toolbarCenterX = newX + (toolbarRect?.width || 0) / 2;
@@ -56,7 +57,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
 
       // Left snap zone - check if close to left edge of screen
       const distanceToLeft = Math.abs(newX);
-      if (distanceToLeft < snapThreshold && toolbarCenterY > 100) { // Avoid very top area
+      if (distanceToLeft < snapThreshold && toolbarCenterY > 100) {
         currentSnapZone = 'left';
       }
       
@@ -64,6 +65,16 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       const distanceToTop = Math.abs(newY);
       if (distanceToTop < snapThreshold && toolbarCenterX > 50 && toolbarCenterX < window.innerWidth - 50) {
         currentSnapZone = 'very-top';
+      }
+
+      // Canvas-left snap zone - check if close to canvas area
+      const canvasRect = props.canvasRef?.current?.getBoundingClientRect();
+      if (canvasRect) {
+        const distanceToCanvasLeft = Math.abs(newX - (canvasRect.left - 80));
+        const isWithinCanvasHeight = toolbarCenterY > canvasRect.top && toolbarCenterY < canvasRect.bottom;
+        if (distanceToCanvasLeft < snapThreshold && isWithinCanvasHeight) {
+          currentSnapZone = 'canvas-left';
+        }
       }
 
       setSnapZone(currentSnapZone);
@@ -80,6 +91,9 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
         if (snapZone) {
           setIsDocked(true);
           setPosition(snapZone);
+          props.onPositionChange?.(snapZone, true);
+        } else {
+          props.onPositionChange?.('floating', false);
         }
         
         setSnapZone(null);
@@ -95,7 +109,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset, isDocked, snapZone]);
+  }, [isDragging, dragOffset, isDocked, snapZone, props]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isDocked || !toolbarRef.current) return;
@@ -109,9 +123,14 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
   };
 
   const handleToggleDock = () => {
-    setIsDocked(!isDocked);
-    if (!isDocked) {
-      setPosition('left'); // Default to left when docking
+    const newIsDocked = !isDocked;
+    setIsDocked(newIsDocked);
+    if (!newIsDocked) {
+      setPosition('floating');
+      props.onPositionChange?.('floating', false);
+    } else {
+      setPosition('left');
+      props.onPositionChange?.('left', true);
     }
     setSnapZone(null);
   };
@@ -127,6 +146,8 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       zIndex: 40,
       borderRadius: '8px',
     };
+
+    const canvasRect = props.canvasRef?.current?.getBoundingClientRect();
 
     switch (zone) {
       case 'left':
@@ -145,6 +166,14 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
           width: window.innerWidth,
           height: 60,
         };
+      case 'canvas-left':
+        return {
+          ...baseStyle,
+          left: canvasRect ? canvasRect.left - 80 : 100,
+          top: canvasRect?.top || 200,
+          width: 60,
+          height: canvasRect?.height || 400,
+        };
       default:
         return { display: 'none' };
     }
@@ -160,11 +189,12 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
           onToggleDock={handleToggleDock}
         />
         
-        {/* Snap zone indicators - only left and very-top */}
+        {/* Snap zone indicators */}
         {isDragging && (
           <>
             <div style={getSnapZoneStyle('left')} />
             <div style={getSnapZoneStyle('very-top')} />
+            <div style={getSnapZoneStyle('canvas-left')} />
           </>
         )}
       </>
@@ -191,11 +221,12 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
         />
       </div>
       
-      {/* Snap zone indicators - only left and very-top */}
+      {/* Snap zone indicators */}
       {isDragging && (
         <>
           <div style={getSnapZoneStyle('left')} />
           <div style={getSnapZoneStyle('very-top')} />
+          <div style={getSnapZoneStyle('canvas-left')} />
         </>
       )}
     </>

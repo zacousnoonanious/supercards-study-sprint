@@ -33,7 +33,7 @@ interface ConsolidatedToolbarProps {
   onDeleteCard: () => void;
   onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
   onShowCardOverview?: () => void;
-  position?: 'left' | 'very-top' | 'floating';
+  position?: 'left' | 'very-top' | 'canvas-left' | 'floating';
   isDocked?: boolean;
   onToggleDock?: () => void;
   style?: React.CSSProperties;
@@ -101,7 +101,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
             {displayText && <span className="ml-1 text-xs whitespace-nowrap">{label}</span>}
           </Button>
         </TooltipTrigger>
-        <TooltipContent side={position === 'left' ? 'right' : 'bottom'}>
+        <TooltipContent side={position === 'left' || position === 'canvas-left' ? 'right' : 'bottom'}>
           {label}
         </TooltipContent>
       </Tooltip>
@@ -145,6 +145,9 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           transform: 'translateX(-50%)',
           zIndex: 60
         };
+      case 'canvas-left':
+        // This will be positioned by the parent container in CardEditor
+        return {};
       default:
         return {};
     }
