@@ -1,12 +1,10 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useI18n } from '@/contexts/I18nContext';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Save, Check, X, Edit, Grid3x3, ZoomIn, ZoomOut } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Save, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { FlashcardSet } from '@/types/flashcard';
-import { ThemeToggle } from './ThemeToggle';
 import { EditableDeckTitle } from './EditableDeckTitle';
 
 interface EditorHeaderProps {
@@ -18,14 +16,14 @@ interface EditorHeaderProps {
   onStartEdit: () => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
-  onShowCardOverview?: () => void;
-  onUpdateDeckTitle?: (title: string) => Promise<void>;
-  zoom?: number;
-  onZoomChange?: (zoom: number) => void;
+  onUpdateDeckTitle: (title: string) => Promise<void>;
+  zoom: number;
+  onZoomChange: (zoom: number) => void;
+  onFitToArea?: () => void;
 }
 
-export const EditorHeader: React.FC<EditorHeaderProps> = ({ 
-  set, 
+export const EditorHeader: React.FC<EditorHeaderProps> = ({
+  set,
   onSave,
   isEditingDeckName,
   deckName,
@@ -33,153 +31,101 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   onStartEdit,
   onSaveEdit,
   onCancelEdit,
-  onShowCardOverview,
   onUpdateDeckTitle,
-  zoom = 1,
-  onZoomChange
+  zoom,
+  onZoomChange,
+  onFitToArea,
 }) => {
-  const { t } = useI18n();
-  const navigate = useNavigate();
+  const [zoomInput, setZoomInput] = useState(Math.round(zoom * 100).toString());
 
   const handleZoomIn = () => {
-    if (onZoomChange) {
-      onZoomChange(Math.min(zoom + 0.1, 2));
-    }
+    const newZoom = Math.min(zoom * 1.2, 3);
+    onZoomChange(newZoom);
+    setZoomInput(Math.round(newZoom * 100).toString());
   };
 
   const handleZoomOut = () => {
-    if (onZoomChange) {
-      onZoomChange(Math.max(zoom - 0.1, 0.5));
-    }
+    const newZoom = Math.max(zoom * 0.8, 0.1);
+    onZoomChange(newZoom);
+    setZoomInput(Math.round(newZoom * 100).toString());
   };
 
-  const handleZoomReset = () => {
-    if (onZoomChange) {
-      onZoomChange(1);
+  const handleZoomInputChange = (value: string) => {
+    setZoomInput(value);
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue > 0 && numValue <= 300) {
+      onZoomChange(numValue / 100);
     }
   };
 
   return (
-    <header className="bg-card shadow-sm border-b editor-header">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              onClick={() => navigate(`/sets/${set.id}`)}
-              className="mr-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {t('back')}
-            </Button>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">{t('edit')}:</span>
-              {onUpdateDeckTitle ? (
-                <EditableDeckTitle
-                  title={set.title}
-                  onTitleUpdate={onUpdateDeckTitle}
-                  className="flex items-center"
-                />
-              ) : (
-                <div className="flex items-center gap-2">
-                  {isEditingDeckName ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={deckName}
-                        onChange={(e) => onDeckNameChange(e.target.value)}
-                        className="h-8 text-lg font-bold text-indigo-600"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') onSaveEdit();
-                          if (e.key === 'Escape') onCancelEdit();
-                        }}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onSaveEdit}
-                        className="h-8 w-8 p-0 text-green-600"
-                        title={t('save')}
-                      >
-                        <Check className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onCancelEdit}
-                        className="h-8 w-8 p-0 text-red-600"
-                        title={t('cancel')}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <h1 className="text-xl font-bold text-indigo-600">{deckName}</h1>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onStartEdit}
-                        className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-                        title={t('edit')}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <ThemeToggle />
-            
-            {/* Zoom Controls */}
-            {onZoomChange && (
-              <div className="flex items-center gap-1 border rounded-md p-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleZoomOut}
-                  disabled={zoom <= 0.5}
-                  className="h-6 w-6 p-0"
-                >
-                  <ZoomOut className="w-3 h-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleZoomReset}
-                  className="h-6 px-2 text-xs"
-                >
-                  {Math.round(zoom * 100)}%
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleZoomIn}
-                  disabled={zoom >= 2}
-                  className="h-6 w-6 p-0"
-                >
-                  <ZoomIn className="w-3 h-3" />
-                </Button>
-              </div>
-            )}
-            
-            {onShowCardOverview && (
-              <Button onClick={onShowCardOverview} variant="outline">
-                <Grid3x3 className="w-4 h-4 mr-2" />
-                {t('dashboard.viewCards')}
-              </Button>
-            )}
-            <Button onClick={onSave} variant="outline">
-              <Save className="w-4 h-4 mr-2" />
-              {t('save')}
-            </Button>
-          </div>
+    <div className="flex items-center justify-between px-4 py-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-14">
+      <div className="flex items-center space-x-4">
+        <EditableDeckTitle
+          title={deckName}
+          onTitleChange={onDeckNameChange}
+          onSave={onUpdateDeckTitle}
+          className="text-lg font-semibold"
+        />
+        
+        <Separator orientation="vertical" className="h-6" />
+        
+        <div className="text-sm text-muted-foreground">
+          Created: {new Date(set.created_at).toLocaleDateString()}
         </div>
       </div>
-    </header>
+
+      <div className="flex items-center space-x-2">
+        {/* Zoom Controls */}
+        <div className="flex items-center space-x-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleZoomOut}
+            disabled={zoom <= 0.1}
+          >
+            <ZoomOut className="w-4 h-4" />
+          </Button>
+          
+          <div className="flex items-center space-x-1">
+            <Input
+              type="text"
+              value={zoomInput}
+              onChange={(e) => handleZoomInputChange(e.target.value)}
+              className="w-16 h-8 text-center text-sm"
+              onBlur={() => setZoomInput(Math.round(zoom * 100).toString())}
+            />
+            <span className="text-xs text-muted-foreground">%</span>
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleZoomIn}
+            disabled={zoom >= 3}
+          >
+            <ZoomIn className="w-4 h-4" />
+          </Button>
+
+          {onFitToArea && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onFitToArea}
+              title="Fit to area"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+
+        <Separator orientation="vertical" className="h-6" />
+        
+        <Button onClick={onSave} variant="default" size="sm">
+          <Save className="w-4 h-4 mr-2" />
+          Save
+        </Button>
+      </div>
+    </div>
   );
 };

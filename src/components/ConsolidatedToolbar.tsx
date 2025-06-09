@@ -36,6 +36,7 @@ interface ConsolidatedToolbarProps {
   position?: 'left' | 'very-top' | 'canvas-left' | 'floating';
   isDocked?: boolean;
   onToggleDock?: () => void;
+  onTextToggle?: (showText: boolean) => void;
   style?: React.CSSProperties;
   className?: string;
 }
@@ -58,6 +59,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   position = 'left',
   isDocked = true,
   onToggleDock,
+  onTextToggle,
   style,
   className
 }) => {
@@ -72,6 +74,12 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
   // Force icon mode for horizontal layout
   const displayText = !isHorizontal && !isFloating && showText;
+
+  const handleTextToggle = () => {
+    const newShowText = !showText;
+    setShowText(newShowText);
+    onTextToggle?.(newShowText);
+  };
 
   const ToolbarButton = ({ 
     icon: Icon, 
@@ -195,7 +203,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
             variant="ghost"
             size="sm"
             className={displayText ? "w-auto h-6 px-2" : "w-6 h-6 p-0 shrink-0"}
-            onClick={() => setShowText(!showText)}
+            onClick={handleTextToggle}
             title={showText ? "Show Icons" : "Show Text"}
           >
             <Menu className="w-3 h-3" />

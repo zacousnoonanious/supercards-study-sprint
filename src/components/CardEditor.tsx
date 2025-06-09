@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -51,6 +52,7 @@ export const CardEditor = () => {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [toolbarPosition, setToolbarPosition] = useState<'left' | 'very-top' | 'canvas-left' | 'floating'>('left');
   const [toolbarIsDocked, setToolbarIsDocked] = useState(true);
+  const [toolbarShowText, setToolbarShowText] = useState(false);
   
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const topSettingsBarRef = useRef<HTMLDivElement>(null);
@@ -62,10 +64,12 @@ export const CardEditor = () => {
   // Determine if we should use dark styling for the editor
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
-  // Calculate layout offset based on toolbar position
+  // Calculate layout offset based on toolbar position and text display
   const getLayoutOffset = () => {
     if (toolbarIsDocked && toolbarPosition === 'left') {
-      return { marginLeft: '4.5rem' }; // w-18 equivalent
+      // Use wider margin when showing text labels
+      const leftMargin = toolbarShowText ? '9rem' : '4.5rem'; // w-36 vs w-18 equivalent
+      return { marginLeft: leftMargin };
     }
     return {};
   };
@@ -125,7 +129,7 @@ export const CardEditor = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedElement, currentCardIndex, cards.length, navigateCard]);
 
-  // Handle zoom and pan with improved middle mouse button handling
+  // Handle zoom and pan with left-click dragging
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       if (!canvasViewportRef.current?.contains(e.target as Node)) return;
@@ -159,22 +163,26 @@ export const CardEditor = () => {
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      // Only handle middle mouse button and only within canvas viewport
-      if (e.button === 1 && canvasViewportRef.current?.contains(e.target as Node)) {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsPanning(true);
-        setPanStart({ x: e.clientX, y: e.clientY });
-        
-        // Add cursor style
-        if (canvasViewportRef.current) {
-          canvasViewportRef.current.style.cursor = 'grabbing';
+      // Only handle left mouse button and only within canvas viewport
+      if (e.button === 0 && canvasViewportRef.current?.contains(e.target as Node)) {
+        // Check if we clicked on the canvas background, not an element
+        const target = e.target as HTMLElement;
+        if (target === canvasViewportRef.current || target.closest('[data-canvas-background]')) {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsPanning(true);
+          setPanStart({ x: e.clientX, y: e.clientY });
+          
+          // Add cursor style
+          if (canvasViewportRef.current) {
+            canvasViewportRef.current.style.cursor = 'grabbing';
+          }
         }
       }
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (isPanning && canvasViewportRef.current?.contains(e.target as Node)) {
+      if (isPanning) {
         e.preventDefault();
         e.stopPropagation();
         
@@ -191,7 +199,7 @@ export const CardEditor = () => {
     };
 
     const handleMouseUp = (e: MouseEvent) => {
-      if (e.button === 1 && isPanning) {
+      if (e.button === 0 && isPanning) {
         e.preventDefault();
         e.stopPropagation();
         setIsPanning(false);
@@ -203,17 +211,42 @@ export const CardEditor = () => {
       }
     };
 
-    // Prevent context menu on middle click
-    const handleContextMenu = (e: MouseEvent) => {
-      if (e.button === 1 || isPanning) {
-        e.preventDefault();
+    // Touch event handlers for mobile
+    const handleTouchStart = (e: TouchEvent) => {
+      if (!canvasViewportRef.current?.contains(e.target as Node)) return;
+      
+      if (e.touches.length === 1) {
+        const target = e.target as HTMLElement;
+        if (target === canvasViewportRef.current || target.closest('[data-canvas-background]')) {
+          e.preventDefault();
+          setIsPanning(true);
+          setPanStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+        }
       }
     };
 
-    // Prevent drag start events that might interfere
-    const handleDragStart = (e: DragEvent) => {
-      if (isPanning) {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isPanning && e.touches.length === 1) {
         e.preventDefault();
+        
+        const deltaX = e.touches[0].clientX - panStart.x;
+        const deltaY = e.touches[0].clientY - panStart.y;
+        
+        setPanOffset(prev => ({
+          x: prev.x + deltaX,
+          y: prev.y + deltaY
+        }));
+        
+        setPanStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (isPanning) {
+        setIsPanning(false);
+        if (canvasViewportRef.current) {
+          canvasViewportRef.current.style.cursor = zoom > 1 ? 'grab' : 'default';
+        }
       }
     };
 
@@ -221,18 +254,44 @@ export const CardEditor = () => {
     document.addEventListener('mousedown', handleMouseDown, { capture: true });
     document.addEventListener('mousemove', handleMouseMove, { capture: true });
     document.addEventListener('mouseup', handleMouseUp, { capture: true });
-    document.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       document.removeEventListener('wheel', handleWheel);
       document.removeEventListener('mousedown', handleMouseDown, { capture: true });
       document.removeEventListener('mousemove', handleMouseMove, { capture: true });
       document.removeEventListener('mouseup', handleMouseUp, { capture: true });
-      document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('dragstart', handleDragStart);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [zoom, panOffset, isPanning, panStart]);
+
+  // Fit to area function
+  const handleFitToArea = useCallback(() => {
+    if (!canvasViewportRef.current) return;
+    
+    const viewportRect = canvasViewportRef.current.getBoundingClientRect();
+    const viewportWidth = viewportRect.width;
+    const viewportHeight = viewportRect.height;
+    
+    // Calculate zoom to fit with some padding
+    const padding = 40;
+    const zoomX = (viewportWidth - padding) / cardWidth;
+    const zoomY = (viewportHeight - padding) / cardHeight;
+    const newZoom = Math.min(zoomX, zoomY, 3); // Cap at 3x zoom
+    
+    // Center the canvas
+    const scaledWidth = cardWidth * newZoom;
+    const scaledHeight = cardHeight * newZoom;
+    const centerX = (viewportWidth - scaledWidth) / 2;
+    const centerY = (viewportHeight - scaledHeight) / 2;
+    
+    setZoom(newZoom);
+    setPanOffset({ x: centerX, y: centerY });
+  }, [cardWidth, cardHeight]);
 
   const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     updateElement(elementId, updates);
@@ -407,6 +466,11 @@ export const CardEditor = () => {
     setToolbarIsDocked(isDocked);
   }, []);
 
+  // Handle toolbar text toggle
+  const handleToolbarTextToggle = useCallback((showText: boolean) => {
+    setToolbarShowText(showText);
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -470,6 +534,7 @@ export const CardEditor = () => {
         onUpdateDeckTitle={handleUpdateDeckTitle}
         zoom={zoom}
         onZoomChange={setZoom}
+        onFitToArea={handleFitToArea}
       />
 
       {/* Top Settings Bar */}
@@ -510,6 +575,7 @@ export const CardEditor = () => {
                 canvasRef={canvasContainerRef}
                 topSettingsBarRef={topSettingsBarRef}
                 onPositionChange={handleToolbarPositionChange}
+                onTextToggle={handleToolbarTextToggle}
               />
             )}
 
@@ -528,12 +594,7 @@ export const CardEditor = () => {
                   minHeight: Math.max(cardHeight * 0.5, 300),
                   userSelect: isPanning ? 'none' : 'auto',
                 }}
-                onMouseDown={(e) => {
-                  // Prevent default browser drag behavior
-                  if (e.button === 1) {
-                    e.preventDefault();
-                  }
-                }}
+                data-canvas-background="true"
               >
                 <div
                   style={{
@@ -544,6 +605,7 @@ export const CardEditor = () => {
                     transition: isPanning ? 'none' : 'transform 0.1s ease-out',
                     pointerEvents: isPanning ? 'none' : 'auto',
                   }}
+                  data-canvas-background="true"
                 >
                   <CardCanvas
                     elements={getCurrentElements()}
@@ -594,6 +656,7 @@ export const CardEditor = () => {
           canvasRef={canvasContainerRef}
           topSettingsBarRef={topSettingsBarRef}
           onPositionChange={handleToolbarPositionChange}
+          onTextToggle={handleToolbarTextToggle}
         />
       )}
 

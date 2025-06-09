@@ -22,6 +22,7 @@ interface UndockableToolbarProps {
   canvasRef?: React.RefObject<HTMLDivElement>;
   topSettingsBarRef?: React.RefObject<HTMLDivElement>;
   onPositionChange?: (position: 'left' | 'very-top' | 'canvas-left' | 'floating', isDocked: boolean) => void;
+  onTextToggle?: (showText: boolean) => void;
 }
 
 type SnapZone = 'left' | 'very-top' | 'canvas-left' | null;
