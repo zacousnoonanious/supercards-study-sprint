@@ -559,6 +559,7 @@ export const CardEditor = () => {
           onShowGridChange={setShowGrid}
           snapToGrid={snapToGrid}
           onSnapToGridChange={setSnapToGrid}
+          currentSide={currentSide}
         />
       </div>
 
