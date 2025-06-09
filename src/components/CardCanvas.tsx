@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
@@ -112,7 +111,12 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   }, []);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === canvasRef.current) {
+    // Check if the click target is the canvas itself or the background
+    const isCanvasBackground = e.target === canvasRef.current || 
+                               (e.target as Element).hasAttribute('data-canvas-background') ||
+                               (e.target as Element).closest('[data-canvas-background]') === canvasRef.current;
+    
+    if (isCanvasBackground) {
       onSelectElement(null);
       setEditingElement(null);
     }

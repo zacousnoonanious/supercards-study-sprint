@@ -90,8 +90,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           element.hasTTS ? 'border-blue-200' : ''
         }`}
         style={{ padding: '8px' }}
-        onClick={startEditing}
-        onDoubleClick={startEditing}
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent canvas deselection
+          startEditing();
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation(); // Prevent canvas deselection
+          startEditing();
+        }}
       >
         {isEditing ? (
           <textarea

@@ -14,7 +14,7 @@ import { CanvasElement } from '@/types/flashcard';
 import { updateFlashcardSet } from '@/lib/api/sets';
 import { useToast } from '@/hooks/use-toast';
 
-export const CardEditor = () => {
+export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const { t } = useI18n();
   const { theme } = useTheme();
   const { toast } = useToast();
@@ -23,10 +23,10 @@ export const CardEditor = () => {
     cards,
     currentCardIndex,
     currentSide,
-    selectedElement,
+    selectedElementId,
     loading,
     setCurrentSide,
-    setSelectedElement,
+    setSelectedElementId,
     setCurrentCardIndex,
     addElement,
     updateElement,
@@ -94,57 +94,61 @@ export const CardEditor = () => {
   }, [set?.title]);
 
   // Handle keyboard events for delete functionality and navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Delete key - delete selected element
+    if (e.key === 'Delete' && selectedElementId) {
+      e.preventDefault();
+      handleDeleteElement(selectedElementId);
+      return;
+    }
+
+    // Escape key - deselect element
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setSelectedElementId(null);
+      return;
+    }
+
+    // Navigation keys
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (currentCardIndex > 0) {
+        navigateToCard(currentCardIndex - 1);
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (currentCardIndex < cards.length - 1) {
+        navigateToCard(currentCardIndex + 1);
+      }
+      return;
+    }
+
+    // Card side navigation - Up for back, Down for front
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (currentCard?.card_type !== 'single-sided') {
+        setCurrentSide('back');
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setCurrentSide('front');
+      return;
+    }
+  }, [selectedElementId, currentCardIndex, cards.length, currentCard, handleDeleteElement, navigateToCard, setCurrentSide]);
+
+  // Add keyboard event listener
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Skip if user is typing in an input/textarea
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-
-      // Delete selected element
-      if (e.key === 'Delete' && selectedElement) {
-        e.preventDefault();
-        handleDeleteElement(selectedElement);
-        return;
-      }
-
-      // Navigate between cards with left/right arrows
-      if (e.key === 'ArrowLeft' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
-        e.preventDefault();
-        if (currentCardIndex > 0) {
-          navigateCard('prev');
-        }
-        return;
-      }
-
-      if (e.key === 'ArrowRight' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
-        e.preventDefault();
-        if (currentCardIndex < cards.length - 1) {
-          navigateCard('next');
-        }
-        return;
-      }
-
-      // Navigate between card sides with up/down arrows
-      if (e.key === 'ArrowUp' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
-        e.preventDefault();
-        // Only switch to back if current card supports it (not single-sided)
-        if (currentCard?.card_type !== 'single-sided') {
-          setCurrentSide('back');
-        }
-        return;
-      }
-
-      if (e.key === 'ArrowDown' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
-        e.preventDefault();
-        setCurrentSide('front');
-        return;
-      }
-    };
-
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedElement, currentCardIndex, cards.length, navigateCard, currentCard, setCurrentSide]);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
 
   // Handle zoom and pan with left-click dragging - only for canvas background
   useEffect(() => {
@@ -322,17 +326,17 @@ export const CardEditor = () => {
 
   const handleDeleteElement = useCallback((elementId: string) => {
     deleteElement(elementId);
-    setSelectedElement(null);
-  }, [deleteElement, setSelectedElement]);
+    setSelectedElementId(null);
+  }, [deleteElement, setSelectedElementId]);
 
   const handleElementSelect = useCallback((elementId: string | null) => {
-    setSelectedElement(elementId);
-  }, [setSelectedElement]);
+    setSelectedElementId(elementId);
+  }, [setSelectedElementId]);
 
   const handleNavigateToCard = useCallback((cardIndex: number) => {
     setCurrentCardIndex(cardIndex);
-    setSelectedElement(null);
-  }, [setCurrentCardIndex, setSelectedElement]);
+    setSelectedElementId(null);
+  }, [setCurrentCardIndex, setSelectedElementId]);
 
   const getCurrentElements = () => {
     if (!currentCard) return [];
@@ -340,8 +344,8 @@ export const CardEditor = () => {
   };
 
   const getSelectedElementData = () => {
-    if (!selectedElement) return null;
-    return getCurrentElements().find(el => el.id === selectedElement) || null;
+    if (!selectedElementId) return null;
+    return getCurrentElements().find(el => el.id === selectedElementId) || null;
   };
 
   const handleSave = async () => {
@@ -510,6 +514,13 @@ export const CardEditor = () => {
     }
   }, [addElement]);
 
+  const handleCanvasClick = useCallback((e: React.MouseEvent) => {
+    // Only deselect if clicking directly on the canvas background
+    if (e.target === e.currentTarget || (e.target as Element).hasAttribute('data-canvas-background')) {
+      setSelectedElementId(null);
+    }
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -557,9 +568,7 @@ export const CardEditor = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={getLayoutOffset()}>
-      <Navigation />
-      
+    <div className="h-screen flex flex-col bg-background">
       {/* Header */}
       <EditorHeader
         set={{ ...set, title: deckName }}
@@ -653,7 +662,7 @@ export const CardEditor = () => {
                 >
                   <CardCanvas
                     elements={getCurrentElements()}
-                    selectedElement={selectedElement}
+                    selectedElement={selectedElementId}
                     onSelectElement={handleElementSelect}
                     onUpdateElement={handleUpdateElement}
                     onDeleteElement={handleDeleteElement}
