@@ -61,6 +61,11 @@ export const useCardEditor = () => {
           card_type: (card.card_type as Flashcard['card_type']) || 'normal',
           interactive_type: card.interactive_type || null,
           countdown_timer: card.countdown_timer || 0,
+          countdown_timer_front: card.countdown_timer_front || 0,
+          countdown_timer_back: card.countdown_timer_back || 0,
+          countdown_behavior_front: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
+          countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
+          flips_before_next: card.flips_before_next || 2,
           password: card.password || null,
           position: index, // Add position based on array index
           countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
@@ -311,6 +316,11 @@ export const useCardEditor = () => {
         card_type: (data.card_type as Flashcard['card_type']) || 'normal',
         interactive_type: data.interactive_type || null,
         countdown_timer: data.countdown_timer || 0,
+        countdown_timer_front: data.countdown_timer_front || 0,
+        countdown_timer_back: data.countdown_timer_back || 0,
+        countdown_behavior_front: (data.countdown_behavior_front as 'flip' | 'next') || 'flip',
+        countdown_behavior_back: (data.countdown_behavior_back as 'flip' | 'next') || 'next',
+        flips_before_next: data.flips_before_next || 2,
         password: data.password || null,
         position: cards.length, // Set position to current array length
         countdown_behavior: ((data as any).countdown_behavior as 'flip' | 'next') || 'flip'
@@ -383,6 +393,11 @@ export const useCardEditor = () => {
         card_type: (data.card_type === 'standard' ? 'normal' : data.card_type as Flashcard['card_type']) || 'normal',
         interactive_type: data.interactive_type || null,
         countdown_timer: data.countdown_timer || 0,
+        countdown_timer_front: data.countdown_timer_front || 0,
+        countdown_timer_back: data.countdown_timer_back || 0,
+        countdown_behavior_front: (data.countdown_behavior_front as 'flip' | 'next') || 'flip',
+        countdown_behavior_back: (data.countdown_behavior_back as 'flip' | 'next') || 'next',
+        flips_before_next: data.flips_before_next || 2,
         password: data.password || null,
         position: cards.length, // Set position to current array length
         countdown_behavior: ((data as any).countdown_behavior as 'flip' | 'next') || 'flip'
@@ -449,6 +464,11 @@ export const useCardEditor = () => {
         card_type: (data.card_type as Flashcard['card_type']) || 'normal',
         interactive_type: data.interactive_type || null,
         countdown_timer: data.countdown_timer || 0,
+        countdown_timer_front: data.countdown_timer_front || 0,
+        countdown_timer_back: data.countdown_timer_back || 0,
+        countdown_behavior_front: (data.countdown_behavior_front as 'flip' | 'next') || 'flip',
+        countdown_behavior_back: (data.countdown_behavior_back as 'flip' | 'next') || 'next',
+        flips_before_next: data.flips_before_next || 2,
         password: data.password || null,
         position: cards.length, // Set position to current array length
         countdown_behavior: ((data as any).countdown_behavior as 'flip' | 'next') || 'flip'
