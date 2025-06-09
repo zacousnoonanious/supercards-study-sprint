@@ -23,6 +23,15 @@ export const HeroSection = () => {
     { front: "What is a hook?", back: "Functions that let you use state and other React features" },
   ];
 
+  // Generate glitter particles
+  const glitterParticles = Array.from({ length: 15 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    delay: Math.random() * 3,
+    duration: 2 + Math.random() * 2,
+  }));
+
   return (
     <>
       <GlobalStyles />
@@ -111,11 +120,61 @@ export const HeroSection = () => {
         </div>
 
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
-          {/* Main Heading */}
-          <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight">
-            Master your studies
+          {/* Main Heading with effects */}
+          <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight relative">
+            <div className="relative inline-block">
+              <span 
+                className="bg-gradient-to-r from-red-400 via-yellow-400 via-green-400 via-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent animate-pulse"
+                style={{
+                  backgroundSize: '200% 200%',
+                  animation: 'rainbow 3s ease-in-out infinite'
+                }}
+              >
+                Smarter
+              </span>
+              
+              {/* Glitter particles for "Smarter" */}
+              {glitterParticles.slice(0, 8).map((particle) => (
+                <div
+                  key={`smarter-${particle.id}`}
+                  className="absolute w-1 h-1 bg-yellow-300 rounded-full opacity-80"
+                  style={{
+                    left: `${particle.x}%`,
+                    top: `${particle.y}%`,
+                    animation: `glitter ${particle.duration}s ease-in-out infinite`,
+                    animationDelay: `${particle.delay}s`
+                  }}
+                />
+              ))}
+            </div>
+            {' '}Cards.{' '}
             <br />
-            with flashcards
+            <div className="relative inline-block">
+              <span 
+                className="bg-gradient-to-r from-red-400 via-yellow-400 via-green-400 via-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent animate-pulse"
+                style={{
+                  backgroundSize: '200% 200%',
+                  animation: 'rainbow 3s ease-in-out infinite 1.5s'
+                }}
+              >
+                Better
+              </span>
+              
+              {/* Glitter particles for "Better" */}
+              {glitterParticles.slice(8).map((particle) => (
+                <div
+                  key={`better-${particle.id}`}
+                  className="absolute w-1 h-1 bg-yellow-300 rounded-full opacity-80"
+                  style={{
+                    left: `${particle.x}%`,
+                    top: `${particle.y}%`,
+                    animation: `glitter ${particle.duration}s ease-in-out infinite`,
+                    animationDelay: `${particle.delay + 1.5}s`
+                  }}
+                />
+              ))}
+            </div>
+            {' '}Learning.
           </h1>
 
           {/* CTA Button */}
@@ -157,6 +216,27 @@ export const HeroSection = () => {
             />
           </div>
         </div>
+
+        {/* Additional styles for rainbow and glitter effects */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes rainbow {
+              0%, 100% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+            }
+            
+            @keyframes glitter {
+              0%, 100% { 
+                opacity: 0;
+                transform: translateY(0px) scale(0);
+              }
+              50% { 
+                opacity: 1;
+                transform: translateY(-10px) scale(1);
+              }
+            }
+          `
+        }} />
       </div>
     </>
   );
