@@ -1,12 +1,14 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
+import { TTSComponent } from './TTSComponent';
 
 interface RichTextEditorProps {
   element: CanvasElement;
   onUpdate: (updates: Partial<CanvasElement>) => void;
   onEditingChange: (editing: boolean) => void;
   textScale?: number;
+  isStudyMode?: boolean;
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -14,6 +16,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   onUpdate,
   onEditingChange,
   textScale = 1,
+  isStudyMode = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -37,6 +40,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   const startEditing = () => {
+    if (isStudyMode && element.hasTTS && element.ttsEnabled) {
+      // In study mode with TTS, clicking should play audio instead of editing
+      return;
+    }
     setIsEditing(true);
     onEditingChange(true);
   };
@@ -65,9 +72,23 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   return (
     <div className="w-full h-full relative">
+      {/* TTS Component */}
+      {element.hasTTS && (
+        <div className="absolute top-0 right-0 z-10 bg-white/80 rounded-bl">
+          <TTSComponent
+            element={element}
+            onUpdate={onUpdate}
+            isEditing={isEditing}
+            autoplay={isStudyMode}
+          />
+        </div>
+      )}
+
       {/* Text Content */}
       <div
-        className="w-full h-full flex items-center justify-center border rounded cursor-text bg-background"
+        className={`w-full h-full flex items-center justify-center border rounded cursor-text bg-background ${
+          element.hasTTS ? 'border-blue-200' : ''
+        }`}
         style={{ padding: '8px' }}
         onClick={startEditing}
         onDoubleClick={startEditing}

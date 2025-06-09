@@ -1,127 +1,106 @@
-export interface CanvasElement {
+export interface FlashcardSet {
   id: string;
-  type: 'text' | 'image' | 'multiple-choice' | 'true-false' | 'fill-in-blank' | 'youtube' | 'deck-embed' | 'drawing' | 'audio';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  content?: string;
-  imageUrl?: string;
-  audioUrl?: string;
-  fontSize?: number;
-  fontWeight?: 'normal' | 'bold';
-  fontStyle?: 'normal' | 'italic';
-  fontFamily?: string;
-  textDecoration?: 'none' | 'underline' | 'line-through';
-  color?: string;
-  backgroundColor?: string;
-  textAlign?: 'left' | 'center' | 'right' | 'justify';
-  hyperlink?: string;
-  mcOptions?: string[];
-  mcCorrectAnswer?: number;
-  mcCorrectAnswers?: number[];
-  mcType?: 'single' | 'multiple';
-  multipleChoiceOptions?: string[];
-  correctAnswer?: number;
-  tfCorrectAnswer?: boolean;
-  fillInBlankText?: string;
-  fillInBlankBlanks?: Array<{
-    word: string;
-    position: number;
-    id: string;
-  }>;
-  fillInBlankMode?: 'every-nth' | 'random' | 'sentence-start' | 'manual' | 'significant-words';
-  fillInBlankInterval?: number;
-  fillInBlankPercentage?: number;
-  showLetterCount?: boolean;
-  ignoreCase?: boolean;
-  youtubeUrl?: string;
-  youtubeVideoId?: string;
-  youtubeAutoplay?: boolean;
-  youtubeMuted?: boolean;
-  youtubeStartTime?: number;
-  deckId?: string;
-  deckTitle?: string;
-  drawingData?: string;
-  strokeColor?: string;
-  strokeWidth?: number;
-  zIndex?: number;
-  rotation?: number;
-  showImmediateFeedback?: boolean;
-  autoAdvanceOnAnswer?: boolean;
-  autoplay?: boolean;
-  opacity?: number;
-  borderWidth?: number;
-  borderColor?: string;
-  borderStyle?: string;
-  borderRadius?: boolean;
+  title: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  category?: string;
+  tags?: string[];
+  is_public?: boolean;
+  allow_copying?: boolean;
+  language?: string;
+  source_language?: string;
+  target_language?: string;
+  accent_color?: string;
+  cover_image?: string;
 }
 
 export interface Flashcard {
   id: string;
   set_id: string;
-  question?: string;
-  answer?: string;
-  hint?: string;
   front_elements: CanvasElement[];
   back_elements: CanvasElement[];
-  card_type?: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
-  countdown_timer?: number;
-  countdown_behavior?: 'flip' | 'next';
-  countdown_timer_front?: number;
-  countdown_behavior_front?: 'flip' | 'next';
-  countdown_timer_back?: number;
-  countdown_behavior_back?: 'flip' | 'next';
-  flips_before_next?: number;
-  canvas_width?: number;
-  canvas_height?: number;
-  position: number;
-  password?: string;
-  interactive_type?: string;
-  last_reviewed_at?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface FlashcardSet {
-  id: string;
-  title: string;
-  description?: string;
-  user_id: string;
-  is_public: boolean;
-  permanent_shuffle?: boolean;
   created_at: string;
   updated_at: string;
-  cards?: Flashcard[];
+  card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
+  canvas_width?: number;
+  canvas_height?: number;
 }
 
 export interface CardTemplate {
   id: string;
   name: string;
-  description: string;
-  thumbnail?: string;
-  category?: string;
-  card_type?: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
+  image: string;
   front_elements: CanvasElement[];
   back_elements: CanvasElement[];
-  canvas_width?: number;
-  canvas_height?: number;
 }
 
-export interface StudySession {
+export interface CanvasElement {
   id: string;
-  set_id: string;
-  user_id: string;
-  started_at: string;
-  completed_at?: string;
-  total_cards: number;
-  correct_answers: number;
-  incorrect_answers: number;
-}
-
-export interface StudyProgress {
-  card_id: string;
-  is_correct: boolean;
-  time_spent: number;
-  attempts: number;
+  type: 'text' | 'image' | 'audio' | 'drawing' | 'multiple-choice' | 'true-false' | 'fill-in-blank' | 'youtube' | 'deck-embed' | 'tts';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  zIndex?: number;
+  rotation?: number;
+  
+  // Text properties
+  content?: string;
+  fontSize?: number;
+  fontWeight?: string;
+  fontStyle?: string;
+  textDecoration?: string;
+  color?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  
+  // TTS properties
+  hasTTS?: boolean;
+  ttsEnabled?: boolean;
+  ttsAutoplay?: boolean;
+  ttsVoice?: string;
+  ttsRate?: number;
+  ttsPitch?: number;
+  
+  // Image properties
+  imageUrl?: string;
+  opacity?: number;
+  borderWidth?: number;
+  borderColor?: string;
+  borderStyle?: string;
+  borderRadius?: boolean;
+  
+  // Audio properties
+  audioUrl?: string;
+  
+  // Drawing properties
+  drawingData?: string;
+  strokeColor?: string;
+  strokeWidth?: number;
+  
+  // Interactive properties
+  options?: string[];
+  correctAnswer?: string | number;
+  explanation?: string;
+  isCorrect?: boolean;
+  
+  // Fill-in-blank properties
+  blanks?: Array<{
+    id: string;
+    word: string;
+    startIndex: number;
+    endIndex: number;
+  }>;
+  
+  // YouTube properties
+  youtubeUrl?: string;
+  youtubeId?: string;
+  
+  // Deck embed properties
+  deckId?: string;
+  deckTitle?: string;
+  
+  // General properties
+  hyperlink?: string;
 }

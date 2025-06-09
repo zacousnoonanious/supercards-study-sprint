@@ -8,7 +8,7 @@ import {
   Plus, Copy, Trash2, Grid3X3, AlignCenter, AlignJustify, 
   AlignLeft, AlignRight, Layers, FlipHorizontal, FlipVertical,
   CheckSquare, HelpCircle, Shuffle, List, Grid, Eye, FileText,
-  Menu, Move, Pin, PinOff
+  Menu, Move, Pin, PinOff, Mic
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -304,6 +304,12 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           icon={Type}
           label={t('text') || 'Text'}
           onClick={() => onAddElement('text')}
+        />
+        
+        <ToolbarButton
+          icon={Mic}
+          label={t('tts') || 'Text-to-Speech'}
+          onClick={() => onAddElement('tts')}
         />
         
         <ToolbarButton

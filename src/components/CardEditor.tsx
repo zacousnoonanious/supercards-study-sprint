@@ -494,6 +494,22 @@ export const CardEditor = () => {
     setToolbarShowText(showText);
   }, []);
 
+  const handleAddElement = useCallback((type: CanvasElement['type']) => {
+    if (type === 'tts') {
+      // Create a text element with TTS enabled
+      addElement('text', {
+        hasTTS: true,
+        ttsEnabled: true,
+        ttsAutoplay: false,
+        ttsRate: 1,
+        ttsPitch: 1,
+        content: 'Click to edit and add speech'
+      });
+    } else {
+      addElement(type);
+    }
+  }, [addElement]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -586,7 +602,7 @@ export const CardEditor = () => {
             {/* Canvas-Left Toolbar Position */}
             {toolbarIsDocked && toolbarPosition === 'canvas-left' && (
               <UndockableToolbar
-                onAddElement={addElement}
+                onAddElement={handleAddElement}
                 onAutoArrange={handleAutoArrange}
                 currentCard={currentCard}
                 currentCardIndex={currentCardIndex}
@@ -676,7 +692,7 @@ export const CardEditor = () => {
       {/* Other Toolbar Positions */}
       {(!toolbarIsDocked || toolbarPosition !== 'canvas-left') && (
         <UndockableToolbar
-          onAddElement={addElement}
+          onAddElement={handleAddElement}
           onAutoArrange={handleAutoArrange}
           currentCard={currentCard}
           currentCardIndex={currentCardIndex}
