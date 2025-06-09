@@ -15,12 +15,12 @@ export const HeroSection = () => {
   }, []);
 
   const flashcards = [
-    { front: "What is React?", back: "A JavaScript library for building user interfaces" },
-    { front: "What is JSX?", back: "JavaScript XML - a syntax extension for JavaScript" },
-    { front: "What is a component?", back: "A reusable piece of UI that can have its own state and props" },
-    { front: "What is state?", back: "Data that changes over time in a component" },
-    { front: "What are props?", back: "Properties passed from parent to child components" },
-    { front: "What is a hook?", back: "Functions that let you use state and other React features" },
+    { front: "Photosynthesis", back: "The process by which plants convert sunlight into energy" },
+    { front: "Democracy", back: "A system of government where citizens vote for their leaders" },
+    { front: "Osmosis", back: "The movement of water through a semi-permeable membrane" },
+    { front: "Renaissance", back: "A period of cultural rebirth in Europe (14th-17th centuries)" },
+    { front: "Ecosystem", back: "A community of living organisms interacting with their environment" },
+    { front: "Gravity", back: "The force that attracts objects toward the center of the Earth" },
   ];
 
   // Generate glitter particles

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, Brain, Users, Zap, BarChart3, Sparkles } from 'lucide-react';
@@ -45,10 +46,10 @@ export const CoreFeatures = () => {
   ];
 
   const flashcards = [
-    { front: "What is React?", back: "A JavaScript library for building user interfaces", x: 15, y: 20, delay: 0 },
-    { front: "Machine Learning", back: "AI that learns from data to make predictions", x: 85, y: 40, delay: 2 },
-    { front: "JavaScript", back: "Programming language for web development", x: 10, y: 70, delay: 4 },
-    { front: "Study Smart", back: "Use spaced repetition for better retention", x: 90, y: 80, delay: 1 },
+    { front: "Mitochondria", back: "The powerhouse of the cell that produces energy", x: 15, y: 20, delay: 0 },
+    { front: "Magna Carta", back: "1215 document that limited the power of English kings", x: 85, y: 40, delay: 2 },
+    { front: "Photosynthesis", back: "Process where plants convert sunlight into chemical energy", x: 10, y: 70, delay: 4 },
+    { front: "Newton's First Law", back: "An object in motion stays in motion unless acted upon by a force", x: 90, y: 80, delay: 1 },
   ];
 
   return (

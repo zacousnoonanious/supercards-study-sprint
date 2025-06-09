@@ -6,11 +6,19 @@ import { Palette, Type, Image, Layers, Zap, MousePointer } from 'lucide-react';
 
 export const CardEditorShowcase = () => {
   const [scrollY, setScrollY] = useState(0);
+  const [animationStep, setAnimationStep] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimationStep((prev) => (prev + 1) % 4);
+    }, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const features = [
@@ -23,10 +31,10 @@ export const CardEditorShowcase = () => {
   ];
 
   const flashcards = [
-    { front: "Card Editor", back: "Powerful visual editor for flashcards", x: 8, y: 15, delay: 0 },
-    { front: "Design Tools", back: "Professional design tools at your fingertips", x: 88, y: 25, delay: 3 },
-    { front: "Templates", back: "Beautiful templates to get started quickly", x: 12, y: 85, delay: 1.5 },
-    { front: "Rich Media", back: "Add images, videos, and audio easily", x: 85, y: 75, delay: 4.5 },
+    { front: "Ecosystem", back: "A community of organisms and their environment", x: 8, y: 15, delay: 0 },
+    { front: "Renaissance", back: "Period of cultural rebirth in 14th-17th century Europe", x: 88, y: 25, delay: 3 },
+    { front: "Mitochondria", back: "Organelle that produces energy in cells", x: 12, y: 85, delay: 1.5 },
+    { front: "Democracy", back: "Government system where citizens choose leaders", x: 85, y: 75, delay: 4.5 },
   ];
 
   return (
@@ -183,13 +191,13 @@ export const CardEditorShowcase = () => {
               </div>
             </div>
 
-            {/* Reduced movement Editor Preview */}
+            {/* Enhanced Editor Preview with Animation */}
             <div className="relative">
               <div 
                 className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/30"
                 style={{
-                  transform: `translateY(${Math.sin(scrollY * 0.003 + Date.now() * 0.0005) * 8}px) rotate(${Math.cos(scrollY * 0.002 + Date.now() * 0.0003) * 1}deg)`,
-                  borderRadius: `${30 + Math.sin(scrollY * 0.005 + Date.now() * 0.0008) * 8}px`
+                  transform: `translateY(${Math.sin(scrollY * 0.002 + Date.now() * 0.0003) * 4}px) rotate(${Math.cos(scrollY * 0.001 + Date.now() * 0.0002) * 0.5}deg)`,
+                  borderRadius: `${30 + Math.sin(scrollY * 0.003 + Date.now() * 0.0004) * 4}px`
                 }}
               >
                 {/* Mock Editor Interface */}
@@ -202,37 +210,97 @@ export const CardEditorShowcase = () => {
                   <div className="text-gray-700 font-medium">Card Editor</div>
                 </div>
                 
+                {/* Animated Card Building Demo */}
                 <div 
-                  className="bg-gradient-to-br from-orange-50/80 to-yellow-50/80 rounded-2xl p-10 border-2 border-dashed border-orange-300/60 min-h-[350px] flex flex-col justify-center items-center text-center"
+                  className="bg-gradient-to-br from-orange-50/80 to-yellow-50/80 rounded-2xl p-10 border-2 border-dashed border-orange-300/60 min-h-[350px] flex flex-col justify-center items-center text-center relative overflow-hidden"
                   style={{
-                    borderRadius: `${20 + Math.sin(scrollY * 0.008 + Date.now() * 0.0006) * 6}px`
+                    borderRadius: `${20 + Math.sin(scrollY * 0.004 + Date.now() * 0.0003) * 3}px`
                   }}
                 >
-                  <div className="w-20 h-20 bg-orange-200/80 rounded-full flex items-center justify-center mb-6">
-                    <Type className="w-10 h-10 text-orange-600" />
+                  {/* Animated cursor */}
+                  <div 
+                    className={`absolute w-6 h-6 transition-all duration-1000 pointer-events-none z-20 ${
+                      animationStep === 0 ? 'top-4 left-4' : 
+                      animationStep === 1 ? 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2' :
+                      animationStep === 2 ? 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2' :
+                      'bottom-4 right-4'
+                    }`}
+                  >
+                    <MousePointer className="w-6 h-6 text-orange-600" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                    What is React?
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Click to reveal answer
-                  </p>
-                  <div className="flex space-x-3">
-                    <div className="w-3 h-3 bg-orange-400 rounded-full animate-pulse"></div>
-                    <div className="w-3 h-3 bg-orange-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-3 h-3 bg-orange-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                  </div>
+
+                  {/* Step 1: Empty state */}
+                  {animationStep === 0 && (
+                    <div className="animate-fade-in">
+                      <div className="w-20 h-20 bg-orange-200/80 rounded-full flex items-center justify-center mb-6">
+                        <Type className="w-10 h-10 text-orange-600" />
+                      </div>
+                      <p className="text-gray-600">Click to add text...</p>
+                    </div>
+                  )}
+
+                  {/* Step 2: Adding title */}
+                  {animationStep === 1 && (
+                    <div className="animate-scale-in">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                        What is Photosynthesis?
+                      </h3>
+                      <div className="w-1 h-6 bg-orange-500 animate-pulse"></div>
+                    </div>
+                  )}
+
+                  {/* Step 3: Adding content */}
+                  {animationStep === 2 && (
+                    <div className="animate-fade-in">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                        What is Photosynthesis?
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        The process by which plants convert sunlight into energy
+                      </p>
+                      <div className="flex space-x-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 4: Completed card */}
+                  {animationStep === 3 && (
+                    <div className="animate-scale-in">
+                      <div className="bg-white/90 rounded-xl p-6 shadow-lg border border-green-200">
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">
+                          What is Photosynthesis?
+                        </h3>
+                        <p className="text-gray-700 mb-4">
+                          The process by which plants convert sunlight into energy
+                        </p>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          <span className="text-sm text-green-600 font-medium">Ready to study!</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
+                {/* Toolbar */}
                 <div className="flex items-center justify-center mt-6 space-x-6 p-4 bg-orange-100/50 rounded-2xl">
-                  <div className="w-10 h-10 bg-orange-200 rounded-lg flex items-center justify-center">
-                    <Type className="w-5 h-5 text-orange-600" />
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-500 ${
+                    animationStep === 1 ? 'bg-orange-500 scale-110' : 'bg-orange-200'
+                  }`}>
+                    <Type className={`w-5 h-5 ${animationStep === 1 ? 'text-white' : 'text-orange-600'}`} />
                   </div>
-                  <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <Image className="w-5 h-5 text-gray-600" />
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-500 ${
+                    animationStep === 2 ? 'bg-orange-500 scale-110' : 'bg-gray-200'
+                  }`}>
+                    <Image className={`w-5 h-5 ${animationStep === 2 ? 'text-white' : 'text-gray-600'}`} />
                   </div>
-                  <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <Palette className="w-5 h-5 text-gray-600" />
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-500 ${
+                    animationStep === 3 ? 'bg-green-500 scale-110' : 'bg-gray-200'
+                  }`}>
+                    <Palette className={`w-5 h-5 ${animationStep === 3 ? 'text-white' : 'text-gray-600'}`} />
                   </div>
                   <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
                     <Layers className="w-5 h-5 text-gray-600" />
@@ -240,17 +308,17 @@ export const CardEditorShowcase = () => {
                 </div>
               </div>
               
-              {/* Reduced floating elements */}
+              {/* Floating elements with reduced movement */}
               <div 
                 className="absolute -top-6 -right-6 w-12 h-12 bg-orange-500 rounded-full opacity-80"
                 style={{ 
-                  transform: `translateY(${Math.sin(scrollY * 0.008 + Date.now() * 0.0012) * 8}px) rotate(${scrollY * 0.1 + Date.now() * 0.0006}deg) scale(${1 + Math.cos(scrollY * 0.006 + Date.now() * 0.0008) * 0.15})`
+                  transform: `translateY(${Math.sin(scrollY * 0.004 + Date.now() * 0.0006) * 4}px) rotate(${scrollY * 0.05 + Date.now() * 0.0003}deg) scale(${1 + Math.cos(scrollY * 0.003 + Date.now() * 0.0004) * 0.08})`
                 }}
               ></div>
               <div 
                 className="absolute -bottom-6 -left-6 w-8 h-8 bg-yellow-500 rounded-full opacity-80"
                 style={{ 
-                  transform: `translateY(${Math.cos(scrollY * 0.006 + Date.now() * 0.001) * 6}px) rotate(${scrollY * -0.08 + Date.now() * 0.0004}deg)`
+                  transform: `translateY(${Math.cos(scrollY * 0.003 + Date.now() * 0.0005) * 3}px) rotate(${scrollY * -0.04 + Date.now() * 0.0002}deg)`
                 }}
               ></div>
             </div>
