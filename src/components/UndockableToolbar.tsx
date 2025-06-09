@@ -49,7 +49,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       // Check for snap zones with improved proximity detection
       if (props.canvasRef?.current) {
         const canvasRect = props.canvasRef.current.getBoundingClientRect();
-        const snapThreshold = 60; // Reduced from 80 for closer proximity
+        const snapThreshold = 40;
         const toolbarRect = toolbarRef.current?.getBoundingClientRect();
         const toolbarCenterX = newX + (toolbarRect?.width || 0) / 2;
         const toolbarCenterY = newY + (toolbarRect?.height || 0) / 2;
@@ -57,37 +57,44 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
         let currentSnapZone: SnapZone = null;
 
         // Check proximity to canvas for snapping
-        const distanceToCanvas = Math.min(
-          Math.abs(newX - canvasRect.left),
-          Math.abs(newX - canvasRect.right),
-          Math.abs(newY - canvasRect.top),
-          Math.abs(newY - canvasRect.bottom)
-        );
+        const distanceToLeft = Math.abs(newX - (canvasRect.left - 60));
+        const distanceToRight = Math.abs(newX - canvasRect.right);
+        const distanceToTop = Math.abs(newY - (canvasRect.top - 60));
+        const distanceToBottom = Math.abs(newY - canvasRect.bottom);
 
-        if (distanceToCanvas < snapThreshold) {
-          // Left snap zone
-          if (newX < canvasRect.left && toolbarCenterY > canvasRect.top - 50 && toolbarCenterY < canvasRect.bottom + 50) {
-            currentSnapZone = 'left';
-          }
-          // Right snap zone
-          else if (newX > canvasRect.right - 50 && toolbarCenterY > canvasRect.top - 50 && toolbarCenterY < canvasRect.bottom + 50) {
-            currentSnapZone = 'right';
-          }
-          // Above canvas snap zone
-          else if (toolbarCenterY < canvasRect.top && toolbarCenterX > canvasRect.left - 50 && toolbarCenterX < canvasRect.right + 50) {
-            currentSnapZone = 'above-canvas';
-          }
-          // Below canvas snap zone
-          else if (toolbarCenterY > canvasRect.bottom && toolbarCenterX > canvasRect.left - 50 && toolbarCenterX < canvasRect.right + 50) {
-            currentSnapZone = 'bottom';
-          }
+        // Left snap zone - must be within vertical bounds of canvas
+        if (distanceToLeft < snapThreshold && 
+            toolbarCenterY > canvasRect.top - 20 && 
+            toolbarCenterY < canvasRect.bottom + 20) {
+          currentSnapZone = 'left';
+        }
+        // Right snap zone - must be within vertical bounds of canvas  
+        else if (distanceToRight < snapThreshold && 
+                 toolbarCenterY > canvasRect.top - 20 && 
+                 toolbarCenterY < canvasRect.bottom + 20) {
+          currentSnapZone = 'right';
+        }
+        // Top snap zone (above canvas) - must be within horizontal bounds
+        else if (distanceToTop < snapThreshold && 
+                 toolbarCenterX > canvasRect.left - 20 && 
+                 toolbarCenterX < canvasRect.right + 20) {
+          currentSnapZone = 'above-canvas';
+        }
+        // Bottom snap zone - must be within horizontal bounds
+        else if (distanceToBottom < snapThreshold && 
+                 toolbarCenterX > canvasRect.left - 20 && 
+                 toolbarCenterX < canvasRect.right + 20) {
+          currentSnapZone = 'bottom';
         }
 
         // Check for below-settings snap zone
         if (props.topSettingsBarRef?.current) {
           const settingsRect = props.topSettingsBarRef.current.getBoundingClientRect();
-          if (toolbarCenterY > settingsRect.bottom && toolbarCenterY < settingsRect.bottom + 40 && 
-              toolbarCenterX > settingsRect.left && toolbarCenterX < settingsRect.right) {
+          const distanceToSettings = Math.abs(toolbarCenterY - settingsRect.bottom);
+          
+          if (distanceToSettings < snapThreshold && 
+              toolbarCenterX > settingsRect.left && 
+              toolbarCenterX < settingsRect.right) {
             currentSnapZone = 'below-settings';
           }
         }
@@ -160,9 +167,9 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       case 'left':
         return {
           ...baseStyle,
-          left: canvasRect.left - 60,
+          left: canvasRect.left - 70,
           top: canvasRect.top,
-          width: 50,
+          width: 60,
           height: canvasRect.height,
         };
       case 'right':
@@ -170,16 +177,16 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
           ...baseStyle,
           left: canvasRect.right + 10,
           top: canvasRect.top,
-          width: 50,
+          width: 60,
           height: canvasRect.height,
         };
       case 'above-canvas':
         return {
           ...baseStyle,
           left: canvasRect.left,
-          top: canvasRect.top - 60,
+          top: canvasRect.top - 70,
           width: canvasRect.width,
-          height: 50,
+          height: 60,
         };
       case 'bottom':
         return {
@@ -187,7 +194,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
           left: canvasRect.left,
           top: canvasRect.bottom + 10,
           width: canvasRect.width,
-          height: 50,
+          height: 60,
         };
       case 'below-settings':
         if (props.topSettingsBarRef?.current) {
@@ -197,7 +204,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
             left: settingsRect.left,
             top: settingsRect.bottom + 5,
             width: settingsRect.width,
-            height: 40,
+            height: 50,
           };
         }
         return { display: 'none' };

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -47,9 +46,13 @@ export const CardEditor = () => {
   const [cardWidth, setCardWidth] = useState(600);
   const [cardHeight, setCardHeight] = useState(450);
   const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const topSettingsBarRef = useRef<HTMLDivElement>(null);
+  const canvasViewportRef = useRef<HTMLDivElement>(null);
 
   // Get current card early in the component
   const currentCard = cards[currentCardIndex];
@@ -111,6 +114,63 @@ export const CardEditor = () => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedElement, currentCardIndex, cards.length, navigateCard]);
+
+  // Handle zoom and pan
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (!canvasViewportRef.current?.contains(e.target as Node)) return;
+      
+      e.preventDefault();
+      
+      if (e.ctrlKey || e.metaKey) {
+        // Zoom with Ctrl+scroll or pinch
+        const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        const newZoom = Math.max(0.1, Math.min(3, zoom * zoomFactor));
+        setZoom(newZoom);
+      } else {
+        // Pan with scroll
+        setPanOffset(prev => ({
+          x: prev.x - e.deltaX,
+          y: prev.y - e.deltaY
+        }));
+      }
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 1 && canvasViewportRef.current?.contains(e.target as Node)) { // Middle mouse button
+        e.preventDefault();
+        setIsPanning(true);
+        setPanStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isPanning) {
+        setPanOffset({
+          x: e.clientX - panStart.x,
+          y: e.clientY - panStart.y
+        });
+      }
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (e.button === 1) {
+        setIsPanning(false);
+      }
+    };
+
+    document.addEventListener('wheel', handleWheel, { passive: false });
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('wheel', handleWheel);
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [zoom, panOffset, isPanning, panStart]);
 
   const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     updateElement(elementId, updates);
@@ -383,24 +443,26 @@ export const CardEditor = () => {
 
           {/* Card Canvas and Footer Container */}
           <div className="flex flex-col">
-            {/* Canvas Container with proper zoom containment */}
+            {/* Canvas Viewport with zoom and pan */}
             <div 
+              ref={canvasViewportRef}
               className={`shadow-lg border overflow-hidden ${
                 isDarkTheme 
                   ? 'bg-gray-800 border-gray-600' 
                   : 'bg-white border-gray-300'
-              }`}
+              } ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
               style={{ 
-                width: cardWidth,
-                height: cardHeight,
+                width: Math.max(cardWidth, 400),
+                height: Math.max(cardHeight, 300),
               }}
             >
               <div
                 style={{
                   width: cardWidth,
                   height: cardHeight,
-                  transform: `scale(${zoom})`,
-                  transformOrigin: 'top left',
+                  transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
+                  transformOrigin: '0 0',
+                  transition: isPanning ? 'none' : 'transform 0.1s ease-out',
                 }}
               >
                 <CardCanvas
@@ -423,7 +485,7 @@ export const CardEditor = () => {
               selectedElement={getSelectedElementData()}
               onUpdateCard={updateCard}
               onNavigateCard={navigateCard}
-              cardWidth={cardWidth}
+              cardWidth={Math.max(cardWidth, 400)}
             />
           </div>
         </div>

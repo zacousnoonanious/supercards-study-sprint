@@ -115,7 +115,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
     } ${className || ''}`;
 
     if (isFloating) {
-      return `${baseClass} grid grid-cols-2 gap-1 w-24 max-h-[calc(100vh-120px)] overflow-y-auto`;
+      return `${baseClass} grid grid-cols-2 gap-1 w-28 max-h-[calc(100vh-120px)] overflow-y-auto`;
     }
 
     if (isHorizontal) {
@@ -126,24 +126,38 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   };
 
   const getPositioning = () => {
-    if (!isDocked) return {};
+    if (!isDocked || isFloating) return {};
     
     switch (position) {
+      case 'left':
+        return {
+          marginRight: '8px'
+        };
+      case 'right':
+        return {
+          marginLeft: '8px'
+        };
+      case 'top':
+        return {
+          marginBottom: '8px',
+          alignSelf: 'center'
+        };
+      case 'bottom':
+        return {
+          marginTop: '8px',
+          alignSelf: 'center'
+        };
       case 'above-canvas':
         return {
           position: 'absolute' as const,
-          top: '-70px',
+          top: '-80px',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 10
         };
       case 'below-settings':
         return {
-          position: 'absolute' as const,
-          top: '100%',
-          left: '0',
-          right: '0',
-          zIndex: 10,
+          width: '100%',
           marginTop: '8px'
         };
       default:
