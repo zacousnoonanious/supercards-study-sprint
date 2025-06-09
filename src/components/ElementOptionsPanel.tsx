@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { AdvancedCountdownSettings } from './AdvancedCountdownSettings';
 
@@ -34,6 +36,18 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
   onUpdateCard,
 }) => {
   if (!selectedElement && !currentCard) return null;
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && selectedElement) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        onUpdateElement(selectedElement.id, { imageUrl: result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="fixed right-4 top-20 w-80 max-h-[calc(100vh-200px)] overflow-y-auto bg-background border rounded-lg shadow-lg z-50">
@@ -189,15 +203,182 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
 
             {/* Image Element Properties */}
             {selectedElement.type === 'image' && (
-              <div>
-                <Label className="text-sm font-medium">Image URL</Label>
-                <Input
-                  value={selectedElement.imageUrl || ''}
-                  onChange={(e) => onUpdateElement(selectedElement.id, { imageUrl: e.target.value })}
-                  className="mt-1"
-                  placeholder="Enter image URL"
-                />
-              </div>
+              <>
+                <div>
+                  <Label className="text-sm font-medium">Image Source</Label>
+                  <Tabs defaultValue="upload" className="mt-1">
+                    <TabsList className="grid w-full grid-cols-2 h-7">
+                      <TabsTrigger value="upload" className="text-xs">Upload</TabsTrigger>
+                      <TabsTrigger value="url" className="text-xs">URL</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="upload" className="space-y-2 mt-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="w-full text-xs"
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="url" className="space-y-2 mt-2">
+                      <Input
+                        placeholder="Enter image URL"
+                        value={selectedElement.imageUrl || ''}
+                        onChange={(e) => onUpdateElement(selectedElement.id, { imageUrl: e.target.value })}
+                        className="h-7 text-xs"
+                      />
+                    </TabsContent>
+                  </Tabs>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Opacity: {Math.round((selectedElement.opacity || 1) * 100)}%</Label>
+                  <Slider
+                    value={[selectedElement.opacity || 1]}
+                    onValueChange={(values) => onUpdateElement(selectedElement.id, { opacity: values[0] })}
+                    min={0.1}
+                    max={1}
+                    step={0.1}
+                    className="w-full mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Rotation: {selectedElement.rotation || 0}°</Label>
+                  <Slider
+                    value={[selectedElement.rotation || 0]}
+                    onValueChange={(values) => onUpdateElement(selectedElement.id, { rotation: values[0] })}
+                    min={0}
+                    max={360}
+                    step={15}
+                    className="w-full mt-1"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">Border Style</Label>
+                    <Select
+                      value={selectedElement.borderStyle || 'none'}
+                      onValueChange={(value) => onUpdateElement(selectedElement.id, { borderStyle: value })}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="solid">Solid</SelectItem>
+                        <SelectItem value="dashed">Dashed</SelectItem>
+                        <SelectItem value="dotted">Dotted</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-xs">Border Width</Label>
+                    <Input
+                      type="number"
+                      value={selectedElement.borderWidth || 0}
+                      onChange={(e) => onUpdateElement(selectedElement.id, { borderWidth: parseInt(e.target.value) || 0 })}
+                      min="0"
+                      max="10"
+                      className="h-7 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs">Border Color</Label>
+                  <Input
+                    type="color"
+                    value={selectedElement.borderColor || '#d1d5db'}
+                    onChange={(e) => onUpdateElement(selectedElement.id, { borderColor: e.target.value })}
+                    className="h-7 w-full mt-1"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Fill-in-Blank Properties */}
+            {selectedElement.type === 'fill-in-blank' && (
+              <>
+                <div>
+                  <Label className="text-sm font-medium">Blanks Created</Label>
+                  <div className="text-xs text-gray-600 mt-1">
+                    {(selectedElement.fillInBlankBlanks || []).length} blank(s) created
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Blank Settings</Label>
+                  <div className="space-y-2 mt-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Show letter count</Label>
+                      <Switch
+                        checked={selectedElement.showLetterCount || false}
+                        onCheckedChange={(checked) => onUpdateElement(selectedElement.id, { showLetterCount: checked })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Ignore case</Label>
+                      <Switch
+                        checked={selectedElement.ignoreCase !== false}
+                        onCheckedChange={(checked) => onUpdateElement(selectedElement.id, { ignoreCase: checked })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Blank Generation Mode</Label>
+                  <Select
+                    value={selectedElement.fillInBlankMode || 'manual'}
+                    onValueChange={(value) => onUpdateElement(selectedElement.id, { fillInBlankMode: value as any })}
+                  >
+                    <SelectTrigger className="mt-1 h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual (double-click words)</SelectItem>
+                      <SelectItem value="every-nth">Every Nth word</SelectItem>
+                      <SelectItem value="random">Random percentage</SelectItem>
+                      <SelectItem value="significant-words">Significant words only</SelectItem>
+                      <SelectItem value="sentence-start">Start of sentences</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedElement.fillInBlankMode === 'every-nth' && (
+                  <div>
+                    <Label className="text-sm">Every {selectedElement.fillInBlankInterval || 3} words</Label>
+                    <Slider
+                      value={[selectedElement.fillInBlankInterval || 3]}
+                      onValueChange={(values) => onUpdateElement(selectedElement.id, { fillInBlankInterval: values[0] })}
+                      min={2}
+                      max={10}
+                      step={1}
+                      className="w-full mt-1"
+                    />
+                  </div>
+                )}
+
+                {(selectedElement.fillInBlankMode === 'random' || selectedElement.fillInBlankMode === 'significant-words') && (
+                  <div>
+                    <Label className="text-sm">
+                      {selectedElement.fillInBlankMode === 'significant-words' ? 'Percentage of significant words' : 'Percentage to blank'}: {selectedElement.fillInBlankPercentage || 25}%
+                    </Label>
+                    <Slider
+                      value={[selectedElement.fillInBlankPercentage || 25]}
+                      onValueChange={(values) => onUpdateElement(selectedElement.id, { fillInBlankPercentage: values[0] })}
+                      min={10}
+                      max={80}
+                      step={5}
+                      className="w-full mt-1"
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             {/* Multiple Choice Properties */}
