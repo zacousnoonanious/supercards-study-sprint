@@ -60,6 +60,9 @@ const StudyMode = () => {
   const [hideHints, setHideHints] = useState(hideHintsParam);
   const [singleAttempt, setSingleAttempt] = useState(singleAttemptParam);
 
+  // Define currentCard before using it in useEffect hooks
+  const currentCard = shuffledCards[currentCardIndex];
+
   // Move all useEffect hooks to the top, before any conditional logic
   useEffect(() => {
     if (!user) {
@@ -293,8 +296,6 @@ const StudyMode = () => {
       });
     }
   };
-
-  const currentCard = shuffledCards[currentCardIndex];
 
   if (loading) {
     return (
