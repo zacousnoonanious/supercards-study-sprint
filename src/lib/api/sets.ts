@@ -23,3 +23,18 @@ export const getSet = async (id: string) => {
     flashcards: flashcards || []
   };
 };
+
+export const updateFlashcardSet = async (id: string, updates: { title?: string; description?: string }) => {
+  const { data, error } = await supabase
+    .from('flashcard_sets')
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
