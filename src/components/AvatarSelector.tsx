@@ -44,7 +44,7 @@ export const AvatarSelector: React.FC<AvatarSelectorProps> = ({
       // This would ideally use the user's actual name, but for demo purposes using "User"
       const initials = getInitials('User Name');
       return (
-        <div className="w-full h-full rounded bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+        <div className="w-full h-full rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
           {initials}
         </div>
       );
@@ -54,7 +54,7 @@ export const AvatarSelector: React.FC<AvatarSelectorProps> = ({
       <img
         src={avatar}
         alt={`Avatar ${index + 1}`}
-        className="w-full h-full rounded object-cover"
+        className="w-full h-full rounded-full object-cover"
       />
     );
   };
@@ -70,7 +70,7 @@ export const AvatarSelector: React.FC<AvatarSelectorProps> = ({
             <Button
               key={index}
               variant="outline"
-              className="h-20 w-20 p-1 hover:scale-105 transition-transform"
+              className="h-20 w-20 p-0 rounded-full overflow-hidden hover:scale-105 transition-transform"
               onClick={() => {
                 onSelectAvatar(avatar === 'initials' ? 'initials' : avatar);
                 onClose();
