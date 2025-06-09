@@ -15,6 +15,16 @@ export const AvatarSelector: React.FC<AvatarSelectorProps> = ({
   const avatars = [
     // Letter initials option
     'initials',
+    // Cartoon character profile pictures
+    '/lovable-uploads/1274a091-d94b-4e6f-a061-ceb2e1c93c54.png',
+    '/lovable-uploads/8a13a67a-f28a-4f75-b538-dcfbf5b15e19.png',
+    '/lovable-uploads/f000cfc9-befb-4af4-8a46-4bed2264daf8.png',
+    '/lovable-uploads/eac469c3-66fd-4775-87fb-65a43eda90c5.png',
+    '/lovable-uploads/ae30cfff-0b93-4759-93c9-7dae17b296c8.png',
+    '/lovable-uploads/a28c8b5b-a7c4-45bf-9365-884e2f0daa6b.png',
+    '/lovable-uploads/c33ada4d-5f56-46da-83c7-a70c7d4d3b9b.png',
+    '/lovable-uploads/cf6e51ac-6b78-4e0f-af67-47b65b53d9cc.png',
+    '/lovable-uploads/02dff4bc-318b-45f8-9c6e-3016ab6c2623.png',
     // Bright colored shapes
     'https://api.dicebear.com/7.x/shapes/svg?seed=colorful1&backgroundColor=ff6b6b',
     'https://api.dicebear.com/7.x/shapes/svg?seed=colorful2&backgroundColor=4ecdc4',
