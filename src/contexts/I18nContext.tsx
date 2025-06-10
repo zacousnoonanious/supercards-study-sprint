@@ -34,6 +34,19 @@ const translations = {
     'update': 'Update',
     'search': 'Search',
     'welcome': 'Welcome',
+    'yes': 'Yes',
+    'no': 'No',
+    'ok': 'OK',
+    'done': 'Done',
+    'finish': 'Finish',
+    'start': 'Start',
+    'next': 'Next',
+    'previous': 'Previous',
+    'settings': 'Settings',
+    'options': 'Options',
+    'help': 'Help',
+    'success': 'Success',
+    'error': 'Error',
     
     // Auth page
     'signIn': 'Sign In',
@@ -48,7 +61,6 @@ const translations = {
     'accountCreated': 'Account created!',
     'signInSuccess': 'You have successfully signed in.',
     'checkEmail': 'Please check your email to verify your account.',
-    'error': 'Error',
     'unexpectedError': 'An unexpected error occurred.',
     
     // Dashboard
@@ -163,6 +175,107 @@ const translations = {
     
     // Study
     'study.title': 'Study',
+    
+    // Card Editor
+    'cardEditor.title': 'Card Editor',
+    'cardEditor.front': 'Front',
+    'cardEditor.back': 'Back',
+    'cardEditor.cardNotFound': 'Card not found',
+    'cardEditor.addText': 'Add Text',
+    'cardEditor.addImage': 'Add Image',
+    'cardEditor.addAudio': 'Add Audio',
+    'cardEditor.addVideo': 'Add Video',
+    'cardEditor.addDrawing': 'Add Drawing',
+    'cardEditor.addQuiz': 'Add Quiz',
+    'cardEditor.autoArrange': 'Auto Arrange',
+    'cardEditor.grid': 'Grid',
+    'cardEditor.center': 'Center',
+    'cardEditor.stack': 'Stack',
+    'cardEditor.justify': 'Justify',
+    'cardEditor.alignLeft': 'Align Left',
+    'cardEditor.alignCenter': 'Align Center',
+    'cardEditor.alignRight': 'Align Right',
+    'cardEditor.centerHorizontal': 'Center Horizontal',
+    'cardEditor.centerVertical': 'Center Vertical',
+    'cardEditor.newCard': 'New Card',
+    'cardEditor.deleteCard': 'Delete Card',
+    'cardEditor.cardType': 'Card Type',
+    'cardEditor.basicCard': 'Basic Card',
+    'cardEditor.singleSided': 'Single Sided',
+    'cardEditor.informational': 'Informational',
+    'cardEditor.quizOnly': 'Quiz Only',
+    'cardEditor.passwordProtected': 'Password Protected',
+    'cardEditor.showGrid': 'Show Grid',
+    'cardEditor.snapToGrid': 'Snap to Grid',
+    'cardEditor.zoom': 'Zoom',
+    'cardEditor.fitToView': 'Fit to View',
+    'cardEditor.fullscreen': 'Fullscreen',
+    'cardEditor.cardSize': 'Card Size',
+    'cardEditor.width': 'Width',
+    'cardEditor.height': 'Height',
+    'cardEditor.clickToEdit': 'Click to edit text',
+    'cardEditor.enterText': 'Enter your text...',
+    
+    // Element Controls
+    'elementControls.element': 'Element',
+    'elementControls.delete': 'Delete',
+    'elementControls.fontSize': 'Font Size',
+    'elementControls.fontFamily': 'Font Family',
+    'elementControls.color': 'Color',
+    'elementControls.backgroundColor': 'Background Color',
+    'elementControls.bold': 'Bold',
+    'elementControls.italic': 'Italic',
+    'elementControls.underline': 'Underline',
+    'elementControls.alignLeft': 'Align Left',
+    'elementControls.alignCenter': 'Align Center',
+    'elementControls.alignRight': 'Align Right',
+    'elementControls.alignJustify': 'Align Justify',
+    
+    // Enhanced Set Overview
+    'enhancedOverview.title': 'Enhanced Overview',
+    'enhancedOverview.backToSet': 'Back to Set',
+    'enhancedOverview.cardMoved': 'Card moved',
+    'enhancedOverview.cardMovedDesc': 'Card moved from position {from} to {to}',
+    'enhancedOverview.moving': 'Moving...',
+    
+    // Editor Card Overview
+    'editorOverview.title': 'Card Overview',
+    'editorOverview.backToEditor': 'Back to Editor',
+    'editorOverview.clickToNavigate': 'Click any card to navigate to it',
+    'editorOverview.dragToReorder': 'Drag cards to reorder them',
+    'editorOverview.instructions': 'Click any card to navigate to it • Drag cards to reorder them',
+    'editorOverview.noCards': 'No cards to display',
+    'editorOverview.current': 'Current',
+    'editorOverview.elements': 'elements',
+    'editorOverview.textBased': 'Text-based card',
+    'editorOverview.cardCount': '{count} cards',
+    
+    // Card Types in Overview
+    'cardType.text': 'text',
+    'cardType.image': 'image',
+    'cardType.audio': 'audio',
+    'cardType.quiz': 'quiz',
+    'cardType.video': 'video',
+    
+    // Toolbar
+    'toolbar.navigation': 'Navigation',
+    'toolbar.cardNavigation': 'Card Navigation',
+    'toolbar.elements': 'Elements',
+    'toolbar.layout': 'Layout',
+    'toolbar.arrangement': 'Arrangement',
+    'toolbar.cardManagement': 'Card Management',
+    'toolbar.viewOptions': 'View Options',
+    'toolbar.showText': 'Show Text',
+    'toolbar.hideText': 'Hide Text',
+    
+    // Top Toolbar
+    'topToolbar.deckTitle': 'Deck Title',
+    'topToolbar.cardOf': 'Card {current} of {total}',
+    'topToolbar.overview': 'Overview',
+    
+    // Success/Error messages from existing handlers
+    'success.deckTitleUpdated': 'Deck title updated successfully',
+    'error.deckTitleUpdateFailed': 'Failed to update deck title',
     
     // Error messages
     'error.general': 'An error occurred. Please try again.',
