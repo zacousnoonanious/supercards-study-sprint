@@ -29,6 +29,7 @@ import {
   FileText
 } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ElementToolbarProps {
   onAddElement: (type: string) => void;
@@ -47,6 +48,8 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
   onCreateNewCard,
   onCreateNewCardWithLayout,
 }) => {
+  const { t } = useI18n();
+
   const elementTypes = [
     { type: 'text', icon: Type, label: 'Text' },
     { type: 'image', icon: Image, label: 'Image' },
@@ -66,7 +69,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
         <Input
           value={selectedElement?.content || ''}
           onChange={(e) => onUpdateElement({ content: e.target.value })}
-          placeholder="Enter your text here..."
+          placeholder={t('placeholders.enterYourText')}
           className="h-20"
         />
       </div>
@@ -122,7 +125,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
         <Input
           value={selectedElement?.imageUrl || ''}
           onChange={(e) => onUpdateElement({ imageUrl: e.target.value })}
-          placeholder="Enter image URL here..."
+          placeholder={t('placeholders.enterImageUrl')}
           className="h-20"
         />
       </div>
@@ -136,7 +139,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
         <Textarea
           value={selectedElement?.content || ''}
           onChange={(e) => onUpdateElement({ content: e.target.value })}
-          placeholder="Enter your question here..."
+          placeholder={t('placeholders.enterQuestion')}
           className="h-20"
         />
       </div>
@@ -153,7 +156,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
                   newOptions[index] = e.target.value;
                   onUpdateElement({ multipleChoiceOptions: newOptions });
                 }}
-                placeholder="Option"
+                placeholder={t('placeholders.option')}
                 className="w-full"
               />
               <Button
@@ -179,19 +182,19 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
             }}
             className="w-full justify-start text-sm"
           >
-            Add Option
+            {t('placeholders.addOption')}
           </Button>
         </div>
       </div>
       
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium">Correct Answer</Label>
+        <Label className="text-sm font-medium">{t('placeholders.correctAnswer')}</Label>
         <Select
           value={selectedElement?.correctAnswer?.toString() || ''}
           onValueChange={(value) => onUpdateElement({ correctAnswer: parseInt(value) })}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Correct Answer" />
+            <SelectValue placeholder={t('placeholders.correctAnswer')} />
           </SelectTrigger>
           <SelectContent>
             {selectedElement?.multipleChoiceOptions?.map((option, index) => (
@@ -210,19 +213,19 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
         <Textarea
           value={selectedElement?.content || ''}
           onChange={(e) => onUpdateElement({ content: e.target.value })}
-          placeholder="Enter your question here..."
+          placeholder={t('placeholders.enterQuestion')}
           className="h-20"
         />
       </div>
       
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium">Correct Answer</Label>
+        <Label className="text-sm font-medium">{t('placeholders.correctAnswer')}</Label>
         <Select
           value={selectedElement?.correctAnswer?.toString() || ''}
           onValueChange={(value) => onUpdateElement({ correctAnswer: parseInt(value) })}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Correct Answer" />
+            <SelectValue placeholder={t('placeholders.correctAnswer')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="1">True</SelectItem>
@@ -240,7 +243,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
         <Textarea
           value={selectedElement?.fillInBlankText || ''}
           onChange={(e) => onUpdateElement({ fillInBlankText: e.target.value })}
-          placeholder="Enter your sentence here..."
+          placeholder={t('placeholders.enterSentence')}
           className="h-20"
         />
       </div>
@@ -276,7 +279,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
         <Input
           value={selectedElement?.youtubeUrl || ''}
           onChange={(e) => onUpdateElement({ youtubeUrl: e.target.value })}
-          placeholder="Enter YouTube URL here..."
+          placeholder={t('placeholders.enterYouTubeUrl')}
           className="h-20"
         />
       </div>
@@ -290,7 +293,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
         <Input
           value={selectedElement?.deckTitle || ''}
           onChange={(e) => onUpdateElement({ deckTitle: e.target.value })}
-          placeholder="Deck title..."
+          placeholder={t('placeholders.deckTitle')}
           className="h-20"
         />
       </div>
@@ -304,7 +307,7 @@ export const ElementToolbar: React.FC<ElementToolbarProps> = ({
         <Input
           value={selectedElement?.audioUrl || ''}
           onChange={(e) => onUpdateElement({ audioUrl: e.target.value })}
-          placeholder="Enter Audio URL here..."
+          placeholder={t('placeholders.enterAudioUrl')}
           className="h-20"
         />
       </div>

@@ -62,7 +62,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                 value={element.content || ''}
                 onChange={(e) => onUpdateElement(element.id, { content: e.target.value })}
                 className="h-8 text-xs"
-                placeholder={t('editor.enterTextContent')}
+                placeholder={t('placeholders.enterTextContent')}
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -135,7 +135,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
               value={element.imageUrl || ''}
               onChange={(e) => onUpdateElement(element.id, { imageUrl: e.target.value })}
               className="h-8 text-xs"
-              placeholder={t('editor.enterImageUrl')}
+              placeholder={t('placeholders.enterImageUrl')}
             />
           </div>
         )}
@@ -161,7 +161,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                     size="sm"
                     onClick={() => onUpdateElement(element.id, { correctAnswer: index })}
                     className="h-6 w-6 p-0 text-xs"
-                    title={t('editor.correctAnswer')}
+                    title={t('placeholders.correctAnswer')}
                   >
                     ✓
                   </Button>
@@ -207,7 +207,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                 }}
                 className="h-6 text-xs w-full"
               >
-                {t('editor.addOption')}
+                {t('placeholders.addOption')}
               </Button>
             </div>
           </div>

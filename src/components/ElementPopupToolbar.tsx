@@ -143,7 +143,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
               <div className="flex items-center gap-2 mt-2">
                 <Link className="w-4 h-4" />
                 <Input
-                  placeholder={t('editor.enterUrl')}
+                  placeholder={t('placeholders.enterUrl')}
                   value={element.hyperlink || ''}
                   onChange={(e) => handleHyperlinkChange(e.target.value)}
                   className="flex-1 h-8"

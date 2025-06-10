@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Flashcard, CanvasElement } from '@/types/flashcard';
 import { Input } from '@/components/ui/input';
@@ -6,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface EditorFooterProps {
   currentCard: Flashcard;
@@ -20,6 +20,8 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
   onUpdateElement,
   onUpdateCard,
 }) => {
+  const { t } = useI18n();
+
   const handleCardUpdate = (field: keyof Flashcard, value: any) => {
     onUpdateCard(currentCard.id, { [field]: value });
   };
@@ -53,6 +55,7 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                   value={currentCard.question || ''}
                   onChange={(e) => handleCardUpdate('question', e.target.value)}
                   className="h-8 text-xs"
+                  placeholder={t('placeholders.enterQuestion')}
                 />
               </div>
               <div>
@@ -62,6 +65,7 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                   value={currentCard.answer || ''}
                   onChange={(e) => handleCardUpdate('answer', e.target.value)}
                   className="h-8 text-xs"
+                  placeholder={t('placeholders.enterContent')}
                 />
               </div>
               <div>
@@ -105,6 +109,7 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                         value={selectedElement.content || ''}
                         onChange={(e) => onUpdateElement(selectedElement.id, { content: e.target.value })}
                         className="h-8 text-xs"
+                        placeholder={t('placeholders.enterTextContent')}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -140,6 +145,7 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                       value={selectedElement.imageUrl || ''}
                       onChange={(e) => onUpdateElement(selectedElement.id, { imageUrl: e.target.value })}
                       className="h-8 text-xs"
+                      placeholder={t('placeholders.enterImageUrl')}
                     />
                   </div>
                 )}
@@ -150,7 +156,7 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                     <Input
                       value={selectedElement.content || ''}
                       onChange={(e) => onUpdateElement(selectedElement.id, { content: e.target.value })}
-                      placeholder="Enter question"
+                      placeholder={t('placeholders.enterQuestion')}
                       className="h-8 text-xs mb-2"
                     />
                     <div className="space-y-1">
@@ -164,7 +170,7 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                               onUpdateElement(selectedElement.id, { multipleChoiceOptions: newOptions });
                             }}
                             className="h-6 text-xs flex-1"
-                            placeholder={`Option ${index + 1}`}
+                            placeholder={`${t('placeholders.option')} ${index + 1}`}
                           />
                           <Button
                             variant={selectedElement.correctAnswer === index ? 'default' : 'outline'}
@@ -205,7 +211,7 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                         size="sm"
                         onClick={() => {
                           const currentOptions = selectedElement.multipleChoiceOptions || [];
-                          const newOptions = [...currentOptions, `Option ${currentOptions.length + 1}`];
+                          const newOptions = [...currentOptions, `${t('placeholders.option')} ${currentOptions.length + 1}`];
                           
                           // Auto-resize element when adding options
                           const newHeight = Math.max(selectedElement.height, 120 + (newOptions.length * 40));
@@ -217,7 +223,7 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                         }}
                         className="h-6 text-xs w-full"
                       >
-                        + Add Option
+                        + {t('placeholders.addOption')}
                       </Button>
                     </div>
                   </div>
