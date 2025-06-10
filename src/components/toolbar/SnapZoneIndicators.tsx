@@ -37,9 +37,9 @@ export const SnapZoneIndicators: React.FC<SnapZoneIndicatorsProps> = ({
         return {
           ...baseStyle,
           left: 0,
-          top: 100,
+          top: 250, // Moved down from 100px to 250px
           width: 60,
-          height: window.innerHeight - 100,
+          height: window.innerHeight - 350, // Shortened on both ends (250px from top, 100px from bottom)
         };
       case 'very-top':
         return {

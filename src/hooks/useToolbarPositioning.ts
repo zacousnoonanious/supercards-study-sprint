@@ -50,7 +50,7 @@ export const useToolbarPositioning = ({ canvasRef, onPositionChange }: UseToolba
         return {
           position: 'fixed' as const,
           left: '8px',
-          top: '100px',
+          top: '300px', // Moved down by 200px from original 100px
           zIndex: 50
         };
       case 'very-top':
@@ -90,9 +90,9 @@ export const useToolbarPositioning = ({ canvasRef, onPositionChange }: UseToolba
       
       let currentSnapZone: SnapZone = null;
 
-      // Left snap zone - check if close to left edge of screen
+      // Left snap zone - moved down and shortened
       const distanceToLeft = Math.abs(newX);
-      if (distanceToLeft < snapThreshold && toolbarCenterY > 100) {
+      if (distanceToLeft < snapThreshold && toolbarCenterY > 250 && toolbarCenterY < window.innerHeight - 100) {
         currentSnapZone = 'left';
       }
       
