@@ -32,7 +32,7 @@ interface CardEditorLayoutProps {
   onToolbarDockChange: (docked: boolean) => void;
   onToolbarShowTextChange: (showText: boolean) => void;
   onShowCardOverviewChange: (show: boolean) => void;
-  onDeckTitleChange: (title: string) => void;
+  onDeckTitleChange: (title: string) => Promise<void>;
   onCardSideChange: (side: 'front' | 'back') => void;
   onElementSelect: (elementId: string | null) => void;
   onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => void;
@@ -110,8 +110,15 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
       />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Canvas */}
-        <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
+        {/* Canvas Area with integrated toolbar positioning */}
+        <div className="flex-1 flex items-center justify-center p-4 overflow-auto relative">
+          {/* Toolbar positioned within canvas area when docked to canvas-left */}
+          {toolbarIsDocked && toolbarPosition === 'canvas-left' && (
+            <div className="absolute left-4 top-4 z-50">
+              {/* Toolbar will be rendered here by UndockableToolbar */}
+            </div>
+          )}
+          
           <div
             className="relative"
             style={{

@@ -30,7 +30,7 @@ type SnapZone = 'left' | 'very-top' | 'canvas-left' | null;
 export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
   const { theme } = useTheme();
   const [isDocked, setIsDocked] = useState(true);
-  const [position, setPosition] = useState<'left' | 'very-top' | 'canvas-left' | 'floating'>('left');
+  const [position, setPosition] = useState<'left' | 'very-top' | 'canvas-left' | 'floating'>('canvas-left');
   const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -79,8 +79,8 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       // Canvas-left snap zone - check if close to canvas area
       const canvasRect = props.canvasRef?.current?.getBoundingClientRect();
       if (canvasRect) {
-        const distanceToCanvasLeft = Math.abs(newX - (canvasRect.left - 80));
-        const isWithinCanvasHeight = toolbarCenterY > canvasRect.top && toolbarCenterY < canvasRect.bottom;
+        const distanceToCanvasLeft = Math.abs(newX - (canvasRect.left + 16)); // 16px padding
+        const isWithinCanvasHeight = toolbarCenterY > canvasRect.top + 16 && toolbarCenterY < canvasRect.bottom - 16;
         if (distanceToCanvasLeft < snapThreshold && isWithinCanvasHeight) {
           currentSnapZone = 'canvas-left';
         }
@@ -138,8 +138,8 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       setPosition('floating');
       props.onPositionChange?.('floating', false);
     } else {
-      setPosition('left');
-      props.onPositionChange?.('left', true);
+      setPosition('canvas-left');
+      props.onPositionChange?.('canvas-left', true);
     }
     setSnapZone(null);
   };
@@ -178,27 +178,61 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
       case 'canvas-left':
         return {
           ...baseStyle,
-          left: canvasRect ? canvasRect.left - 80 : 100,
-          top: canvasRect?.top || 200,
+          left: canvasRect ? canvasRect.left + 16 : 100,
+          top: canvasRect ? canvasRect.top + 16 : 200,
           width: 60,
-          height: canvasRect?.height || 400,
+          height: canvasRect ? Math.max(300, canvasRect.height - 32) : 400,
         };
       default:
         return { display: 'none' };
     }
   };
 
+  const getDockedPosition = () => {
+    const canvasRect = props.canvasRef?.current?.getBoundingClientRect();
+    
+    switch (position) {
+      case 'left':
+        return {
+          position: 'fixed' as const,
+          left: '8px',
+          top: '100px',
+          zIndex: 50
+        };
+      case 'very-top':
+        return {
+          position: 'fixed' as const,
+          top: '8px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 60
+        };
+      case 'canvas-left':
+        return {
+          position: 'absolute' as const,
+          left: '16px',
+          top: '16px',
+          zIndex: 50
+        };
+      default:
+        return {};
+    }
+  };
+
   if (isDocked) {
     return (
       <>
-        <ConsolidatedToolbar
-          {...props}
-          position={position}
-          isDocked={isDocked}
-          onToggleDock={handleToggleDock}
-          showText={showText}
-          onTextToggle={handleTextToggle}
-        />
+        <div style={position === 'canvas-left' ? {} : getDockedPosition()}>
+          <ConsolidatedToolbar
+            {...props}
+            position={position}
+            isDocked={isDocked}
+            onToggleDock={handleToggleDock}
+            showText={showText}
+            onTextToggle={handleTextToggle}
+            style={position === 'canvas-left' ? getDockedPosition() : {}}
+          />
+        </div>
         
         {/* Snap zone indicators */}
         {isDragging && (
