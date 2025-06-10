@@ -9,6 +9,7 @@ interface UseCanvasDragResizeProps {
   canvasHeight: number;
   snapToGrid: boolean;
   gridSize: number;
+  zoom?: number;
 }
 
 export const useCanvasDragResize = ({
@@ -18,6 +19,7 @@ export const useCanvasDragResize = ({
   canvasHeight,
   snapToGrid,
   gridSize,
+  zoom = 1,
 }: UseCanvasDragResizeProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -43,9 +45,9 @@ export const useCanvasDragResize = ({
     const currentX = e.clientX - canvasRect.left;
     const currentY = e.clientY - canvasRect.top;
     
-    // Calculate the actual pixel delta
-    const deltaX = currentX - dragStart.x;
-    const deltaY = currentY - dragStart.y;
+    // Calculate the actual pixel delta and scale it by zoom
+    const deltaX = (currentX - dragStart.x) / zoom;
+    const deltaY = (currentY - dragStart.y) / zoom;
     
     if (isDragging) {
       // Simple dragging - just move the element
@@ -132,7 +134,7 @@ export const useCanvasDragResize = ({
         height: newHeight 
       });
     }
-  }, [isDragging, isResizing, dragElementId, dragStart, dragElementStart, elements, canvasWidth, canvasHeight, snapToGridIfEnabled, onUpdateElement, resizeHandle]);
+  }, [isDragging, isResizing, dragElementId, dragStart, dragElementStart, elements, canvasWidth, canvasHeight, snapToGridIfEnabled, onUpdateElement, resizeHandle, zoom]);
 
   const startDragOrResize = useCallback((
     e: React.MouseEvent,

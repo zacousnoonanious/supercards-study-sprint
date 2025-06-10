@@ -62,6 +62,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     canvasHeight,
     snapToGrid,
     gridSize,
+    zoom,
   });
 
   const handleElementMouseDown = useCallback((e: React.MouseEvent, elementId: string, action: 'drag' | 'resize' = 'drag', handle?: string) => {
