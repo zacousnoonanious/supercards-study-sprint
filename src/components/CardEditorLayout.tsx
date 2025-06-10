@@ -5,7 +5,8 @@ import { BottomToolbar } from './BottomToolbar';
 import { CardCanvas } from './CardCanvas';
 import { SidePanel } from './SidePanel';
 import { TopSettingsBar } from './TopSettingsBar';
-import { Flashcard, CanvasElement } from '@/types/flashcard';
+import { ConsolidatedToolbar } from './ConsolidatedToolbar';
+import { Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CardEditorLayoutProps {
@@ -39,6 +40,15 @@ interface CardEditorLayoutProps {
   onDeleteElement: (elementId: string) => void;
   onCanvasSizeChange: (width: number, height: number) => void;
   onUpdateCard: (updates: Partial<Flashcard>) => void;
+  onAddElement: (type: string) => void;
+  onAutoArrange: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => void;
+  onNavigateCard: (direction: 'prev' | 'next') => void;
+  onCreateNewCard: () => void;
+  onCreateNewCardWithLayout: () => void;
+  onCreateNewCardFromTemplate: (template: CardTemplate) => void;
+  onDeleteCard: () => void;
+  onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
+  onShowCardOverview?: () => void;
 }
 
 export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
@@ -72,6 +82,15 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   onDeleteElement,
   onCanvasSizeChange,
   onUpdateCard,
+  onAddElement,
+  onAutoArrange,
+  onNavigateCard,
+  onCreateNewCard,
+  onCreateNewCardWithLayout,
+  onCreateNewCardFromTemplate,
+  onDeleteCard,
+  onCardTypeChange,
+  onShowCardOverview,
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
@@ -110,15 +129,32 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
       />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Canvas Area with integrated toolbar positioning */}
+        {/* Left Toolbar Panel */}
+        <div className="w-20 border-r bg-background overflow-y-auto">
+          <ConsolidatedToolbar
+            onAddElement={onAddElement}
+            onAutoArrange={onAutoArrange}
+            currentCard={currentCard}
+            currentCardIndex={currentCardIndex}
+            totalCards={cards.length}
+            currentSide={currentSide}
+            onNavigateCard={onNavigateCard}
+            onSideChange={onCardSideChange}
+            onCreateNewCard={onCreateNewCard}
+            onCreateNewCardWithLayout={onCreateNewCardWithLayout}
+            onCreateNewCardFromTemplate={onCreateNewCardFromTemplate}
+            onDeleteCard={onDeleteCard}
+            onCardTypeChange={onCardTypeChange}
+            onShowCardOverview={onShowCardOverview}
+            position="left"
+            isDocked={true}
+            showText={toolbarShowText}
+            onTextToggle={onToolbarShowTextChange}
+          />
+        </div>
+
+        {/* Canvas Area */}
         <div className="flex-1 flex items-center justify-center p-4 overflow-auto relative">
-          {/* Toolbar positioned within canvas area when docked to canvas-left */}
-          {toolbarIsDocked && toolbarPosition === 'canvas-left' && (
-            <div className="absolute left-4 top-4 z-50">
-              {/* Toolbar will be rendered here by UndockableToolbar */}
-            </div>
-          )}
-          
           <div
             className="relative"
             style={{

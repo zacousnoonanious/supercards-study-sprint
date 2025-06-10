@@ -1,8 +1,6 @@
 
 import React, { useState } from 'react';
 import { ConsolidatedToolbar } from './ConsolidatedToolbar';
-import { SnapZoneIndicators } from './toolbar/SnapZoneIndicators';
-import { useToolbarPositioning } from '@/hooks/useToolbarPositioning';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
 
@@ -31,23 +29,6 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
   const { theme } = useTheme();
   const [showText, setShowText] = useState(false);
 
-  const {
-    isDocked,
-    position,
-    dragPosition,
-    isDragging,
-    snapZone,
-    toolbarRef,
-    handleToggleDock,
-    handleMouseDown,
-    getDockedPosition
-  } = useToolbarPositioning({
-    canvasRef: props.canvasRef,
-    onPositionChange: props.onPositionChange
-  });
-
-  const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
-
   // Handle text toggle
   const handleTextToggle = () => {
     const newShowText = !showText;
@@ -55,59 +36,16 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
     props.onTextToggle?.(newShowText);
   };
 
-  if (isDocked) {
-    return (
-      <>
-        <div style={position === 'canvas-left' ? {} : getDockedPosition()}>
-          <ConsolidatedToolbar
-            {...props}
-            position={position}
-            isDocked={isDocked}
-            onToggleDock={handleToggleDock}
-            showText={showText}
-            onTextToggle={handleTextToggle}
-            style={position === 'canvas-left' ? getDockedPosition() : {}}
-            canvasRef={props.canvasRef}
-          />
-        </div>
-        
-        <SnapZoneIndicators
-          snapZone={snapZone}
-          isDragging={isDragging}
-          canvasRef={props.canvasRef}
-        />
-      </>
-    );
-  }
-
+  // For the new embedded layout, we just render the toolbar directly
+  // The positioning is handled by the parent CardEditorLayout
   return (
-    <>
-      <div
-        ref={toolbarRef}
-        className={`fixed z-50 ${isDragging ? 'cursor-move' : 'cursor-grab'}`}
-        style={{
-          left: dragPosition.x,
-          top: dragPosition.y,
-        }}
-        onMouseDown={handleMouseDown}
-      >
-        <ConsolidatedToolbar
-          {...props}
-          position="floating"
-          isDocked={isDocked}
-          onToggleDock={handleToggleDock}
-          showText={showText}
-          onTextToggle={handleTextToggle}
-          className={`shadow-xl ${isDarkTheme ? 'border-gray-500' : 'border-gray-400'}`}
-          canvasRef={props.canvasRef}
-        />
-      </div>
-      
-      <SnapZoneIndicators
-        snapZone={snapZone}
-        isDragging={isDragging}
-        canvasRef={props.canvasRef}
-      />
-    </>
+    <ConsolidatedToolbar
+      {...props}
+      position="left"
+      isDocked={true}
+      showText={showText}
+      onTextToggle={handleTextToggle}
+      canvasRef={props.canvasRef}
+    />
   );
 };

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -71,24 +72,13 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   const [showTemplates, setShowTemplates] = useState(false);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
-  const isHorizontal = position === 'very-top';
-  const isFloating = position === 'floating';
-  const isCanvasLeft = position === 'canvas-left';
-
-  // Force icon mode for horizontal layout
-  const displayText = !isHorizontal && !isFloating && showText;
+  
+  // Always display as icons only for the embedded left toolbar
+  const displayText = false;
 
   const handleTextToggle = () => {
     const newShowText = !showText;
     onTextToggle?.(newShowText);
-  };
-
-  const getMaxHeight = () => {
-    if (isCanvasLeft && canvasRef?.current) {
-      const canvasRect = canvasRef.current.getBoundingClientRect();
-      return Math.max(300, canvasRect.height - 32); // 32px for padding
-    }
-    return 'calc(100vh - 120px)';
   };
 
   const ToolbarButton = ({ 
@@ -110,136 +100,69 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           <Button
             variant={variant}
             size="sm"
-            className={displayText ? "w-auto h-8 px-2" : "w-8 h-8 p-0 shrink-0"}
+            className="w-8 h-8 p-0 shrink-0"
             onClick={onClick}
             disabled={disabled}
             title={label}
           >
             <Icon className="w-4 h-4" />
-            {displayText && <span className="ml-1 text-xs whitespace-nowrap">{label}</span>}
           </Button>
         </TooltipTrigger>
-        <TooltipContent side={position === 'left' || position === 'canvas-left' ? 'right' : 'bottom'}>
+        <TooltipContent side="right">
           {label}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
 
-  const getContainerClass = () => {
-    const baseClass = `border rounded-lg shadow-sm p-2 ${
-      isDarkTheme
-        ? 'bg-gray-800 border-gray-600 text-white' 
-        : 'bg-background border text-foreground'
-    } ${className || ''}`;
-
-    if (isFloating) {
-      return `${baseClass} grid grid-cols-2 gap-1 w-28 overflow-y-auto`;
-    }
-
-    if (isHorizontal) {
-      return `${baseClass} flex flex-row items-center gap-2 w-auto max-w-full overflow-x-auto`;
-    }
-
-    return `${baseClass} flex flex-col items-center space-y-1 ${displayText ? 'w-36' : 'w-16'} overflow-y-auto`;
-  };
-
-  const getContainerStyle = () => {
-    const baseStyle = { ...style };
-    
-    if (isCanvasLeft) {
-      baseStyle.maxHeight = getMaxHeight();
-    } else if (isFloating) {
-      baseStyle.maxHeight = 'calc(100vh - 120px)';
-    } else {
-      baseStyle.maxHeight = 'calc(100vh - 120px)';
-    }
-    
-    return baseStyle;
-  };
-
   const getSeparator = () => {
-    if (isFloating) {
-      return <div className="col-span-2 h-px bg-border my-1" />;
-    }
-    if (isHorizontal) {
-      return <Separator orientation="vertical" className="h-6" />;
-    }
-    return <div className={`w-6 h-px my-1 ${isDarkTheme ? 'bg-gray-600' : 'bg-border'}`} />;
-  };
-
-  const getButtonGroupClass = () => {
-    if (isFloating) {
-      return "contents"; // Use CSS Grid contents to place buttons in grid
-    }
-    if (isHorizontal) {
-      return "flex items-center gap-1";
-    }
-    return "flex flex-col items-center space-y-1";
+    return <div className="w-6 h-px my-1 bg-border" />;
   };
 
   return (
-    <div className={getContainerClass()} style={getContainerStyle()}>
-      {/* Dock/Undock and Text/Icon Toggle */}
-      <div className={getButtonGroupClass()}>
-        {onToggleDock && (
+    <div className="p-2 flex flex-col items-center space-y-1 overflow-y-auto h-full" style={style}>
+      {/* Text/Icon Toggle */}
+      {onTextToggle && (
+        <>
           <Button
             variant="ghost"
             size="sm"
-            className={displayText ? "w-auto h-6 px-2" : "w-6 h-6 p-0 shrink-0"}
-            onClick={onToggleDock}
-            title={isDocked ? "Undock" : "Dock"}
-          >
-            {isDocked ? <PinOff className="w-3 h-3" /> : <Pin className="w-3 h-3" />}
-            {displayText && <span className="ml-1 text-[10px] whitespace-nowrap">Dock</span>}
-          </Button>
-        )}
-        
-        {!isHorizontal && !isFloating && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className={displayText ? "w-auto h-6 px-2" : "w-6 h-6 p-0 shrink-0"}
+            className="w-6 h-6 p-0 shrink-0"
             onClick={handleTextToggle}
             title={showText ? "Show Icons" : "Show Text"}
           >
             <Menu className="w-3 h-3" />
-            {displayText && <span className="ml-1 text-[10px] whitespace-nowrap">{showText ? "Icons" : "Text"}</span>}
           </Button>
-        )}
-      </div>
-
-      {getSeparator()}
+          
+          {getSeparator()}
+        </>
+      )}
 
       {/* Navigation */}
-      <div className={getButtonGroupClass()}>
+      <div className="flex flex-col items-center space-y-1">
         <Button
           variant="ghost"
           size="sm"
-          className={displayText ? "w-auto h-8 px-2" : "w-8 h-8 p-0 shrink-0"}
+          className="w-8 h-8 p-0 shrink-0"
           onClick={() => onNavigateCard('prev')}
           disabled={currentCardIndex === 0}
           title="Previous"
         >
           <ChevronLeft className="w-4 h-4" />
-          {displayText && <span className="ml-1 text-xs whitespace-nowrap">Prev</span>}
         </Button>
         
         <Button
           variant="ghost"
           size="sm"
-          className={displayText ? "w-auto h-8 px-2" : "w-8 h-8 p-0 shrink-0"}
+          className="w-8 h-8 p-0 shrink-0"
           onClick={() => onNavigateCard('next')}
           disabled={currentCardIndex >= totalCards - 1}
           title="Next"
         >
           <ChevronRight className="w-4 h-4" />
-          {displayText && <span className="ml-1 text-xs whitespace-nowrap">Next</span>}
         </Button>
 
-        <div className={`text-[10px] text-center leading-tight ${
-          isDarkTheme ? 'text-gray-300' : 'text-muted-foreground'
-        } ${displayText ? 'px-2' : ''} ${isFloating ? 'col-span-2' : ''}`}>
+        <div className="text-[10px] text-center leading-tight text-muted-foreground">
           {currentCardIndex + 1}<br/>{totalCards}
         </div>
       </div>
@@ -247,7 +170,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       {getSeparator()}
 
       {/* Card Management */}
-      <div className={getButtonGroupClass()}>
+      <div className="flex flex-col items-center space-y-1">
         <ToolbarButton
           icon={Plus}
           label={t('newCard') || 'New Card'}
@@ -271,33 +194,33 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       {getSeparator()}
 
       {/* Front/Back Toggle */}
-      <div className={getButtonGroupClass()}>
+      <div className="flex flex-col items-center space-y-1">
         <Button
           variant={currentSide === 'front' ? 'default' : 'ghost'}
           size="sm"
-          className={displayText ? "w-auto h-8 px-2 text-[10px]" : "w-8 h-8 p-0 text-[10px] shrink-0"}
+          className="w-8 h-8 p-0 text-[10px] shrink-0"
           onClick={() => onSideChange('front')}
           title="Front Side"
         >
-          F{displayText && <span className="ml-1 whitespace-nowrap">ront</span>}
+          F
         </Button>
         
         <Button
           variant={currentSide === 'back' ? 'default' : 'ghost'}
           size="sm"
-          className={displayText ? "w-auto h-8 px-2 text-[10px]" : "w-8 h-8 p-0 text-[10px] shrink-0"}
+          className="w-8 h-8 p-0 text-[10px] shrink-0"
           onClick={() => onSideChange('back')}
           disabled={currentCard?.card_type === 'single-sided'}
           title="Back Side"
         >
-          B{displayText && <span className="ml-1 whitespace-nowrap">ack</span>}
+          B
         </Button>
       </div>
 
       {getSeparator()}
 
       {/* Elements */}
-      <div className={getButtonGroupClass()}>
+      <div className="flex flex-col items-center space-y-1">
         <ToolbarButton
           icon={Type}
           label={t('text') || 'Text'}
@@ -338,7 +261,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       {getSeparator()}
 
       {/* Interactive Elements */}
-      <div className={getButtonGroupClass()}>
+      <div className="flex flex-col items-center space-y-1">
         <ToolbarButton
           icon={CheckSquare}
           label={t('multipleChoice') || 'Multiple Choice'}
@@ -361,7 +284,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       {getSeparator()}
 
       {/* Auto Arrange */}
-      <div className={getButtonGroupClass()}>
+      <div className="flex flex-col items-center space-y-1">
         <ToolbarButton
           icon={Grid3X3}
           label={t('grid') || 'Grid'}
