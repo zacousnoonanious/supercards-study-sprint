@@ -68,28 +68,39 @@ export const useCanvasInteraction = ({
     
     // Different padding based on context
     const isFullscreen = canvasArea === canvasViewportRef.current;
-    const padding = isFullscreen ? 80 : 32; // More padding in fullscreen
-    const availableWidth = canvasAreaRect.width - padding;
-    const availableHeight = canvasAreaRect.height - padding;
-    
-    // Calculate zoom to fit canvas with padding
-    const extraPadding = isFullscreen ? 0 : 40;
-    const zoomX = (availableWidth - extraPadding) / cardWidth;
-    const zoomY = (availableHeight - extraPadding) / cardHeight;
-    const maxZoom = isFullscreen ? 2 : 1; // Allow higher zoom in fullscreen
-    const newZoom = Math.min(zoomX, zoomY, maxZoom);
-    
-    setZoom(newZoom);
     
     if (isFullscreen) {
-      // In fullscreen, we need to manually center
+      // Fullscreen mode - more generous padding
+      const padding = 80;
+      const availableWidth = canvasAreaRect.width - padding;
+      const availableHeight = canvasAreaRect.height - padding;
+      
+      const zoomX = availableWidth / cardWidth;
+      const zoomY = availableHeight / cardHeight;
+      const newZoom = Math.min(zoomX, zoomY, 2); // Allow up to 200% zoom in fullscreen
+      
+      setZoom(newZoom);
+      
+      // Center the canvas in the viewport
       const scaledWidth = cardWidth * newZoom;
       const scaledHeight = cardHeight * newZoom;
       const centerX = (canvasAreaRect.width - scaledWidth) / 2;
       const centerY = (canvasAreaRect.height - scaledHeight) / 2;
       setPanOffset({ x: centerX, y: centerY });
     } else {
-      // In normal mode, CSS centers it
+      // Normal mode - make the canvas fill more of the available space
+      const padding = 40; // Reduced padding for normal mode
+      const availableWidth = canvasAreaRect.width - padding;
+      const availableHeight = canvasAreaRect.height - padding;
+      
+      // Calculate zoom to make canvas fill available space better
+      const zoomX = availableWidth / cardWidth;
+      const zoomY = availableHeight / cardHeight;
+      const newZoom = Math.min(zoomX, zoomY, 1.5); // Allow up to 150% zoom in normal mode
+      
+      setZoom(newZoom);
+      
+      // Reset pan offset since CSS handles centering in normal mode
       setPanOffset({ x: 0, y: 0 });
     }
   }, [cardWidth, cardHeight, setZoom, setPanOffset, canvasViewportRef]);
