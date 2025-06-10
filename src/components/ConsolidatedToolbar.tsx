@@ -73,8 +73,8 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
   
-  // Always display as icons only for the embedded left toolbar
-  const displayText = false;
+  // Use the actual showText prop instead of always false
+  const displayText = showText;
 
   const handleTextToggle = () => {
     const newShowText = !showText;
@@ -99,39 +99,46 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
         <TooltipTrigger asChild>
           <Button
             variant={variant}
-            size="sm"
-            className="w-8 h-8 p-0 shrink-0"
+            size={displayText ? "sm" : "sm"}
+            className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 shrink-0"}
             onClick={onClick}
             disabled={disabled}
             title={label}
           >
             <Icon className="w-4 h-4" />
+            {displayText && <span className="text-xs truncate">{label}</span>}
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="right">
-          {label}
-        </TooltipContent>
+        {!displayText && (
+          <TooltipContent side="right">
+            {label}
+          </TooltipContent>
+        )}
       </Tooltip>
     </TooltipProvider>
   );
 
   const getSeparator = () => {
-    return <div className="w-6 h-px my-1 bg-border" />;
+    return <div className={displayText ? "w-full h-px my-2 bg-border" : "w-6 h-px my-1 bg-border"} />;
   };
 
   return (
-    <div className="p-2 flex flex-col items-center space-y-1 overflow-y-auto h-full" style={style}>
+    <div 
+      className={displayText ? "p-2 flex flex-col space-y-1 overflow-y-auto h-full min-w-[160px]" : "p-2 flex flex-col items-center space-y-1 overflow-y-auto h-full"} 
+      style={style}
+    >
       {/* Text/Icon Toggle */}
       {onTextToggle && (
         <>
           <Button
             variant="ghost"
             size="sm"
-            className="w-6 h-6 p-0 shrink-0"
+            className={displayText ? "w-full justify-start gap-2 h-8" : "w-6 h-6 p-0 shrink-0"}
             onClick={handleTextToggle}
             title={showText ? "Show Icons" : "Show Text"}
           >
             <Menu className="w-3 h-3" />
+            {displayText && <span className="text-xs">Toggle View</span>}
           </Button>
           
           {getSeparator()}
@@ -139,38 +146,48 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       )}
 
       {/* Navigation */}
-      <div className="flex flex-col items-center space-y-1">
+      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
         <Button
           variant="ghost"
           size="sm"
-          className="w-8 h-8 p-0 shrink-0"
+          className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 shrink-0"}
           onClick={() => onNavigateCard('prev')}
           disabled={currentCardIndex === 0}
           title="Previous"
         >
           <ChevronLeft className="w-4 h-4" />
+          {displayText && <span className="text-xs">Previous</span>}
         </Button>
         
         <Button
           variant="ghost"
           size="sm"
-          className="w-8 h-8 p-0 shrink-0"
+          className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 shrink-0"}
           onClick={() => onNavigateCard('next')}
           disabled={currentCardIndex >= totalCards - 1}
           title="Next"
         >
           <ChevronRight className="w-4 h-4" />
+          {displayText && <span className="text-xs">Next</span>}
         </Button>
 
-        <div className="text-[10px] text-center leading-tight text-muted-foreground">
-          {currentCardIndex + 1}<br/>{totalCards}
-        </div>
+        {!displayText && (
+          <div className="text-[10px] text-center leading-tight text-muted-foreground">
+            {currentCardIndex + 1}<br/>{totalCards}
+          </div>
+        )}
+        
+        {displayText && (
+          <div className="text-xs text-center text-muted-foreground px-2">
+            Card {currentCardIndex + 1} of {totalCards}
+          </div>
+        )}
       </div>
 
       {getSeparator()}
 
       {/* Card Management */}
-      <div className="flex flex-col items-center space-y-1">
+      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={Plus}
           label={t('newCard') || 'New Card'}
@@ -194,33 +211,33 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       {getSeparator()}
 
       {/* Front/Back Toggle */}
-      <div className="flex flex-col items-center space-y-1">
+      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
         <Button
           variant={currentSide === 'front' ? 'default' : 'ghost'}
           size="sm"
-          className="w-8 h-8 p-0 text-[10px] shrink-0"
+          className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 text-[10px] shrink-0"}
           onClick={() => onSideChange('front')}
           title="Front Side"
         >
-          F
+          {displayText ? <span className="text-xs">Front Side</span> : 'F'}
         </Button>
         
         <Button
           variant={currentSide === 'back' ? 'default' : 'ghost'}
           size="sm"
-          className="w-8 h-8 p-0 text-[10px] shrink-0"
+          className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 text-[10px] shrink-0"}
           onClick={() => onSideChange('back')}
           disabled={currentCard?.card_type === 'single-sided'}
           title="Back Side"
         >
-          B
+          {displayText ? <span className="text-xs">Back Side</span> : 'B'}
         </Button>
       </div>
 
       {getSeparator()}
 
       {/* Elements */}
-      <div className="flex flex-col items-center space-y-1">
+      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={Type}
           label={t('text') || 'Text'}
@@ -261,7 +278,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       {getSeparator()}
 
       {/* Interactive Elements */}
-      <div className="flex flex-col items-center space-y-1">
+      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={CheckSquare}
           label={t('multipleChoice') || 'Multiple Choice'}
@@ -284,7 +301,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       {getSeparator()}
 
       {/* Auto Arrange */}
-      <div className="flex flex-col items-center space-y-1">
+      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={Grid3X3}
           label={t('grid') || 'Grid'}

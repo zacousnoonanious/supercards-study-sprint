@@ -6,6 +6,7 @@ import { CardCanvas } from './CardCanvas';
 import { SidePanel } from './SidePanel';
 import { TopSettingsBar } from './TopSettingsBar';
 import { ConsolidatedToolbar } from './ConsolidatedToolbar';
+import { EnhancedSetOverview } from './EnhancedSetOverview';
 import { Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -100,6 +101,50 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
     height: cardHeight,
   };
 
+  // Handle reordering cards for the enhanced overview
+  const handleReorderCards = (reorderedCards: Flashcard[]) => {
+    // This would need to be passed down from parent or handled via context
+    console.log('Reorder cards:', reorderedCards);
+  };
+
+  // Handle navigation to card from overview
+  const handleNavigateToCard = (cardIndex: number) => {
+    onShowCardOverviewChange(false);
+    // Navigate to the specific card index
+    const targetCard = cards[cardIndex];
+    if (targetCard) {
+      // This would trigger navigation to that card
+      console.log('Navigate to card:', cardIndex);
+    }
+  };
+
+  // Show enhanced overview if requested
+  if (showCardOverview) {
+    return (
+      <EnhancedSetOverview
+        cards={cards}
+        setId={currentCard.set_id}
+        onReorderCards={handleReorderCards}
+        onNavigateToCard={handleNavigateToCard}
+        onBackToSet={() => onShowCardOverviewChange(false)}
+        onCreateCard={onCreateNewCard}
+        onCreateFromTemplate={onCreateNewCardFromTemplate}
+        onSetDefaultTemplate={() => {}}
+        onDeleteCard={(cardId) => {
+          const cardIndex = cards.findIndex(c => c.id === cardId);
+          if (cardIndex !== -1) {
+            onDeleteCard();
+          }
+        }}
+        onStudyFromCard={(cardIndex) => {
+          console.log('Study from card:', cardIndex);
+        }}
+        permanentShuffle={false}
+        onPermanentShuffleChange={() => {}}
+      />
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <TopToolbar
@@ -129,8 +174,8 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
       />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Toolbar Panel */}
-        <div className="w-20 border-r bg-background overflow-y-auto">
+        {/* Left Toolbar Panel - Dynamic width based on text mode */}
+        <div className={`${toolbarShowText ? 'w-48' : 'w-20'} border-r bg-background overflow-y-auto transition-all duration-200`}>
           <ConsolidatedToolbar
             onAddElement={onAddElement}
             onAutoArrange={onAutoArrange}
@@ -145,7 +190,7 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
             onCreateNewCardFromTemplate={onCreateNewCardFromTemplate}
             onDeleteCard={onDeleteCard}
             onCardTypeChange={onCardTypeChange}
-            onShowCardOverview={onShowCardOverview}
+            onShowCardOverview={() => onShowCardOverviewChange(!showCardOverview)}
             position="left"
             isDocked={true}
             showText={toolbarShowText}
