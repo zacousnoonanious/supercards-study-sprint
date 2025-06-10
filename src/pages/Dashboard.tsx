@@ -35,7 +35,6 @@ const Dashboard = () => {
     cardsReviewed: 45
   });
   const [loading, setLoading] = useState(true);
-  const [isVisible, setIsVisible] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -45,10 +44,6 @@ const Dashboard = () => {
       return;
     }
     fetchDashboardData();
-    
-    // Trigger fade-in animation after component mounts
-    const timer = setTimeout(() => setIsVisible(true), 50);
-    return () => clearTimeout(timer);
   }, [user, navigate]);
 
   const fetchDashboardData = async () => {
@@ -107,9 +102,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <main className={`max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 transition-all duration-500 ease-out ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      }`}>
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-foreground mb-2">{t('welcome')} {t('back')}!</h2>
           <p className="text-muted-foreground">{t('dashboard.subtitle')}</p>
@@ -123,9 +116,7 @@ const Dashboard = () => {
             { title: t('dashboard.studyStreak'), value: `${stats.studyStreak} ${t('dashboard.days')}`, icon: TrendingUp },
             { title: t('dashboard.cardsReviewed'), value: stats.cardsReviewed, subtitle: t('dashboard.thisWeek'), icon: Clock }
           ].map((stat, index) => (
-            <Card key={stat.title} className={`transition-all duration-500 ease-out ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-            }`} style={{ transitionDelay: `${index * 100}ms` }}>
+            <Card key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
                 <stat.icon className="h-4 w-4 text-muted-foreground" />
@@ -139,9 +130,7 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Decks Section */}
-        <div className={`mb-8 transition-all duration-500 ease-out ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-        }`} style={{ transitionDelay: '400ms' }}>
+        <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-foreground">{t('dashboard.recentDecks')}</h3>
             <Button variant="outline" onClick={() => navigate('/decks')}>
@@ -162,10 +151,8 @@ const Dashboard = () => {
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {recentSets.map((set, index) => (
-                <Card key={set.id} className={`hover:shadow-lg transition-all duration-300 ${
-                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                }`} style={{ transitionDelay: `${500 + index * 100}ms` }}>
+              {recentSets.map((set) => (
+                <Card key={set.id} className="hover:shadow-lg transition-all duration-300">
                   <CardHeader>
                     <CardTitle className="text-sm truncate">{set.title}</CardTitle>
                     <CardDescription className="text-xs">{set.description}</CardDescription>
@@ -189,9 +176,7 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card className={`transition-all duration-500 ease-out ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-        }`} style={{ transitionDelay: '600ms' }}>
+        <Card>
           <CardHeader>
             <CardTitle>{t('dashboard.quickActions')}</CardTitle>
             <CardDescription>{t('dashboard.quickActionsDesc')}</CardDescription>

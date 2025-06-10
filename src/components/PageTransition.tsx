@@ -19,7 +19,7 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
 
   return (
     <div
-      className={`transition-opacity duration-300 ease-in-out ${
+      className={`transition-opacity duration-500 ease-in-out ${
         transitionStage === 'fadeOut' ? 'opacity-0' : 'opacity-100'
       }`}
       onTransitionEnd={() => {
@@ -29,7 +29,9 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
         }
       }}
     >
-      {children}
+      {React.cloneElement(children as React.ReactElement, {
+        key: displayLocation.pathname
+      })}
     </div>
   );
 };
