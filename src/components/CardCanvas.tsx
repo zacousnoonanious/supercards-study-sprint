@@ -132,17 +132,20 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       onMouseLeave={endDragOrResize}
       data-canvas-background="true"
     >
+      {/* Grid background - should be rendered first */}
       <CanvasBackground 
         showGrid={showGrid} 
         gridSize={gridSize}
         isDarkTheme={isDarkTheme}
       />
       
+      {/* Card side indicator */}
       <CanvasCardSideIndicator
         cardSide={cardSide}
         isDarkTheme={isDarkTheme}
       />
       
+      {/* Canvas elements - should render above the grid */}
       {elements.map((element) => (
         <CanvasElementWrapper
           key={element.id}
@@ -158,6 +161,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         />
       ))}
       
+      {/* Empty state - should render above everything */}
       {elements.length === 0 && <CanvasEmptyState />}
     </div>
   );
