@@ -338,6 +338,7 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           <CardSideToggle
             currentSide={currentSide}
             onSideChange={onSideChange}
+            isBackDisabled={isBackSideDisabled}
           />
         )}
 

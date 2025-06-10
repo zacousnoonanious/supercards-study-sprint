@@ -1,36 +1,36 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useI18n } from '@/contexts/I18nContext';
 
 interface CardSideToggleProps {
   currentSide: 'front' | 'back';
   onSideChange: (side: 'front' | 'back') => void;
+  isBackDisabled?: boolean;
 }
 
 export const CardSideToggle: React.FC<CardSideToggleProps> = ({
   currentSide,
   onSideChange,
+  isBackDisabled = false,
 }) => {
-  const { t } = useI18n();
-
   return (
-    <div className="flex items-center gap-1 bg-muted rounded-md p-1">
+    <div className="flex gap-1 p-1 bg-muted rounded">
       <Button
         variant={currentSide === 'front' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => onSideChange('front')}
-        className="h-7 px-3"
+        className="h-7 px-3 text-xs"
       >
-        {t('editor.front')}
+        Front
       </Button>
       <Button
         variant={currentSide === 'back' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => onSideChange('back')}
-        className="h-7 px-3"
+        className="h-7 px-3 text-xs"
+        disabled={isBackDisabled}
       >
-        {t('editor.back')}
+        Back
       </Button>
     </div>
   );
