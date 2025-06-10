@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -339,8 +338,6 @@ export const CanvasOverlayToolbar: React.FC<CanvasOverlayToolbarProps> = ({
           <CardSideToggle
             currentSide={currentSide}
             onSideChange={onSideChange}
-            size="sm"
-            isBackDisabled={isBackSideDisabled}
           />
         )}
 
