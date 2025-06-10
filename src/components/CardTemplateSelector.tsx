@@ -29,6 +29,7 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
       id: 'simple-text',
       name: 'Simple Text Card',
       description: 'Basic front and back text card',
+      image: '/placeholder.svg',
       card_type: 'normal',
       canvas_width: 600,
       canvas_height: 450,
@@ -63,6 +64,7 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
       id: 'quiz-multiple-choice',
       name: 'Multiple Choice Quiz',
       description: 'Quiz card with multiple choice questions',
+      image: '/placeholder.svg',
       card_type: 'quiz-only',
       canvas_width: 600,
       canvas_height: 450,
@@ -87,6 +89,7 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
       id: 'quiz-true-false',
       name: 'True/False Quiz',
       description: 'Quiz card with true/false questions',
+      image: '/placeholder.svg',
       card_type: 'quiz-only',
       canvas_width: 600,
       canvas_height: 450,
@@ -110,6 +113,7 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
       id: 'informational',
       name: 'Informational Card',
       description: 'Single-sided informational card',
+      image: '/placeholder.svg',
       card_type: 'informational',
       canvas_width: 600,
       canvas_height: 450,
@@ -160,7 +164,9 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
                 <span className="text-xs bg-primary text-primary-foreground px-1 rounded">Default</span>
               )}
             </div>
-            <span className="text-xs text-muted-foreground">{template.description}</span>
+            {template.description && (
+              <span className="text-xs text-muted-foreground">{template.description}</span>
+            )}
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />

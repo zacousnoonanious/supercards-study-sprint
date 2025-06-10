@@ -180,8 +180,9 @@ export const EditorFooter: React.FC<EditorFooterProps> = ({
                               size="sm"
                               onClick={() => {
                                 const newOptions = (selectedElement.multipleChoiceOptions || []).filter((_, i) => i !== index);
-                                const newCorrectAnswer = selectedElement.correctAnswer === index ? 0 : 
-                                  (selectedElement.correctAnswer || 0) > index ? (selectedElement.correctAnswer || 0) - 1 : selectedElement.correctAnswer;
+                                const currentCorrectAnswer = typeof selectedElement.correctAnswer === 'number' ? selectedElement.correctAnswer : 0;
+                                const newCorrectAnswer = currentCorrectAnswer === index ? 0 : 
+                                  currentCorrectAnswer > index ? currentCorrectAnswer - 1 : currentCorrectAnswer;
                                 
                                 // Auto-resize element when removing options
                                 const newHeight = Math.max(120, 120 + (newOptions.length * 40));

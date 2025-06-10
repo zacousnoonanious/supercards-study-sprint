@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -651,7 +650,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
           snapToGrid={snapToGrid}
           onSnapToGridChange={setSnapToGrid}
           currentSide={currentSide}
-          isTextSelecting={isTextSelecting}
         />
       </div>
 
@@ -729,8 +727,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
                     gridSize={20}
                     snapToGrid={snapToGrid}
                     zoom={zoom}
-                    onTextSelectionStart={handleTextSelectionStart}
-                    onTextSelectionEnd={handleTextSelectionEnd}
                   />
                 </div>
               </div>

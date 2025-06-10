@@ -15,6 +15,7 @@ export interface FlashcardSet {
   target_language?: string;
   accent_color?: string;
   cover_image?: string;
+  permanent_shuffle?: boolean;
 }
 
 export interface Flashcard {
@@ -43,13 +44,14 @@ export interface Flashcard {
   interactive_type?: string;
   last_reviewed_at?: string;
   metadata?: any;
+  position?: number;
 }
 
 export interface CardTemplate {
   id: string;
   name: string;
   description?: string;
-  image: string;
+  image?: string;
   front_elements: CanvasElement[];
   back_elements: CanvasElement[];
   card_type?: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
@@ -74,7 +76,7 @@ export interface CanvasElement {
   fontStyle?: string;
   textDecoration?: string;
   color?: string;
-  textAlign?: 'left' | 'center' | 'right';
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
   fontFamily?: string;
   backgroundColor?: string;
   

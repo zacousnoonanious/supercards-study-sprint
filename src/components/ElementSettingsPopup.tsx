@@ -163,8 +163,9 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                       size="sm"
                       onClick={() => {
                         const newOptions = (element.multipleChoiceOptions || []).filter((_, i) => i !== index);
-                        const newCorrectAnswer = element.correctAnswer === index ? 0 : 
-                          (element.correctAnswer || 0) > index ? (element.correctAnswer || 0) - 1 : element.correctAnswer;
+                        const currentCorrectAnswer = typeof element.correctAnswer === 'number' ? element.correctAnswer : 0;
+                        const newCorrectAnswer = currentCorrectAnswer === index ? 0 : 
+                          currentCorrectAnswer > index ? currentCorrectAnswer - 1 : currentCorrectAnswer;
                         
                         const newHeight = Math.max(120, 120 + (newOptions.length * 40));
                         

@@ -187,9 +187,9 @@ export const TTSComponent: React.FC<TTSComponentProps> = ({
       {/* TTS indicator */}
       <div className="flex items-center">
         {hasGoogleTTS ? (
-          <Volume2 className="w-3 h-3 text-blue-500" title="Google Neural TTS" />
+          <Volume2 className="w-3 h-3 text-blue-500" />
         ) : (
-          <VolumeX className="w-3 h-3 text-gray-500" title="Browser TTS" />
+          <VolumeX className="w-3 h-3 text-gray-500" />
         )}
       </div>
     </div>
