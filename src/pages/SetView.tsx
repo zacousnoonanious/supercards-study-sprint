@@ -128,7 +128,7 @@ const SetView = () => {
 
     const newCard = {
       question: t('setView.createNewCard'),
-      answer: t('answer'),
+      answer: 'Answer',
       hint: '',
       front_elements: [] as any,
       back_elements: [] as any,
@@ -178,7 +178,7 @@ const SetView = () => {
 
     const newCard = {
       question: template.front_elements.find(el => el.type === 'text')?.content || t('setView.createNewCard'),
-      answer: template.back_elements.find(el => el.type === 'text')?.content || t('answer'),
+      answer: template.back_elements.find(el => el.type === 'text')?.content || 'Answer',
       hint: '',
       front_elements: newFrontElements as any,
       back_elements: newBackElements as any,
@@ -201,7 +201,7 @@ const SetView = () => {
       fetchSetAndCards();
       toast({
         title: t('setView.success'),
-        description: t('setView.cardCreatedFromTemplate', { templateName: template.name }),
+        description: t('setView.cardCreatedFromTemplate').replace('{templateName}', template.name),
       });
     } catch (error) {
       console.error('Error creating card from template:', error);
@@ -218,7 +218,7 @@ const SetView = () => {
     localStorage.setItem('defaultCardTemplate', JSON.stringify(template));
     toast({
       title: t('setView.defaultTemplateSet'),
-      description: t('setView.defaultTemplateMessage', { templateName: template.name }),
+      description: t('setView.defaultTemplateMessage').replace('{templateName}', template.name),
     });
   };
 
@@ -462,7 +462,7 @@ const SetView = () => {
           {cards.map((card, index) => (
             <Card key={card.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle className="text-sm">{t('setView.cardNumber', { number: index + 1 })}</CardTitle>
+                <CardTitle className="text-sm">{t('setView.cardNumber').replace('{number}', (index + 1).toString())}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
