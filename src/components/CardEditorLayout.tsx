@@ -23,6 +23,7 @@ interface CardEditorLayoutProps {
   zoom: number;
   showGrid: boolean;
   snapToGrid: boolean;
+  showBorder: boolean;
   toolbarPosition: 'left' | 'very-top' | 'canvas-left' | 'floating';
   toolbarIsDocked: boolean;
   toolbarShowText: boolean;
@@ -31,6 +32,7 @@ interface CardEditorLayoutProps {
   onZoomChange: (zoom: number) => void;
   onShowGridChange: (show: boolean) => void;
   onSnapToGridChange: (snap: boolean) => void;
+  onShowBorderChange: (show: boolean) => void;
   onToolbarPositionChange: (position: 'left' | 'very-top' | 'canvas-left' | 'floating') => void;
   onToolbarDockChange: (docked: boolean) => void;
   onToolbarShowTextChange: (showText: boolean) => void;

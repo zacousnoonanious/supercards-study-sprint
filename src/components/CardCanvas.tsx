@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
@@ -16,7 +15,9 @@ interface CardCanvasProps {
   showGrid?: boolean;
   gridSize?: number;
   snapToGrid?: boolean;
+  showBorder?: boolean;
   zoom?: number;
+  onCanvasSizeChange?: (width: number, height: number) => void;
 }
 
 export const CardCanvas: React.FC<CardCanvasProps> = ({
@@ -30,7 +31,9 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   showGrid = false,
   gridSize = 20,
   snapToGrid = false,
+  showBorder = false,
   zoom = 1,
+  onCanvasSizeChange,
 }) => {
   const { theme } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
@@ -129,7 +132,9 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   return (
     <div
       ref={canvasRef}
-      className={`relative overflow-hidden ${isDarkTheme ? 'bg-gray-900' : 'bg-white'}`}
+      className={`relative overflow-hidden ${isDarkTheme ? 'bg-gray-900' : 'bg-white'} ${
+        showBorder ? 'border-2 border-dashed border-gray-400' : ''
+      }`}
       style={style}
       onClick={handleCanvasClick}
       onMouseMove={handleMouseMove}
@@ -150,6 +155,40 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           {cardSide === 'front' ? 'Front' : 'Back'}
         </div>
       </div>
+      
+      {/* Draggable resize handle for canvas size */}
+      {onCanvasSizeChange && (
+        <div
+          className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-se-resize z-20"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const startWidth = style?.width as number || 600;
+            const startHeight = style?.height as number || 450;
+            
+            const handleMouseMove = (moveEvent: MouseEvent) => {
+              const deltaX = moveEvent.clientX - startX;
+              const deltaY = moveEvent.clientY - startY;
+              
+              const newWidth = Math.max(200, Math.min(2000, startWidth + deltaX / zoom));
+              const newHeight = Math.max(200, Math.min(2000, startHeight + deltaY / zoom));
+              
+              onCanvasSizeChange(Math.round(newWidth), Math.round(newHeight));
+            };
+            
+            const handleMouseUp = () => {
+              document.removeEventListener('mousemove', handleMouseMove);
+              document.removeEventListener('mouseup', handleMouseUp);
+            };
+            
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+          }}
+        />
+      )}
       
       {elements.map((element) => (
         <div
