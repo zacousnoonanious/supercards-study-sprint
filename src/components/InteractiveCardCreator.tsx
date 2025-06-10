@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -132,7 +131,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
         height: 200,
         fillInBlankText: blankText,
         fillInBlankBlanks: blanks,
-        fillInBlankMode: 'manual',
+        fillInBlankMode: true,
         showLetterCount: true,
         ignoreCase: true
       };

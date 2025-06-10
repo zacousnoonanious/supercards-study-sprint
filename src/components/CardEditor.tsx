@@ -639,7 +639,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         <TopSettingsBar
           selectedElement={getSelectedElementData()}
           onUpdateElement={handleUpdateElement}
-          onDeleteElement={(id) => handleDeleteElement(id)}
+          onDeleteElement={handleDeleteElement}
           canvasWidth={cardWidth}
           canvasHeight={cardHeight}
           onCanvasSizeChange={handleCanvasSizeChange}
