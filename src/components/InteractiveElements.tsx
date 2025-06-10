@@ -51,7 +51,8 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
     const newOptions = [...options, `Option ${options.length + 1}`];
     
     // Auto-resize to fit new option
-    const newHeight = Math.max(element.height, 120 + (newOptions.length * 40));
+    const currentHeight = typeof element.height === 'number' ? element.height : 200;
+    const newHeight = Math.max(currentHeight, 120 + (newOptions.length * 40));
     onUpdate?.({ 
       multipleChoiceOptions: newOptions,
       height: newHeight
@@ -61,8 +62,9 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
   const removeOption = (index: number) => {
     if (options.length <= 2) return; // Keep at least 2 options
     const newOptions = options.filter((_, i) => i !== index);
-    const newCorrectAnswer = element.correctAnswer === index ? 0 : 
-      (element.correctAnswer || 0) > index ? (element.correctAnswer || 0) - 1 : element.correctAnswer;
+    const correctAnswer = typeof element.correctAnswer === 'number' ? element.correctAnswer : 0;
+    const newCorrectAnswer = correctAnswer === index ? 0 : 
+      correctAnswer > index ? correctAnswer - 1 : correctAnswer;
     
     // Auto-resize to fit remaining options
     const newHeight = Math.max(120, 120 + (newOptions.length * 40));
@@ -108,7 +110,8 @@ export const MultipleChoiceRenderer: React.FC<ElementRendererProps> = ({
 
   // Auto-resize if current height is too small
   React.useEffect(() => {
-    if (element.height < minHeight) {
+    const currentHeight = typeof element.height === 'number' ? element.height : 200;
+    if (currentHeight < minHeight) {
       onUpdate?.({ height: minHeight });
     }
   }, [options.length, element.height, minHeight, onUpdate]);
