@@ -1,0 +1,20 @@
+
+export const auth = {
+  title: "SuperCards",
+  signInSubtitle: "Sign in to your account",
+  signUpSubtitle: "Create a new account",
+  email: "Email",
+  password: "Password",
+  emailPlaceholder: "Enter your email",
+  passwordPlaceholder: "Enter your password",
+  signIn: "Sign In",
+  signUp: "Sign Up",
+  loading: "Loading...",
+  welcomeBack: "Welcome back!",
+  accountCreated: "Account created!",
+  signInSuccess: "You have successfully signed in.",
+  signUpSuccess: "Please check your email to verify your account.",
+  unexpectedError: "An unexpected error occurred.",
+  noAccount: "Don't have an account? Sign up",
+  hasAccount: "Already have an account? Sign in",
+};
