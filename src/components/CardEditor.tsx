@@ -18,6 +18,7 @@ interface CardEditorProps {
 export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const { t } = useI18n();
   const [showFullscreen, setShowFullscreen] = useState(false);
+  const [hasAppliedTemplateSettings, setHasAppliedTemplateSettings] = useState(false);
   const { getCardTemplateSettings } = useTemplateConfiguration();
 
   const {
@@ -171,8 +172,9 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     }
   }, [set]);
 
+  // Only apply template settings once when the card changes, not on every render
   useEffect(() => {
-    if (currentCard && templateSettings) {
+    if (currentCard && templateSettings && !hasAppliedTemplateSettings) {
       if (templateSettings.showGrid !== undefined) {
         setShowGrid(templateSettings.showGrid);
       }
@@ -182,8 +184,14 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
       if (templateSettings.showBorder !== undefined) {
         setShowBorder(templateSettings.showBorder);
       }
+      setHasAppliedTemplateSettings(true);
     }
-  }, [currentCard, templateSettings, setShowGrid, setSnapToGrid, setShowBorder]);
+  }, [currentCard, templateSettings, hasAppliedTemplateSettings, setShowGrid, setSnapToGrid, setShowBorder]);
+
+  // Reset the flag when card changes
+  useEffect(() => {
+    setHasAppliedTemplateSettings(false);
+  }, [currentCard?.id]);
 
   if (loading) {
     return (
