@@ -17,47 +17,63 @@ export const useI18n = () => {
   return context;
 };
 
-// Base translations - you can add your own languages here
+// Translation keys for actual text used in our pages
 const translations = {
   en: {
-    // Navigation & General
-    'nav.navigation': 'Navigation',
-    'nav.dashboard': 'Dashboard',
-    'nav.profile': 'Profile',
-    'nav.signOut': 'Sign Out',
-    'nav.createSet': 'Create New Set',
-    'nav.marketplace': 'Marketplace',
-    'nav.decks': 'Decks',
-    'welcome': 'Welcome',
+    // General
     'loading': 'Loading...',
+    'back': 'Back',
     'save': 'Save',
     'cancel': 'Cancel',
     'edit': 'Edit',
     'delete': 'Delete',
     'create': 'Create',
-    'add': 'Add',
-    'remove': 'Remove',
+    'view': 'View',
     'close': 'Close',
-    'back': 'Back',
-    'next': 'Next',
-    'previous': 'Previous',
     'submit': 'Submit',
     'update': 'Update',
-    'confirm': 'Confirm',
     'search': 'Search',
-    'filter': 'Filter',
-    'sort': 'Sort',
-    'view': 'View',
-    'preview': 'Preview',
-    'download': 'Download',
-    'upload': 'Upload',
-    'share': 'Share',
-    'copy': 'Copy',
-    'duplicate': 'Duplicate',
-    'export': 'Export',
-    'import': 'Import',
+    'welcome': 'Welcome',
     
-    // Decks specific
+    // Auth page
+    'signIn': 'Sign In',
+    'signUp': 'Sign Up',
+    'email': 'Email',
+    'password': 'Password',
+    'enterEmail': 'Enter your email',
+    'enterPassword': 'Enter your password',
+    'noAccount': "Don't have an account? Sign up",
+    'haveAccount': 'Already have an account? Sign in',
+    'welcomeBack': 'Welcome back!',
+    'accountCreated': 'Account created!',
+    'signInSuccess': 'You have successfully signed in.',
+    'checkEmail': 'Please check your email to verify your account.',
+    'error': 'Error',
+    'unexpectedError': 'An unexpected error occurred.',
+    
+    // Dashboard
+    'dashboard.subtitle': 'Here\'s your learning progress at a glance.',
+    'dashboard.totalCards': 'Total Cards',
+    'dashboard.studyStreak': 'Study Streak',
+    'dashboard.cardsReviewed': 'Cards Reviewed',
+    'dashboard.days': 'days',
+    'dashboard.thisWeek': 'This week',
+    'dashboard.recentDecks': 'Recently Created Decks',
+    'dashboard.viewAllDecks': 'View All Decks',
+    'dashboard.quickActions': 'Quick Actions',
+    'dashboard.quickActionsDesc': 'Get started with your learning journey',
+    'dashboard.createNewDeck': 'Create New Deck',
+    'dashboard.browseDecks': 'Browse My Decks',
+    'dashboard.exploreMarketplace': 'Explore Marketplace',
+    
+    // Navigation
+    'nav.dashboard': 'Dashboard',
+    'nav.profile': 'Profile',
+    'nav.signOut': 'Sign Out',
+    'nav.decks': 'Decks',
+    'nav.marketplace': 'Marketplace',
+    
+    // Decks page
     'decks.title': 'My Decks',
     'decks.createNew': 'Create New Deck',
     'decks.noDecks': 'No decks yet',
@@ -65,15 +81,13 @@ const translations = {
     'decks.createFirst': 'Create Your First Deck',
     'decks.viewCards': 'View Cards',
     'decks.study': 'Study',
-    'decks.edit': 'Edit',
-    'decks.delete': 'Delete',
     'decks.deleteConfirm': 'Delete Deck',
     'decks.deleteMessage': 'Are you sure you want to delete "{title}"? This action cannot be undone and will permanently delete all cards in this deck.',
     'decks.deleteSuccess': 'Deck "{title}" deleted successfully.',
     'decks.deleteError': 'Failed to delete deck. Please try again.',
     'decks.loadError': 'Failed to load your flashcard decks.',
     
-    // Set View specific
+    // Set View page
     'setView.notFound': 'Set not found',
     'setView.backToDecks': 'Back to Decks',
     'setView.deckSettings': 'Deck Settings',
@@ -102,48 +116,22 @@ const translations = {
     'setView.failedDeleteCard': 'Failed to delete card.',
     'setView.failedUpdateShuffle': 'Failed to update shuffle setting.',
     
-    // Dashboard
-    'dashboard.title': 'Your Flashcard Sets',
-    'dashboard.subtitle': 'Here\'s your learning progress at a glance.',
-    'dashboard.totalCards': 'Total Cards',
-    'dashboard.studyStreak': 'Study Streak',
-    'dashboard.cardsReviewed': 'Cards Reviewed',
-    'dashboard.days': 'days',
-    'dashboard.thisWeek': 'This week',
-    'dashboard.recentDecks': 'Recently Created Decks',
-    'dashboard.viewAllDecks': 'View All Decks',
-    'dashboard.quickActions': 'Quick Actions',
-    'dashboard.quickActionsDesc': 'Get started with your learning journey',
-    'dashboard.createNewDeck': 'Create New Deck',
-    'dashboard.browseDecks': 'Browse My Decks',
-    'dashboard.exploreMarketplace': 'Explore Marketplace',
+    // Create Set page
+    'sets.create': 'Create New Set',
+    'sets.title': 'Title',
+    'sets.description': 'Description',
+    'enterSetTitle': 'Enter set title...',
+    'enterSetDescription': 'Enter set description (optional)...',
+    'aiGeneratedDeck': 'AI-Generated Deck',
+    'manualCreation': 'Manual Creation',
+    'createAiDeck': 'Create AI-Generated Deck',
+    'createAiDeckDesc': 'Let AI create a complete flashcard deck with advanced educational content, interactive quizzes, and visual elements.',
+    'createManualDesc': 'Create a new flashcard set manually and add cards one by one.',
+    'enterTitle': 'Please enter a title for your set.',
+    'setCreatedSuccess': 'Flashcard set created successfully!',
+    'failedCreateSet': 'Failed to create flashcard set.',
     
-    // Study
-    'study.title': 'Study',
-    
-    // Languages
-    'lang.en': 'English',
-    'lang.es': 'Español',
-    'lang.fr': 'Français',
-    'lang.de': 'Deutsch',
-    'lang.it': 'Italiano',
-    'lang.zh': '中文',
-    
-    // Error Messages
-    'error.general': 'An error occurred. Please try again.',
-    'error.network': 'Network error. Please check your connection.',
-    'error.notFound': 'The requested item was not found.',
-    'error.unauthorized': 'You are not authorized to perform this action.',
-    'error.validation': 'Please check your input and try again.',
-    
-    // Success Messages
-    'success.saved': 'Saved successfully!',
-    'success.created': 'Created successfully!',
-    'success.updated': 'Updated successfully!',
-    'success.deleted': 'Deleted successfully!',
-    'success.shared': 'Shared successfully!',
-    
-    // Profile
+    // Profile page
     'profile.title': 'Profile Settings',
     'profile.personalInfo': 'Personal Information',
     'profile.firstName': 'First Name',
@@ -155,11 +143,46 @@ const translations = {
     'profile.updateSuccess': 'Profile updated successfully!',
     'profile.updateError': 'Failed to update profile.',
     'profile.changeAvatar': 'Change Avatar',
+    
+    // Marketplace page
+    'marketplace.title': 'Marketplace',
+    'marketplace.subtitle': 'Discover and download flashcard sets created by the community',
+    'marketplace.search': 'Search marketplace...',
+    'marketplace.featured': 'Featured Sets',
+    'marketplace.free': 'Free',
+    'marketplace.preview': 'Preview',
+    'marketplace.download': 'Download',
+    'noResultsFound': 'No results found',
+    'adjustSearchTerms': 'Try adjusting your search terms',
+    
+    // NotFound page
+    'pageNotFound': 'Page Not Found',
+    'pageNotFoundDesc': 'The page you\'re looking for doesn\'t exist or has been moved.',
+    'goBack': 'Go Back',
+    'goHome': 'Go Home',
+    
+    // Study
+    'study.title': 'Study',
+    
+    // Error messages
+    'error.general': 'An error occurred. Please try again.',
+    'error.validation': 'Please check your input and try again.',
+    
+    // Success messages
+    'success.created': 'Created successfully!',
+    'success.updated': 'Updated successfully!',
+    'success.deleted': 'Deleted successfully!',
+    'success.saved': 'Saved successfully!',
+    
+    // Languages
+    'lang.en': 'English',
+    'lang.es': 'Español',
+    'lang.fr': 'Français',
+    'lang.de': 'Deutsch',
+    'lang.it': 'Italiano',
+    'lang.zh': '中文',
   },
-  // Add your own languages here following the same structure:
-  // es: { ... },
-  // fr: { ... },
-  // etc.
+  // You can add other languages here following the same structure
 };
 
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
