@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ImageElementEditorProps {
   element: CanvasElement;
@@ -14,14 +14,13 @@ export const ImageElementEditor: React.FC<ImageElementEditorProps> = ({
   onUpdate,
   textScale = 1
 }) => {
-  const { theme } = useTheme();
-  const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
+  const { t } = useI18n();
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Image Preview */}
+      {/* Simple Image Display */}
       <div 
-        className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-300 rounded relative overflow-hidden"
+        className="flex-1 flex items-center justify-center rounded relative overflow-hidden"
         style={{
           opacity: element.opacity || 1,
           transform: `rotate(${element.rotation || 0}deg)`,
@@ -35,14 +34,15 @@ export const ImageElementEditor: React.FC<ImageElementEditorProps> = ({
             style={{
               borderWidth: element.borderWidth || 0,
               borderColor: element.borderColor || '#d1d5db',
-              borderStyle: element.borderStyle || 'none',
+              borderStyle: element.borderWidth ? 'solid' : 'none',
+              borderRadius: element.borderRadius ? '8px' : '0px',
             }}
             draggable={false}
           />
         ) : (
-          <div className="text-center text-gray-400">
-            <p style={{ fontSize: `${12 * textScale}px` }}>No image selected</p>
-            <p style={{ fontSize: `${10 * textScale}px` }}>Configure in options panel</p>
+          <div className="text-center text-gray-400 p-4">
+            <p style={{ fontSize: `${12 * textScale}px` }}>{t('editor.noImageSelected')}</p>
+            <p style={{ fontSize: `${10 * textScale}px` }}>{t('editor.configureInSidebar')}</p>
           </div>
         )}
       </div>

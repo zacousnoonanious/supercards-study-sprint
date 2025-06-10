@@ -27,4 +27,6 @@ export const placeholders = {
   enterSentence: "Enter your sentence here...",
   addOption: "Add Option",
   correctAnswer: "Correct Answer",
+  noImageSelected: "No image selected",
+  configureInSidebar: "Configure in options panel →",
 };
