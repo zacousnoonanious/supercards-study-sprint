@@ -47,48 +47,68 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
     onUpdateElement,
     onElementSelect,
     isDarkTheme,
+    isSelected,
+    isEditing: editingElement === element.id,
+    onEditingChange,
+  };
+
+  const containerProps = {
+    className: "w-full h-full",
+    style: { 
+      pointerEvents: editingElement === element.id ? 'auto' : 'none' 
+    }
   };
 
   switch (element.type) {
     case 'text':
       return (
-        <SimpleTextElementRenderer
-          {...commonProps}
-        />
+        <div {...containerProps}>
+          <SimpleTextElementRenderer
+            {...commonProps}
+          />
+        </div>
       );
     case 'image':
       return (
-        <ImageElementRenderer
-          {...commonProps}
-        />
+        <div {...containerProps}>
+          <ImageElementRenderer
+            {...commonProps}
+          />
+        </div>
       );
     case 'audio':
       return (
-        <AudioElementRenderer
-          {...commonProps}
-        />
+        <div {...containerProps}>
+          <AudioElementRenderer
+            {...commonProps}
+          />
+        </div>
       );
     case 'multiple-choice':
     case 'true-false':
     case 'fill-in-blank':
       return (
-        <InteractiveElementRenderer
-          element={element}
-          textScale={textScale}
-          isStudyMode={isStudyMode}
-          onUpdateElement={onUpdateElement}
-          onElementSelect={onElementSelect}
-        />
+        <div {...containerProps}>
+          <InteractiveElementRenderer
+            element={element}
+            textScale={textScale}
+            isStudyMode={isStudyMode}
+            onUpdateElement={onUpdateElement}
+            onElementSelect={onElementSelect}
+          />
+        </div>
       );
     case 'youtube':
     case 'deck-embed':
     case 'drawing':
       return (
-        <MediaElementRenderer
-          {...commonProps}
-          onElementDragStart={onElementDragStart}
-          isDragging={isDragging}
-        />
+        <div {...containerProps}>
+          <MediaElementRenderer
+            {...commonProps}
+            onElementDragStart={onElementDragStart}
+            isDragging={isDragging}
+          />
+        </div>
       );
     default:
       return null;
