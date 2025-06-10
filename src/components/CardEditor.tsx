@@ -17,6 +17,7 @@ interface CardEditorProps {
 export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const { t } = useI18n();
   const { toast } = useToast();
+
   const {
     set,
     cards,
@@ -237,6 +238,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     }
   };
 
+  // Handle auto-arrange function
   const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => {
     const elements = getCurrentElements();
     if (elements.length === 0) return;
