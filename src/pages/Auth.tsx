@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,16 +20,28 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const { signUp, signIn, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useI18n();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useReactEffect(() => {
     if (user) {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  // Track mouse position for card interaction
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   // Password strength calculation
   const getPasswordStrength = (password: string) => {
@@ -84,73 +95,92 @@ const Auth = () => {
     { front: "Smallest Country", back: "Vatican City", color: "bg-zinc-100 border-zinc-300 text-zinc-800" }
   ];
 
-  // Generate smooth gliding movement data for each card
-  const [cardMovements] = useState(() => 
+  // Generate initial random movement data for each card
+  const [cardMovements, setCardMovements] = useState(() => 
     flashcardFacts.map((_, index) => ({
       id: index,
-      x: Math.random() * 90 + 5, // Keep cards away from edges
-      y: Math.random() * 90 + 5,
-      vx: (Math.random() - 0.5) * 0.4, // Slower, smoother movement
-      vy: (Math.random() - 0.5) * 0.4,
+      x: Math.random() * 80 + 10, // Start away from edges
+      y: Math.random() * 80 + 10,
+      vx: (Math.random() - 0.5) * 0.8, // Random velocity
+      vy: (Math.random() - 0.5) * 0.8,
       rotation: Math.random() * 360,
-      rotationSpeed: (Math.random() - 0.5) * 0.8, // Slower rotation
+      rotationSpeed: (Math.random() - 0.5) * 1.2,
       scale: 0.7 + Math.random() * 0.3,
-      flipTimer: Math.random() * 12000,
+      flipTimer: Math.random() * 8000,
       isFlipped: false,
-      opacity: 0.4 + Math.random() * 0.4, // Varying opacity for depth
+      opacity: 0.5 + Math.random() * 0.3,
       zIndex: Math.floor(Math.random() * 10)
     }))
   );
 
-  // Update card positions with smooth gliding - continuous movement
+  // Continuous card movement and mouse interaction
   useEffect(() => {
     const interval = setInterval(() => {
-      cardMovements.forEach(movement => {
-        // Smooth gliding movement
-        movement.x += movement.vx;
-        movement.y += movement.vy;
-        
-        // Smooth edge bouncing with gradual direction changes
-        if (movement.x <= 2 || movement.x >= 93) {
-          movement.vx *= -0.8; // Damped bounce
-          movement.vx += (Math.random() - 0.5) * 0.2; // Add some randomness
-          movement.x = Math.max(2, Math.min(93, movement.x));
-        }
-        if (movement.y <= 2 || movement.y >= 93) {
-          movement.vy *= -0.8;
-          movement.vy += (Math.random() - 0.5) * 0.2;
-          movement.y = Math.max(2, Math.min(93, movement.y));
-        }
-        
-        // Smooth continuous rotation
-        movement.rotation += movement.rotationSpeed;
-        
-        // Smooth flip transitions
-        movement.flipTimer += 150;
-        if (movement.flipTimer > 10000 + Math.random() * 5000) {
-          movement.isFlipped = !movement.isFlipped;
-          movement.flipTimer = 0;
-        }
-        
-        // Gentle random direction changes for more organic movement
-        if (Math.random() < 0.005) { // Less frequent changes
-          movement.vx += (Math.random() - 0.5) * 0.1;
-          movement.vy += (Math.random() - 0.5) * 0.1;
+      setCardMovements(prevMovements => 
+        prevMovements.map(movement => {
+          const newMovement = { ...movement };
           
-          // Keep speeds within reasonable gliding range
-          movement.vx = Math.max(-0.6, Math.min(0.6, movement.vx));
-          movement.vy = Math.max(-0.6, Math.min(0.6, movement.vy));
-        }
-        
-        // Subtle opacity changes for breathing effect
-        if (Math.random() < 0.01) {
-          movement.opacity = Math.max(0.2, Math.min(0.8, movement.opacity + (Math.random() - 0.5) * 0.1));
-        }
-      });
-    }, 50); // Higher frequency for smoother animation
+          // Mouse repulsion effect
+          if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            const cardX = (newMovement.x / 100) * rect.width;
+            const cardY = (newMovement.y / 100) * rect.height;
+            const mouseDistance = Math.sqrt(
+              Math.pow(mousePos.x - cardX, 2) + Math.pow(mousePos.y - cardY, 2)
+            );
+            
+            // Apply repulsion if mouse is close (within 150px)
+            if (mouseDistance < 150 && mouseDistance > 0) {
+              const repulsionForce = (150 - mouseDistance) / 150 * 0.05;
+              const angle = Math.atan2(cardY - mousePos.y, cardX - mousePos.x);
+              newMovement.vx += Math.cos(angle) * repulsionForce;
+              newMovement.vy += Math.sin(angle) * repulsionForce;
+            }
+          }
+          
+          // Apply velocity
+          newMovement.x += newMovement.vx;
+          newMovement.y += newMovement.vy;
+          
+          // Bounce off edges with some randomness
+          if (newMovement.x <= 5 || newMovement.x >= 95) {
+            newMovement.vx *= -0.7;
+            newMovement.vx += (Math.random() - 0.5) * 0.3;
+            newMovement.x = Math.max(5, Math.min(95, newMovement.x));
+          }
+          if (newMovement.y <= 5 || newMovement.y >= 95) {
+            newMovement.vy *= -0.7;
+            newMovement.vy += (Math.random() - 0.5) * 0.3;
+            newMovement.y = Math.max(5, Math.min(95, newMovement.y));
+          }
+          
+          // Apply rotation
+          newMovement.rotation += newMovement.rotationSpeed;
+          
+          // Random direction changes
+          if (Math.random() < 0.008) {
+            newMovement.vx += (Math.random() - 0.5) * 0.2;
+            newMovement.vy += (Math.random() - 0.5) * 0.2;
+            
+            // Keep speeds reasonable
+            newMovement.vx = Math.max(-1, Math.min(1, newMovement.vx));
+            newMovement.vy = Math.max(-1, Math.min(1, newMovement.vy));
+          }
+          
+          // Card flipping
+          newMovement.flipTimer += 100;
+          if (newMovement.flipTimer > 6000 + Math.random() * 4000) {
+            newMovement.isFlipped = !newMovement.isFlipped;
+            newMovement.flipTimer = 0;
+          }
+          
+          return newMovement;
+        })
+      );
+    }, 50);
 
     return () => clearInterval(interval);
-  }, [cardMovements]);
+  }, [mousePos]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -264,7 +294,7 @@ const Auth = () => {
   }
 
   return (
-    <div className="h-screen w-screen fixed inset-0 overflow-hidden">
+    <div ref={containerRef} className="h-screen w-screen fixed inset-0 overflow-hidden">
       <Navigation />
       
       {/* Animated gradient background */}
@@ -287,11 +317,11 @@ const Auth = () => {
           return (
             <div
               key={index}
-              className="absolute transition-all duration-75 ease-out"
+              className="absolute transition-none"
               style={{
                 left: `${movement.x}%`,
                 top: `${movement.y}%`,
-                transform: `rotate(${movement.rotation}deg) scale(${movement.scale})`,
+                transform: `translate(-50%, -50%) rotate(${movement.rotation}deg) scale(${movement.scale})`,
                 opacity: movement.opacity,
                 zIndex: movement.zIndex,
               }}
@@ -300,7 +330,7 @@ const Auth = () => {
                 className="w-32 h-20 md:w-40 md:h-28 [perspective:1000px] drop-shadow-lg"
               >
                 <div
-                  className="relative w-full h-full transition-transform duration-1000 ease-in-out"
+                  className="relative w-full h-full transition-transform duration-700 ease-in-out"
                   style={{
                     transformStyle: 'preserve-3d',
                     transform: movement.isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -486,3 +516,5 @@ const Auth = () => {
 };
 
 export default Auth;
+
+</edits_to_apply>
