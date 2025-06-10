@@ -1,10 +1,7 @@
 
 import React, { useRef, useMemo } from 'react';
-import { Canvas, useFrame, extend } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-
-// Extend Three.js for JSX support
-extend({ Mesh: THREE.Mesh, PlaneGeometry: THREE.PlaneGeometry, MeshBasicMaterial: THREE.MeshBasicMaterial, InstancedMesh: THREE.InstancedMesh });
 
 interface FlashcardData {
   front: string;
