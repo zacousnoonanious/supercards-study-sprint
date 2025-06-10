@@ -94,22 +94,17 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
     
-    // Calculate the raw mouse movement
+    // Calculate the raw mouse movement in pixels
     const deltaX = e.clientX - dragStart.x;
     const deltaY = e.clientY - dragStart.y;
-    
-    // Adjust for zoom with reduced sensitivity for resizing - divide by zoom and reduce scaling
-    const resizeSensitivity = 0.5; // Reduce resize sensitivity
-    const adjustedDeltaX = isResizing ? (deltaX / zoom) * resizeSensitivity : deltaX / zoom;
-    const adjustedDeltaY = isResizing ? (deltaY / zoom) * resizeSensitivity : deltaY / zoom;
     
     const element = elements.find(el => el.id === dragElementId);
     if (!element) return;
     
     if (isDragging) {
-      // Calculate new position based on initial element position + adjusted delta
-      let newX = dragElementStart.x + adjustedDeltaX;
-      let newY = dragElementStart.y + adjustedDeltaY;
+      // Calculate new position based on initial element position + delta (pixel perfect)
+      let newX = dragElementStart.x + deltaX;
+      let newY = dragElementStart.y + deltaY;
       
       // Apply grid snapping if enabled
       if (snapToGrid) {
@@ -125,7 +120,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       
       onUpdateElement(dragElementId, { x: newX, y: newY });
     } else if (isResizing) {
-      // Handle resizing based on the resize handle
+      // Handle resizing - pixel perfect, no zoom interference
       let newWidth = element.width;
       let newHeight = element.height;
       let newX = element.x;
@@ -137,37 +132,37 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       
       switch (resizeHandle) {
         case 'se': // Southeast - bottom right
-          newWidth = Math.max(minSize, Math.min(element.width + adjustedDeltaX, canvasWidth - element.x));
-          newHeight = Math.max(minSize, Math.min(element.height + adjustedDeltaY, canvasHeight - element.y));
+          newWidth = Math.max(minSize, Math.min(element.width + deltaX, canvasWidth - element.x));
+          newHeight = Math.max(minSize, Math.min(element.height + deltaY, canvasHeight - element.y));
           break;
         case 'sw': // Southwest - bottom left
-          newWidth = Math.max(minSize, element.width - adjustedDeltaX);
-          newHeight = Math.max(minSize, Math.min(element.height + adjustedDeltaY, canvasHeight - element.y));
+          newWidth = Math.max(minSize, element.width - deltaX);
+          newHeight = Math.max(minSize, Math.min(element.height + deltaY, canvasHeight - element.y));
           newX = element.x + (element.width - newWidth);
           break;
         case 'ne': // Northeast - top right
-          newWidth = Math.max(minSize, Math.min(element.width + adjustedDeltaX, canvasWidth - element.x));
-          newHeight = Math.max(minSize, element.height - adjustedDeltaY);
+          newWidth = Math.max(minSize, Math.min(element.width + deltaX, canvasWidth - element.x));
+          newHeight = Math.max(minSize, element.height - deltaY);
           newY = element.y + (element.height - newHeight);
           break;
         case 'nw': // Northwest - top left
-          newWidth = Math.max(minSize, element.width - adjustedDeltaX);
-          newHeight = Math.max(minSize, element.height - adjustedDeltaY);
+          newWidth = Math.max(minSize, element.width - deltaX);
+          newHeight = Math.max(minSize, element.height - deltaY);
           newX = element.x + (element.width - newWidth);
           newY = element.y + (element.height - newHeight);
           break;
         case 'n': // North - top
-          newHeight = Math.max(minSize, element.height - adjustedDeltaY);
+          newHeight = Math.max(minSize, element.height - deltaY);
           newY = element.y + (element.height - newHeight);
           break;
         case 's': // South - bottom
-          newHeight = Math.max(minSize, Math.min(element.height + adjustedDeltaY, canvasHeight - element.y));
+          newHeight = Math.max(minSize, Math.min(element.height + deltaY, canvasHeight - element.y));
           break;
         case 'e': // East - right
-          newWidth = Math.max(minSize, Math.min(element.width + adjustedDeltaX, canvasWidth - element.x));
+          newWidth = Math.max(minSize, Math.min(element.width + deltaX, canvasWidth - element.x));
           break;
         case 'w': // West - left
-          newWidth = Math.max(minSize, element.width - adjustedDeltaX);
+          newWidth = Math.max(minSize, element.width - deltaX);
           newX = element.x + (element.width - newWidth);
           break;
       }
@@ -191,7 +186,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         height: newHeight 
       });
     }
-  }, [isDragging, isResizing, dragElementId, dragStart, dragElementStart, elements, style, snapToGrid, gridSize, zoom, onUpdateElement, resizeHandle]);
+  }, [isDragging, isResizing, dragElementId, dragStart, dragElementStart, elements, style, snapToGrid, gridSize, onUpdateElement, resizeHandle]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -239,12 +234,12 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     const currentWidth = style?.width as number || 600;
     const currentHeight = style?.height as number || 450;
     
-    const newWidth = Math.max(200, Math.min(2000, currentWidth + deltaX / zoom));
-    const newHeight = Math.max(200, Math.min(2000, currentHeight + deltaY / zoom));
+    const newWidth = Math.max(200, Math.min(2000, currentWidth + deltaX));
+    const newHeight = Math.max(200, Math.min(2000, currentHeight + deltaY));
     
     onCanvasSizeChange(Math.round(newWidth), Math.round(newHeight));
     setDragStart({ x: e.clientX, y: e.clientY });
-  }, [isCanvasResizing, dragStart, style, zoom, onCanvasSizeChange]);
+  }, [isCanvasResizing, dragStart, style, onCanvasSizeChange]);
 
   const handleCanvasResizeEnd = useCallback(() => {
     setIsCanvasResizing(false);

@@ -55,7 +55,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   const containerProps = {
     className: "w-full h-full",
     style: { 
-      pointerEvents: (editingElement === element.id ? 'auto' : 'none') as React.CSSProperties['pointerEvents']
+      pointerEvents: 'auto' as React.CSSProperties['pointerEvents']
     }
   };
 

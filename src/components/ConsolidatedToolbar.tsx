@@ -22,7 +22,6 @@ import {
   Copy,
   Trash2,
   LayoutGrid,
-  AlignLeft,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
@@ -45,7 +44,6 @@ interface ConsolidatedToolbarProps {
   onCreateNewCardWithLayout: () => void;
   onCreateNewCardFromTemplate: (template: CardTemplate) => void;
   onDeleteCard: () => void;
-  onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
   onShowCardOverview?: () => void;
   position: 'left' | 'very-top' | 'canvas-left' | 'floating';
   isDocked: boolean;
@@ -67,7 +65,6 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   onCreateNewCardWithLayout,
   onCreateNewCardFromTemplate,
   onDeleteCard,
-  onCardTypeChange,
   onShowCardOverview,
   position,
   isDocked,
@@ -114,7 +111,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
   return (
     <div className={`flex flex-col h-full border-r bg-background transition-all duration-200 ${
-      showText ? 'w-44' : 'w-12'
+      showText ? 'w-36' : 'w-10'
     }`}>
       {/* Header with text toggle */}
       <div className="p-1 border-b">
@@ -124,9 +121,9 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => onTextToggle(!showText)}
-              className="p-1 h-8 w-8"
+              className="p-1 h-6 w-6"
             >
-              {showText ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
+              {showText ? <PanelLeftClose className="w-3 h-3" /> : <PanelLeftOpen className="w-3 h-3" />}
             </Button>
           )}
         </div>
@@ -158,9 +155,9 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={onCreateNewCardWithLayout}
-                      className={`${showText ? 'justify-start h-8' : 'aspect-square p-0 h-8 w-8'} transition-colors`}
+                      className={`${showText ? 'justify-start h-6' : 'aspect-square p-0 h-6 w-6'} transition-colors`}
                     >
-                      <Copy className="w-3 h-3" />
+                      <Copy className="w-2.5 h-2.5" />
                       {showText && <span className="ml-2 text-xs">Copy Layout</span>}
                     </Button>
                   </TooltipTrigger>
@@ -190,9 +187,9 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                           variant="outline"
                           size="sm"
                           onClick={() => onAddElement(type)}
-                          className={`${showText ? 'justify-start h-8' : 'aspect-square p-0 h-8 w-8'} transition-colors`}
+                          className={`${showText ? 'justify-start h-6' : 'aspect-square p-0 h-6 w-6'} transition-colors`}
                         >
-                          <Icon className="w-3 h-3" />
+                          <Icon className="w-2.5 h-2.5" />
                           {showText && <span className="ml-2 text-xs">{label}</span>}
                         </Button>
                       </TooltipTrigger>
@@ -242,9 +239,9 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                           variant="outline"
                           size="sm"
                           onClick={() => onAutoArrange(type)}
-                          className={`${showText ? 'justify-start h-8' : 'aspect-square p-0 h-8 w-8'} transition-colors`}
+                          className={`${showText ? 'justify-start h-6' : 'aspect-square p-0 h-6 w-6'} transition-colors`}
                         >
-                          <Icon className="w-3 h-3" />
+                          <Icon className="w-2.5 h-2.5" />
                           {showText && <span className="ml-2 text-xs">{label}</span>}
                         </Button>
                       </TooltipTrigger>
@@ -285,9 +282,9 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                         variant="outline"
                         size="sm"
                         onClick={onShowCardOverview}
-                        className={`${showText ? 'justify-start h-8' : 'aspect-square p-0 h-8 w-8'} transition-colors`}
+                        className={`${showText ? 'justify-start h-6' : 'aspect-square p-0 h-6 w-6'} transition-colors`}
                       >
-                        <LayoutGrid className="w-3 h-3" />
+                        <LayoutGrid className="w-2.5 h-2.5" />
                         {showText && <span className="ml-2 text-xs">Overview</span>}
                       </Button>
                     </TooltipTrigger>
@@ -306,9 +303,9 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={onDeleteCard}
-                      className={`${showText ? 'justify-start h-8' : 'aspect-square p-0 h-8 w-8'} text-destructive hover:text-destructive transition-colors`}
+                      className={`${showText ? 'justify-start h-6' : 'aspect-square p-0 h-6 w-6'} text-destructive hover:text-destructive transition-colors`}
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-2.5 h-2.5" />
                       {showText && <span className="ml-2 text-xs">Delete</span>}
                     </Button>
                   </TooltipTrigger>
