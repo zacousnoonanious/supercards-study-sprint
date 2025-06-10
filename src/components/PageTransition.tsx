@@ -19,12 +19,12 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
       // After half the animation (when card is perpendicular), update content
       const timer = setTimeout(() => {
         setDisplayLocation(location);
-      }, 300); // Half of the 600ms total animation time
+      }, 150); // Half of the 300ms total animation time
 
       // Complete the flip animation
       const completeTimer = setTimeout(() => {
         setIsFlipping(false);
-      }, 600);
+      }, 300);
 
       return () => {
         clearTimeout(timer);
@@ -34,21 +34,13 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
   }, [location.pathname, displayLocation.pathname]);
 
   return (
-    <div className="min-h-screen perspective-1000">
+    <div className="w-full min-h-screen">
       <div
-        className={`w-full min-h-screen transition-transform duration-300 ease-in-out transform-style-preserve-3d ${
-          isFlipping ? 'rotate-y-180' : 'rotate-y-0'
+        className={`w-full min-h-screen transition-transform duration-300 ease-in-out ${
+          isFlipping ? 'scale-95 opacity-90' : 'scale-100 opacity-100'
         }`}
-        style={{
-          transformStyle: 'preserve-3d',
-          perspective: '1000px',
-        }}
       >
-        <div 
-          key={displayLocation.pathname}
-          className="w-full min-h-screen backface-hidden"
-          style={{ backfaceVisibility: 'hidden' }}
-        >
+        <div key={displayLocation.pathname} className="w-full min-h-screen">
           {children}
         </div>
       </div>
