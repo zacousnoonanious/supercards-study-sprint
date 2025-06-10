@@ -8,30 +8,27 @@ interface PageTransitionProps {
 
 export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
   const location = useLocation();
-  const [displayLocation, setDisplayLocation] = useState(location);
-  const [transitionStage, setTransitionStage] = useState('fadeIn');
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (location !== displayLocation) {
-      setTransitionStage('fadeOut');
-    }
-  }, [location, displayLocation]);
+    // Reset visibility when location changes
+    setIsVisible(false);
+    
+    // Start fade-in after a brief delay to ensure clean transition
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   return (
     <div
-      className={`transition-opacity duration-500 ease-in-out ${
-        transitionStage === 'fadeOut' ? 'opacity-0' : 'opacity-100'
+      className={`transition-opacity duration-300 ease-in-out ${
+        isVisible ? 'opacity-100' : 'opacity-0'
       }`}
-      onTransitionEnd={() => {
-        if (transitionStage === 'fadeOut') {
-          setDisplayLocation(location);
-          setTransitionStage('fadeIn');
-        }
-      }}
     >
-      {React.cloneElement(children as React.ReactElement, {
-        key: displayLocation.pathname
-      })}
+      {children}
     </div>
   );
 };
