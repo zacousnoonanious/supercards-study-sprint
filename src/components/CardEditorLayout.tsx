@@ -1,346 +1,165 @@
 import React from 'react';
-import { Navigation } from './Navigation';
-import { EditorHeader } from './EditorHeader';
-import { TopSettingsBar } from './TopSettingsBar';
-import { UndockableToolbar } from './UndockableToolbar';
-import { SimpleEditorFooter } from './SimpleEditorFooter';
-import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
-import { EditorCardOverview } from './EditorCardOverview';
+import { TopToolbar } from './TopToolbar';
+import { BottomToolbar } from './BottomToolbar';
 import { CardCanvas } from './CardCanvas';
-import { HoverElementPopup } from './HoverElementPopup';
-import { FlashcardSet, Flashcard, CanvasElement } from '@/types/flashcard';
+import { SidePanel } from './SidePanel';
+import { TopSettingsBar } from './TopSettingsBar';
+import { Flashcard } from '@/types/flashcard';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CardEditorLayoutProps {
-  // State props
-  showShortcuts: boolean;
-  showCardOverview: boolean;
-  deckName: string;
-  cardWidth: number;
-  cardHeight: number;
-  zoom: number;
-  panOffset: { x: number; y: number };
-  isPanning: boolean;
-  toolbarPosition: 'left' | 'very-top' | 'canvas-left' | 'floating';
-  toolbarIsDocked: boolean;
-  toolbarShowText: boolean;
-  showGrid: boolean;
-  snapToGrid: boolean;
-  isTextSelecting: boolean;
-
-  // Data props
-  set: FlashcardSet;
   cards: Flashcard[];
   currentCard: Flashcard;
   currentCardIndex: number;
   currentSide: 'front' | 'back';
-  selectedElementId: string | null;
-
-  // Refs
-  canvasContainerRef: React.RefObject<HTMLDivElement>;
-  topSettingsBarRef: React.RefObject<HTMLDivElement>;
-  canvasViewportRef: React.RefObject<HTMLDivElement>;
-
-  // Handlers
-  onSave: () => void;
-  onUpdateDeckTitle: (title: string) => Promise<void>;
+  selectedElement: any;
+  deckName: string;
+  cardWidth: number;
+  cardHeight: number;
+  zoom: number;
+  showGrid: boolean;
+  snapToGrid: boolean;
+  toolbarPosition: 'left' | 'very-top' | 'canvas-left' | 'floating';
+  toolbarIsDocked: boolean;
+  toolbarShowText: boolean;
+  isPanning: boolean;
+  showCardOverview: boolean;
   onZoomChange: (zoom: number) => void;
-  onFitToArea: () => void;
-  onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => void;
+  onShowGridChange: (show: boolean) => void;
+  onSnapToGridChange: (snap: boolean) => void;
+  onToolbarPositionChange: (position: 'left' | 'very-top' | 'canvas-left' | 'floating') => void;
+  onToolbarDockChange: (docked: boolean) => void;
+  onToolbarShowTextChange: (showText: boolean) => void;
+  onShowCardOverviewChange: (show: boolean) => void;
+  onDeckTitleChange: (title: string) => void;
+  onCardSideChange: (side: 'front' | 'back') => void;
+  onElementSelect: (elementId: string | null) => void;
+  onUpdateElement: (elementId: string, updates: Partial<Flashcard>) => void;
   onDeleteElement: (elementId: string) => void;
   onCanvasSizeChange: (width: number, height: number) => void;
   onUpdateCard: (updates: Partial<Flashcard>) => void;
-  onElementSelect: (elementId: string | null) => void;
-  onCanvasClick: (e: React.MouseEvent) => void;
-  onNavigateToCard: (cardIndex: number) => void;
-  onReorderCards: (cards: Flashcard[]) => void;
-  onAddElement: (type: CanvasElement['type']) => void;
-  onAutoArrange: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => void;
-  onNavigateCard: (direction: 'prev' | 'next') => void;
-  onSideChange: (side: 'front' | 'back') => void;
-  onCreateNewCard: () => void;
-  onCreateNewCardWithLayout: () => void;
-  onCreateNewCardFromTemplate: (template: any) => void;
-  onDeleteCard: () => void;
-  onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
-  onShowCardOverview: () => void;
-  onToolbarPositionChange: (position: 'left' | 'very-top' | 'canvas-left' | 'floating', isDocked: boolean) => void;
-  onToolbarTextToggle: (showText: boolean) => void;
-  setShowShortcuts: (show: boolean) => void;
-  setShowCardOverview: (show: boolean) => void;
-
-  // Utility functions
-  getCurrentElements: () => CanvasElement[];
-  getSelectedElementData: () => CanvasElement | null;
 }
 
 export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
-  showShortcuts,
-  showCardOverview,
-  deckName,
-  cardWidth,
-  cardHeight,
-  zoom,
-  panOffset,
-  isPanning,
-  toolbarPosition,
-  toolbarIsDocked,
-  toolbarShowText,
-  showGrid,
-  snapToGrid,
-  isTextSelecting,
-  set,
   cards,
   currentCard,
   currentCardIndex,
   currentSide,
-  selectedElementId,
-  canvasContainerRef,
-  topSettingsBarRef,
-  canvasViewportRef,
-  onSave,
-  onUpdateDeckTitle,
+  selectedElement,
+  deckName,
+  cardWidth,
+  cardHeight,
+  zoom,
+  showGrid,
+  snapToGrid,
+  toolbarPosition,
+  toolbarIsDocked,
+  toolbarShowText,
+  isPanning,
+  showCardOverview,
   onZoomChange,
-  onFitToArea,
+  onShowGridChange,
+  onSnapToGridChange,
+  onToolbarPositionChange,
+  onToolbarDockChange,
+  onToolbarShowTextChange,
+  onShowCardOverviewChange,
+  onDeckTitleChange,
+  onCardSideChange,
+  onElementSelect,
   onUpdateElement,
   onDeleteElement,
   onCanvasSizeChange,
   onUpdateCard,
-  onElementSelect,
-  onCanvasClick,
-  onNavigateToCard,
-  onReorderCards,
-  onAddElement,
-  onAutoArrange,
-  onNavigateCard,
-  onSideChange,
-  onCreateNewCard,
-  onCreateNewCardWithLayout,
-  onCreateNewCardFromTemplate,
-  onDeleteCard,
-  onCardTypeChange,
-  onShowCardOverview,
-  onToolbarPositionChange,
-  onToolbarTextToggle,
-  setShowShortcuts,
-  setShowCardOverview,
-  getCurrentElements,
-  getSelectedElementData,
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
-  // Calculate layout offset based on toolbar position and text display
-  const getLayoutOffset = () => {
-    if (toolbarIsDocked && toolbarPosition === 'left') {
-      const leftMargin = toolbarShowText ? '14rem' : '4.5rem';
-      return { marginLeft: leftMargin };
-    }
-    return {};
+  const canvasStyle = {
+    width: cardWidth,
+    height: cardHeight,
   };
-
-  // Get selected element data and position for popup
-  const selectedElement = getSelectedElementData();
-  const getElementPosition = () => {
-    if (!selectedElement || !canvasViewportRef.current) return { x: 0, y: 0 };
-    
-    // Calculate the element's position relative to the viewport
-    const canvasRect = canvasViewportRef.current.getBoundingClientRect();
-    const elementX = selectedElement.x * zoom + panOffset.x;
-    const elementY = selectedElement.y * zoom + panOffset.y;
-    
-    return {
-      x: elementX + canvasRect.left + 10, // Add small offset
-      y: elementY + canvasRect.top + 10
-    };
-  };
-
-  // Show card overview if toggled
-  if (showCardOverview) {
-    return (
-      <div className="min-h-screen flex flex-col" style={getLayoutOffset()}>
-        <Navigation />
-        <EditorCardOverview
-          cards={cards}
-          currentCardIndex={currentCardIndex}
-          onReorderCards={onReorderCards}
-          onNavigateToCard={onNavigateToCard}
-          onBackToEditor={() => setShowCardOverview(false)}
-        />
-      </div>
-    );
-  }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <EditorHeader
-        set={{ ...set, title: deckName }}
-        onSave={onSave}
-        isEditingDeckName={false}
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <TopToolbar
         deckName={deckName}
-        onDeckNameChange={() => {}}
-        onStartEdit={() => {}}
-        onSaveEdit={() => {}}
-        onCancelEdit={() => {}}
-        onUpdateDeckTitle={onUpdateDeckTitle}
-        zoom={zoom}
-        onZoomChange={onZoomChange}
-        onFitToArea={onFitToArea}
+        currentCardIndex={currentCardIndex}
+        cards={cards}
+        showShortcuts={false}
+        showCardOverview={showCardOverview}
+        onDeckTitleChange={onDeckTitleChange}
+        onShowCardOverviewChange={onShowCardOverviewChange}
+      />
+      
+      <TopSettingsBar
+        selectedElement={selectedElement}
+        onUpdateElement={onUpdateElement}
+        onDeleteElement={onDeleteElement}
+        canvasWidth={cardWidth}
+        canvasHeight={cardHeight}
+        onCanvasSizeChange={onCanvasSizeChange}
+        currentCard={currentCard}
+        onUpdateCard={onUpdateCard}
+        showGrid={showGrid}
+        onShowGridChange={onShowGridChange}
+        snapToGrid={snapToGrid}
+        onSnapToGridChange={onSnapToGridChange}
+        currentSide={currentSide}
       />
 
-      {/* Top Settings Bar */}
-      <div ref={topSettingsBarRef}>
-        <TopSettingsBar
-          selectedElement={getSelectedElementData()}
-          onUpdateElement={onUpdateElement}
-          onDeleteElement={onDeleteElement}
-          canvasWidth={cardWidth}
-          canvasHeight={cardHeight}
-          onCanvasSizeChange={onCanvasSizeChange}
-          currentCard={currentCard}
-          onUpdateCard={onUpdateCard}
-          showGrid={showGrid}
-          onShowGridChange={() => {}}
-          snapToGrid={snapToGrid}
-          onSnapToGridChange={() => {}}
-          currentSide={currentSide}
-        />
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex min-h-0 relative">
-        <div className="flex-1 flex items-center justify-center p-1" ref={canvasContainerRef}>
-          <div className="flex items-start gap-1 h-full w-full max-w-none">
-            {/* Canvas-Left Toolbar Position */}
-            {toolbarIsDocked && toolbarPosition === 'canvas-left' && (
-              <UndockableToolbar
-                onAddElement={onAddElement}
-                onAutoArrange={onAutoArrange}
-                currentCard={currentCard}
-                currentCardIndex={currentCardIndex}
-                totalCards={cards.length}
-                currentSide={currentSide}
-                onNavigateCard={onNavigateCard}
-                onSideChange={onSideChange}
-                onCreateNewCard={onCreateNewCard}
-                onCreateNewCardWithLayout={onCreateNewCardWithLayout}
-                onCreateNewCardFromTemplate={onCreateNewCardFromTemplate}
-                onDeleteCard={onDeleteCard}
-                onCardTypeChange={onCardTypeChange}
-                onShowCardOverview={onShowCardOverview}
-                canvasRef={canvasContainerRef}
-                topSettingsBarRef={topSettingsBarRef}
-                onPositionChange={onToolbarPositionChange}
-                onTextToggle={onToolbarTextToggle}
-              />
-            )}
-
-            {/* Card Canvas and Footer Container */}
-            <div className="flex flex-col flex-1 min-h-0 h-full">
-              {/* Canvas Viewport with zoom and pan */}
-              <div 
-                ref={canvasViewportRef}
-                className={`shadow-lg border overflow-hidden flex-1 relative ${
-                  isDarkTheme 
-                    ? 'bg-gray-800 border-gray-600' 
-                    : 'bg-white border-gray-300'
-                } ${zoom > 1 && !isPanning ? 'cursor-grab' : ''} ${isPanning ? 'cursor-grabbing' : ''}`}
-                style={{ 
-                  minWidth: Math.max(cardWidth * 0.5, 400),
-                  minHeight: Math.max(cardHeight * 0.5, 300),
-                  userSelect: isPanning ? 'none' : 'auto',
-                }}
-                data-canvas-background="true"
-                onClick={onCanvasClick}
-              >
-                <div
-                  style={{
-                    width: cardWidth,
-                    height: cardHeight,
-                    transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
-                    transformOrigin: '0 0',
-                    transition: isPanning ? 'none' : 'transform 0.1s ease-out',
-                    pointerEvents: isPanning ? 'none' : 'auto',
-                  }}
-                  data-canvas-background="true"
-                >
-                  <CardCanvas
-                    elements={getCurrentElements()}
-                    selectedElement={selectedElementId}
-                    onSelectElement={onElementSelect}
-                    onUpdateElement={onUpdateElement}
-                    onDeleteElement={onDeleteElement}
-                    cardSide={currentSide}
-                    style={{ 
-                      width: cardWidth, 
-                      height: cardHeight,
-                      border: `2px solid ${isDarkTheme ? '#6b7280' : '#d1d5db'}`,
-                      backgroundColor: isDarkTheme ? '#1f2937' : '#ffffff'
-                    }}
-                    showGrid={showGrid}
-                    gridSize={20}
-                    snapToGrid={snapToGrid}
-                    zoom={zoom}
-                  />
-                </div>
-              </div>
-
-              {/* Bottom Footer */}
-              <div className="flex-shrink-0">
-                <SimpleEditorFooter
-                  currentCard={currentCard}
-                  currentCardIndex={currentCardIndex}
-                  totalCards={cards.length}
-                  selectedElement={getSelectedElementData()}
-                  onUpdateCard={onUpdateCard}
-                  onNavigateCard={onNavigateCard}
-                  cardWidth={Math.max(cardWidth * 0.5, 400)}
-                />
-              </div>
-            </div>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Canvas */}
+        <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
+          <div
+            className="relative"
+            style={{
+              transform: `scale(${zoom})`,
+              transformOrigin: 'top left',
+              width: cardWidth,
+              height: cardHeight,
+              cursor: isPanning ? 'grabbing' : 'default',
+            }}
+          >
+            <CardCanvas
+              elements={currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements}
+              selectedElement={selectedElement?.id || null}
+              onSelectElement={onElementSelect}
+              onUpdateElement={onUpdateElement}
+              onDeleteElement={onDeleteElement}
+              cardSide={currentSide}
+              style={canvasStyle}
+              showGrid={showGrid}
+              snapToGrid={snapToGrid}
+              zoom={zoom}
+            />
           </div>
         </div>
 
-        {/* Element Selection Popup */}
-        {selectedElement && selectedElementId && (
-          <HoverElementPopup
-            element={selectedElement}
-            position={getElementPosition()}
-            onUpdate={(updates) => onUpdateElement(selectedElementId, updates)}
-            onDelete={() => onDeleteElement(selectedElementId)}
-            isSelected={true}
-          />
-        )}
+        {/* Right Side Panel */}
+        <SidePanel
+          selectedElement={selectedElement}
+          onUpdateElement={onUpdateElement}
+          onDeleteElement={onDeleteElement}
+        />
       </div>
 
-      {/* Other Toolbar Positions */}
-      {(!toolbarIsDocked || toolbarPosition !== 'canvas-left') && (
-        <UndockableToolbar
-          onAddElement={onAddElement}
-          onAutoArrange={onAutoArrange}
-          currentCard={currentCard}
-          currentCardIndex={currentCardIndex}
-          totalCards={cards.length}
-          currentSide={currentSide}
-          onNavigateCard={onNavigateCard}
-          onSideChange={onSideChange}
-          onCreateNewCard={onCreateNewCard}
-          onCreateNewCardWithLayout={onCreateNewCardWithLayout}
-          onCreateNewCardFromTemplate={onCreateNewCardFromTemplate}
-          onDeleteCard={onDeleteCard}
-          onCardTypeChange={onCardTypeChange}
-          onShowCardOverview={onShowCardOverview}
-          canvasRef={canvasContainerRef}
-          topSettingsBarRef={topSettingsBarRef}
-          onPositionChange={onToolbarPositionChange}
-          onTextToggle={onToolbarTextToggle}
-        />
-      )}
-
-      {showShortcuts && (
-        <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />
-      )}
+      <BottomToolbar
+        zoom={zoom}
+        showGrid={showGrid}
+        snapToGrid={snapToGrid}
+        toolbarPosition={toolbarPosition}
+        toolbarIsDocked={toolbarIsDocked}
+        toolbarShowText={toolbarShowText}
+        onZoomChange={onZoomChange}
+        onShowGridChange={onShowGridChange}
+        onSnapToGridChange={onSnapToGridChange}
+        onToolbarPositionChange={onToolbarPositionChange}
+        onToolbarDockChange={onToolbarDockChange}
+        onToolbarShowTextChange={onToolbarShowTextChange}
+        currentSide={currentSide}
+        onCardSideChange={onCardSideChange}
+      />
     </div>
   );
 };
