@@ -8,7 +8,6 @@ import { BookOpen, Brain, Clock, TrendingUp, Play, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
-import { I18nTester } from '@/components/I18nTester';
 
 interface FlashcardSet {
   id: string;
@@ -104,11 +103,6 @@ const Dashboard = () => {
       <Navigation />
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {/* i18n Tester - Temporary for testing */}
-        <div className="mb-8">
-          <I18nTester />
-        </div>
-
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-foreground mb-2">{t('welcome')} {t('back')}!</h2>
           <p className="text-muted-foreground">{t('dashboard.subtitle')}</p>

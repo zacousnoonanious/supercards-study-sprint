@@ -21,6 +21,18 @@ export const ProfileLanguageSettings: React.FC<ProfileLanguageSettingsProps> = (
     onLanguageChange(value);
   };
 
+  const availableLanguages = [
+    { code: 'en', label: t('lang.en') || 'English' },
+    { code: 'zh-CN', label: t('lang.zh-CN') || '简体中文' },
+    { code: 'zh-TW', label: t('lang.zh-TW') || '繁體中文' },
+    { code: 'hi', label: t('lang.hi') || 'हिन्दी' },
+    { code: 'es', label: t('lang.es') || 'Español' },
+    { code: 'fr', label: t('lang.fr') || 'Français' },
+    { code: 'ar', label: t('lang.ar') || 'العربية' },
+    { code: 'pt', label: t('lang.pt') || 'Português' },
+    { code: 'ru', label: t('lang.ru') || 'Русский' },
+  ];
+
   return (
     <div className="space-y-2">
       <Label htmlFor="language">{t('profile.language')}</Label>
@@ -32,9 +44,11 @@ export const ProfileLanguageSettings: React.FC<ProfileLanguageSettingsProps> = (
           <SelectValue placeholder="Select language" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="en">{t('lang.en')}</SelectItem>
-          <SelectItem value="es">{t('lang.es')}</SelectItem>
-          <SelectItem value="fr">{t('lang.fr')}</SelectItem>
+          {availableLanguages.map((lang) => (
+            <SelectItem key={lang.code} value={lang.code}>
+              {lang.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
