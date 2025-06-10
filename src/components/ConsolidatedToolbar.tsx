@@ -39,6 +39,7 @@ interface ConsolidatedToolbarProps {
   onTextToggle?: (showText: boolean) => void;
   style?: React.CSSProperties;
   className?: string;
+  canvasRef?: React.RefObject<HTMLDivElement>;
 }
 
 export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
@@ -62,7 +63,8 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   showText = false,
   onTextToggle,
   style,
-  className
+  className,
+  canvasRef
 }) => {
   const { t } = useI18n();
   const { theme } = useTheme();
@@ -71,6 +73,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
   const isHorizontal = position === 'very-top';
   const isFloating = position === 'floating';
+  const isCanvasLeft = position === 'canvas-left';
 
   // Force icon mode for horizontal layout
   const displayText = !isHorizontal && !isFloating && showText;
@@ -78,6 +81,14 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   const handleTextToggle = () => {
     const newShowText = !showText;
     onTextToggle?.(newShowText);
+  };
+
+  const getMaxHeight = () => {
+    if (isCanvasLeft && canvasRef?.current) {
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      return Math.max(300, canvasRect.height - 32); // 32px for padding
+    }
+    return 'calc(100vh - 120px)';
   };
 
   const ToolbarButton = ({ 
@@ -123,41 +134,28 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
     } ${className || ''}`;
 
     if (isFloating) {
-      return `${baseClass} grid grid-cols-2 gap-1 w-28 max-h-[calc(100vh-120px)] overflow-y-auto`;
+      return `${baseClass} grid grid-cols-2 gap-1 w-28 overflow-y-auto`;
     }
 
     if (isHorizontal) {
       return `${baseClass} flex flex-row items-center gap-2 w-auto max-w-full overflow-x-auto`;
     }
 
-    return `${baseClass} flex flex-col items-center space-y-1 ${displayText ? 'w-36' : 'w-16'} max-h-[calc(100vh-120px)] overflow-y-auto`;
+    return `${baseClass} flex flex-col items-center space-y-1 ${displayText ? 'w-36' : 'w-16'} overflow-y-auto`;
   };
 
-  const getPositioning = () => {
-    if (!isDocked || isFloating) return {};
+  const getContainerStyle = () => {
+    const baseStyle = { ...style };
     
-    switch (position) {
-      case 'left':
-        return {
-          position: 'fixed' as const,
-          left: '8px',
-          top: '100px',
-          zIndex: 50
-        };
-      case 'very-top':
-        return {
-          position: 'fixed' as const,
-          top: '8px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 60
-        };
-      case 'canvas-left':
-        // This will be positioned by the parent container in CardEditor
-        return {};
-      default:
-        return {};
+    if (isCanvasLeft) {
+      baseStyle.maxHeight = getMaxHeight();
+    } else if (isFloating) {
+      baseStyle.maxHeight = 'calc(100vh - 120px)';
+    } else {
+      baseStyle.maxHeight = 'calc(100vh - 120px)';
     }
+    
+    return baseStyle;
   };
 
   const getSeparator = () => {
@@ -181,7 +179,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   };
 
   return (
-    <div className={getContainerClass()} style={{ ...style, ...getPositioning() }}>
+    <div className={getContainerClass()} style={getContainerStyle()}>
       {/* Dock/Undock and Text/Icon Toggle */}
       <div className={getButtonGroupClass()}>
         {onToggleDock && (

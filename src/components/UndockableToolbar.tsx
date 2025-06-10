@@ -67,6 +67,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
             showText={showText}
             onTextToggle={handleTextToggle}
             style={position === 'canvas-left' ? getDockedPosition() : {}}
+            canvasRef={props.canvasRef}
           />
         </div>
         
@@ -98,6 +99,7 @@ export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
           showText={showText}
           onTextToggle={handleTextToggle}
           className={`shadow-xl ${isDarkTheme ? 'border-gray-500' : 'border-gray-400'}`}
+          canvasRef={props.canvasRef}
         />
       </div>
       
