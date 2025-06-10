@@ -83,7 +83,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             size="sm"
             onClick={() => onNavigateCard('prev')}
             disabled={currentCardIndex === 0}
-            title={t('toolbar.previousCard') || 'Previous card'}
+            title={t('toolbar.previousCard')}
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -95,7 +95,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             size="sm"
             onClick={() => onNavigateCard('next')}
             disabled={currentCardIndex === totalCards - 1}
-            title={t('toolbar.nextCard') || 'Next card'}
+            title={t('toolbar.nextCard')}
           >
             <ArrowRight className="w-4 h-4" />
           </Button>
@@ -110,7 +110,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             size="sm"
             onClick={() => onSideChange('front')}
           >
-            {t('editor.front') || 'Front'}
+            {t('editor.front')}
           </Button>
           <Button
             variant={currentSide === 'back' ? 'default' : 'outline'}
@@ -118,7 +118,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             onClick={() => onSideChange('back')}
             disabled={isBackSideDisabled}
           >
-            {t('editor.back') || 'Back'}
+            {t('editor.back')}
           </Button>
         </div>
 
@@ -130,7 +130,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             variant="outline" 
             size="sm" 
             onClick={() => onAddElement('text')}
-            title={t('toolbar.addText') || 'Add text element'}
+            title={t('toolbar.addText')}
           >
             <Type className="w-4 h-4" />
           </Button>
@@ -138,7 +138,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             variant="outline" 
             size="sm" 
             onClick={() => onAddElement('image')}
-            title={t('toolbar.addImage') || 'Add image element'}
+            title={t('toolbar.addImage')}
           >
             <Image className="w-4 h-4" />
           </Button>
@@ -146,7 +146,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             variant="outline" 
             size="sm" 
             onClick={() => onAddElement('audio')}
-            title={t('toolbar.addAudio') || 'Add audio element'}
+            title={t('toolbar.addAudio')}
           >
             <Music className="w-4 h-4" />
           </Button>
@@ -154,7 +154,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             variant="outline" 
             size="sm" 
             onClick={() => onAddElement('youtube')}
-            title={t('toolbar.addYoutube') || 'Add YouTube video'}
+            title={t('toolbar.addYoutube')}
           >
             <Youtube className="w-4 h-4" />
           </Button>
@@ -162,7 +162,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             variant="outline" 
             size="sm" 
             onClick={() => onAddElement('multiple-choice')}
-            title={t('toolbar.addMultipleChoice') || 'Add multiple choice'}
+            title={t('toolbar.addMultipleChoice')}
           >
             <CheckSquare className="w-4 h-4" />
           </Button>
@@ -170,7 +170,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             variant="outline" 
             size="sm" 
             onClick={() => onAddElement('true-false')}
-            title={t('toolbar.addTrueFalse') || 'Add true/false'}
+            title={t('toolbar.addTrueFalse')}
           >
             <Circle className="w-4 h-4" />
           </Button>
@@ -178,7 +178,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             variant="outline" 
             size="sm" 
             onClick={() => onAddElement('fill-in-blank')}
-            title={t('toolbar.addFillInBlank') || 'Add fill in blank'}
+            title={t('toolbar.addFillInBlank')}
           >
             <Square className="w-4 h-4" />
           </Button>
@@ -186,7 +186,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             variant="outline" 
             size="sm" 
             onClick={() => onAddElement('drawing')}
-            title={t('toolbar.addDrawing') || 'Add drawing canvas'}
+            title={t('toolbar.addDrawing')}
           >
             <PenTool className="w-4 h-4" />
           </Button>
@@ -194,7 +194,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             variant="outline" 
             size="sm" 
             onClick={() => onAddElement('deck-embed')}
-            title={t('toolbar.addDeckEmbed') || 'Embed deck'}
+            title={t('toolbar.addDeckEmbed')}
           >
             <BookOpen className="w-4 h-4" />
           </Button>
@@ -205,17 +205,17 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
         {/* Arrange */}
         <Select onValueChange={(value) => onAutoArrange(value as any)}>
           <SelectTrigger className="w-32 h-8">
-            <SelectValue placeholder={t('toolbar.arrange') || 'Arrange'} />
+            <SelectValue placeholder={t('toolbar.arrange')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="grid">{t('toolbar.arrangeGrid') || 'Grid'}</SelectItem>
-            <SelectItem value="center">{t('toolbar.arrangeCenter') || 'Center'}</SelectItem>
-            <SelectItem value="justify">{t('toolbar.arrangeJustify') || 'Justify'}</SelectItem>
-            <SelectItem value="stack">{t('toolbar.arrangeStack') || 'Stack'}</SelectItem>
-            <SelectItem value="align-left">{t('toolbar.arrangeAlignLeft') || 'Align Left'}</SelectItem>
-            <SelectItem value="align-center">{t('toolbar.arrangeAlignCenter') || 'Align Center'}</SelectItem>
-            <SelectItem value="align-right">{t('toolbar.arrangeAlignRight') || 'Align Right'}</SelectItem>
-            <SelectItem value="scale-to-fit">{t('toolbar.arrangeScaleToFit') || 'Scale to Fit'}</SelectItem>
+            <SelectItem value="grid">{t('toolbar.arrangeGrid')}</SelectItem>
+            <SelectItem value="center">{t('toolbar.arrangeCenter')}</SelectItem>
+            <SelectItem value="justify">{t('toolbar.arrangeJustify')}</SelectItem>
+            <SelectItem value="stack">{t('toolbar.arrangeStack')}</SelectItem>
+            <SelectItem value="align-left">{t('toolbar.arrangeAlignLeft')}</SelectItem>
+            <SelectItem value="align-center">{t('toolbar.arrangeAlignCenter')}</SelectItem>
+            <SelectItem value="align-right">{t('toolbar.arrangeAlignRight')}</SelectItem>
+            <SelectItem value="scale-to-fit">{t('toolbar.arrangeScaleToFit')}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -226,10 +226,10 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
           variant="outline"
           size="sm"
           onClick={onToggleGrid}
-          title={showGrid ? (t('toolbar.hideGrid') || 'Hide Grid') : (t('toolbar.showGrid') || 'Show Grid')}
+          title={showGrid ? t('toolbar.hideGrid') : t('toolbar.showGrid')}
         >
           {showGrid ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-          {t('toolbar.grid') || 'Grid'}
+          {t('toolbar.grid')}
         </Button>
 
         {/* Card Dimensions */}
@@ -237,7 +237,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
           variant="outline"
           size="sm"
           onClick={() => setShowDimensionsEdit(!showDimensionsEdit)}
-          title={t('toolbar.cardDimensions') || 'Card Dimensions'}
+          title={t('toolbar.cardDimensions')}
         >
           <Settings className="w-4 h-4" />
           {cardDimensions.width}×{cardDimensions.height}
@@ -245,14 +245,14 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
 
         {showDimensionsEdit && (
           <div className="flex items-center gap-2 bg-background border rounded p-2">
-            <Label className="text-xs">{t('editor.width') || 'W'}:</Label>
+            <Label className="text-xs">{t('editor.width')}:</Label>
             <Input
               type="number"
               value={tempDimensions.width}
               onChange={(e) => setTempDimensions(prev => ({ ...prev, width: parseInt(e.target.value) || 600 }))}
               className="w-16 h-6 text-xs"
             />
-            <Label className="text-xs">{t('editor.height') || 'H'}:</Label>
+            <Label className="text-xs">{t('editor.height')}:</Label>
             <Input
               type="number"
               value={tempDimensions.height}
@@ -260,7 +260,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
               className="w-16 h-6 text-xs"
             />
             <Button size="sm" onClick={handleDimensionsSubmit}>
-              {t('common.apply') || 'Apply'}
+              {t('common.apply')}
             </Button>
           </div>
         )}
@@ -273,19 +273,19 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             variant="outline" 
             size="sm" 
             onClick={onCreateNewCard}
-            title={t('toolbar.createNewCard') || 'Create new card'}
+            title={t('toolbar.createNewCard')}
           >
             <Plus className="w-4 h-4" />
-            {t('toolbar.card') || 'Card'}
+            {t('toolbar.card')}
           </Button>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={onSave}
-            title={t('toolbar.save') || 'Save'}
+            title={t('toolbar.save')}
           >
             <Save className="w-4 h-4" />
-            {t('common.save') || 'Save'}
+            {t('common.save')}
           </Button>
         </div>
       </div>
