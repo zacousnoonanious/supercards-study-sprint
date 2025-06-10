@@ -92,6 +92,31 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
     cardHeight,
   });
 
+  // Custom fit to view for fullscreen that calculates based on the fullscreen viewport
+  const handleFullscreenFitToView = () => {
+    const viewport = canvasViewportRef.current;
+    if (!viewport) return;
+    
+    const viewportRect = viewport.getBoundingClientRect();
+    const padding = 80; // Extra padding for fullscreen
+    const availableWidth = viewportRect.width - padding;
+    const availableHeight = viewportRect.height - padding;
+    
+    const zoomX = availableWidth / cardWidth;
+    const zoomY = availableHeight / cardHeight;
+    const newZoom = Math.min(zoomX, zoomY, 2); // Allow up to 200% zoom in fullscreen
+    
+    setZoom(newZoom);
+    
+    // Center the canvas in the viewport
+    const scaledWidth = cardWidth * newZoom;
+    const scaledHeight = cardHeight * newZoom;
+    const centerX = (viewportRect.width - scaledWidth) / 2;
+    const centerY = (viewportRect.height - scaledHeight) / 2;
+    
+    setPanOffset({ x: centerX, y: centerY });
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -123,7 +148,7 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={fitToView}
+                  onClick={handleFullscreenFitToView}
                   title="Fit to View"
                 >
                   <Maximize2 className="w-4 h-4" />
@@ -164,6 +189,7 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
               ref={canvasViewportRef}
               className="flex-1 relative overflow-hidden bg-gray-100 dark:bg-gray-800"
               style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
+              data-canvas-background
             >
               <div
                 ref={canvasContainerRef}
