@@ -90,63 +90,70 @@ const Auth = () => {
     { front: "Smallest Country", back: "Vatican City", color: "bg-zinc-100 border-zinc-300 text-zinc-800" }
   ];
 
-  // Generate random movement data for each card
+  // Generate smooth gliding movement data for each card
   const [cardMovements] = useState(() => 
     flashcardFacts.map((_, index) => ({
       id: index,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
+      x: Math.random() * 90 + 5, // Keep cards away from edges
+      y: Math.random() * 90 + 5,
+      vx: (Math.random() - 0.5) * 0.4, // Slower, smoother movement
+      vy: (Math.random() - 0.5) * 0.4,
       rotation: Math.random() * 360,
-      rotationSpeed: (Math.random() - 0.5) * 2,
-      scale: 0.8 + Math.random() * 0.4,
-      flipTimer: Math.random() * 10000,
-      isFlipped: false
+      rotationSpeed: (Math.random() - 0.5) * 0.8, // Slower rotation
+      scale: 0.7 + Math.random() * 0.3,
+      flipTimer: Math.random() * 12000,
+      isFlipped: false,
+      opacity: 0.4 + Math.random() * 0.4, // Varying opacity for depth
+      zIndex: Math.floor(Math.random() * 10)
     }))
   );
 
-  // Update card positions
+  // Update card positions with smooth gliding
   useEffect(() => {
     const interval = setInterval(() => {
       cardMovements.forEach(movement => {
-        // Update position
+        // Smooth gliding movement
         movement.x += movement.vx;
         movement.y += movement.vy;
         
-        // Bounce off edges with some randomness
-        if (movement.x <= 0 || movement.x >= 95) {
-          movement.vx *= -1;
-          movement.vx += (Math.random() - 0.5) * 0.1;
-          movement.x = Math.max(0, Math.min(95, movement.x));
+        // Smooth edge bouncing with gradual direction changes
+        if (movement.x <= 2 || movement.x >= 93) {
+          movement.vx *= -0.8; // Damped bounce
+          movement.vx += (Math.random() - 0.5) * 0.2; // Add some randomness
+          movement.x = Math.max(2, Math.min(93, movement.x));
         }
-        if (movement.y <= 0 || movement.y >= 95) {
-          movement.vy *= -1;
-          movement.vy += (Math.random() - 0.5) * 0.1;
-          movement.y = Math.max(0, Math.min(95, movement.y));
+        if (movement.y <= 2 || movement.y >= 93) {
+          movement.vy *= -0.8;
+          movement.vy += (Math.random() - 0.5) * 0.2;
+          movement.y = Math.max(2, Math.min(93, movement.y));
         }
         
-        // Update rotation
+        // Smooth continuous rotation
         movement.rotation += movement.rotationSpeed;
         
-        // Update flip state
-        movement.flipTimer += 100;
-        if (movement.flipTimer > 8000) {
+        // Smooth flip transitions
+        movement.flipTimer += 150;
+        if (movement.flipTimer > 10000 + Math.random() * 5000) {
           movement.isFlipped = !movement.isFlipped;
           movement.flipTimer = 0;
         }
         
-        // Occasionally change direction slightly
-        if (Math.random() < 0.02) {
+        // Gentle random direction changes for more organic movement
+        if (Math.random() < 0.005) { // Less frequent changes
           movement.vx += (Math.random() - 0.5) * 0.1;
           movement.vy += (Math.random() - 0.5) * 0.1;
           
-          // Keep speeds reasonable
-          movement.vx = Math.max(-0.5, Math.min(0.5, movement.vx));
-          movement.vy = Math.max(-0.5, Math.min(0.5, movement.vy));
+          // Keep speeds within reasonable gliding range
+          movement.vx = Math.max(-0.6, Math.min(0.6, movement.vx));
+          movement.vy = Math.max(-0.6, Math.min(0.6, movement.vy));
+        }
+        
+        // Subtle opacity changes for breathing effect
+        if (Math.random() < 0.01) {
+          movement.opacity = Math.max(0.2, Math.min(0.8, movement.opacity + (Math.random() - 0.5) * 0.1));
         }
       });
-    }, 100);
+    }, 50); // Higher frequency for smoother animation
 
     return () => clearInterval(interval);
   }, [cardMovements]);
@@ -286,41 +293,42 @@ const Auth = () => {
         ></div>
       </div>
 
-      {/* Animated flashcards moving like a crowd */}
+      {/* Smoothly gliding flashcards background */}
       <div className="absolute inset-0 z-5 pointer-events-none overflow-hidden">
         {flashcardFacts.map((card, index) => {
           const movement = cardMovements[index];
           return (
             <div
               key={index}
-              className="absolute transition-all duration-100 ease-linear"
+              className="absolute transition-all duration-75 ease-out"
               style={{
                 left: `${movement.x}%`,
                 top: `${movement.y}%`,
                 transform: `rotate(${movement.rotation}deg) scale(${movement.scale})`,
-                opacity: 0.7,
+                opacity: movement.opacity,
+                zIndex: movement.zIndex,
               }}
             >
               <div 
-                className="w-36 h-24 [perspective:1000px]"
+                className="w-40 h-28 [perspective:1000px] drop-shadow-lg"
               >
                 <div
-                  className="relative w-full h-full transition-transform duration-700"
+                  className="relative w-full h-full transition-transform duration-1000 ease-in-out"
                   style={{
                     transformStyle: 'preserve-3d',
                     transform: movement.isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
                   }}
                 >
                   {/* Front of card */}
-                  <div className={`absolute inset-0 w-full h-full ${card.color} border-2 rounded-lg shadow-lg p-3 flex items-center justify-center [backface-visibility:hidden]`}>
-                    <p className="text-xs font-semibold text-center leading-tight">{card.front}</p>
+                  <div className={`absolute inset-0 w-full h-full ${card.color} border-2 rounded-xl shadow-xl p-4 flex items-center justify-center [backface-visibility:hidden] backdrop-blur-sm`}>
+                    <p className="text-sm font-semibold text-center leading-tight">{card.front}</p>
                   </div>
                   {/* Back of card */}
                   <div 
-                    className={`absolute inset-0 w-full h-full ${card.color} border-2 rounded-lg shadow-lg p-3 flex items-center justify-center [backface-visibility:hidden]`}
+                    className={`absolute inset-0 w-full h-full ${card.color} border-2 rounded-xl shadow-xl p-4 flex items-center justify-center [backface-visibility:hidden] backdrop-blur-sm`}
                     style={{ transform: 'rotateY(180deg)' }}
                   >
-                    <p className="text-xs font-medium text-center leading-tight">{card.back}</p>
+                    <p className="text-sm font-medium text-center leading-tight">{card.back}</p>
                   </div>
                 </div>
               </div>
