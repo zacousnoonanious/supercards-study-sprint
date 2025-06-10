@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export const I18nTester: React.FC = () => {
-  const { t, language, setLanguage, availableLanguages } = useI18n();
+  const { t, language, setLanguage } = useI18n();
+
+  // Define available languages locally since it's not in the context
+  const availableLanguages = ['en', 'zh', 'hi', 'es', 'fr', 'ar', 'pt', 'ru'];
 
   const testKeys = [
     'welcome',
