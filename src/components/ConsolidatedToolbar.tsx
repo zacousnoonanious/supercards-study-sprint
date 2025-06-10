@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -32,7 +33,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTemplateConfiguration } from '@/hooks/useTemplateConfiguration';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
-import { NewCardTemplateSelector } from './NewCardTemplateSelector';
+import { EnhancedAddCardButton } from './EnhancedAddCardButton';
 
 interface ConsolidatedToolbarProps {
   onAddElement: (type: string) => void;
@@ -105,13 +106,13 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   );
 
   const arrangements = [
-    { type: 'grid', icon: Grid3x3, label: t('toolbar.arrangeGrid'), key: 'g' },
-    { type: 'center', icon: AlignCenter, label: t('toolbar.arrangeCenter'), key: 'c' },
-    { type: 'justify', icon: AlignJustify, label: t('toolbar.arrangeJustify'), key: 'j' },
-    { type: 'stack', icon: Layers3, label: t('toolbar.arrangeStack'), key: 's' },
-    { type: 'align-left', icon: AlignLeftIcon, label: t('toolbar.arrangeAlignLeft'), key: '1' },
-    { type: 'align-center', icon: AlignCenterIcon, label: t('toolbar.arrangeAlignCenter'), key: '2' },
-    { type: 'align-right', icon: AlignRight, label: t('toolbar.arrangeAlignRight'), key: '3' },
+    { type: 'grid' as const, icon: Grid3x3, label: t('toolbar.arrangeGrid'), key: 'g' },
+    { type: 'center' as const, icon: AlignCenter, label: t('toolbar.arrangeCenter'), key: 'c' },
+    { type: 'justify' as const, icon: AlignJustify, label: t('toolbar.arrangeJustify'), key: 'j' },
+    { type: 'stack' as const, icon: Layers3, label: t('toolbar.arrangeStack'), key: 's' },
+    { type: 'align-left' as const, icon: AlignLeftIcon, label: t('toolbar.arrangeAlignLeft'), key: '1' },
+    { type: 'align-center' as const, icon: AlignCenterIcon, label: t('toolbar.arrangeAlignCenter'), key: '2' },
+    { type: 'align-right' as const, icon: AlignRight, label: t('toolbar.arrangeAlignRight'), key: '3' },
   ];
 
   const renderIcon = (icon: React.ComponentType<any>, text?: string) => {
@@ -324,11 +325,11 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
             )}
             
             <div className="grid gap-1">
-              {/* New Card from Template */}
-              <NewCardTemplateSelector
+              {/* Enhanced Add Card Button */}
+              <EnhancedAddCardButton
                 onCreateCard={onCreateNewCard}
                 onCreateFromTemplate={onCreateNewCardFromTemplate}
-                showAsDialog={false}
+                showText={showText}
               />
               
               {/* Copy Layout */}

@@ -30,9 +30,14 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
       name: 'Simple Text Card',
       description: 'Basic front and back text card',
       image: '/placeholder.svg',
+      category: 'study',
       card_type: 'normal',
       canvas_width: 600,
       canvas_height: 450,
+      allowedElementTypes: ['text', 'image', 'audio', 'tts'],
+      autoAdvanceOnAnswer: false,
+      showBackSide: true,
+      restrictedToolbar: false,
       front_elements: [
         {
           id: 'front-text',
@@ -65,9 +70,14 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
       name: 'Multiple Choice Quiz',
       description: 'Quiz card with multiple choice questions',
       image: '/placeholder.svg',
+      category: 'quiz',
       card_type: 'quiz-only',
       canvas_width: 600,
       canvas_height: 450,
+      allowedElementTypes: ['multiple-choice'],
+      autoAdvanceOnAnswer: true,
+      showBackSide: false,
+      restrictedToolbar: true,
       front_elements: [
         {
           id: 'mc-quiz',
@@ -90,9 +100,14 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
       name: 'True/False Quiz',
       description: 'Quiz card with true/false questions',
       image: '/placeholder.svg',
+      category: 'quiz',
       card_type: 'quiz-only',
       canvas_width: 600,
       canvas_height: 450,
+      allowedElementTypes: ['true-false'],
+      autoAdvanceOnAnswer: true,
+      showBackSide: false,
+      restrictedToolbar: true,
       front_elements: [
         {
           id: 'tf-quiz',
@@ -114,9 +129,14 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
       name: 'Informational Card',
       description: 'Single-sided informational card',
       image: '/placeholder.svg',
+      category: 'information',
       card_type: 'informational',
       canvas_width: 600,
       canvas_height: 450,
+      allowedElementTypes: ['text', 'image'],
+      autoAdvanceOnAnswer: false,
+      showBackSide: false,
+      restrictedToolbar: false,
       front_elements: [
         {
           id: 'info-text',
