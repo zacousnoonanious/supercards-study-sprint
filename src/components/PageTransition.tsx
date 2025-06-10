@@ -9,22 +9,22 @@ interface PageTransitionProps {
 export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
   const location = useLocation();
   const [displayLocation, setDisplayLocation] = useState(location);
-  const [isFlipping, setIsFlipping] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     if (location.pathname !== displayLocation.pathname) {
-      // Start the flip animation
-      setIsFlipping(true);
+      // Start the transition
+      setIsTransitioning(true);
       
-      // After half the animation, update content
+      // After fade out, update content
       const timer = setTimeout(() => {
         setDisplayLocation(location);
-      }, 300); // Half of the 600ms total animation time
+      }, 150); // Half of the 300ms total animation time
 
-      // Complete the flip animation
+      // Complete the transition
       const completeTimer = setTimeout(() => {
-        setIsFlipping(false);
-      }, 600);
+        setIsTransitioning(false);
+      }, 300);
 
       return () => {
         clearTimeout(timer);
@@ -34,14 +34,11 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
   }, [location.pathname, displayLocation.pathname]);
 
   return (
-    <div className="w-full min-h-screen perspective-1000 overflow-hidden">
+    <div className="w-full min-h-screen">
       <div
-        className={`w-full min-h-screen transition-all duration-600 ease-in-out ${
-          isFlipping ? 'scale-90 opacity-80' : 'scale-100 opacity-100'
+        className={`w-full min-h-screen transition-opacity duration-300 ease-in-out ${
+          isTransitioning ? 'opacity-0' : 'opacity-100'
         }`}
-        style={{
-          transform: isFlipping ? 'rotateY(10deg) rotateX(5deg)' : 'rotateY(0deg) rotateX(0deg)',
-        }}
       >
         <div key={displayLocation.pathname} className="w-full min-h-screen">
           {children}
