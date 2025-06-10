@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { TopToolbar } from './TopToolbar';
 import { BottomToolbar } from './BottomToolbar';
 import { CardCanvas } from './CardCanvas';
 import { SidePanel } from './SidePanel';
 import { TopSettingsBar } from './TopSettingsBar';
-import { Flashcard } from '@/types/flashcard';
+import { Flashcard, CanvasElement } from '@/types/flashcard';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CardEditorLayoutProps {
@@ -12,7 +13,7 @@ interface CardEditorLayoutProps {
   currentCard: Flashcard;
   currentCardIndex: number;
   currentSide: 'front' | 'back';
-  selectedElement: any;
+  selectedElement: CanvasElement | null;
   deckName: string;
   cardWidth: number;
   cardHeight: number;
@@ -34,7 +35,7 @@ interface CardEditorLayoutProps {
   onDeckTitleChange: (title: string) => void;
   onCardSideChange: (side: 'front' | 'back') => void;
   onElementSelect: (elementId: string | null) => void;
-  onUpdateElement: (elementId: string, updates: Partial<Flashcard>) => void;
+  onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => void;
   onDeleteElement: (elementId: string) => void;
   onCanvasSizeChange: (width: number, height: number) => void;
   onUpdateCard: (updates: Partial<Flashcard>) => void;

@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { updateFlashcardSet } from '@/lib/api/sets';
@@ -13,7 +12,7 @@ interface UseCardEditorHandlersProps {
   currentCard: Flashcard;
   navigateCard: (direction: 'prev' | 'next') => void;
   setCurrentSide: (side: 'front' | 'back') => void;
-  updateCard: (cardId: string, updates: Partial<Flashcard>) => void;
+  updateCard: (updates: Partial<Flashcard>) => void;
   isTextSelecting: boolean;
   set: any;
   setDeckName: (name: string) => void;
@@ -169,10 +168,8 @@ export const useCardEditorHandlers = ({
   }, [currentCard, updateCard]);
 
   const handleCardUpdate = useCallback((updates: Partial<Flashcard>) => {
-    if (currentCard) {
-      updateCard(currentCard.id, updates);
-    }
-  }, [updateCard, currentCard]);
+    updateCard(updates);
+  }, [updateCard]);
 
   return {
     handleUpdateElement,
