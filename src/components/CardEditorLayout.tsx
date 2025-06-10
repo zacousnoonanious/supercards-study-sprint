@@ -58,7 +58,7 @@ interface CardEditorLayoutProps {
   onNavigateCard: (direction: 'prev' | 'next') => void;
   onSideChange: (side: 'front' | 'back') => void;
   onCreateNewCard: () => void;
-  onCreateNewCardWithLayout: (layout: any) => void;
+  onCreateNewCardWithLayout: () => void;
   onCreateNewCardFromTemplate: (template: any) => void;
   onDeleteCard: () => void;
   onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
