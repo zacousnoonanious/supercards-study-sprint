@@ -18,7 +18,6 @@ interface CardCanvasProps {
   snapToGrid?: boolean;
   showBorder?: boolean;
   zoom?: number;
-  onCanvasSizeChange?: (width: number, height: number) => void;
 }
 
 export const CardCanvas: React.FC<CardCanvasProps> = ({
@@ -34,12 +33,10 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   snapToGrid = false,
   showBorder = false,
   zoom = 1,
-  onCanvasSizeChange,
 }) => {
   const { theme } = useTheme();
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [isCanvasResizing, setIsCanvasResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragElementId, setDragElementId] = useState<string | null>(null);
   const [dragElementStart, setDragElementStart] = useState({ x: 0, y: 0 });
@@ -71,10 +68,13 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
-      // Store the initial mouse position
+      // Store the initial mouse position relative to the canvas
+      const canvasX = (e.clientX - rect.left) / zoom;
+      const canvasY = (e.clientY - rect.top) / zoom;
+      
       setDragStart({
-        x: e.clientX,
-        y: e.clientY,
+        x: canvasX,
+        y: canvasY,
       });
       
       // Store the initial element position
@@ -86,7 +86,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         });
       }
     }
-  }, [onSelectElement, elements, editingElement]);
+  }, [onSelectElement, elements, editingElement, zoom]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if ((!isDragging && !isResizing) || !dragElementId) return;
@@ -94,15 +94,19 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
     
-    // Calculate the raw mouse movement in pixels
-    const deltaX = e.clientX - dragStart.x;
-    const deltaY = e.clientY - dragStart.y;
+    // Calculate the current mouse position relative to the canvas (accounting for zoom)
+    const currentCanvasX = (e.clientX - rect.left) / zoom;
+    const currentCanvasY = (e.clientY - rect.top) / zoom;
+    
+    // Calculate the delta from the original position
+    const deltaX = currentCanvasX - dragStart.x;
+    const deltaY = currentCanvasY - dragStart.y;
     
     const element = elements.find(el => el.id === dragElementId);
     if (!element) return;
     
     if (isDragging) {
-      // Calculate new position based on initial element position + delta (pixel perfect)
+      // Calculate new position based on initial element position + pixel-perfect delta
       let newX = dragElementStart.x + deltaX;
       let newY = dragElementStart.y + deltaY;
       
@@ -120,7 +124,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       
       onUpdateElement(dragElementId, { x: newX, y: newY });
     } else if (isResizing) {
-      // Handle resizing - pixel perfect, no zoom interference
+      // Handle resizing - pixel perfect, using the delta directly
       let newWidth = element.width;
       let newHeight = element.height;
       let newX = element.x;
@@ -132,38 +136,45 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       
       switch (resizeHandle) {
         case 'se': // Southeast - bottom right
-          newWidth = Math.max(minSize, Math.min(element.width + deltaX, canvasWidth - element.x));
-          newHeight = Math.max(minSize, Math.min(element.height + deltaY, canvasHeight - element.y));
+          newWidth = Math.max(minSize, element.width + deltaX);
+          newHeight = Math.max(minSize, element.height + deltaY);
+          // Constrain to canvas bounds
+          newWidth = Math.min(newWidth, canvasWidth - element.x);
+          newHeight = Math.min(newHeight, canvasHeight - element.y);
           break;
         case 'sw': // Southwest - bottom left
           newWidth = Math.max(minSize, element.width - deltaX);
-          newHeight = Math.max(minSize, Math.min(element.height + deltaY, canvasHeight - element.y));
-          newX = element.x + (element.width - newWidth);
+          newHeight = Math.max(minSize, element.height + deltaY);
+          newX = element.x - (newWidth - element.width);
+          newHeight = Math.min(newHeight, canvasHeight - element.y);
           break;
         case 'ne': // Northeast - top right
-          newWidth = Math.max(minSize, Math.min(element.width + deltaX, canvasWidth - element.x));
+          newWidth = Math.max(minSize, element.width + deltaX);
           newHeight = Math.max(minSize, element.height - deltaY);
-          newY = element.y + (element.height - newHeight);
+          newY = element.y - (newHeight - element.height);
+          newWidth = Math.min(newWidth, canvasWidth - element.x);
           break;
         case 'nw': // Northwest - top left
           newWidth = Math.max(minSize, element.width - deltaX);
           newHeight = Math.max(minSize, element.height - deltaY);
-          newX = element.x + (element.width - newWidth);
-          newY = element.y + (element.height - newHeight);
+          newX = element.x - (newWidth - element.width);
+          newY = element.y - (newHeight - element.height);
           break;
         case 'n': // North - top
           newHeight = Math.max(minSize, element.height - deltaY);
-          newY = element.y + (element.height - newHeight);
+          newY = element.y - (newHeight - element.height);
           break;
         case 's': // South - bottom
-          newHeight = Math.max(minSize, Math.min(element.height + deltaY, canvasHeight - element.y));
+          newHeight = Math.max(minSize, element.height + deltaY);
+          newHeight = Math.min(newHeight, canvasHeight - element.y);
           break;
         case 'e': // East - right
-          newWidth = Math.max(minSize, Math.min(element.width + deltaX, canvasWidth - element.x));
+          newWidth = Math.max(minSize, element.width + deltaX);
+          newWidth = Math.min(newWidth, canvasWidth - element.x);
           break;
         case 'w': // West - left
           newWidth = Math.max(minSize, element.width - deltaX);
-          newX = element.x + (element.width - newWidth);
+          newX = element.x - (newWidth - element.width);
           break;
       }
       
@@ -175,7 +186,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         newY = Math.round(newY / gridSize) * gridSize;
       }
       
-      // Ensure element stays within canvas bounds
+      // Final bounds check
       newX = Math.max(0, Math.min(newX, canvasWidth - newWidth));
       newY = Math.max(0, Math.min(newY, canvasHeight - newHeight));
       
@@ -186,7 +197,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         height: newHeight 
       });
     }
-  }, [isDragging, isResizing, dragElementId, dragStart, dragElementStart, elements, style, snapToGrid, gridSize, onUpdateElement, resizeHandle]);
+  }, [isDragging, isResizing, dragElementId, dragStart, dragElementStart, elements, style, snapToGrid, gridSize, onUpdateElement, resizeHandle, zoom]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -217,60 +228,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     setEditingElement(elementId);
   }, []);
 
-  // Canvas resize functionality
-  const handleCanvasResizeStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsCanvasResizing(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-  }, []);
-
-  const handleCanvasResize = useCallback((e: React.MouseEvent) => {
-    if (!isCanvasResizing || !onCanvasSizeChange) return;
-    
-    const deltaX = e.clientX - dragStart.x;
-    const deltaY = e.clientY - dragStart.y;
-    
-    const currentWidth = style?.width as number || 600;
-    const currentHeight = style?.height as number || 450;
-    
-    const newWidth = Math.max(200, Math.min(2000, currentWidth + deltaX));
-    const newHeight = Math.max(200, Math.min(2000, currentHeight + deltaY));
-    
-    onCanvasSizeChange(Math.round(newWidth), Math.round(newHeight));
-    setDragStart({ x: e.clientX, y: e.clientY });
-  }, [isCanvasResizing, dragStart, style, onCanvasSizeChange]);
-
-  const handleCanvasResizeEnd = useCallback(() => {
-    setIsCanvasResizing(false);
-  }, []);
-
-  // Global mouse events for canvas resizing
-  React.useEffect(() => {
-    if (isCanvasResizing) {
-      const handleGlobalMouseMove = (e: MouseEvent) => {
-        handleCanvasResize({
-          clientX: e.clientX,
-          clientY: e.clientY,
-          preventDefault: () => {},
-          stopPropagation: () => {},
-        } as React.MouseEvent);
-      };
-
-      const handleGlobalMouseUp = () => {
-        handleCanvasResizeEnd();
-      };
-
-      document.addEventListener('mousemove', handleGlobalMouseMove);
-      document.addEventListener('mouseup', handleGlobalMouseUp);
-
-      return () => {
-        document.removeEventListener('mousemove', handleGlobalMouseMove);
-        document.removeEventListener('mouseup', handleGlobalMouseUp);
-      };
-    }
-  }, [isCanvasResizing, handleCanvasResize, handleCanvasResizeEnd]);
-
   return (
     <div
       ref={canvasRef}
@@ -297,14 +254,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           {cardSide === 'front' ? 'Front' : 'Back'}
         </div>
       </div>
-      
-      {/* Canvas resize handle */}
-      {onCanvasSizeChange && (
-        <div
-          className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-se-resize z-20"
-          onMouseDown={handleCanvasResizeStart}
-        />
-      )}
       
       {elements.map((element) => (
         <div

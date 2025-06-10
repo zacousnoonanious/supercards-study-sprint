@@ -51,7 +51,6 @@ interface CardEditorLayoutProps {
   onCreateNewCardWithLayout: () => void;
   onCreateNewCardFromTemplate: (template: CardTemplate) => void;
   onDeleteCard: () => void;
-  onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
   onShowCardOverview?: () => void;
   onFitToView?: () => void;
   onOpenFullscreen?: () => void;
@@ -97,7 +96,6 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   onCreateNewCardWithLayout,
   onCreateNewCardFromTemplate,
   onDeleteCard,
-  onCardTypeChange,
   onShowCardOverview,
   onFitToView,
   onOpenFullscreen,
@@ -190,7 +188,7 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
 
         <div className="flex flex-1 overflow-hidden">
           {/* Left Toolbar Panel - Dynamic width based on text mode */}
-          <div className={`${toolbarShowText ? 'w-48' : 'w-20'} border-r bg-background overflow-y-auto transition-all duration-200`}>
+          <div className={`${toolbarShowText ? 'w-36' : 'w-10'} border-r bg-background overflow-y-auto transition-all duration-200`}>
             <ConsolidatedToolbar
               onAddElement={onAddElement}
               onAutoArrange={onAutoArrange}
@@ -204,7 +202,6 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
               onCreateNewCardWithLayout={onCreateNewCardWithLayout}
               onCreateNewCardFromTemplate={onCreateNewCardFromTemplate}
               onDeleteCard={onDeleteCard}
-              onCardTypeChange={onCardTypeChange}
               onShowCardOverview={() => onShowCardOverviewChange(!showCardOverview)}
               position="left"
               isDocked={true}
@@ -239,7 +236,6 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
                 showGrid={showGrid}
                 snapToGrid={snapToGrid}
                 showBorder={showBorder}
-                onCanvasSizeChange={onCanvasSizeChange}
                 zoom={zoom}
               />
             </div>
