@@ -23,6 +23,8 @@ import {
   Trash2,
   LayoutGrid,
   AlignLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -110,44 +112,32 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
     { type: 'align-right' as const, icon: AlignRight, label: t('toolbar.arrangeAlignRight'), key: '3' },
   ];
 
-  const renderIcon = (icon: React.ComponentType<any>, text?: string) => {
-    return (
-      <div className="flex flex-col items-center justify-center">
-        {React.createElement(icon, { className: "w-5 h-5" })}
-        {text && <span className="text-xs mt-1">{text}</span>}
-      </div>
-    );
-  };
-
   return (
     <div className={`flex flex-col h-full border-r bg-background transition-all duration-200 ${
-      showText ? 'w-48' : 'w-20'
+      showText ? 'w-44' : 'w-12'
     }`}>
       {/* Header with text toggle */}
-      <div className="p-2 border-b">
-        <div className="flex items-center justify-between">
-          <span className={`font-medium ${showText ? 'block' : 'hidden'}`}>
-            {t('toolbar.tools')}
-          </span>
+      <div className="p-1 border-b">
+        <div className="flex items-center justify-center">
           {onTextToggle && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onTextToggle(!showText)}
-              className="p-1"
+              className="p-1 h-8 w-8"
             >
-              <AlignLeft className="w-4 h-4" />
+              {showText ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
             </Button>
           )}
         </div>
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-4">
+        <div className="p-1 space-y-3">
           {/* Add Card - Top Priority */}
           <div className="space-y-1">
             {showText && (
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
                 Create
               </h3>
             )}
@@ -168,10 +158,10 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={onCreateNewCardWithLayout}
-                      className={`${showText ? 'justify-start' : 'aspect-square p-0'} transition-colors`}
+                      className={`${showText ? 'justify-start h-8' : 'aspect-square p-0 h-8 w-8'} transition-colors`}
                     >
-                      <Copy className="w-4 h-4" />
-                      {showText && <span className="ml-2">Copy Layout</span>}
+                      <Copy className="w-3 h-3" />
+                      {showText && <span className="ml-2 text-xs">Copy Layout</span>}
                     </Button>
                   </TooltipTrigger>
                   {!showText && (
@@ -186,7 +176,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           {!templateSettings.restrictedToolbar && allowedElementTypes.length > 0 && (
             <div className="space-y-1">
               {showText && (
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
                   Add Elements
                 </h3>
               )}
@@ -200,10 +190,10 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                           variant="outline"
                           size="sm"
                           onClick={() => onAddElement(type)}
-                          className={`${showText ? 'justify-start' : 'aspect-square p-0'} transition-colors`}
+                          className={`${showText ? 'justify-start h-8' : 'aspect-square p-0 h-8 w-8'} transition-colors`}
                         >
-                          <Icon className="w-4 h-4" />
-                          {showText && <span className="ml-2">{label}</span>}
+                          <Icon className="w-3 h-3" />
+                          {showText && <span className="ml-2 text-xs">{label}</span>}
                         </Button>
                       </TooltipTrigger>
                       {!showText && (
@@ -238,7 +228,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           {!templateSettings.restrictedToolbar && (
             <div className="space-y-1">
               {showText && (
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
                   Arrange
                 </h3>
               )}
@@ -252,10 +242,10 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                           variant="outline"
                           size="sm"
                           onClick={() => onAutoArrange(type)}
-                          className={`${showText ? 'justify-start' : 'aspect-square p-0'} transition-colors`}
+                          className={`${showText ? 'justify-start h-8' : 'aspect-square p-0 h-8 w-8'} transition-colors`}
                         >
-                          <Icon className="w-4 h-4" />
-                          {showText && <span className="ml-2">{label}</span>}
+                          <Icon className="w-3 h-3" />
+                          {showText && <span className="ml-2 text-xs">{label}</span>}
                         </Button>
                       </TooltipTrigger>
                       {!showText && (
@@ -280,7 +270,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           {/* Other Actions */}
           <div className="space-y-1">
             {showText && (
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
                 Actions
               </h3>
             )}
@@ -295,10 +285,10 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                         variant="outline"
                         size="sm"
                         onClick={onShowCardOverview}
-                        className={`${showText ? 'justify-start' : 'aspect-square p-0'} transition-colors`}
+                        className={`${showText ? 'justify-start h-8' : 'aspect-square p-0 h-8 w-8'} transition-colors`}
                       >
-                        <LayoutGrid className="w-4 h-4" />
-                        {showText && <span className="ml-2">Overview</span>}
+                        <LayoutGrid className="w-3 h-3" />
+                        {showText && <span className="ml-2 text-xs">Overview</span>}
                       </Button>
                     </TooltipTrigger>
                     {!showText && (
@@ -316,10 +306,10 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={onDeleteCard}
-                      className={`${showText ? 'justify-start' : 'aspect-square p-0'} text-destructive hover:text-destructive transition-colors`}
+                      className={`${showText ? 'justify-start h-8' : 'aspect-square p-0 h-8 w-8'} text-destructive hover:text-destructive transition-colors`}
                     >
-                      <Trash2 className="w-4 h-4" />
-                      {showText && <span className="ml-2">Delete</span>}
+                      <Trash2 className="w-3 h-3" />
+                      {showText && <span className="ml-2 text-xs">Delete</span>}
                     </Button>
                   </TooltipTrigger>
                   {!showText && (

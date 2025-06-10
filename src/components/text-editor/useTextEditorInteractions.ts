@@ -29,21 +29,21 @@ export const useTextEditorInteractions = ({
   }, [onEditingChange]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Allow canvas to handle dragging by not stopping propagation
+    // Stop propagation when editing to prevent canvas from handling the event
     if (isEditing) {
       e.stopPropagation();
     }
   }, [isEditing]);
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    // Allow canvas to handle dragging by not stopping propagation
+    // Stop propagation when editing to prevent canvas from handling the event
     if (isEditing) {
       e.stopPropagation();
     }
   }, [isEditing]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
-    // Only stop propagation if we're editing
+    // Stop propagation when editing to prevent canvas from handling the event
     if (isEditing) {
       e.stopPropagation();
     }
@@ -52,10 +52,10 @@ export const useTextEditorInteractions = ({
   const handleDoubleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    if (!isStudyMode) {
+    if (!isStudyMode && !isEditing) {
       startEditing();
     }
-  }, [startEditing, isStudyMode]);
+  }, [startEditing, isStudyMode, isEditing]);
 
   return {
     showToolbar,

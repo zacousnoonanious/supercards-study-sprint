@@ -98,9 +98,10 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     const deltaX = e.clientX - dragStart.x;
     const deltaY = e.clientY - dragStart.y;
     
-    // Adjust for zoom - divide by zoom to get actual canvas movement
-    const adjustedDeltaX = deltaX / zoom;
-    const adjustedDeltaY = deltaY / zoom;
+    // Adjust for zoom with reduced sensitivity for resizing - divide by zoom and reduce scaling
+    const resizeSensitivity = 0.5; // Reduce resize sensitivity
+    const adjustedDeltaX = isResizing ? (deltaX / zoom) * resizeSensitivity : deltaX / zoom;
+    const adjustedDeltaY = isResizing ? (deltaY / zoom) * resizeSensitivity : deltaY / zoom;
     
     const element = elements.find(el => el.id === dragElementId);
     if (!element) return;
