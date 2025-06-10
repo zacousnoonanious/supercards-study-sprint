@@ -113,8 +113,8 @@ const SetView = () => {
     setShowAIGenerator(false);
     fetchSetAndCards();
     toast({
-      title: "Success",
-      description: "AI-generated cards have been added to your deck!",
+      title: t('setView.success'),
+      description: t('setView.aiCardsAdded'),
     });
   };
 
@@ -127,8 +127,8 @@ const SetView = () => {
     if (!setId) return;
 
     const newCard = {
-      question: 'New Card',
-      answer: 'Answer',
+      question: t('setView.createNewCard'),
+      answer: t('answer'),
       hint: '',
       front_elements: [] as any,
       back_elements: [] as any,
@@ -150,14 +150,14 @@ const SetView = () => {
 
       fetchSetAndCards();
       toast({
-        title: "Success",
-        description: "New card created successfully!",
+        title: t('setView.success'),
+        description: t('setView.cardCreated'),
       });
     } catch (error) {
       console.error('Error creating card:', error);
       toast({
-        title: "Error",
-        description: "Failed to create new card.",
+        title: t('setView.error'),
+        description: t('setView.failedCreateCard'),
         variant: "destructive"
       });
     }
@@ -177,8 +177,8 @@ const SetView = () => {
     }));
 
     const newCard = {
-      question: template.front_elements.find(el => el.type === 'text')?.content || 'New Card',
-      answer: template.back_elements.find(el => el.type === 'text')?.content || 'Answer',
+      question: template.front_elements.find(el => el.type === 'text')?.content || t('setView.createNewCard'),
+      answer: template.back_elements.find(el => el.type === 'text')?.content || t('answer'),
       hint: '',
       front_elements: newFrontElements as any,
       back_elements: newBackElements as any,
@@ -200,14 +200,14 @@ const SetView = () => {
 
       fetchSetAndCards();
       toast({
-        title: "Success",
-        description: `Card created from ${template.name} template!`,
+        title: t('setView.success'),
+        description: t('setView.cardCreatedFromTemplate', { templateName: template.name }),
       });
     } catch (error) {
       console.error('Error creating card from template:', error);
       toast({
-        title: "Error",
-        description: "Failed to create card from template.",
+        title: t('setView.error'),
+        description: t('setView.failedCreateFromTemplate'),
         variant: "destructive"
       });
     }
@@ -217,8 +217,8 @@ const SetView = () => {
     setDefaultTemplate(template);
     localStorage.setItem('defaultCardTemplate', JSON.stringify(template));
     toast({
-      title: "Default Template Set",
-      description: `${template.name} is now your default card template.`,
+      title: t('setView.defaultTemplateSet'),
+      description: t('setView.defaultTemplateMessage', { templateName: template.name }),
     });
   };
 
@@ -233,14 +233,14 @@ const SetView = () => {
 
       fetchSetAndCards();
       toast({
-        title: "Success",
-        description: "Card deleted successfully!",
+        title: t('setView.success'),
+        description: t('setView.cardDeleted'),
       });
     } catch (error) {
       console.error('Error deleting card:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete card.",
+        title: t('setView.error'),
+        description: t('setView.failedDeleteCard'),
         variant: "destructive"
       });
     }
@@ -300,14 +300,14 @@ const SetView = () => {
 
       setSet(prev => prev ? { ...prev, permanent_shuffle: enabled } : null);
       toast({
-        title: "Success",
-        description: `Permanent shuffle ${enabled ? 'enabled' : 'disabled'}`,
+        title: t('setView.success'),
+        description: enabled ? t('setView.shuffleEnabled') : t('setView.shuffleDisabled'),
       });
     } catch (error) {
       console.error('Error updating permanent shuffle:', error);
       toast({
-        title: "Error",
-        description: "Failed to update shuffle setting.",
+        title: t('setView.error'),
+        description: t('setView.failedUpdateShuffle'),
         variant: "destructive"
       });
     }
@@ -363,10 +363,10 @@ const SetView = () => {
         <Navigation />
         <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-foreground">Set not found</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('setView.notFound')}</h2>
             <Button onClick={() => navigate('/decks')} className="mt-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Decks
+              {t('setView.backToDecks')}
             </Button>
           </div>
         </main>
@@ -422,7 +422,7 @@ const SetView = () => {
               className="flex items-center gap-2"
             >
               <Shuffle className="w-4 h-4" />
-              Deck Settings
+              {t('setView.deckSettings')}
             </Button>
             <Button
               variant="outline"
@@ -430,7 +430,7 @@ const SetView = () => {
               className="flex items-center gap-2"
             >
               <Grid className="w-4 h-4" />
-              Enhanced Overview
+              {t('setView.enhancedOverview')}
             </Button>
             <Button
               variant="outline"
@@ -438,7 +438,7 @@ const SetView = () => {
               className="flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
-              AI Generate
+              {t('setView.aiGenerate')}
             </Button>
             <Button
               variant="outline"
@@ -462,16 +462,16 @@ const SetView = () => {
           {cards.map((card, index) => (
             <Card key={card.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle className="text-sm">Card {index + 1}</CardTitle>
+                <CardTitle className="text-sm">{t('setView.cardNumber', { number: index + 1 })}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <div>
-                    <h4 className="text-xs font-medium text-muted-foreground mb-1">Front:</h4>
+                    <h4 className="text-xs font-medium text-muted-foreground mb-1">{t('setView.front')}</h4>
                     <p className="text-sm">{card.question}</p>
                   </div>
                   <div>
-                    <h4 className="text-xs font-medium text-muted-foreground mb-1">Back:</h4>
+                    <h4 className="text-xs font-medium text-muted-foreground mb-1">{t('setView.back')}</h4>
                     <p className="text-sm">{card.answer}</p>
                   </div>
                 </div>
@@ -504,14 +504,14 @@ const SetView = () => {
       <Dialog open={showPermanentShuffleSettings} onOpenChange={setShowPermanentShuffleSettings}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Deck Settings</DialogTitle>
+            <DialogTitle>{t('setView.deckSettings')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="permanent-shuffle">Permanent Shuffle</Label>
+                <Label htmlFor="permanent-shuffle">{t('setView.permanentShuffle')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Always shuffle cards when studying this deck
+                  {t('setView.permanentShuffleDesc')}
                 </p>
               </div>
               <Switch
@@ -528,7 +528,7 @@ const SetView = () => {
       <Dialog open={showAIGenerator} onOpenChange={setShowAIGenerator}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>AI Flashcard Generator</DialogTitle>
+            <DialogTitle>{t('setView.aiGenerateTitle')}</DialogTitle>
           </DialogHeader>
           <AIFlashcardGenerator
             setId={setId!}
@@ -542,7 +542,7 @@ const SetView = () => {
       <Dialog open={showCardCreator} onOpenChange={setShowCardCreator}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New Card</DialogTitle>
+            <DialogTitle>{t('setView.createNewCardTitle')}</DialogTitle>
           </DialogHeader>
           <InteractiveCardCreator
             setId={setId!}
