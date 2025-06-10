@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -332,11 +331,9 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     }
   }, [currentCard, updateCard, setCardWidth, setCardHeight]);
 
-  const handleCardUpdate = useCallback((updates: Partial<typeof currentCard>) => {
-    if (currentCard) {
-      updateCard(currentCard.id, updates);
-    }
-  }, [currentCard, updateCard]);
+  const handleCardUpdate = useCallback((cardId: string, updates: Partial<typeof currentCard>) => {
+    updateCard(cardId, updates);
+  }, [updateCard]);
 
   // Handle toolbar position changes
   const handleToolbarPositionChange = useCallback((position: 'left' | 'very-top' | 'canvas-left' | 'floating', isDocked: boolean) => {
