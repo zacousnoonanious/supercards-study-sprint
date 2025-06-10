@@ -73,8 +73,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   const handleContainerMouseDown = (e: React.MouseEvent) => {
-    // Only prevent propagation when not in editing mode to allow dragging
-    if (!isEditing) {
+    // Only prevent propagation when editing to allow dragging when not editing
+    if (isEditing) {
       e.stopPropagation();
     }
     handleMouseDown(e);
