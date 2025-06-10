@@ -35,6 +35,7 @@ const Dashboard = () => {
     cardsReviewed: 45
   });
   const [loading, setLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -44,6 +45,10 @@ const Dashboard = () => {
       return;
     }
     fetchDashboardData();
+    
+    // Trigger fade-in animation after component mounts
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => clearTimeout(timer);
   }, [user, navigate]);
 
   const fetchDashboardData = async () => {
@@ -93,7 +98,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg text-foreground">{t('loading')}</div>
+        <div className="text-lg text-foreground animate-pulse">{t('loading')}</div>
       </div>
     );
   }
@@ -102,7 +107,9 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <main className={`max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 transition-all duration-500 ease-out ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      }`}>
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-foreground mb-2">{t('welcome')} {t('back')}!</h2>
           <p className="text-muted-foreground">{t('dashboard.subtitle')}</p>
@@ -110,50 +117,31 @@ const Dashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('decks.title')}</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalDecks}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.totalCards')}</CardTitle>
-              <Brain className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalCards}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.studyStreak')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.studyStreak} {t('dashboard.days')}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.cardsReviewed')}</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.cardsReviewed}</div>
-              <p className="text-xs text-muted-foreground">{t('dashboard.thisWeek')}</p>
-            </CardContent>
-          </Card>
+          {[
+            { title: t('decks.title'), value: stats.totalDecks, icon: BookOpen },
+            { title: t('dashboard.totalCards'), value: stats.totalCards, icon: Brain },
+            { title: t('dashboard.studyStreak'), value: `${stats.studyStreak} ${t('dashboard.days')}`, icon: TrendingUp },
+            { title: t('dashboard.cardsReviewed'), value: stats.cardsReviewed, subtitle: t('dashboard.thisWeek'), icon: Clock }
+          ].map((stat, index) => (
+            <Card key={stat.title} className={`transition-all duration-500 ease-out ${
+              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`} style={{ transitionDelay: `${index * 100}ms` }}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                <stat.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                {stat.subtitle && <p className="text-xs text-muted-foreground">{stat.subtitle}</p>}
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Recent Decks Section */}
-        <div className="mb-8">
+        <div className={`mb-8 transition-all duration-500 ease-out ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`} style={{ transitionDelay: '400ms' }}>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-foreground">{t('dashboard.recentDecks')}</h3>
             <Button variant="outline" onClick={() => navigate('/decks')}>
@@ -174,8 +162,10 @@ const Dashboard = () => {
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {recentSets.map(set => (
-                <Card key={set.id} className="hover:shadow-lg transition-shadow">
+              {recentSets.map((set, index) => (
+                <Card key={set.id} className={`hover:shadow-lg transition-all duration-300 ${
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`} style={{ transitionDelay: `${500 + index * 100}ms` }}>
                   <CardHeader>
                     <CardTitle className="text-sm truncate">{set.title}</CardTitle>
                     <CardDescription className="text-xs">{set.description}</CardDescription>
@@ -199,7 +189,9 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card>
+        <Card className={`transition-all duration-500 ease-out ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`} style={{ transitionDelay: '600ms' }}>
           <CardHeader>
             <CardTitle>{t('dashboard.quickActions')}</CardTitle>
             <CardDescription>{t('dashboard.quickActionsDesc')}</CardDescription>
