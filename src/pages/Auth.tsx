@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
+import { useI18n } from '@/contexts/I18nContext';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,6 +19,7 @@ const Auth = () => {
   const { signUp, signIn, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (user) {
@@ -36,16 +38,16 @@ const Auth = () => {
 
       if (error) {
         toast({
-          title: "Error",
+          title: t('common.error'),
           description: error.message,
           variant: "destructive",
         });
       } else {
         toast({
-          title: isLogin ? "Welcome back!" : "Account created!",
+          title: isLogin ? t('auth.welcomeBack') : t('auth.accountCreated'),
           description: isLogin 
-            ? "You have successfully signed in."
-            : "Please check your email to verify your account.",
+            ? t('auth.signInSuccess')
+            : t('auth.signUpSuccess'),
         });
         if (isLogin) {
           navigate('/dashboard');
@@ -53,8 +55,8 @@ const Auth = () => {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
+        title: t('common.error'),
+        description: t('auth.unexpectedError'),
         variant: "destructive",
       });
     } finally {
@@ -93,40 +95,40 @@ const Auth = () => {
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 pt-16">
         <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border/50 shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-primary">SuperCards</CardTitle>
+            <CardTitle className="text-2xl font-bold text-primary">{t('auth.title')}</CardTitle>
             <CardDescription>
-              {isLogin ? 'Sign in to your account' : 'Create a new account'}
+              {isLogin ? t('auth.signInSubtitle') : t('auth.signUpSubtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.email')}</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="Enter your email"
+                  placeholder={t('auth.emailPlaceholder')}
                   className="bg-background/50"
                 />
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="Enter your password"
+                  placeholder={t('auth.passwordPlaceholder')}
                   minLength={6}
                   className="bg-background/50"
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
+                {loading ? t('auth.loading') : (isLogin ? t('auth.signIn') : t('auth.signUp'))}
               </Button>
             </form>
             <div className="mt-4 text-center">
@@ -135,7 +137,7 @@ const Auth = () => {
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-primary hover:text-primary/80 text-sm transition-colors"
               >
-                {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+                {isLogin ? t('auth.noAccount') : t('auth.hasAccount')}
               </button>
             </div>
           </CardContent>
