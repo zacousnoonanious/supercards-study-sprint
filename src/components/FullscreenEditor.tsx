@@ -29,7 +29,6 @@ interface FullscreenEditorProps {
   onCreateNewCardWithLayout: () => void;
   onCreateNewCardFromTemplate: (template: CardTemplate) => void;
   onDeleteCard: () => void;
-  onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
   currentCardIndex: number;
   totalCards: number;
 }
@@ -53,7 +52,6 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
   onCreateNewCardWithLayout,
   onCreateNewCardFromTemplate,
   onDeleteCard,
-  onCardTypeChange,
   currentCardIndex,
   totalCards,
 }) => {
@@ -177,7 +175,6 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
                 onCreateNewCardWithLayout={onCreateNewCardWithLayout}
                 onCreateNewCardFromTemplate={onCreateNewCardFromTemplate}
                 onDeleteCard={onDeleteCard}
-                onCardTypeChange={onCardTypeChange}
                 position="left"
                 isDocked={true}
                 showText={false}

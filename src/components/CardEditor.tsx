@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -242,7 +243,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         onCreateNewCardWithLayout={createNewCardWithLayout}
         onCreateNewCardFromTemplate={createNewCardFromTemplate}
         onDeleteCard={handleDeleteCard}
-        onCardTypeChange={(type) => updateCard(currentCard.id, { card_type: type })}
         onShowCardOverview={() => setShowCardOverview(!showCardOverview)}
         onFitToView={fitToView}
         onOpenFullscreen={handleOpenFullscreen}
@@ -267,7 +267,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         onCreateNewCardWithLayout={createNewCardWithLayout}
         onCreateNewCardFromTemplate={createNewCardFromTemplate}
         onDeleteCard={handleDeleteCard}
-        onCardTypeChange={(type) => updateCard(currentCard.id, { card_type: type })}
         currentCardIndex={currentCardIndex}
         totalCards={cards.length}
       />
