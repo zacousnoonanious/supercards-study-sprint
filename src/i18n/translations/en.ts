@@ -1,4 +1,3 @@
-
 export const en = {
   // Common translations
   common: {
@@ -223,6 +222,9 @@ export const en = {
     advancedOptions: "Advanced Options",
     elementOptions: "Element Options",
     blanks: "Blanks",
+    noElementSelected: "No element selected",
+    clickElementToEdit: "Click on an element to view and edit its properties",
+    clickToEdit: "Click to edit",
   },
 
   // Toolbar translations
