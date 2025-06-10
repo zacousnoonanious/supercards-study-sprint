@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TopToolbar } from './TopToolbar';
 import { BottomToolbar } from './BottomToolbar';
@@ -209,12 +210,12 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
           </div>
 
           {/* Canvas Area */}
-          <div className="flex-1 flex items-center justify-center p-4 overflow-auto relative">
+          <div className="flex-1 flex items-center justify-center p-4 overflow-hidden relative">
             <div
               className="relative"
               style={{
                 transform: `scale(${zoom})`,
-                transformOrigin: 'top left',
+                transformOrigin: 'center center',
                 width: cardWidth,
                 height: cardHeight,
                 cursor: isPanning ? 'grabbing' : 'default',

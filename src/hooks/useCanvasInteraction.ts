@@ -54,28 +54,28 @@ export const useCanvasInteraction = ({
   }, [setIsPanning]);
 
   const fitToView = useCallback(() => {
-    if (!canvasViewportRef.current) return;
+    // Find the canvas area container (the div with flex-1 in CardEditorLayout)
+    const canvasArea = document.querySelector('.flex-1.flex.items-center.justify-center');
+    if (!canvasArea) return;
     
-    const viewport = canvasViewportRef.current;
-    const viewportWidth = viewport.clientWidth;
-    const viewportHeight = viewport.clientHeight;
+    const canvasAreaRect = canvasArea.getBoundingClientRect();
     
-    // Calculate zoom to fit canvas with some padding
-    const padding = 40;
-    const zoomX = (viewportWidth - padding * 2) / cardWidth;
-    const zoomY = (viewportHeight - padding * 2) / cardHeight;
+    // Account for padding (16px on each side in the canvas area)
+    const padding = 32; // 16px * 2
+    const availableWidth = canvasAreaRect.width - padding;
+    const availableHeight = canvasAreaRect.height - padding;
+    
+    // Calculate zoom to fit canvas with some additional padding
+    const extraPadding = 40;
+    const zoomX = (availableWidth - extraPadding) / cardWidth;
+    const zoomY = (availableHeight - extraPadding) / cardHeight;
     const newZoom = Math.min(zoomX, zoomY, 1); // Don't zoom larger than 100%
     
     setZoom(newZoom);
     
-    // Center the canvas
-    const scaledWidth = cardWidth * newZoom;
-    const scaledHeight = cardHeight * newZoom;
-    const centerX = (viewportWidth - scaledWidth) / 2;
-    const centerY = (viewportHeight - scaledHeight) / 2;
-    
-    setPanOffset({ x: centerX, y: centerY });
-  }, [canvasViewportRef, cardWidth, cardHeight, setZoom, setPanOffset]);
+    // Reset pan offset to 0 since the canvas is centered by CSS in CardEditorLayout
+    setPanOffset({ x: 0, y: 0 });
+  }, [cardWidth, cardHeight, setZoom, setPanOffset]);
 
   const handleWheel = useCallback((e: WheelEvent) => {
     if (!canvasViewportRef.current?.contains(e.target as Node)) return;
