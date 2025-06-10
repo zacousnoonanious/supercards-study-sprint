@@ -1,22 +1,38 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import {
-  Type, Image, Volume2, Palette, Video, 
-  ChevronLeft, ChevronRight, RotateCcw,
-  Plus, Copy, Trash2, Grid3X3, AlignCenter, AlignJustify, 
-  AlignLeft, AlignRight, Layers, FlipHorizontal, FlipVertical,
-  CheckSquare, HelpCircle, Shuffle, List, Grid, Eye, FileText,
-  Menu, Move, Pin, PinOff, Mic
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Type, 
+  Image, 
+  Volume2, 
+  Pencil, 
+  CheckSquare, 
+  ToggleLeft,
+  Youtube,
+  Layers,
+  FileText,
+  Grid3x3,
+  AlignCenter,
+  AlignJustify,
+  Layers3,
+  AlignLeft as AlignLeftIcon,
+  AlignCenter as AlignCenterIcon,
+  AlignRight,
+  ChevronLeft,
+  ChevronRight,
+  SquareStack,
+  Plus,
+  Copy,
+  Trash2,
+  LayoutGrid,
+  AlignLeft,
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTemplateConfiguration } from '@/hooks/useTemplateConfiguration';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
-import { CardSideToggle } from './CardSideToggle';
-import { CardTypeSelector } from './CardTypeSelector';
-import { TemplateSelector } from './TemplateSelector';
+import { NewCardTemplateSelector } from './NewCardTemplateSelector';
 
 interface ConsolidatedToolbarProps {
   onAddElement: (type: string) => void;
@@ -33,13 +49,10 @@ interface ConsolidatedToolbarProps {
   onDeleteCard: () => void;
   onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
   onShowCardOverview?: () => void;
-  position?: 'left' | 'very-top' | 'canvas-left' | 'floating';
-  isDocked?: boolean;
-  onToggleDock?: () => void;
-  showText?: boolean;
+  position: 'left' | 'very-top' | 'canvas-left' | 'floating';
+  isDocked: boolean;
+  showText: boolean;
   onTextToggle?: (showText: boolean) => void;
-  style?: React.CSSProperties;
-  className?: string;
   canvasRef?: React.RefObject<HTMLDivElement>;
 }
 
@@ -58,284 +71,331 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   onDeleteCard,
   onCardTypeChange,
   onShowCardOverview,
-  position = 'left',
-  isDocked = true,
-  onToggleDock,
-  showText = false,
+  position,
+  isDocked,
+  showText,
   onTextToggle,
-  style,
-  className,
-  canvasRef
+  canvasRef,
 }) => {
   const { t } = useI18n();
   const { theme } = useTheme();
-  const [showTemplates, setShowTemplates] = useState(false);
-
+  const { getCardTemplateSettings, isElementTypeAllowed } = useTemplateConfiguration();
+  
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
   
-  // Use the actual showText prop instead of always false
-  const displayText = showText;
+  // Get template settings for current card
+  const templateSettings = getCardTemplateSettings(currentCard);
 
-  const handleTextToggle = () => {
-    const newShowText = !showText;
-    onTextToggle?.(newShowText);
-  };
+  const elementTypes = [
+    { type: 'text', icon: Type, label: t('toolbar.addText'), key: 't' },
+    { type: 'image', icon: Image, label: t('toolbar.addImage'), key: 'i' },
+    { type: 'audio', icon: Volume2, label: t('toolbar.addAudio'), key: 'a' },
+    { type: 'youtube', icon: Youtube, label: t('toolbar.addYoutube'), key: 'y' },
+    { type: 'multiple-choice', icon: CheckSquare, label: t('toolbar.addMultipleChoice'), key: 'm' },
+    { type: 'true-false', icon: ToggleLeft, label: t('toolbar.addTrueFalse'), key: 'f' },
+    { type: 'fill-in-blank', icon: FileText, label: t('toolbar.addFillInBlank'), key: 'b' },
+    { type: 'drawing', icon: Pencil, label: t('toolbar.addDrawing'), key: 'd' },
+    { type: 'deck-embed', icon: Layers, label: t('toolbar.addDeckEmbed'), key: 'e' },
+    { type: 'tts', icon: Volume2, label: t('toolbar.addTTS'), key: 's' },
+  ];
 
-  const ToolbarButton = ({ 
-    icon: Icon, 
-    label, 
-    onClick, 
-    variant = "ghost",
-    disabled = false 
-  }: { 
-    icon: any; 
-    label: string; 
-    onClick: () => void; 
-    variant?: "ghost" | "default"; 
-    disabled?: boolean;
-  }) => (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant={variant}
-            size={displayText ? "sm" : "sm"}
-            className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 shrink-0"}
-            onClick={onClick}
-            disabled={disabled}
-            title={label}
-          >
-            <Icon className="w-4 h-4" />
-            {displayText && <span className="text-xs truncate">{label}</span>}
-          </Button>
-        </TooltipTrigger>
-        {!displayText && (
-          <TooltipContent side="right">
-            {label}
-          </TooltipContent>
-        )}
-      </Tooltip>
-    </TooltipProvider>
+  // Filter element types based on template restrictions
+  const allowedElementTypes = elementTypes.filter(elementType => 
+    isElementTypeAllowed(elementType.type, currentCard)
   );
 
-  const getSeparator = () => {
-    return <div className={displayText ? "w-full h-px my-2 bg-border" : "w-6 h-px my-1 bg-border"} />;
+  const arrangements = [
+    { type: 'grid', icon: Grid3x3, label: t('toolbar.arrangeGrid'), key: 'g' },
+    { type: 'center', icon: AlignCenter, label: t('toolbar.arrangeCenter'), key: 'c' },
+    { type: 'justify', icon: AlignJustify, label: t('toolbar.arrangeJustify'), key: 'j' },
+    { type: 'stack', icon: Layers3, label: t('toolbar.arrangeStack'), key: 's' },
+    { type: 'align-left', icon: AlignLeftIcon, label: t('toolbar.arrangeAlignLeft'), key: '1' },
+    { type: 'align-center', icon: AlignCenterIcon, label: t('toolbar.arrangeAlignCenter'), key: '2' },
+    { type: 'align-right', icon: AlignRight, label: t('toolbar.arrangeAlignRight'), key: '3' },
+  ];
+
+  const renderIcon = (icon: React.ComponentType<any>, text?: string) => {
+    return (
+      <div className="flex flex-col items-center justify-center">
+        {React.createElement(icon, { className: "w-5 h-5" })}
+        {text && <span className="text-xs mt-1">{text}</span>}
+      </div>
+    );
   };
 
   return (
-    <div 
-      className={displayText ? "p-2 flex flex-col space-y-1 overflow-y-auto h-full min-w-[160px]" : "p-2 flex flex-col items-center space-y-1 overflow-y-auto h-full"} 
-      style={style}
-    >
-      {/* Text/Icon Toggle */}
-      {onTextToggle && (
-        <>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={displayText ? "w-full justify-start gap-2 h-8" : "w-6 h-6 p-0 shrink-0"}
-            onClick={handleTextToggle}
-            title={showText ? t('common.showIcons') || "Show Icons" : t('common.showText') || "Show Text"}
-          >
-            <Menu className="w-3 h-3" />
-            {displayText && <span className="text-xs">{t('common.toggleView') || 'Toggle View'}</span>}
-          </Button>
-          
-          {getSeparator()}
-        </>
-      )}
+    <div className={`flex flex-col h-full border-r bg-background transition-all duration-200 ${
+      showText ? 'w-48' : 'w-20'
+    }`}>
+      {/* Header with text toggle */}
+      <div className="p-2 border-b">
+        <div className="flex items-center justify-between">
+          <span className={`font-medium ${showText ? 'block' : 'hidden'}`}>
+            {t('toolbar.tools')}
+          </span>
+          {onTextToggle && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onTextToggle(!showText)}
+              className="p-1"
+            >
+              <AlignLeft className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </div>
 
-      {/* Navigation */}
-      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 shrink-0"}
-          onClick={() => onNavigateCard('prev')}
-          disabled={currentCardIndex === 0}
-          title={t('toolbar.previousCard')}
-        >
-          <ChevronLeft className="w-4 h-4" />
-          {displayText && <span className="text-xs">{t('common.previous')}</span>}
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 shrink-0"}
-          onClick={() => onNavigateCard('next')}
-          disabled={currentCardIndex >= totalCards - 1}
-          title={t('toolbar.nextCard')}
-        >
-          <ChevronRight className="w-4 h-4" />
-          {displayText && <span className="text-xs">{t('common.next')}</span>}
-        </Button>
+      <ScrollArea className="flex-1">
+        <div className="p-2 space-y-4">
+          {/* Card Navigation */}
+          <div className="space-y-1">
+            {showText && (
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Navigation
+              </h3>
+            )}
+            
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onNavigateCard('prev')}
+                disabled={currentCardIndex === 0}
+                className={`flex-1 ${!showText ? 'aspect-square p-0' : ''}`}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                {showText && <span className="ml-1">Prev</span>}
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onNavigateCard('next')}
+                disabled={currentCardIndex >= totalCards - 1}
+                className={`flex-1 ${!showText ? 'aspect-square p-0' : ''}`}
+              >
+                <ChevronRight className="w-4 h-4" />
+                {showText && <span className="ml-1">Next</span>}
+              </Button>
+            </div>
 
-        {!displayText && (
-          <div className="text-[10px] text-center leading-tight text-muted-foreground">
-            {currentCardIndex + 1}<br/>{totalCards}
+            {showText && (
+              <div className="text-xs text-center text-muted-foreground mt-1">
+                {currentCardIndex + 1} of {totalCards}
+              </div>
+            )}
           </div>
-        )}
-        
-        {displayText && (
-          <div className="text-xs text-center text-muted-foreground px-2">
-            {t('toolbar.card')} {currentCardIndex + 1} {t('common.of')} {totalCards}
+
+          {/* Card Side Toggle - Only show if template allows back side */}
+          {templateSettings.showBackSide && (
+            <div className="space-y-1">
+              {showText && (
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Card Side
+                </h3>
+              )}
+              
+              <div className="flex gap-1">
+                <Button
+                  variant={currentSide === 'front' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onSideChange('front')}
+                  className={`flex-1 ${!showText ? 'aspect-square p-0' : ''}`}
+                >
+                  <SquareStack className="w-4 h-4" />
+                  {showText && <span className="ml-1">Front</span>}
+                </Button>
+                
+                <Button
+                  variant={currentSide === 'back' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onSideChange('back')}
+                  className={`flex-1 ${!showText ? 'aspect-square p-0' : ''}`}
+                >
+                  <SquareStack className="w-4 h-4" />
+                  {showText && <span className="ml-1">Back</span>}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Add Elements - Only show allowed types and if toolbar not restricted */}
+          {!templateSettings.restrictedToolbar && allowedElementTypes.length > 0 && (
+            <div className="space-y-1">
+              {showText && (
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Add Elements
+                </h3>
+              )}
+              
+              <div className="grid gap-1">
+                {allowedElementTypes.map(({ type, icon: Icon, label, key }) => (
+                  <TooltipProvider key={type}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onAddElement(type)}
+                          className={`${showText ? 'justify-start' : 'aspect-square p-0'} transition-colors`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {showText && <span className="ml-2">{label}</span>}
+                        </Button>
+                      </TooltipTrigger>
+                      {!showText && (
+                        <TooltipContent side="right">
+                          <div className="flex items-center gap-2">
+                            <span>{label}</span>
+                            {key && (
+                              <kbd className="px-1 py-0.5 text-xs bg-muted rounded">
+                                {key.toUpperCase()}
+                              </kbd>
+                            )}
+                          </div>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Template info for restricted cards */}
+          {templateSettings.restrictedToolbar && showText && (
+            <div className="space-y-1">
+              <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+                This template has restricted editing to maintain its purpose.
+              </div>
+            </div>
+          )}
+
+          {/* Arrange Elements - Only if toolbar not restricted */}
+          {!templateSettings.restrictedToolbar && (
+            <div className="space-y-1">
+              {showText && (
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Arrange
+                </h3>
+              )}
+              
+              <div className="grid gap-1">
+                {arrangements.map(({ type, icon: Icon, label, key }) => (
+                  <TooltipProvider key={type}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onAutoArrange(type)}
+                          className={`${showText ? 'justify-start' : 'aspect-square p-0'} transition-colors`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {showText && <span className="ml-2">{label}</span>}
+                        </Button>
+                      </TooltipTrigger>
+                      {!showText && (
+                        <TooltipContent side="right">
+                          <div className="flex items-center gap-2">
+                            <span>{label}</span>
+                            {key && (
+                              <kbd className="px-1 py-0.5 text-xs bg-muted rounded">
+                                {key.toUpperCase()}
+                              </kbd>
+                            )}
+                          </div>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Card Actions */}
+          <div className="space-y-1">
+            {showText && (
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Card Actions
+              </h3>
+            )}
+            
+            <div className="grid gap-1">
+              {/* New Card from Template */}
+              <NewCardTemplateSelector
+                onCreateCard={onCreateNewCard}
+                onCreateFromTemplate={onCreateNewCardFromTemplate}
+                showAsDialog={false}
+              />
+              
+              {/* Copy Layout */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onCreateNewCardWithLayout}
+                      className={`${showText ? 'justify-start' : 'aspect-square p-0'} transition-colors`}
+                    >
+                      <Copy className="w-4 h-4" />
+                      {showText && <span className="ml-2">Copy Layout</span>}
+                    </Button>
+                  </TooltipTrigger>
+                  {!showText && (
+                    <TooltipContent side="right">Copy Layout</TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+
+              {/* Overview */}
+              {onShowCardOverview && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onShowCardOverview}
+                        className={`${showText ? 'justify-start' : 'aspect-square p-0'} transition-colors`}
+                      >
+                        <LayoutGrid className="w-4 h-4" />
+                        {showText && <span className="ml-2">Overview</span>}
+                      </Button>
+                    </TooltipTrigger>
+                    {!showText && (
+                      <TooltipContent side="right">Card Overview</TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
+              {/* Delete Card */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onDeleteCard}
+                      className={`${showText ? 'justify-start' : 'aspect-square p-0'} text-destructive hover:text-destructive transition-colors`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {showText && <span className="ml-2">Delete</span>}
+                    </Button>
+                  </TooltipTrigger>
+                  {!showText && (
+                    <TooltipContent side="right">Delete Card</TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
-        )}
-      </div>
-
-      {getSeparator()}
-
-      {/* Card Management */}
-      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
-        <ToolbarButton
-          icon={Plus}
-          label={t('toolbar.createNewCard')}
-          onClick={onCreateNewCard}
-        />
-        
-        <ToolbarButton
-          icon={Copy}
-          label={t('common.copy') + ' ' + t('common.layout')}
-          onClick={onCreateNewCardWithLayout}
-        />
-        
-        <ToolbarButton
-          icon={Trash2}
-          label={t('common.delete') + ' ' + t('toolbar.card')}
-          onClick={onDeleteCard}
-          disabled={totalCards <= 1}
-        />
-      </div>
-
-      {getSeparator()}
-
-      {/* Front/Back Toggle */}
-      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
-        <Button
-          variant={currentSide === 'front' ? 'default' : 'ghost'}
-          size="sm"
-          className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 text-[10px] shrink-0"}
-          onClick={() => onSideChange('front')}
-          title={t('editor.front')}
-        >
-          {displayText ? <span className="text-xs">{t('editor.front')}</span> : 'F'}
-        </Button>
-        
-        <Button
-          variant={currentSide === 'back' ? 'default' : 'ghost'}
-          size="sm"
-          className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 text-[10px] shrink-0"}
-          onClick={() => onSideChange('back')}
-          disabled={currentCard?.card_type === 'single-sided'}
-          title={t('editor.back')}
-        >
-          {displayText ? <span className="text-xs">{t('editor.back')}</span> : 'B'}
-        </Button>
-      </div>
-
-      {getSeparator()}
-
-      {/* Elements */}
-      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
-        <ToolbarButton
-          icon={Type}
-          label={t('toolbar.addText')}
-          onClick={() => onAddElement('text')}
-        />
-        
-        <ToolbarButton
-          icon={Mic}
-          label={t('toolbar.addTTS') || 'Text-to-Speech'}
-          onClick={() => onAddElement('tts')}
-        />
-        
-        <ToolbarButton
-          icon={Image}
-          label={t('toolbar.addImage')}
-          onClick={() => onAddElement('image')}
-        />
-        
-        <ToolbarButton
-          icon={Volume2}
-          label={t('toolbar.addAudio')}
-          onClick={() => onAddElement('audio')}
-        />
-        
-        <ToolbarButton
-          icon={Video}
-          label={t('toolbar.addYoutube')}
-          onClick={() => onAddElement('youtube')}
-        />
-        
-        <ToolbarButton
-          icon={Palette}
-          label={t('toolbar.addDrawing')}
-          onClick={() => onAddElement('drawing')}
-        />
-      </div>
-
-      {getSeparator()}
-
-      {/* Interactive Elements */}
-      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
-        <ToolbarButton
-          icon={CheckSquare}
-          label={t('toolbar.addMultipleChoice')}
-          onClick={() => onAddElement('multiple-choice')}
-        />
-        
-        <ToolbarButton
-          icon={HelpCircle}
-          label={t('toolbar.addTrueFalse')}
-          onClick={() => onAddElement('true-false')}
-        />
-
-        <ToolbarButton
-          icon={FileText}
-          label={t('toolbar.addFillInBlank')}
-          onClick={() => onAddElement('fill-in-blank')}
-        />
-      </div>
-
-      {getSeparator()}
-
-      {/* Auto Arrange */}
-      <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
-        <ToolbarButton
-          icon={Grid3X3}
-          label={t('toolbar.arrangeGrid')}
-          onClick={() => onAutoArrange('grid')}
-        />
-        
-        <ToolbarButton
-          icon={AlignCenter}
-          label={t('toolbar.arrangeCenter')}
-          onClick={() => onAutoArrange('center')}
-        />
-        
-        <ToolbarButton
-          icon={Layers}
-          label={t('toolbar.arrangeStack')}
-          onClick={() => onAutoArrange('stack')}
-        />
-
-        {onShowCardOverview && (
-          <ToolbarButton
-            icon={Grid}
-            label={t('common.cardOverview') || "Card Overview"}
-            onClick={onShowCardOverview}
-          />
-        )}
-      </div>
-
-      {/* Template Selector Modal */}
-      {showTemplates && (
-        <TemplateSelector
-          onSelectTemplate={onCreateNewCardFromTemplate}
-          onClose={() => setShowTemplates(false)}
-        />
-      )}
+        </div>
+      </ScrollArea>
     </div>
   );
 };

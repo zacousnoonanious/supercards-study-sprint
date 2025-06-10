@@ -8,6 +8,7 @@ import { useCardEditorHandlers } from '@/hooks/useCardEditorHandlers';
 import { CardEditorLayout } from './CardEditorLayout';
 import { FullscreenEditor } from './FullscreenEditor';
 import { CanvasElement } from '@/types/flashcard';
+import { useTemplateConfiguration } from '@/hooks/useTemplateConfiguration';
 
 interface CardEditorProps {
   setId?: string;
@@ -16,6 +17,7 @@ interface CardEditorProps {
 export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const { t } = useI18n();
   const [showFullscreen, setShowFullscreen] = useState(false);
+  const { getCardTemplateSettings } = useTemplateConfiguration();
 
   const {
     set,
@@ -81,6 +83,9 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const selectedElement = currentCard ? 
     [...(currentCard.front_elements || []), ...(currentCard.back_elements || [])]
       .find(el => el.id === selectedElementId) || null : null;
+
+  // Get template settings for current card
+  const templateSettings = currentCard ? getCardTemplateSettings(currentCard) : null;
 
   const {
     handleUpdateElement,
@@ -164,6 +169,20 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
       setDeckName(set.title);
     }
   }, [set]);
+
+  useEffect(() => {
+    if (currentCard && templateSettings) {
+      if (templateSettings.showGrid !== undefined) {
+        setShowGrid(templateSettings.showGrid);
+      }
+      if (templateSettings.snapToGrid !== undefined) {
+        setSnapToGrid(templateSettings.snapToGrid);
+      }
+      if (templateSettings.showBorder !== undefined) {
+        setShowBorder(templateSettings.showBorder);
+      }
+    }
+  }, [currentCard, templateSettings, setShowGrid, setSnapToGrid, setShowBorder]);
 
   if (loading) {
     return (

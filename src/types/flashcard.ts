@@ -45,6 +45,13 @@ export interface Flashcard {
   last_reviewed_at?: string;
   metadata?: any;
   position?: number;
+  
+  // Template-driven configuration properties
+  allowedElementTypes?: string[];
+  autoAdvanceOnAnswer?: boolean;
+  showBackSide?: boolean;
+  restrictedToolbar?: boolean;
+  templateId?: string;
 }
 
 export interface CardTemplate {
@@ -52,11 +59,31 @@ export interface CardTemplate {
   name: string;
   description?: string;
   image?: string;
+  category: 'study' | 'quiz' | 'information' | 'vocab' | 'custom';
   front_elements: CanvasElement[];
   back_elements: CanvasElement[];
-  card_type?: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
-  canvas_width?: number;
-  canvas_height?: number;
+  
+  // Complete card configuration
+  card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
+  canvas_width: number;
+  canvas_height: number;
+  
+  // Template behavior settings
+  allowedElementTypes: string[];
+  autoAdvanceOnAnswer: boolean;
+  showBackSide: boolean;
+  restrictedToolbar: boolean;
+  
+  // Timer settings
+  countdown_timer_front?: number;
+  countdown_timer_back?: number;
+  countdown_behavior_front?: 'flip' | 'next';
+  countdown_behavior_back?: 'flip' | 'next';
+  
+  // UI preferences
+  showGrid?: boolean;
+  snapToGrid?: boolean;
+  showBorder?: boolean;
 }
 
 export interface CanvasElement {
