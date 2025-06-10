@@ -72,7 +72,19 @@ const Auth = () => {
     { front: "Author of 1984", back: "George Orwell", color: "#22c55e" },
     { front: "Pythagorean Theorem", back: "a² + b² = c²", color: "#ef4444" },
     { front: "Capital of France", back: "Paris", color: "#06b6d4" },
-    { front: "Smallest Prime Number", back: "2", color: "#ec4899" }
+    { front: "Smallest Prime Number", back: "2", color: "#ec4899" },
+    { front: "Water's Chemical Formula", back: "H₂O", color: "#10b981" },
+    { front: "First President of USA", back: "George Washington", color: "#f59e0b" },
+    { front: "Atomic Number of Carbon", back: "6", color: "#8b5cf6" },
+    { front: "Capital of Italy", back: "Rome", color: "#ef4444" },
+    { front: "Continent with Antarctica", back: "Antarctica", color: "#06b6d4" },
+    { front: "Square Root of 64", back: "8", color: "#22c55e" },
+    { front: "Inventor of the Telephone", back: "Alexander Graham Bell", color: "#f97316" },
+    { front: "Largest Ocean", back: "Pacific Ocean", color: "#3b82f6" },
+    { front: "Number of Continents", back: "7", color: "#ec4899" },
+    { front: "Chemical Symbol for Iron", back: "Fe", color: "#eab308" },
+    { front: "Author of Romeo and Juliet", back: "William Shakespeare", color: "#8b5cf6" },
+    { front: "Year WWI Ended", back: "1918", color: "#ef4444" }
   ], []);
 
   const handleSubmit = async (e: React.FormEvent) => {
