@@ -22,6 +22,7 @@ import {
   RotateCw,
   Move
 } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface CanvasContextMenuProps {
   children: React.ReactNode;
@@ -50,13 +51,15 @@ export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
   onScaleToElements,
   onSetDefaultSize,
 }) => {
+  const { t } = useI18n();
+
   const backgroundColors = [
-    { name: 'White', value: '#ffffff' },
-    { name: 'Light Gray', value: '#f5f5f5' },
-    { name: 'Blue', value: '#e3f2fd' },
-    { name: 'Green', value: '#e8f5e8' },
-    { name: 'Yellow', value: '#fff9c4' },
-    { name: 'Pink', value: '#fce4ec' },
+    { name: t('canvas.colorWhite') || 'White', value: '#ffffff' },
+    { name: t('canvas.colorLightGray') || 'Light Gray', value: '#f5f5f5' },
+    { name: t('canvas.colorBlue') || 'Blue', value: '#e3f2fd' },
+    { name: t('canvas.colorGreen') || 'Green', value: '#e8f5e8' },
+    { name: t('canvas.colorYellow') || 'Yellow', value: '#fff9c4' },
+    { name: t('canvas.colorPink') || 'Pink', value: '#fce4ec' },
   ];
 
   return (
@@ -67,18 +70,18 @@ export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
       <ContextMenuContent className="w-56">
         <ContextMenuItem onClick={onUndo} disabled={!canUndo}>
           <Undo className="w-4 h-4 mr-2" />
-          Undo
+          {t('canvas.undo') || 'Undo'}
         </ContextMenuItem>
         <ContextMenuItem onClick={onRedo} disabled={!canRedo}>
           <Redo className="w-4 h-4 mr-2" />
-          Redo
+          {t('canvas.redo') || 'Redo'}
         </ContextMenuItem>
         <ContextMenuSeparator />
         
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <Palette className="w-4 h-4 mr-2" />
-            Background Color
+            {t('canvas.backgroundColor') || 'Background Color'}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-48">
             {backgroundColors.map((color) => (
@@ -101,7 +104,7 @@ export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
 
         <ContextMenuItem onClick={() => {}}>
           <Image className="w-4 h-4 mr-2" />
-          Background Image
+          {t('canvas.backgroundImage') || 'Background Image'}
         </ContextMenuItem>
         
         <ContextMenuSeparator />
@@ -109,26 +112,26 @@ export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <Maximize2 className="w-4 h-4 mr-2" />
-            Card Size
+            {t('canvas.cardSize') || 'Card Size'}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-40">
             <ContextMenuItem onClick={() => onChangeCardSize?.('small')}>
-              Small (400x300)
+              {t('canvas.sizeSmall') || 'Small (400x300)'}
             </ContextMenuItem>
             <ContextMenuItem onClick={() => onChangeCardSize?.('medium')}>
-              Medium (600x400)
+              {t('canvas.sizeMedium') || 'Medium (600x400)'}
             </ContextMenuItem>
             <ContextMenuItem onClick={() => onChangeCardSize?.('large')}>
-              Large (800x600)
+              {t('canvas.sizeLarge') || 'Large (800x600)'}
             </ContextMenuItem>
             <ContextMenuSeparator />
             <ContextMenuItem onClick={onScaleToElements}>
               <Move className="w-4 h-4 mr-2" />
-              Scale to Elements
+              {t('canvas.scaleToElements') || 'Scale to Elements'}
             </ContextMenuItem>
             <ContextMenuItem onClick={onSetDefaultSize}>
               <Settings className="w-4 h-4 mr-2" />
-              Set as Default Size
+              {t('canvas.setDefaultSize') || 'Set as Default Size'}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
@@ -136,11 +139,11 @@ export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onToggleGrid}>
           <Grid className="w-4 h-4 mr-2" />
-          Toggle Grid
+          {t('canvas.toggleGrid') || 'Toggle Grid'}
         </ContextMenuItem>
         <ContextMenuItem onClick={onSettings}>
           <Settings className="w-4 h-4 mr-2" />
-          Canvas Settings
+          {t('canvas.settings') || 'Canvas Settings'}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

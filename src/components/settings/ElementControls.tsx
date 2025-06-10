@@ -16,6 +16,7 @@ import {
   AlignJustify
 } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ElementControlsProps {
   selectedElement: CanvasElement | null;
@@ -28,6 +29,8 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
   onUpdateElement,
   onDeleteElement,
 }) => {
+  const { t } = useI18n();
+
   if (!selectedElement) return null;
 
   const handleElementUpdate = (updates: Partial<CanvasElement>) => {
@@ -38,7 +41,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
     <Card className="flex-shrink-0">
       <CardContent className="p-2">
         <div className="flex items-center gap-2">
-          <Label className="text-xs">Element:</Label>
+          <Label className="text-xs">{t('editor.element') || 'Element'}:</Label>
           <Button
             variant="destructive"
             size="sm"
@@ -46,7 +49,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
             className="h-7 px-2"
           >
             <Trash2 className="w-3 h-3" />
-            <span className="ml-1 text-xs">Delete</span>
+            <span className="ml-1 text-xs">{t('common.delete') || 'Delete'}</span>
           </Button>
           
           {selectedElement.type === 'text' && (
@@ -60,6 +63,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                     fontWeight: selectedElement.fontWeight === 'bold' ? 'normal' : 'bold' 
                   })}
                   className="h-7 px-2"
+                  title={t('editor.bold') || 'Bold'}
                 >
                   <Bold className="w-3 h-3" />
                 </Button>
@@ -70,6 +74,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                     fontStyle: selectedElement.fontStyle === 'italic' ? 'normal' : 'italic' 
                   })}
                   className="h-7 px-2"
+                  title={t('editor.italic') || 'Italic'}
                 >
                   <Italic className="w-3 h-3" />
                 </Button>
@@ -80,6 +85,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                     textDecoration: selectedElement.textDecoration === 'underline' ? 'none' : 'underline' 
                   })}
                   className="h-7 px-2"
+                  title={t('editor.underline') || 'Underline'}
                 >
                   <Underline className="w-3 h-3" />
                 </Button>
@@ -92,6 +98,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                   size="sm"
                   onClick={() => handleElementUpdate({ textAlign: 'left' })}
                   className="h-7 px-2"
+                  title={t('editor.alignLeft') || 'Align Left'}
                 >
                   <AlignLeft className="w-3 h-3" />
                 </Button>
@@ -100,6 +107,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                   size="sm"
                   onClick={() => handleElementUpdate({ textAlign: 'center' })}
                   className="h-7 px-2"
+                  title={t('editor.alignCenter') || 'Align Center'}
                 >
                   <AlignCenter className="w-3 h-3" />
                 </Button>
@@ -108,6 +116,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                   size="sm"
                   onClick={() => handleElementUpdate({ textAlign: 'right' })}
                   className="h-7 px-2"
+                  title={t('editor.alignRight') || 'Align Right'}
                 >
                   <AlignRight className="w-3 h-3" />
                 </Button>
@@ -116,6 +125,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                   size="sm"
                   onClick={() => handleElementUpdate({ textAlign: 'justify' })}
                   className="h-7 px-2"
+                  title={t('editor.alignJustify') || 'Justify'}
                 >
                   <AlignJustify className="w-3 h-3" />
                 </Button>
@@ -128,6 +138,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                   value={selectedElement.color || '#000000'}
                   onChange={(e) => handleElementUpdate({ color: e.target.value })}
                   className="w-8 h-7 p-0 border-0"
+                  title={t('editor.textColor') || 'Text Color'}
                 />
                 <Input
                   type="number"
@@ -136,7 +147,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                   className="w-16 h-7 text-xs"
                   min="8"
                   max="72"
-                  placeholder="Size"
+                  placeholder={t('editor.size') || 'Size'}
                 />
               </div>
 
@@ -146,7 +157,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                 onValueChange={(value) => handleElementUpdate({ fontFamily: value })}
               >
                 <SelectTrigger className="w-24 h-7 text-xs">
-                  <SelectValue placeholder="Font" />
+                  <SelectValue placeholder={t('editor.font') || 'Font'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Arial">Arial</SelectItem>
@@ -160,12 +171,13 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
 
               {/* Background Color */}
               <div className="flex items-center gap-1">
-                <Label className="text-xs">BG:</Label>
+                <Label className="text-xs">{t('editor.bg') || 'BG'}:</Label>
                 <Input
                   type="color"
                   value={selectedElement.backgroundColor || '#ffffff'}
                   onChange={(e) => handleElementUpdate({ backgroundColor: e.target.value })}
                   className="w-8 h-7 p-0 border-0"
+                  title={t('editor.backgroundColor') || 'Background Color'}
                 />
               </div>
             </>

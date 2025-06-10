@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Trash2, X } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ElementSettingsPopupProps {
   element: CanvasElement;
@@ -23,6 +24,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
   onClose,
 }) => {
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   return (
     <div
@@ -37,7 +39,9 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
       }}
     >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-sm capitalize">{element.type} Settings</h3>
+        <h3 className="font-semibold text-sm capitalize">
+          {t(`editor.${element.type}Settings`) || `${element.type} Settings`}
+        </h3>
         <Button
           variant="ghost"
           size="sm"
@@ -52,18 +56,18 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
         {element.type === 'text' && (
           <>
             <div>
-              <Label htmlFor="content" className="text-xs">Content</Label>
+              <Label htmlFor="content" className="text-xs">{t('editor.content') || 'Content'}</Label>
               <Input
                 id="content"
                 value={element.content || ''}
                 onChange={(e) => onUpdateElement(element.id, { content: e.target.value })}
                 className="h-8 text-xs"
-                placeholder="Enter text content"
+                placeholder={t('editor.enterTextContent') || 'Enter text content'}
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label htmlFor="fontSize" className="text-xs">Font Size</Label>
+                <Label htmlFor="fontSize" className="text-xs">{t('editor.fontSize') || 'Font Size'}</Label>
                 <Input
                   id="fontSize"
                   type="number"
@@ -75,7 +79,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="color" className="text-xs">Color</Label>
+                <Label htmlFor="color" className="text-xs">{t('editor.color') || 'Color'}</Label>
                 <Input
                   id="color"
                   type="color"
@@ -93,6 +97,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                   fontWeight: element.fontWeight === 'bold' ? 'normal' : 'bold' 
                 })}
                 className="h-7 text-xs"
+                title={t('editor.bold') || 'Bold'}
               >
                 B
               </Button>
@@ -103,6 +108,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                   fontStyle: element.fontStyle === 'italic' ? 'normal' : 'italic' 
                 })}
                 className="h-7 text-xs"
+                title={t('editor.italic') || 'Italic'}
               >
                 I
               </Button>
@@ -113,6 +119,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                   textDecoration: element.textDecoration === 'underline' ? 'none' : 'underline' 
                 })}
                 className="h-7 text-xs"
+                title={t('editor.underline') || 'Underline'}
               >
                 U
               </Button>
@@ -122,20 +129,20 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
         
         {element.type === 'image' && (
           <div>
-            <Label htmlFor="imageUrl" className="text-xs">Image URL</Label>
+            <Label htmlFor="imageUrl" className="text-xs">{t('editor.imageUrl') || 'Image URL'}</Label>
             <Input
               id="imageUrl"
               value={element.imageUrl || ''}
               onChange={(e) => onUpdateElement(element.id, { imageUrl: e.target.value })}
               className="h-8 text-xs"
-              placeholder="Enter image URL"
+              placeholder={t('editor.enterImageUrl') || 'Enter image URL'}
             />
           </div>
         )}
 
         {element.type === 'multiple-choice' && (
           <div>
-            <Label className="text-xs">Options</Label>
+            <Label className="text-xs">{t('editor.options') || 'Options'}</Label>
             <div className="space-y-1 max-h-32 overflow-y-auto">
               {(element.multipleChoiceOptions || []).map((option, index) => (
                 <div key={index} className="flex gap-1 items-center">
@@ -147,13 +154,14 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                       onUpdateElement(element.id, { multipleChoiceOptions: newOptions });
                     }}
                     className="h-6 text-xs flex-1"
-                    placeholder={`Option ${index + 1}`}
+                    placeholder={t('editor.optionPlaceholder', { number: index + 1 }) || `Option ${index + 1}`}
                   />
                   <Button
                     variant={element.correctAnswer === index ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => onUpdateElement(element.id, { correctAnswer: index })}
                     className="h-6 w-6 p-0 text-xs"
+                    title={t('editor.correctAnswer') || 'Correct Answer'}
                   >
                     ✓
                   </Button>
@@ -176,6 +184,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                         });
                       }}
                       className="h-6 w-6 p-0 text-red-500"
+                      title={t('common.delete') || 'Delete'}
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>
@@ -187,7 +196,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                 size="sm"
                 onClick={() => {
                   const currentOptions = element.multipleChoiceOptions || [];
-                  const newOptions = [...currentOptions, `Option ${currentOptions.length + 1}`];
+                  const newOptions = [...currentOptions, t('editor.optionPlaceholder', { number: currentOptions.length + 1 }) || `Option ${currentOptions.length + 1}`];
                   
                   const newHeight = Math.max(element.height, 120 + (newOptions.length * 40));
                   
@@ -198,7 +207,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                 }}
                 className="h-6 text-xs w-full"
               >
-                + Add Option
+                {t('editor.addOption') || '+ Add Option'}
               </Button>
             </div>
           </div>
@@ -215,7 +224,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
             className="text-xs w-full"
           >
             <Trash2 className="w-3 h-3 mr-1" />
-            Delete Element
+            {t('editor.deleteElement') || 'Delete Element'}
           </Button>
         </div>
       </div>

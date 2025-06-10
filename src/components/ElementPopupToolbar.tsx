@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Bold, Italic, Underline, Type, Link, Upload, Palette } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ElementPopupToolbarProps {
   element: CanvasElement;
@@ -19,6 +20,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
   onUpdate,
   onClose,
 }) => {
+  const { t } = useI18n();
   const isTextElement = element.type === 'text';
 
   const handleFontSizeChange = (size: number) => {
@@ -74,7 +76,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
           {isTextElement && (
             <>
               <div>
-                <Label className="text-sm font-medium">Text Formatting</Label>
+                <Label className="text-sm font-medium">{t('editor.textFormatting') || 'Text Formatting'}</Label>
                 <div className="flex gap-2 mt-2">
                   <Button
                     variant={element.fontWeight === 'bold' ? 'default' : 'outline'}
@@ -102,7 +104,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
 
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <Label className="text-sm">Font Size</Label>
+                  <Label className="text-sm">{t('editor.fontSize') || 'Font Size'}</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Type className="w-4 h-4" />
                     <Input
@@ -117,7 +119,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
                 </div>
 
                 <div className="flex-1">
-                  <Label className="text-sm">Color</Label>
+                  <Label className="text-sm">{t('editor.color') || 'Color'}</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Palette className="w-4 h-4" />
                     <Input
@@ -137,11 +139,11 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
           {/* Hyperlink option for image elements only */}
           {element.type === 'image' && (
             <div>
-              <Label className="text-sm font-medium">Hyperlink</Label>
+              <Label className="text-sm font-medium">{t('editor.hyperlink') || 'Hyperlink'}</Label>
               <div className="flex items-center gap-2 mt-2">
                 <Link className="w-4 h-4" />
                 <Input
-                  placeholder="Enter URL (https://...)"
+                  placeholder={t('editor.enterUrl') || 'Enter URL (https://...)'}
                   value={element.hyperlink || ''}
                   onChange={(e) => handleHyperlinkChange(e.target.value)}
                   className="flex-1 h-8"
@@ -153,7 +155,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
           {/* Upload option for image elements */}
           {element.type === 'image' && (
             <div>
-              <Label className="text-sm font-medium">Upload Image</Label>
+              <Label className="text-sm font-medium">{t('editor.uploadImage') || 'Upload Image'}</Label>
               <div className="flex items-center gap-2 mt-2">
                 <Upload className="w-4 h-4" />
                 <input
@@ -167,7 +169,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
           )}
 
           <Button onClick={onClose} className="w-full" size="sm">
-            Done
+            {t('common.done') || 'Done'}
           </Button>
         </div>
       </PopoverContent>

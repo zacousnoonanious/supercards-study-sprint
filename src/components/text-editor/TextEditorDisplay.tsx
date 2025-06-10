@@ -1,6 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface TextEditorDisplayProps {
   element: CanvasElement;
@@ -15,6 +16,7 @@ export const TextEditorDisplay: React.FC<TextEditorDisplayProps> = ({
   onTextSelectionStart,
   onTextSelectionEnd,
 }) => {
+  const { t } = useI18n();
   const textDisplayRef = useRef<HTMLDivElement>(null);
 
   const textStyle = {
@@ -57,7 +59,7 @@ export const TextEditorDisplay: React.FC<TextEditorDisplayProps> = ({
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
     >
-      {element.content || 'Click to edit text'}
+      {element.content || (t('editor.clickToEditText') || 'Click to edit text')}
     </div>
   );
 };

@@ -1,6 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface TextEditorInputProps {
   element: CanvasElement;
@@ -15,6 +16,7 @@ export const TextEditorInput: React.FC<TextEditorInputProps> = ({
   onContentChange,
   onStopEditing,
 }) => {
+  const { t } = useI18n();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const textStyle = {
@@ -52,7 +54,7 @@ export const TextEditorInput: React.FC<TextEditorInputProps> = ({
         whiteSpace: 'pre-wrap',
         padding: '0',
       }}
-      placeholder="Enter your text..."
+      placeholder={t('editor.enterYourText') || 'Enter your text...'}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
     />
