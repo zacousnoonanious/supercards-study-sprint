@@ -8,8 +8,8 @@ import { Badge } from '@/components/ui/badge';
 export const I18nTester: React.FC = () => {
   const { t, language, setLanguage } = useI18n();
 
-  // Define available languages locally since it's not in the context
-  const availableLanguages = ['en', 'zh', 'hi', 'es', 'fr', 'ar', 'pt', 'ru'];
+  // Define available languages with the correct Chinese codes
+  const availableLanguages = ['en', 'zh-CN', 'zh-TW', 'hi', 'es', 'fr', 'ar', 'pt', 'ru'];
 
   const testKeys = [
     'welcome',
@@ -49,7 +49,7 @@ export const I18nTester: React.FC = () => {
                   setLanguage(lang);
                 }}
               >
-                {lang.toUpperCase()}
+                {lang === 'zh-CN' ? 'ZH-CN' : lang === 'zh-TW' ? 'ZH-TW' : lang.toUpperCase()}
               </Button>
             ))}
           </div>
@@ -79,7 +79,8 @@ export const I18nTester: React.FC = () => {
             <div>Language: {JSON.stringify(language)}</div>
             <div>Available Languages: {JSON.stringify(availableLanguages)}</div>
             <div>Sample Translation Test: {t('welcome') || 'NOT FOUND'}</div>
-            <div>Chinese Test (直接): {language === 'zh' ? t('welcome') : 'Not in Chinese mode'}</div>
+            <div>Chinese Simplified Test: {language === 'zh-CN' ? t('welcome') : 'Not in zh-CN mode'}</div>
+            <div>Chinese Traditional Test: {language === 'zh-TW' ? t('welcome') : 'Not in zh-TW mode'}</div>
           </div>
         </div>
       </CardContent>
