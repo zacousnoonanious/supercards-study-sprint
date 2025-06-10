@@ -2,6 +2,7 @@
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { RichTextEditor } from '../RichTextEditor';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface TextElementRendererProps {
   element: CanvasElement;
@@ -26,6 +27,8 @@ export const TextElementRenderer: React.FC<TextElementRendererProps> = ({
   isSelected = false,
   isDarkTheme,
 }) => {
+  const { t } = useI18n();
+
   const getTextColor = () => {
     return element.color || (isDarkTheme ? '#ffffff' : '#000000');
   };

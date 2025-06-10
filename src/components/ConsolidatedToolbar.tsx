@@ -135,10 +135,10 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
             size="sm"
             className={displayText ? "w-full justify-start gap-2 h-8" : "w-6 h-6 p-0 shrink-0"}
             onClick={handleTextToggle}
-            title={showText ? "Show Icons" : "Show Text"}
+            title={showText ? t('common.showIcons') || "Show Icons" : t('common.showText') || "Show Text"}
           >
             <Menu className="w-3 h-3" />
-            {displayText && <span className="text-xs">Toggle View</span>}
+            {displayText && <span className="text-xs">{t('common.toggleView') || 'Toggle View'}</span>}
           </Button>
           
           {getSeparator()}
@@ -153,10 +153,10 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 shrink-0"}
           onClick={() => onNavigateCard('prev')}
           disabled={currentCardIndex === 0}
-          title="Previous"
+          title={t('toolbar.previousCard')}
         >
           <ChevronLeft className="w-4 h-4" />
-          {displayText && <span className="text-xs">Previous</span>}
+          {displayText && <span className="text-xs">{t('common.previous')}</span>}
         </Button>
         
         <Button
@@ -165,10 +165,10 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 shrink-0"}
           onClick={() => onNavigateCard('next')}
           disabled={currentCardIndex >= totalCards - 1}
-          title="Next"
+          title={t('toolbar.nextCard')}
         >
           <ChevronRight className="w-4 h-4" />
-          {displayText && <span className="text-xs">Next</span>}
+          {displayText && <span className="text-xs">{t('common.next')}</span>}
         </Button>
 
         {!displayText && (
@@ -179,7 +179,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
         
         {displayText && (
           <div className="text-xs text-center text-muted-foreground px-2">
-            Card {currentCardIndex + 1} of {totalCards}
+            {t('toolbar.card')} {currentCardIndex + 1} {t('common.of')} {totalCards}
           </div>
         )}
       </div>
@@ -190,19 +190,19 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={Plus}
-          label={t('newCard') || 'New Card'}
+          label={t('toolbar.createNewCard')}
           onClick={onCreateNewCard}
         />
         
         <ToolbarButton
           icon={Copy}
-          label={t('copyLayout') || 'Copy Layout'}
+          label={t('common.copy') + ' ' + t('common.layout')}
           onClick={onCreateNewCardWithLayout}
         />
         
         <ToolbarButton
           icon={Trash2}
-          label={t('deleteCard') || 'Delete Card'}
+          label={t('common.delete') + ' ' + t('toolbar.card')}
           onClick={onDeleteCard}
           disabled={totalCards <= 1}
         />
@@ -217,9 +217,9 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           size="sm"
           className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 text-[10px] shrink-0"}
           onClick={() => onSideChange('front')}
-          title="Front Side"
+          title={t('editor.front')}
         >
-          {displayText ? <span className="text-xs">Front Side</span> : 'F'}
+          {displayText ? <span className="text-xs">{t('editor.front')}</span> : 'F'}
         </Button>
         
         <Button
@@ -228,9 +228,9 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
           className={displayText ? "w-full justify-start gap-2 h-8" : "w-8 h-8 p-0 text-[10px] shrink-0"}
           onClick={() => onSideChange('back')}
           disabled={currentCard?.card_type === 'single-sided'}
-          title="Back Side"
+          title={t('editor.back')}
         >
-          {displayText ? <span className="text-xs">Back Side</span> : 'B'}
+          {displayText ? <span className="text-xs">{t('editor.back')}</span> : 'B'}
         </Button>
       </div>
 
@@ -240,37 +240,37 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={Type}
-          label={t('text') || 'Text'}
+          label={t('toolbar.addText')}
           onClick={() => onAddElement('text')}
         />
         
         <ToolbarButton
           icon={Mic}
-          label={t('tts') || 'Text-to-Speech'}
+          label={t('toolbar.addTTS') || 'Text-to-Speech'}
           onClick={() => onAddElement('tts')}
         />
         
         <ToolbarButton
           icon={Image}
-          label={t('image') || 'Image'}
+          label={t('toolbar.addImage')}
           onClick={() => onAddElement('image')}
         />
         
         <ToolbarButton
           icon={Volume2}
-          label={t('audio') || 'Audio'}
+          label={t('toolbar.addAudio')}
           onClick={() => onAddElement('audio')}
         />
         
         <ToolbarButton
           icon={Video}
-          label={t('youtube') || 'YouTube'}
+          label={t('toolbar.addYoutube')}
           onClick={() => onAddElement('youtube')}
         />
         
         <ToolbarButton
           icon={Palette}
-          label={t('drawing') || 'Drawing'}
+          label={t('toolbar.addDrawing')}
           onClick={() => onAddElement('drawing')}
         />
       </div>
@@ -281,19 +281,19 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={CheckSquare}
-          label={t('multipleChoice') || 'Multiple Choice'}
+          label={t('toolbar.addMultipleChoice')}
           onClick={() => onAddElement('multiple-choice')}
         />
         
         <ToolbarButton
           icon={HelpCircle}
-          label={t('trueFalse') || 'True/False'}
+          label={t('toolbar.addTrueFalse')}
           onClick={() => onAddElement('true-false')}
         />
 
         <ToolbarButton
           icon={FileText}
-          label={t('fillInBlank') || 'Fill in the Blank'}
+          label={t('toolbar.addFillInBlank')}
           onClick={() => onAddElement('fill-in-blank')}
         />
       </div>
@@ -304,26 +304,26 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
       <div className={displayText ? "flex flex-col space-y-1 w-full" : "flex flex-col items-center space-y-1"}>
         <ToolbarButton
           icon={Grid3X3}
-          label={t('grid') || 'Grid'}
+          label={t('toolbar.arrangeGrid')}
           onClick={() => onAutoArrange('grid')}
         />
         
         <ToolbarButton
           icon={AlignCenter}
-          label={t('center') || 'Center'}
+          label={t('toolbar.arrangeCenter')}
           onClick={() => onAutoArrange('center')}
         />
         
         <ToolbarButton
           icon={Layers}
-          label={t('stack') || 'Stack'}
+          label={t('toolbar.arrangeStack')}
           onClick={() => onAutoArrange('stack')}
         />
 
         {onShowCardOverview && (
           <ToolbarButton
             icon={Grid}
-            label="Card Overview"
+            label={t('common.cardOverview') || "Card Overview"}
             onClick={onShowCardOverview}
           />
         )}

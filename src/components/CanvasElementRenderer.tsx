@@ -2,6 +2,7 @@
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { SimpleTextElementRenderer } from './canvas-elements/SimpleTextElementRenderer';
 import { ImageElementRenderer } from './canvas-elements/ImageElementRenderer';
 import { AudioElementRenderer } from './canvas-elements/AudioElementRenderer';
@@ -36,6 +37,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   isSelected = false,
 }) => {
   const { theme } = useTheme();
+  const { t } = useI18n();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
   const commonProps = {
