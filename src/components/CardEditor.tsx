@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -97,7 +98,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     currentCard,
     navigateCard,
     setCurrentSide,
-    updateCard: (cardId: string, updates) => updateCard(currentCard.id, updates),
+    updateCard,
     isTextSelecting,
     set,
     setDeckName,
@@ -124,10 +125,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   });
 
   useKeyboardShortcuts({
-    showShortcuts,
-    setShowShortcuts,
-    showCardOverview,
-    setShowCardOverview,
     zoom,
     setZoom,
     addElement,
@@ -140,6 +137,8 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     setCurrentSide,
     handleAutoArrange,
     isTextSelecting,
+    showCardOverview,
+    setShowCardOverview,
   });
 
   useEffect(() => {

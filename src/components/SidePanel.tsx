@@ -20,7 +20,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
       
       {selectedElement ? (
         <ElementOptionsPanel
-          selectedElement={selectedElement}
+          element={selectedElement}
           onUpdateElement={onUpdateElement}
           onDeleteElement={onDeleteElement}
         />

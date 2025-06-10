@@ -1,7 +1,7 @@
-
 import { useEffect, useCallback } from 'react';
 
 interface UseCanvasInteractionProps {
+  canvasContainerRef: React.RefObject<HTMLDivElement>;
   canvasViewportRef: React.RefObject<HTMLDivElement>;
   zoom: number;
   setZoom: (zoom: number) => void;
@@ -11,10 +11,12 @@ interface UseCanvasInteractionProps {
   setIsPanning: (panning: boolean) => void;
   panStart: { x: number; y: number };
   setPanStart: (start: { x: number; y: number }) => void;
-  isTextSelecting: boolean;
+  cardWidth: number;
+  cardHeight: number;
 }
 
 export const useCanvasInteraction = ({
+  canvasContainerRef,
   canvasViewportRef,
   zoom,
   setZoom,
@@ -24,48 +26,52 @@ export const useCanvasInteraction = ({
   setIsPanning,
   panStart,
   setPanStart,
-  isTextSelecting,
+  cardWidth,
+  cardHeight,
 }: UseCanvasInteractionProps) => {
-  // Handle zoom and pan with left-click dragging - only for canvas background
+  const startPan = useCallback((e: React.MouseEvent) => {
+    setIsPanning(true);
+    setPanStart({ x: e.clientX, y: e.clientY });
+  }, [setIsPanning, setPanStart]);
+
+  const panCanvas = useCallback((e: React.MouseEvent) => {
+    if (!isPanning) return;
+    
+    const deltaX = e.clientX - panStart.x;
+    const deltaY = e.clientY - panStart.y;
+    
+    setPanOffset(prev => ({
+      x: prev.x + deltaX,
+      y: prev.y + deltaY
+    }));
+    
+    setPanStart({ x: e.clientX, y: e.clientY });
+  }, [isPanning, panStart, setPanOffset, setPanStart]);
+
+  const endPan = useCallback(() => {
+    setIsPanning(false);
+  }, [setIsPanning]);
+
+  const handleWheel = useCallback((e: WheelEvent) => {
+    if (!canvasViewportRef.current?.contains(e.target as Node)) return;
+    
+    e.preventDefault();
+    
+    if (e.ctrlKey || e.metaKey) {
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      const newZoom = Math.max(0.1, Math.min(3, zoom * zoomFactor));
+      setZoom(newZoom);
+    } else {
+      setPanOffset(prev => ({
+        x: prev.x - e.deltaX * 0.5,
+        y: prev.y - e.deltaY * 0.5
+      }));
+    }
+  }, [zoom, setZoom, setPanOffset, canvasViewportRef]);
+
   useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (!canvasViewportRef.current?.contains(e.target as Node)) return;
-      
-      e.preventDefault();
-      
-      if (e.ctrlKey || e.metaKey) {
-        // Zoom with Ctrl+scroll or pinch
-        const rect = canvasViewportRef.current.getBoundingClientRect();
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        
-        const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-        const newZoom = Math.max(0.1, Math.min(3, zoom * zoomFactor));
-        
-        // Adjust pan to zoom towards center
-        const zoomRatio = newZoom / zoom;
-        setPanOffset(prev => ({
-          x: centerX - (centerX - prev.x) * zoomRatio,
-          y: centerY - (centerY - prev.y) * zoomRatio
-        }));
-        
-        setZoom(newZoom);
-      } else {
-        // Pan with scroll
-        setPanOffset(prev => ({
-          x: prev.x - e.deltaX * 0.5,
-          y: prev.y - e.deltaY * 0.5
-        }));
-      }
-    };
-
     const handleMouseDown = (e: MouseEvent) => {
-      // Don't handle panning during text selection
-      if (isTextSelecting) return;
-
-      // Only handle left mouse button and only within canvas viewport
       if (e.button === 0 && canvasViewportRef.current?.contains(e.target as Node)) {
-        // Check if we clicked on the canvas background, not an element
         const target = e.target as HTMLElement;
         const isCanvasBackground = target.hasAttribute('data-canvas-background') || 
                                  target.closest('[data-canvas-background]');
@@ -76,7 +82,6 @@ export const useCanvasInteraction = ({
           setIsPanning(true);
           setPanStart({ x: e.clientX, y: e.clientY });
           
-          // Add cursor style
           if (canvasViewportRef.current) {
             canvasViewportRef.current.style.cursor = 'grabbing';
           }
@@ -107,49 +112,6 @@ export const useCanvasInteraction = ({
         e.stopPropagation();
         setIsPanning(false);
         
-        // Reset cursor style
-        if (canvasViewportRef.current) {
-          canvasViewportRef.current.style.cursor = zoom > 1 ? 'grab' : 'default';
-        }
-      }
-    };
-
-    // Touch event handlers for mobile
-    const handleTouchStart = (e: TouchEvent) => {
-      if (!canvasViewportRef.current?.contains(e.target as Node)) return;
-      
-      if (e.touches.length === 1) {
-        const target = e.target as HTMLElement;
-        const isCanvasBackground = target.hasAttribute('data-canvas-background') || 
-                                 target.closest('[data-canvas-background]');
-        
-        if (isCanvasBackground && !target.closest('[data-element]')) {
-          e.preventDefault();
-          setIsPanning(true);
-          setPanStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-        }
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (isPanning && e.touches.length === 1) {
-        e.preventDefault();
-        
-        const deltaX = e.touches[0].clientX - panStart.x;
-        const deltaY = e.touches[0].clientY - panStart.y;
-        
-        setPanOffset(prev => ({
-          x: prev.x + deltaX,
-          y: prev.y + deltaY
-        }));
-        
-        setPanStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-      }
-    };
-
-    const handleTouchEnd = () => {
-      if (isPanning) {
-        setIsPanning(false);
         if (canvasViewportRef.current) {
           canvasViewportRef.current.style.cursor = zoom > 1 ? 'grab' : 'default';
         }
@@ -160,18 +122,19 @@ export const useCanvasInteraction = ({
     document.addEventListener('mousedown', handleMouseDown, { capture: true });
     document.addEventListener('mousemove', handleMouseMove, { capture: true });
     document.addEventListener('mouseup', handleMouseUp, { capture: true });
-    document.addEventListener('touchstart', handleTouchStart, { passive: false });
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       document.removeEventListener('wheel', handleWheel);
       document.removeEventListener('mousedown', handleMouseDown, { capture: true });
       document.removeEventListener('mousemove', handleMouseMove, { capture: true });
       document.removeEventListener('mouseup', handleMouseUp, { capture: true });
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [zoom, panOffset, isPanning, panStart, isTextSelecting, canvasViewportRef, setZoom, setPanOffset, setIsPanning, setPanStart]);
+  }, [zoom, panOffset, isPanning, panStart, canvasViewportRef, setZoom, setPanOffset, setIsPanning, setPanStart, handleWheel]);
+
+  return {
+    startPan,
+    panCanvas,
+    endPan,
+    handleWheel,
+  };
 };
