@@ -357,7 +357,7 @@ const StudyMode = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg text-foreground">{t('loading')}</div>
+        <div className="text-lg text-foreground">{t('study.loading')}</div>
       </div>
     );
   }
@@ -378,10 +378,10 @@ const StudyMode = () => {
         </header>
         <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-foreground">Set not found</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('common.setNotFound')}</h2>
             <Button onClick={() => navigate('/decks')} className="mt-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Decks
+              {t('common.goBack')}
             </Button>
           </div>
         </main>
@@ -412,7 +412,7 @@ const StudyMode = () => {
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              {t('back')}
+              {t('common.back')}
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">{set.title}</h1>
@@ -425,7 +425,7 @@ const StudyMode = () => {
             className="flex items-center gap-2"
           >
             <Settings className="w-4 h-4" />
-            {t('settings')}
+            {t('common.settings')}
           </Button>
         </div>
 
@@ -456,7 +456,7 @@ const StudyMode = () => {
                 <div className="text-sm text-muted-foreground flex justify-center mb-4">
                   <div className="flex items-center">
                     <Lightbulb className="w-4 h-4 mr-1" />
-                    Hint: {currentCard.hint}
+                    {t('study.hint')}: {currentCard.hint}
                   </div>
                 </div>
               )}
@@ -466,12 +466,12 @@ const StudyMode = () => {
                   {answerResult ? (
                     <>
                       <CheckCircle className="w-6 h-6 mr-2" />
-                      Correct!
+                      {t('common.correct')}!
                     </>
                   ) : (
                     <>
                       <XCircle className="w-6 h-6 mr-2" />
-                      Incorrect.
+                      {t('common.incorrect')}.
                     </>
                   )}
                 </div>
@@ -491,7 +491,7 @@ const StudyMode = () => {
           </div>
         ) : (
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-foreground">No cards in this set</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('common.noCardsInSet')}</h2>
           </div>
         )}
       </main>
@@ -500,30 +500,30 @@ const StudyMode = () => {
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Study Settings</DialogTitle>
+            <DialogTitle>{t('common.studySettings')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="shuffle">Shuffle Cards</Label>
+              <Label htmlFor="shuffle">{t('common.shuffleCards')}</Label>
               <Switch id="shuffle" checked={shuffle} onCheckedChange={(checked) => setShuffle(checked)} />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="mode">Study Mode</Label>
+              <Label htmlFor="mode">{t('common.studyMode')}</Label>
               <select
                 id="mode"
                 className="border rounded px-2 py-1"
                 value={mode}
                 onChange={(e) => setMode(e.target.value as 'flashcard' | 'quiz' | 'mixed')}
               >
-                <option value="flashcard">Flashcard</option>
-                <option value="quiz">Quiz</option>
-                <option value="mixed">Mixed</option>
+                <option value="flashcard">{t('study.flashcardMode')}</option>
+                <option value="quiz">{t('study.quizMode')}</option>
+                <option value="mixed">{t('study.mixedMode')}</option>
               </select>
             </div>
           </div>
           <div className="flex justify-end mt-4">
             <Button variant="secondary" onClick={() => setShowSettings(false)}>
-              Close
+              {t('common.close')}
             </Button>
           </div>
         </DialogContent>
@@ -533,3 +533,5 @@ const StudyMode = () => {
 };
 
 export default StudyMode;
+
+}

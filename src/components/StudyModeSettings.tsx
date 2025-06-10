@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface StudyModeSettingsProps {
   studySettings: {
@@ -31,15 +32,17 @@ export const StudyModeSettings: React.FC<StudyModeSettingsProps> = ({
   onTogglePanelView,
   onClose,
 }) => {
+  const { t } = useI18n();
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Study Settings</DialogTitle>
+          <DialogTitle>{t('study.studyModeSettings')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <Label htmlFor="shuffle">Shuffle Cards</Label>
+            <Label htmlFor="shuffle">{t('common.shuffleCards')}</Label>
             <Switch
               id="shuffle"
               checked={studySettings.shuffle}
@@ -50,7 +53,7 @@ export const StudyModeSettings: React.FC<StudyModeSettingsProps> = ({
           </div>
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="autoFlip">Auto Flip</Label>
+            <Label htmlFor="autoFlip">{t('common.autoFlip')}</Label>
             <Switch
               id="autoFlip"
               checked={studySettings.autoFlip}
@@ -61,7 +64,7 @@ export const StudyModeSettings: React.FC<StudyModeSettingsProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label>Study Mode</Label>
+            <Label>{t('common.studyMode')}</Label>
             <Select
               value={studySettings.mode}
               onValueChange={(value: 'flashcard' | 'quiz' | 'review') =>
@@ -72,15 +75,15 @@ export const StudyModeSettings: React.FC<StudyModeSettingsProps> = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="flashcard">Flashcard Mode</SelectItem>
-                <SelectItem value="quiz">Quiz Mode</SelectItem>
-                <SelectItem value="review">Review Mode</SelectItem>
+                <SelectItem value="flashcard">{t('study.flashcardMode')}</SelectItem>
+                <SelectItem value="quiz">{t('study.quizMode')}</SelectItem>
+                <SelectItem value="review">{t('study.reviewMode')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label>Countdown Timer (seconds)</Label>
+            <Label>{t('common.countdownTimer')} ({t('common.seconds')})</Label>
             <Select
               value={studySettings.countdownTimer.toString()}
               onValueChange={(value) =>
@@ -91,9 +94,9 @@ export const StudyModeSettings: React.FC<StudyModeSettingsProps> = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">No Timer</SelectItem>
-                <SelectItem value="10">10 seconds</SelectItem>
-                <SelectItem value="30">30 seconds</SelectItem>
+                <SelectItem value="0">{t('common.noTimer')}</SelectItem>
+                <SelectItem value="10">10 {t('common.seconds')}</SelectItem>
+                <SelectItem value="30">30 {t('common.seconds')}</SelectItem>
                 <SelectItem value="60">1 minute</SelectItem>
                 <SelectItem value="120">2 minutes</SelectItem>
               </SelectContent>
@@ -101,7 +104,7 @@ export const StudyModeSettings: React.FC<StudyModeSettingsProps> = ({
           </div>
 
           <Button onClick={onClose} className="w-full">
-            Save Settings
+            {t('common.saveSettings')}
           </Button>
         </div>
       </DialogContent>

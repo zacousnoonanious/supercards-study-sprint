@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, RotateCcw, Timer } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface StudyNavigationBarProps {
   currentIndex: number;
@@ -25,6 +26,7 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
   onTimeUp,
   allowNavigation = true,
 }) => {
+  const { t } = useI18n();
   const [timeLeft, setTimeLeft] = useState(countdownTimer);
   const [isActive, setIsActive] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
@@ -88,7 +90,7 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Timer className="w-4 h-4" />
-              <span>Time remaining: {formatTime(timeLeft)}</span>
+              <span>{t('common.timeRemaining')}: {formatTime(timeLeft)}</span>
             </div>
           </div>
           <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
@@ -114,7 +116,7 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
             disabled={!allowNavigation || currentIndex === 0}
           >
             <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline ml-1">Previous</span>
+            <span className="hidden sm:inline ml-1">{t('common.previous')}</span>
           </Button>
           
           <span className="text-sm font-medium px-3">
@@ -127,7 +129,7 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
             onClick={() => onNavigate('next')}
             disabled={!allowNavigation || currentIndex === totalCards - 1}
           >
-            <span className="hidden sm:inline mr-1">Next</span>
+            <span className="hidden sm:inline mr-1">{t('common.next')}</span>
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
@@ -140,7 +142,7 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
             className="flex items-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>{showAnswer ? 'Show Question' : 'Reveal Answer'}</span>
+            <span>{showAnswer ? t('study.showQuestion') : t('study.revealAnswer')}</span>
           </Button>
         </div>
       </div>

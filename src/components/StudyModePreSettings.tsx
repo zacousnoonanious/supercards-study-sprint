@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shuffle, Play, Settings } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface StudyModePreSettingsProps {
   open: boolean;
@@ -29,6 +30,7 @@ export const StudyModePreSettings: React.FC<StudyModePreSettingsProps> = ({
   onStartStudy,
   totalCards,
 }) => {
+  const { t } = useI18n();
   const [settings, setSettings] = useState<StudySettings>({
     shuffle: false,
     mode: 'flashcard',
@@ -49,14 +51,14 @@ export const StudyModePreSettings: React.FC<StudyModePreSettingsProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
-            Study Settings
+            {t('study.studyModeSettings')}
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="shuffle">Shuffle Cards</Label>
+              <Label htmlFor="shuffle">{t('common.shuffleCards')}</Label>
               <Switch
                 id="shuffle"
                 checked={settings.shuffle}
@@ -67,7 +69,7 @@ export const StudyModePreSettings: React.FC<StudyModePreSettingsProps> = ({
             </div>
             
             <div className="space-y-2">
-              <Label>Study Mode</Label>
+              <Label>{t('common.studyMode')}</Label>
               <Select
                 value={settings.mode}
                 onValueChange={(value: 'flashcard' | 'quiz' | 'review') =>
@@ -78,15 +80,15 @@ export const StudyModePreSettings: React.FC<StudyModePreSettingsProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="flashcard">Flashcard Mode</SelectItem>
-                  <SelectItem value="quiz">Quiz Mode</SelectItem>
-                  <SelectItem value="review">Review Mode</SelectItem>
+                  <SelectItem value="flashcard">{t('study.flashcardMode')}</SelectItem>
+                  <SelectItem value="quiz">{t('study.quizMode')}</SelectItem>
+                  <SelectItem value="review">{t('study.reviewMode')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="autoflip">Auto-flip Cards</Label>
+              <Label htmlFor="autoflip">{t('common.autoFlip')}</Label>
               <Switch
                 id="autoflip"
                 checked={settings.autoFlip}
@@ -97,7 +99,7 @@ export const StudyModePreSettings: React.FC<StudyModePreSettingsProps> = ({
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="hints">Show Hints</Label>
+              <Label htmlFor="hints">{t('study.showHints')}</Label>
               <Switch
                 id="hints"
                 checked={settings.showHints}
@@ -108,7 +110,7 @@ export const StudyModePreSettings: React.FC<StudyModePreSettingsProps> = ({
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="attempts">Allow Multiple Attempts</Label>
+              <Label htmlFor="attempts">{t('study.allowMultipleAttempts')}</Label>
               <Switch
                 id="attempts"
                 checked={settings.allowMultipleAttempts}
@@ -119,11 +121,11 @@ export const StudyModePreSettings: React.FC<StudyModePreSettingsProps> = ({
               />
             </div>
             {settings.mode === 'quiz' && (
-              <p className="text-sm text-muted-foreground">Quiz mode only allows one attempt per question</p>
+              <p className="text-sm text-muted-foreground">{t('study.quizModeNote')}</p>
             )}
 
             <div className="space-y-2">
-              <Label>Countdown Timer (seconds)</Label>
+              <Label>{t('common.countdownTimer')} ({t('common.seconds')})</Label>
               <Select
                 value={settings.countdownTimer.toString()}
                 onValueChange={(value) =>
@@ -134,9 +136,9 @@ export const StudyModePreSettings: React.FC<StudyModePreSettingsProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">No Timer</SelectItem>
-                  <SelectItem value="10">10 seconds</SelectItem>
-                  <SelectItem value="30">30 seconds</SelectItem>
+                  <SelectItem value="0">{t('common.noTimer')}</SelectItem>
+                  <SelectItem value="10">10 {t('common.seconds')}</SelectItem>
+                  <SelectItem value="30">30 {t('common.seconds')}</SelectItem>
                   <SelectItem value="60">1 minute</SelectItem>
                   <SelectItem value="120">2 minutes</SelectItem>
                 </SelectContent>
@@ -146,11 +148,11 @@ export const StudyModePreSettings: React.FC<StudyModePreSettingsProps> = ({
 
           <div className="flex gap-2">
             <Button variant="outline" onClick={onClose} className="flex-1">
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleStartStudy} className="flex-1">
               <Play className="w-4 h-4 mr-2" />
-              Start Study ({totalCards} cards)
+              {t('study.startStudy')} ({totalCards} {t('study.cardsText')})
             </Button>
           </div>
         </div>

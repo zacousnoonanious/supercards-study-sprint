@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Settings } from 'lucide-react';
 import { FlashcardSet } from '@/types/flashcard';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface StudyModeHeaderProps {
   set: FlashcardSet;
@@ -24,6 +25,8 @@ export const StudyModeHeader: React.FC<StudyModeHeaderProps> = ({
   onToggleSettings,
   onGoBack,
 }) => {
+  const { t } = useI18n();
+
   return (
     <header className="bg-card shadow-sm border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -37,13 +40,13 @@ export const StudyModeHeader: React.FC<StudyModeHeaderProps> = ({
                 size="sm"
               >
                 <ArrowLeft className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Go Back</span>
+                <span className="hidden sm:inline">{t('common.goBack')}</span>
               </Button>
             )}
             <div>
               <h1 className="text-lg sm:text-2xl font-bold text-primary">{set.title}</h1>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Card {currentIndex + 1} of {totalCards} • Correct: {sessionStats.correct} • Incorrect: {sessionStats.incorrect}
+                Card {currentIndex + 1} of {totalCards} • {t('common.correct')}: {sessionStats.correct} • {t('common.incorrect')}: {sessionStats.incorrect}
               </p>
             </div>
           </div>
@@ -55,7 +58,7 @@ export const StudyModeHeader: React.FC<StudyModeHeaderProps> = ({
             className={`p-2 ${showSettings ? 'bg-secondary' : ''}`}
           >
             <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline ml-2">Settings</span>
+            <span className="hidden sm:inline ml-2">{t('common.settings')}</span>
           </Button>
         </div>
       </div>

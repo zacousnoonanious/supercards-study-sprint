@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trophy, RotateCcw, ArrowLeft } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface StudyModeCompleteProps {
   title: string;
@@ -22,6 +23,7 @@ export const StudyModeComplete: React.FC<StudyModeCompleteProps> = ({
   onRestart,
   onBackToSet,
 }) => {
+  const { t } = useI18n();
   const accuracy = totalCards > 0 ? Math.round((sessionStats.correct / totalCards) * 100) : 0;
 
   return (
@@ -31,33 +33,33 @@ export const StudyModeComplete: React.FC<StudyModeCompleteProps> = ({
           <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
             <Trophy className="w-8 h-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Study Complete!</CardTitle>
+          <CardTitle className="text-2xl">{t('study.studyComplete')}</CardTitle>
           <p className="text-muted-foreground">{title}</p>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-green-600">{sessionStats.correct}</div>
-              <div className="text-sm text-muted-foreground">Correct</div>
+              <div className="text-sm text-muted-foreground">{t('common.correct')}</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-red-600">{sessionStats.incorrect}</div>
-              <div className="text-sm text-muted-foreground">Incorrect</div>
+              <div className="text-sm text-muted-foreground">{t('common.incorrect')}</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-primary">{accuracy}%</div>
-              <div className="text-sm text-muted-foreground">Accuracy</div>
+              <div className="text-sm text-muted-foreground">{t('common.accuracy')}</div>
             </div>
           </div>
           
           <div className="flex gap-2">
             <Button onClick={onRestart} className="flex-1">
               <RotateCcw className="w-4 h-4 mr-2" />
-              Study Again
+              {t('study.studyAgain')}
             </Button>
             <Button onClick={onBackToSet} variant="outline" className="flex-1">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Set
+              {t('study.backToSet')}
             </Button>
           </div>
         </CardContent>
