@@ -516,5 +516,3 @@ const Auth = () => {
 };
 
 export default Auth;
-
-</edits_to_apply>
