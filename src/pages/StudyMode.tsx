@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -348,8 +349,8 @@ const StudyMode = () => {
       setFlipCount(0);
     } else {
       toast({
-        title: "Deck Complete",
-        description: "You've reached the end of the deck!",
+        title: t('study.deckComplete'),
+        description: t('study.deckCompleteMessage'),
       });
     }
   };
@@ -533,5 +534,3 @@ const StudyMode = () => {
 };
 
 export default StudyMode;
-
-}
