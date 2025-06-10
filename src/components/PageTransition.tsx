@@ -16,27 +16,27 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
       // Start the transition
       setIsTransitioning(true);
       
-      // After fade out, update content
+      // Update content immediately for the incoming layer
       const timer = setTimeout(() => {
         setDisplayLocation(location);
-      }, 150); // Half of the 300ms total animation time
-
-      // Complete the transition
-      const completeTimer = setTimeout(() => {
-        setIsTransitioning(false);
-      }, 300);
+        
+        // Complete the transition after the new content is rendered
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 50);
+      }, 200); // Delay content update slightly for smooth crossfade
 
       return () => {
         clearTimeout(timer);
-        clearTimeout(completeTimer);
       };
     }
   }, [location.pathname, displayLocation.pathname]);
 
   return (
-    <div className="w-full min-h-screen">
+    <div className="w-full min-h-screen relative">
+      {/* Current/Outgoing content */}
       <div
-        className={`w-full min-h-screen transition-opacity duration-300 ease-in-out ${
+        className={`w-full min-h-screen transition-opacity duration-200 ease-in-out ${
           isTransitioning ? 'opacity-0' : 'opacity-100'
         }`}
       >
@@ -44,6 +44,18 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
           {children}
         </div>
       </div>
+      
+      {/* Incoming content overlay during transition */}
+      {isTransitioning && (
+        <div
+          className="absolute inset-0 w-full min-h-screen transition-opacity duration-200 ease-in-out opacity-0 animate-fade-in"
+          style={{ animationDelay: '100ms' }}
+        >
+          <div key={location.pathname} className="w-full min-h-screen">
+            {children}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
