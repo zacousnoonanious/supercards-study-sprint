@@ -90,6 +90,11 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     setSelectedElementId(null);
   }, [deleteElement, setSelectedElementId]);
 
+  // Create a wrapper function that matches TopSettingsBar's expected signature
+  const handleDeleteElementForTopBar = useCallback((elementId: string, _secondParam?: any) => {
+    handleDeleteElement(elementId);
+  }, [handleDeleteElement]);
+
   const handleElementSelect = useCallback((elementId: string | null) => {
     // Don't change selection during text selection
     if (isTextSelecting) return;
@@ -639,7 +644,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         <TopSettingsBar
           selectedElement={getSelectedElementData()}
           onUpdateElement={handleUpdateElement}
-          onDeleteElement={handleDeleteElement}
+          onDeleteElement={handleDeleteElementForTopBar}
           canvasWidth={cardWidth}
           canvasHeight={cardHeight}
           onCanvasSizeChange={handleCanvasSizeChange}
@@ -780,3 +785,5 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
 };
 
 export default CardEditor;
+
+}
