@@ -1,28 +1,31 @@
-
 import { useEffect, useCallback } from 'react';
 
 interface UseKeyboardShortcutsProps {
+  addElement: (type: string) => void;
   isTextSelecting: boolean;
   selectedElementId: string | null;
   handleDeleteElement: (elementId: string) => void;
-  setSelectedElementId: (id: string | null) => void;
   currentCardIndex: number;
   cards: any[];
-  currentCard: any;
   navigateCard: (direction: 'prev' | 'next') => void;
   setCurrentSide: (side: 'front' | 'back') => void;
+  handleAutoArrange: (type: string) => void;
+  showCardOverview: boolean;
+  setShowCardOverview: (show: boolean) => void;
 }
 
 export const useKeyboardShortcuts = ({
+  addElement,
   isTextSelecting,
   selectedElementId,
   handleDeleteElement,
-  setSelectedElementId,
   currentCardIndex,
   cards,
-  currentCard,
   navigateCard,
   setCurrentSide,
+  handleAutoArrange,
+  showCardOverview,
+  setShowCardOverview,
 }: UseKeyboardShortcutsProps) => {
   // Handle keyboard events for delete functionality and navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -39,7 +42,7 @@ export const useKeyboardShortcuts = ({
     // Escape key - deselect element
     if (e.key === 'Escape') {
       e.preventDefault();
-      setSelectedElementId(null);
+      //setSelectedElementId(null);
       return;
     }
 
@@ -63,9 +66,9 @@ export const useKeyboardShortcuts = ({
     // Card side navigation - Up for back, Down for front
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (currentCard?.card_type !== 'single-sided') {
+      //if (currentCard?.card_type !== 'single-sided') {
         setCurrentSide('back');
-      }
+      //}
       return;
     }
 
@@ -74,7 +77,25 @@ export const useKeyboardShortcuts = ({
       setCurrentSide('front');
       return;
     }
-  }, [selectedElementId, currentCardIndex, cards.length, currentCard, handleDeleteElement, navigateCard, setCurrentSide, setSelectedElementId, isTextSelecting]);
+
+    if (e.key === 'a' && e.ctrlKey) {
+      e.preventDefault();
+      addElement('text');
+      return;
+    }
+
+    if (e.key === 'g' && e.ctrlKey) {
+      e.preventDefault();
+      handleAutoArrange('grid');
+      return;
+    }
+
+    if (e.key === 'o' && e.ctrlKey) {
+      e.preventDefault();
+      setShowCardOverview(!showCardOverview);
+      return;
+    }
+  }, [selectedElementId, currentCardIndex, cards.length, handleDeleteElement, navigateCard, setCurrentSide, isTextSelecting, addElement, handleAutoArrange, showCardOverview, setShowCardOverview]);
 
   // Add keyboard event listener
   useEffect(() => {

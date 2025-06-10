@@ -11,7 +11,7 @@ interface TopToolbarProps {
   cards: Flashcard[];
   showShortcuts: boolean;
   showCardOverview: boolean;
-  onDeckTitleChange: (title: string) => void;
+  onDeckTitleChange: (title: string) => Promise<void>;
   onShowCardOverviewChange: (show: boolean) => void;
 }
 
