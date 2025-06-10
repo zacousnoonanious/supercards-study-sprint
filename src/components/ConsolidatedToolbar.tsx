@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -20,10 +19,6 @@ import {
   AlignLeft as AlignLeftIcon,
   AlignCenter as AlignCenterIcon,
   AlignRight,
-  ChevronLeft,
-  ChevronRight,
-  SquareStack,
-  Plus,
   Copy,
   Trash2,
   LayoutGrid,
@@ -149,77 +144,43 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-4">
-          {/* Card Navigation */}
+          {/* Add Card - Top Priority */}
           <div className="space-y-1">
             {showText && (
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Navigation
+                Create
               </h3>
             )}
             
-            <div className="flex gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onNavigateCard('prev')}
-                disabled={currentCardIndex === 0}
-                className={`flex-1 ${!showText ? 'aspect-square p-0' : ''}`}
-              >
-                <ChevronLeft className="w-4 h-4" />
-                {showText && <span className="ml-1">Prev</span>}
-              </Button>
+            <div className="grid gap-1">
+              {/* Enhanced Add Card Button */}
+              <EnhancedAddCardButton
+                onCreateCard={onCreateNewCard}
+                onCreateFromTemplate={onCreateNewCardFromTemplate}
+                showText={showText}
+              />
               
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onNavigateCard('next')}
-                disabled={currentCardIndex >= totalCards - 1}
-                className={`flex-1 ${!showText ? 'aspect-square p-0' : ''}`}
-              >
-                <ChevronRight className="w-4 h-4" />
-                {showText && <span className="ml-1">Next</span>}
-              </Button>
+              {/* Copy Layout */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onCreateNewCardWithLayout}
+                      className={`${showText ? 'justify-start' : 'aspect-square p-0'} transition-colors`}
+                    >
+                      <Copy className="w-4 h-4" />
+                      {showText && <span className="ml-2">Copy Layout</span>}
+                    </Button>
+                  </TooltipTrigger>
+                  {!showText && (
+                    <TooltipContent side="right">Copy Layout</TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             </div>
-
-            {showText && (
-              <div className="text-xs text-center text-muted-foreground mt-1">
-                {currentCardIndex + 1} of {totalCards}
-              </div>
-            )}
           </div>
-
-          {/* Card Side Toggle - Only show if template allows back side */}
-          {templateSettings.showBackSide && (
-            <div className="space-y-1">
-              {showText && (
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Card Side
-                </h3>
-              )}
-              
-              <div className="flex gap-1">
-                <Button
-                  variant={currentSide === 'front' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => onSideChange('front')}
-                  className={`flex-1 ${!showText ? 'aspect-square p-0' : ''}`}
-                >
-                  <SquareStack className="w-4 h-4" />
-                  {showText && <span className="ml-1">Front</span>}
-                </Button>
-                
-                <Button
-                  variant={currentSide === 'back' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => onSideChange('back')}
-                  className={`flex-1 ${!showText ? 'aspect-square p-0' : ''}`}
-                >
-                  <SquareStack className="w-4 h-4" />
-                  {showText && <span className="ml-1">Back</span>}
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Add Elements - Only show allowed types and if toolbar not restricted */}
           {!templateSettings.restrictedToolbar && allowedElementTypes.length > 0 && (
@@ -316,42 +277,15 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
             </div>
           )}
 
-          {/* Card Actions */}
+          {/* Other Actions */}
           <div className="space-y-1">
             {showText && (
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Card Actions
+                Actions
               </h3>
             )}
             
             <div className="grid gap-1">
-              {/* Enhanced Add Card Button */}
-              <EnhancedAddCardButton
-                onCreateCard={onCreateNewCard}
-                onCreateFromTemplate={onCreateNewCardFromTemplate}
-                showText={showText}
-              />
-              
-              {/* Copy Layout */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={onCreateNewCardWithLayout}
-                      className={`${showText ? 'justify-start' : 'aspect-square p-0'} transition-colors`}
-                    >
-                      <Copy className="w-4 h-4" />
-                      {showText && <span className="ml-2">Copy Layout</span>}
-                    </Button>
-                  </TooltipTrigger>
-                  {!showText && (
-                    <TooltipContent side="right">Copy Layout</TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-
               {/* Overview */}
               {onShowCardOverview && (
                 <TooltipProvider>
