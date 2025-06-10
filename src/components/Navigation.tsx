@@ -16,9 +16,9 @@ export const Navigation: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigationItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: Home },
-    { path: '/decks', label: 'My Decks', icon: BookOpen },
-    { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
+    { path: '/dashboard', label: t('nav.dashboard'), icon: Home },
+    { path: '/decks', label: t('nav.decks'), icon: BookOpen },
+    { path: '/marketplace', label: t('nav.marketplace'), icon: ShoppingBag },
   ];
 
   const isActive = (path: string) => {
@@ -82,7 +82,7 @@ export const Navigation: React.FC = () => {
             <SheetContent side="right" className="w-64">
               <div className="flex flex-col space-y-4 mt-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Navigation</h2>
+                  <h2 className="text-lg font-semibold">{t('nav.navigation')}</h2>
                 </div>
                 <div className="flex flex-col space-y-2">
                   <NavItems />

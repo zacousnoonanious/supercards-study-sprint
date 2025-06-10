@@ -19,6 +19,7 @@ export const useI18n = () => {
 const translations = {
   en: {
     // Navigation & General
+    'nav.navigation': 'Navigation',
     'nav.dashboard': 'Dashboard',
     'nav.profile': 'Profile',
     'nav.signOut': 'Sign Out',
@@ -274,6 +275,7 @@ const translations = {
   },
   es: {
     // Navigation & General
+    'nav.navigation': 'Navegación',
     'nav.dashboard': 'Panel',
     'nav.profile': 'Perfil',
     'nav.signOut': 'Cerrar Sesión',
@@ -515,6 +517,7 @@ const translations = {
   },
   fr: {
     // Navigation & General
+    'nav.navigation': 'Navigation',
     'nav.dashboard': 'Tableau de Bord',
     'nav.profile': 'Profil',
     'nav.signOut': 'Se Déconnecter',
@@ -756,6 +759,7 @@ const translations = {
   },
   zh: {
     // Navigation & General
+    'nav.navigation': '导航',
     'nav.dashboard': '仪表板',
     'nav.profile': '个人资料',
     'nav.signOut': '退出登录',
