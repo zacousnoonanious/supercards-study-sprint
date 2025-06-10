@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -7,6 +6,7 @@ import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useCardEditorHandlers } from '@/hooks/useCardEditorHandlers';
 import { CardEditorLayout } from './CardEditorLayout';
+import { FullscreenEditor } from './FullscreenEditor';
 import { CanvasElement } from '@/types/flashcard';
 
 interface CardEditorProps {
@@ -15,6 +15,7 @@ interface CardEditorProps {
 
 export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const { t } = useI18n();
+  const [showFullscreen, setShowFullscreen] = useState(false);
 
   const {
     set,
@@ -108,6 +109,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     panCanvas,
     endPan,
     handleWheel,
+    fitToView,
   } = useCanvasInteraction({
     canvasContainerRef,
     canvasViewportRef,
@@ -142,6 +144,10 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
       return await deleteCard(currentCard.id);
     }
     return false;
+  };
+
+  const handleOpenFullscreen = () => {
+    setShowFullscreen(true);
   };
 
   useEffect(() => {
@@ -215,6 +221,32 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         onDeleteCard={handleDeleteCard}
         onCardTypeChange={(type) => updateCard(currentCard.id, { card_type: type })}
         onShowCardOverview={() => setShowCardOverview(!showCardOverview)}
+        onFitToView={fitToView}
+        onOpenFullscreen={handleOpenFullscreen}
+      />
+      
+      <FullscreenEditor
+        isOpen={showFullscreen}
+        onClose={() => setShowFullscreen(false)}
+        currentCard={currentCard}
+        currentSide={currentSide}
+        selectedElement={selectedElement}
+        cardWidth={cardWidth}
+        cardHeight={cardHeight}
+        onElementSelect={handleElementSelect}
+        onUpdateElement={handleUpdateElement}
+        onDeleteElement={handleDeleteElement}
+        onAddElement={addElement}
+        onAutoArrange={handleAutoArrange}
+        onNavigateCard={navigateCard}
+        onSideChange={setCurrentSide}
+        onCreateNewCard={createNewCard}
+        onCreateNewCardWithLayout={createNewCardWithLayout}
+        onCreateNewCardFromTemplate={createNewCardFromTemplate}
+        onDeleteCard={handleDeleteCard}
+        onCardTypeChange={(type) => updateCard(currentCard.id, { card_type: type })}
+        currentCardIndex={currentCardIndex}
+        totalCards={cards.length}
       />
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TopToolbar } from './TopToolbar';
 import { BottomToolbar } from './BottomToolbar';
@@ -51,6 +50,8 @@ interface CardEditorLayoutProps {
   onDeleteCard: () => void;
   onCardTypeChange: (type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') => void;
   onShowCardOverview?: () => void;
+  onFitToView?: () => void;
+  onOpenFullscreen?: () => void;
 }
 
 export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
@@ -93,6 +94,8 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   onDeleteCard,
   onCardTypeChange,
   onShowCardOverview,
+  onFitToView,
+  onOpenFullscreen,
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
@@ -255,6 +258,8 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
           onToolbarShowTextChange={onToolbarShowTextChange}
           currentSide={currentSide}
           onCardSideChange={onCardSideChange}
+          onFitToView={onFitToView}
+          onOpenFullscreen={onOpenFullscreen}
         />
       </div>
     </div>

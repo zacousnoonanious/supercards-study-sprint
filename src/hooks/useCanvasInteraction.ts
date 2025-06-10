@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from 'react';
 
 interface UseCanvasInteractionProps {
@@ -52,6 +53,30 @@ export const useCanvasInteraction = ({
     setIsPanning(false);
   }, [setIsPanning]);
 
+  const fitToView = useCallback(() => {
+    if (!canvasViewportRef.current) return;
+    
+    const viewport = canvasViewportRef.current;
+    const viewportWidth = viewport.clientWidth;
+    const viewportHeight = viewport.clientHeight;
+    
+    // Calculate zoom to fit canvas with some padding
+    const padding = 40;
+    const zoomX = (viewportWidth - padding * 2) / cardWidth;
+    const zoomY = (viewportHeight - padding * 2) / cardHeight;
+    const newZoom = Math.min(zoomX, zoomY, 1); // Don't zoom larger than 100%
+    
+    setZoom(newZoom);
+    
+    // Center the canvas
+    const scaledWidth = cardWidth * newZoom;
+    const scaledHeight = cardHeight * newZoom;
+    const centerX = (viewportWidth - scaledWidth) / 2;
+    const centerY = (viewportHeight - scaledHeight) / 2;
+    
+    setPanOffset({ x: centerX, y: centerY });
+  }, [canvasViewportRef, cardWidth, cardHeight, setZoom, setPanOffset]);
+
   const handleWheel = useCallback((e: WheelEvent) => {
     if (!canvasViewportRef.current?.contains(e.target as Node)) return;
     
@@ -71,6 +96,22 @@ export const useCanvasInteraction = ({
 
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
+      if (!canvasViewportRef.current?.contains(e.target as Node)) return;
+      
+      // Right click or middle mouse button for panning
+      if (e.button === 2 || e.button === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsPanning(true);
+        setPanStart({ x: e.clientX, y: e.clientY });
+        
+        if (canvasViewportRef.current) {
+          canvasViewportRef.current.style.cursor = 'grabbing';
+        }
+        return;
+      }
+      
+      // Left click on canvas background for panning
       if (e.button === 0 && canvasViewportRef.current?.contains(e.target as Node)) {
         const target = e.target as HTMLElement;
         const isCanvasBackground = target.hasAttribute('data-canvas-background') || 
@@ -107,7 +148,7 @@ export const useCanvasInteraction = ({
     };
 
     const handleMouseUp = (e: MouseEvent) => {
-      if (e.button === 0 && isPanning) {
+      if (isPanning) {
         e.preventDefault();
         e.stopPropagation();
         setIsPanning(false);
@@ -118,16 +159,24 @@ export const useCanvasInteraction = ({
       }
     };
 
+    const handleContextMenu = (e: MouseEvent) => {
+      if (canvasViewportRef.current?.contains(e.target as Node)) {
+        e.preventDefault(); // Prevent context menu on right click
+      }
+    };
+
     document.addEventListener('wheel', handleWheel, { passive: false });
     document.addEventListener('mousedown', handleMouseDown, { capture: true });
     document.addEventListener('mousemove', handleMouseMove, { capture: true });
     document.addEventListener('mouseup', handleMouseUp, { capture: true });
+    document.addEventListener('contextmenu', handleContextMenu, { capture: true });
 
     return () => {
       document.removeEventListener('wheel', handleWheel);
       document.removeEventListener('mousedown', handleMouseDown, { capture: true });
       document.removeEventListener('mousemove', handleMouseMove, { capture: true });
       document.removeEventListener('mouseup', handleMouseUp, { capture: true });
+      document.removeEventListener('contextmenu', handleContextMenu, { capture: true });
     };
   }, [zoom, panOffset, isPanning, panStart, canvasViewportRef, setZoom, setPanOffset, setIsPanning, setPanStart, handleWheel]);
 
@@ -136,5 +185,6 @@ export const useCanvasInteraction = ({
     panCanvas,
     endPan,
     handleWheel,
+    fitToView,
   };
 };

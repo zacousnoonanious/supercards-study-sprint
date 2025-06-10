@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { CardSideToggle } from './CardSideToggle';
-import { ZoomIn, ZoomOut, Grid, Move } from 'lucide-react';
+import { ZoomIn, ZoomOut, Grid, Move, Maximize2, Fullscreen } from 'lucide-react';
 
 interface BottomToolbarProps {
   zoom: number;
@@ -20,6 +20,8 @@ interface BottomToolbarProps {
   onToolbarShowTextChange: (showText: boolean) => void;
   currentSide: 'front' | 'back';
   onCardSideChange: (side: 'front' | 'back') => void;
+  onFitToView?: () => void;
+  onOpenFullscreen?: () => void;
 }
 
 export const BottomToolbar: React.FC<BottomToolbarProps> = ({
@@ -37,6 +39,8 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
   onToolbarShowTextChange,
   currentSide,
   onCardSideChange,
+  onFitToView,
+  onOpenFullscreen,
 }) => {
   return (
     <div className="border-t p-2 bg-background">
@@ -86,6 +90,28 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
           >
             <ZoomIn className="w-4 h-4" />
           </Button>
+          
+          {onFitToView && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onFitToView}
+              title="Fit to View"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          )}
+          
+          {onOpenFullscreen && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onOpenFullscreen}
+              title="Fullscreen Editor"
+            >
+              <Fullscreen className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>
