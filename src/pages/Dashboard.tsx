@@ -4,11 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen, Brain, Clock, TrendingUp, Play, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { RecentDecks } from '@/components/dashboard/RecentDecks';
@@ -20,7 +16,6 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   // Enable data prefetching
   useDataPrefetcher(user?.id);
@@ -46,21 +41,28 @@ const Dashboard = () => {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboard_stats', user?.id],
     queryFn: async () => {
+      // Get user's set IDs first
+      const { data: userSets, error: setsError } = await supabase
+        .from('flashcard_sets')
+        .select('id')
+        .eq('user_id', user?.id);
+
+      if (setsError) throw setsError;
+
+      const setIds = userSets?.map(set => set.id) || [];
+
       // Run all queries concurrently
       const [setsCount, cardsCount] = await Promise.all([
         supabase
           .from('flashcard_sets')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user?.id),
-        supabase
-          .from('flashcards')
-          .select('set_id', { count: 'exact', head: true })
-          .in('set_id', 
-            supabase
-              .from('flashcard_sets')
-              .select('id')
-              .eq('user_id', user?.id)
-          )
+        setIds.length > 0 
+          ? supabase
+              .from('flashcards')
+              .select('*', { count: 'exact', head: true })
+              .in('set_id', setIds)
+          : Promise.resolve({ count: 0, error: null })
       ]);
 
       if (setsCount.error) throw setsCount.error;
