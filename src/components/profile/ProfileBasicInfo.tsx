@@ -32,7 +32,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
             type="text"
             value={firstName || ''}
             onChange={(e) => onFirstNameChange(e.target.value)}
-            placeholder="Enter your first name"
+            placeholder={t('placeholders.enterFirstName')}
           />
         </div>
         
@@ -43,7 +43,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
             type="text"
             value={lastName || ''}
             onChange={(e) => onLastNameChange(e.target.value)}
-            placeholder="Enter your last name"
+            placeholder={t('placeholders.enterLastName')}
           />
         </div>
       </div>
@@ -58,7 +58,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
           className="bg-muted"
         />
         <p className="text-sm text-muted-foreground">
-          Email address cannot be changed here.
+          {t('profile.emailCannotChange') || 'Email address cannot be changed here.'}
         </p>
       </div>
     </>

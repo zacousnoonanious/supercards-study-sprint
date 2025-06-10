@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -97,7 +98,7 @@ export const UserDropdown = () => {
       <DropdownMenuContent className="w-80 bg-popover" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Account</p>
+            <p className="text-sm font-medium leading-none">{t('common.account')}</p>
             <p className="text-xs leading-none text-muted-foreground truncate">
               {user?.email}
             </p>
@@ -123,7 +124,7 @@ export const UserDropdown = () => {
                 </Label>
                 <Select value={theme} onValueChange={setTheme}>
                   <SelectTrigger id="theme-select" className="w-full">
-                    <SelectValue placeholder="Select theme" />
+                    <SelectValue placeholder={t('placeholders.selectOption')} />
                   </SelectTrigger>
                   <SelectContent className="bg-popover">
                     {allThemes.map((themeOption) => (
@@ -142,7 +143,7 @@ export const UserDropdown = () => {
                 </Label>
                 <Select value={size} onValueChange={setSize}>
                   <SelectTrigger id="size-select" className="w-full">
-                    <SelectValue placeholder="Select size" />
+                    <SelectValue placeholder={t('placeholders.selectOption')} />
                   </SelectTrigger>
                   <SelectContent className="bg-popover">
                     {sizes.map((sizeOption) => (

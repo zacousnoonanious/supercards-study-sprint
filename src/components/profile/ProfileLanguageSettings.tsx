@@ -35,7 +35,7 @@ export const ProfileLanguageSettings: React.FC<ProfileLanguageSettingsProps> = (
     { code: 'ru', label: t('lang.ru') || 'Русский' },
     { code: 'ja', label: t('lang.ja') || '日本語' },
     { code: 'bn', label: t('lang.bn') || 'বাংলা' },
-    { code: 'pa', label: t('lang.pa') || 'ਪੰਜਾਬੀ' },
+    { code: 'pa', label: t('lang.pa') || 'ਪੰਜਾਵੀ' },
     { code: 'jv', label: t('lang.jv') || 'Basa Jawa' },
     { code: 'ko', label: t('lang.ko') || '한국어' },
     { code: 'vi', label: t('lang.vi') || 'Tiếng Việt' },
@@ -52,7 +52,7 @@ export const ProfileLanguageSettings: React.FC<ProfileLanguageSettingsProps> = (
         onValueChange={handleLanguageChange}
       >
         <SelectTrigger>
-          <SelectValue placeholder="Select language" />
+          <SelectValue placeholder={t('placeholders.selectLanguage')} />
         </SelectTrigger>
         <SelectContent>
           {availableLanguages.map((lang) => (

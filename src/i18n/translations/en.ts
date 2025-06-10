@@ -275,6 +275,11 @@ export const en = {
     settings: "Settings",
     help: "Help",
     logout: "Logout",
+    dashboard: "Dashboard",
+    decks: "Decks",
+    marketplace: "Marketplace",
+    navigation: "Navigation",
+    signOut: "Sign Out",
   },
 
   // Forms
@@ -306,6 +311,50 @@ export const en = {
     endDate: "End Date",
     createdAt: "Created At",
     updatedAt: "Updated At",
+  },
+
+  // Profile translations
+  profile: {
+    title: "Profile",
+    personalInfo: "Personal Information",
+    firstName: "First Name",
+    lastName: "Last Name",
+    email: "Email",
+    language: "Language",
+    changeAvatar: "Change Avatar",
+    updateSuccess: "Profile updated successfully",
+    updateError: "Failed to update profile",
+  },
+
+  // Theme translations
+  theme: {
+    settings: "Theme Settings",
+    colorTheme: "Color Theme",
+    interfaceSize: "Interface Size",
+  },
+
+  // Language translations
+  lang: {
+    en: "English",
+    es: "Español",
+    fr: "Français",
+    de: "Deutsch",
+    it: "Italiano",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    hi: "हिन्दी",
+    ar: "العربية",
+    pt: "Português",
+    ru: "Русский",
+    ja: "日本語",
+    bn: "বাংলা",
+    pa: "ਪੰਜਾਬੀ",
+    jv: "Basa Jawa",
+    ko: "한국어",
+    vi: "Tiếng Việt",
+    tr: "Türkçe",
+    ur: "اردو",
+    ta: "தமிழ்",
   },
 
   // Marketplace translations
@@ -410,5 +459,8 @@ export const en = {
     noResults: "No results found",
     noItems: "No items",
     empty: "Empty",
+    enterFirstName: "Enter your first name",
+    enterLastName: "Enter your last name",
+    selectLanguage: "Select language",
   },
 };

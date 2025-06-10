@@ -41,7 +41,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
       <CardHeader>
         <CardTitle>{t('profile.personalInfo')}</CardTitle>
         <CardDescription>
-          Update your personal information and preferences.
+          {t('profile.updateDescription') || 'Update your personal information and preferences.'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -67,7 +67,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
           <div className="flex justify-end pt-4">
             <Button type="submit" disabled={saving}>
               <Save className="w-4 h-4 mr-2" />
-              {saving ? t('loading') : t('save')}
+              {saving ? t('common.loading') : t('common.save')}
             </Button>
           </div>
         </form>
