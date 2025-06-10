@@ -7,7 +7,6 @@ import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useCardEditorHandlers } from '@/hooks/useCardEditorHandlers';
 import { CardEditorLayout } from './CardEditorLayout';
-import { Navigation } from './Navigation';
 import { CanvasElement } from '@/types/flashcard';
 
 interface CardEditorProps {
@@ -176,8 +175,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
 
   return (
     <div className="flex flex-col h-screen">
-      <Navigation />
-      
       <CardEditorLayout
         cards={cards}
         currentCard={currentCard}

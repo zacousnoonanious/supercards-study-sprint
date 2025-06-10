@@ -7,6 +7,7 @@ import { SidePanel } from './SidePanel';
 import { TopSettingsBar } from './TopSettingsBar';
 import { ConsolidatedToolbar } from './ConsolidatedToolbar';
 import { EnhancedSetOverview } from './EnhancedSetOverview';
+import { Navigation } from './Navigation';
 import { Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -121,134 +122,141 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   // Show enhanced overview if requested
   if (showCardOverview) {
     return (
-      <EnhancedSetOverview
-        cards={cards}
-        setId={currentCard.set_id}
-        onReorderCards={handleReorderCards}
-        onNavigateToCard={handleNavigateToCard}
-        onBackToSet={() => onShowCardOverviewChange(false)}
-        onCreateCard={onCreateNewCard}
-        onCreateFromTemplate={onCreateNewCardFromTemplate}
-        onSetDefaultTemplate={() => {}}
-        onDeleteCard={(cardId) => {
-          const cardIndex = cards.findIndex(c => c.id === cardId);
-          if (cardIndex !== -1) {
-            onDeleteCard();
-          }
-        }}
-        onStudyFromCard={(cardIndex) => {
-          console.log('Study from card:', cardIndex);
-        }}
-        permanentShuffle={false}
-        onPermanentShuffleChange={() => {}}
-      />
+      <div className="flex flex-col h-screen">
+        <Navigation />
+        <EnhancedSetOverview
+          cards={cards}
+          setId={currentCard.set_id}
+          onReorderCards={handleReorderCards}
+          onNavigateToCard={handleNavigateToCard}
+          onBackToSet={() => onShowCardOverviewChange(false)}
+          onCreateCard={onCreateNewCard}
+          onCreateFromTemplate={onCreateNewCardFromTemplate}
+          onSetDefaultTemplate={() => {}}
+          onDeleteCard={(cardId) => {
+            const cardIndex = cards.findIndex(c => c.id === cardId);
+            if (cardIndex !== -1) {
+              onDeleteCard();
+            }
+          }}
+          onStudyFromCard={(cardIndex) => {
+            console.log('Study from card:', cardIndex);
+          }}
+          permanentShuffle={false}
+          onPermanentShuffleChange={() => {}}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <TopToolbar
-        deckName={deckName}
-        currentCardIndex={currentCardIndex}
-        cards={cards}
-        showShortcuts={false}
-        showCardOverview={showCardOverview}
-        onDeckTitleChange={onDeckTitleChange}
-        onShowCardOverviewChange={onShowCardOverviewChange}
-      />
+    <div className="flex flex-col h-screen">
+      <Navigation />
       
-      <TopSettingsBar
-        selectedElement={selectedElement}
-        onUpdateElement={onUpdateElement}
-        onDeleteElement={onDeleteElement}
-        canvasWidth={cardWidth}
-        canvasHeight={cardHeight}
-        onCanvasSizeChange={onCanvasSizeChange}
-        currentCard={currentCard}
-        onUpdateCard={onUpdateCard}
-        showGrid={showGrid}
-        onShowGridChange={onShowGridChange}
-        snapToGrid={snapToGrid}
-        onSnapToGridChange={onSnapToGridChange}
-        currentSide={currentSide}
-      />
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Toolbar Panel - Dynamic width based on text mode */}
-        <div className={`${toolbarShowText ? 'w-48' : 'w-20'} border-r bg-background overflow-y-auto transition-all duration-200`}>
-          <ConsolidatedToolbar
-            onAddElement={onAddElement}
-            onAutoArrange={onAutoArrange}
-            currentCard={currentCard}
-            currentCardIndex={currentCardIndex}
-            totalCards={cards.length}
-            currentSide={currentSide}
-            onNavigateCard={onNavigateCard}
-            onSideChange={onCardSideChange}
-            onCreateNewCard={onCreateNewCard}
-            onCreateNewCardWithLayout={onCreateNewCardWithLayout}
-            onCreateNewCardFromTemplate={onCreateNewCardFromTemplate}
-            onDeleteCard={onDeleteCard}
-            onCardTypeChange={onCardTypeChange}
-            onShowCardOverview={() => onShowCardOverviewChange(!showCardOverview)}
-            position="left"
-            isDocked={true}
-            showText={toolbarShowText}
-            onTextToggle={onToolbarShowTextChange}
-          />
-        </div>
-
-        {/* Canvas Area */}
-        <div className="flex-1 flex items-center justify-center p-4 overflow-auto relative">
-          <div
-            className="relative"
-            style={{
-              transform: `scale(${zoom})`,
-              transformOrigin: 'top left',
-              width: cardWidth,
-              height: cardHeight,
-              cursor: isPanning ? 'grabbing' : 'default',
-            }}
-          >
-            <CardCanvas
-              elements={currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements}
-              selectedElement={selectedElement?.id || null}
-              onSelectElement={onElementSelect}
-              onUpdateElement={onUpdateElement}
-              onDeleteElement={onDeleteElement}
-              cardSide={currentSide}
-              style={canvasStyle}
-              showGrid={showGrid}
-              snapToGrid={snapToGrid}
-              zoom={zoom}
-            />
-          </div>
-        </div>
-
-        {/* Right Side Panel */}
-        <SidePanel
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TopToolbar
+          deckName={deckName}
+          currentCardIndex={currentCardIndex}
+          cards={cards}
+          showShortcuts={false}
+          showCardOverview={showCardOverview}
+          onDeckTitleChange={onDeckTitleChange}
+          onShowCardOverviewChange={onShowCardOverviewChange}
+        />
+        
+        <TopSettingsBar
           selectedElement={selectedElement}
           onUpdateElement={onUpdateElement}
           onDeleteElement={onDeleteElement}
+          canvasWidth={cardWidth}
+          canvasHeight={cardHeight}
+          onCanvasSizeChange={onCanvasSizeChange}
+          currentCard={currentCard}
+          onUpdateCard={onUpdateCard}
+          showGrid={showGrid}
+          onShowGridChange={onShowGridChange}
+          snapToGrid={snapToGrid}
+          onSnapToGridChange={onSnapToGridChange}
+          currentSide={currentSide}
+        />
+
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Toolbar Panel - Dynamic width based on text mode */}
+          <div className={`${toolbarShowText ? 'w-48' : 'w-20'} border-r bg-background overflow-y-auto transition-all duration-200`}>
+            <ConsolidatedToolbar
+              onAddElement={onAddElement}
+              onAutoArrange={onAutoArrange}
+              currentCard={currentCard}
+              currentCardIndex={currentCardIndex}
+              totalCards={cards.length}
+              currentSide={currentSide}
+              onNavigateCard={onNavigateCard}
+              onSideChange={onCardSideChange}
+              onCreateNewCard={onCreateNewCard}
+              onCreateNewCardWithLayout={onCreateNewCardWithLayout}
+              onCreateNewCardFromTemplate={onCreateNewCardFromTemplate}
+              onDeleteCard={onDeleteCard}
+              onCardTypeChange={onCardTypeChange}
+              onShowCardOverview={() => onShowCardOverviewChange(!showCardOverview)}
+              position="left"
+              isDocked={true}
+              showText={toolbarShowText}
+              onTextToggle={onToolbarShowTextChange}
+            />
+          </div>
+
+          {/* Canvas Area */}
+          <div className="flex-1 flex items-center justify-center p-4 overflow-auto relative">
+            <div
+              className="relative"
+              style={{
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top left',
+                width: cardWidth,
+                height: cardHeight,
+                cursor: isPanning ? 'grabbing' : 'default',
+              }}
+            >
+              <CardCanvas
+                elements={currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements}
+                selectedElement={selectedElement?.id || null}
+                onSelectElement={onElementSelect}
+                onUpdateElement={onUpdateElement}
+                onDeleteElement={onDeleteElement}
+                cardSide={currentSide}
+                style={canvasStyle}
+                showGrid={showGrid}
+                snapToGrid={snapToGrid}
+                zoom={zoom}
+              />
+            </div>
+          </div>
+
+          {/* Right Side Panel */}
+          <SidePanel
+            selectedElement={selectedElement}
+            onUpdateElement={onUpdateElement}
+            onDeleteElement={onDeleteElement}
+          />
+        </div>
+
+        <BottomToolbar
+          zoom={zoom}
+          showGrid={showGrid}
+          snapToGrid={snapToGrid}
+          toolbarPosition={toolbarPosition}
+          toolbarIsDocked={toolbarIsDocked}
+          toolbarShowText={toolbarShowText}
+          onZoomChange={onZoomChange}
+          onShowGridChange={onShowGridChange}
+          onSnapToGridChange={onSnapToGridChange}
+          onToolbarPositionChange={onToolbarPositionChange}
+          onToolbarDockChange={onToolbarDockChange}
+          onToolbarShowTextChange={onToolbarShowTextChange}
+          currentSide={currentSide}
+          onCardSideChange={onCardSideChange}
         />
       </div>
-
-      <BottomToolbar
-        zoom={zoom}
-        showGrid={showGrid}
-        snapToGrid={snapToGrid}
-        toolbarPosition={toolbarPosition}
-        toolbarIsDocked={toolbarIsDocked}
-        toolbarShowText={toolbarShowText}
-        onZoomChange={onZoomChange}
-        onShowGridChange={onShowGridChange}
-        onSnapToGridChange={onSnapToGridChange}
-        onToolbarPositionChange={onToolbarPositionChange}
-        onToolbarDockChange={onToolbarDockChange}
-        onToolbarShowTextChange={onToolbarShowTextChange}
-        currentSide={currentSide}
-        onCardSideChange={onCardSideChange}
-      />
     </div>
   );
 };
