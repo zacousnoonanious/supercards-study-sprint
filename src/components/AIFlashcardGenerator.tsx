@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ import { Sparkles, Brain, BookOpen, Image, Zap, Target, Layers, Globe } from 'lu
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { cardTemplates } from '@/data/cardTemplates';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +38,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useI18n();
   
   // Basic Settings
   const [topic, setTopic] = useState('');
@@ -93,8 +96,8 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
   const generateCards = async () => {
     if (!topic.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a topic for the flashcards.",
+        title: t('common.error'),
+        description: t('ai.errorEnterTopic'),
         variant: "destructive",
       });
       return;
@@ -102,8 +105,8 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
 
     if (mode === 'create-new-deck' && !deckTitle.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a deck title.",
+        title: t('common.error'),
+        description: t('ai.errorEnterDeckTitle'),
         variant: "destructive",
       });
       return;
@@ -111,8 +114,8 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
 
     if (!user) {
       toast({
-        title: "Error",
-        description: "You must be logged in to generate cards.",
+        title: t('common.error'),
+        description: t('ai.errorLoginRequired'),
         variant: "destructive",
       });
       return;
@@ -121,8 +124,8 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
     // Validate quiz settings
     if (includeQuiz && !quizTypes.multipleChoice && !quizTypes.trueFalse && !quizTypes.fillInBlank) {
       toast({
-        title: "Error",
-        description: "Please select at least one quiz type if including quiz questions.",
+        title: t('common.error'),
+        description: t('ai.errorSelectQuizType'),
         variant: "destructive",
       });
       return;
@@ -221,8 +224,13 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
         const fillInBlankCards = data.fillInBlankCards || 0;
         
         toast({
-          title: "Success",
-          description: `Generated ${totalCards} cards successfully! (${informationalCards} informational, ${quizCards} quiz, ${fillInBlankCards} fill-in-blank, ${imagesGenerated} with images)`,
+          title: t('common.success'),
+          description: t('ai.successGenerated')
+            .replace('{totalCards}', totalCards.toString())
+            .replace('{informationalCards}', informationalCards.toString())
+            .replace('{quizCards}', quizCards.toString())
+            .replace('{fillInBlankCards}', fillInBlankCards.toString())
+            .replace('{imagesGenerated}', imagesGenerated.toString()),
         });
 
         if (mode === 'create-new-deck' && onDeckCreated) {
@@ -243,8 +251,8 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
     } catch (error) {
       console.error('Error generating flashcards:', error);
       toast({
-        title: "Error",
-        description: "Failed to generate flashcards. Please try again.",
+        title: t('common.error'),
+        description: t('ai.errorGeneral'),
         variant: "destructive",
       });
     } finally {
@@ -270,7 +278,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-indigo-600" />
-          Advanced AI Educational Content Generator
+          {t('ai.advancedGenerator')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -278,33 +286,33 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
         {mode === 'create-new-deck' && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="deck-title">Deck Title</Label>
+              <Label htmlFor="deck-title">{t('ai.deckTitle')}</Label>
               <Input
                 id="deck-title"
                 value={deckTitle}
                 onChange={(e) => setDeckTitle(e.target.value)}
-                placeholder="e.g., Advanced Medieval Architecture, Quantum Physics Fundamentals"
+                placeholder={t('ai.deckTitlePlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="deck-description">Description (Optional)</Label>
+              <Label htmlFor="deck-description">{t('ai.deckDescription')}</Label>
               <Input
                 id="deck-description"
                 value={deckDescription}
                 onChange={(e) => setDeckDescription(e.target.value)}
-                placeholder="Comprehensive educational content with interactive elements..."
+                placeholder={t('ai.deckDescriptionPlaceholder')}
               />
             </div>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="topic">Educational Topic</Label>
+          <Label htmlFor="topic">{t('ai.educationalTopic')}</Label>
           <Textarea
             id="topic"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="e.g., 'Medieval castle architecture and defensive strategies', 'Photosynthesis process in detail', 'World War 2 timeline with key battles'"
+            placeholder={t('ai.educationalTopicPlaceholder')}
             className="min-h-[80px]"
           />
         </div>
@@ -313,7 +321,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
         <div className="space-y-4 p-4 border rounded-lg">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4" />
-            <Label className="text-sm font-medium">Template Strategy</Label>
+            <Label className="text-sm font-medium">{t('ai.templateStrategy')}</Label>
           </div>
           
           <Select value={templateMode} onValueChange={(value: 'auto' | 'fixed' | 'mixed') => setTemplateMode(value)}>
@@ -324,19 +332,19 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
               <SelectItem value="auto">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4" />
-                  Auto-Select Templates (AI chooses best layout)
+                  {t('ai.autoSelectTemplates')}
                 </div>
               </SelectItem>
               <SelectItem value="fixed">
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4" />
-                  Fixed Template (All cards same layout)
+                  {t('ai.fixedTemplate')}
                 </div>
               </SelectItem>
               <SelectItem value="mixed">
                 <div className="flex items-center gap-2">
                   <Layers className="w-4 h-4" />
-                  Mixed Templates (Select multiple)
+                  {t('ai.mixedTemplates')}
                 </div>
               </SelectItem>
             </SelectContent>
@@ -344,10 +352,10 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
 
           {templateMode === 'fixed' && (
             <div className="space-y-2">
-              <Label>Choose Template</Label>
+              <Label>{t('ai.chooseTemplate')}</Label>
               <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a template" />
+                  <SelectValue placeholder={t('ai.selectTemplate')} />
                 </SelectTrigger>
                 <SelectContent>
                   {cardTemplates.map(template => (
@@ -362,7 +370,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
 
           {templateMode === 'mixed' && (
             <div className="space-y-2">
-              <Label>Select Templates to Use</Label>
+              <Label>{t('ai.selectTemplateToUse')}</Label>
               <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
                 {cardTemplates.map(template => (
                   <div key={template.id} className="flex items-center space-x-2">
@@ -383,42 +391,42 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
         <div className="space-y-4 p-4 border rounded-lg">
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4" />
-            <Label className="text-sm font-medium">Content Strategy</Label>
+            <Label className="text-sm font-medium">{t('ai.contentStrategy')}</Label>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Content Density</Label>
+              <Label>{t('ai.contentDensity')}</Label>
               <Select value={contentDensity} onValueChange={(value: 'key-points' | 'detailed' | 'comprehensive') => setContentDensity(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="key-points">Key Points Only</SelectItem>
-                  <SelectItem value="detailed">Detailed Explanations</SelectItem>
-                  <SelectItem value="comprehensive">Comprehensive Coverage</SelectItem>
+                  <SelectItem value="key-points">{t('ai.keyPointsOnly')}</SelectItem>
+                  <SelectItem value="detailed">{t('ai.detailedExplanations')}</SelectItem>
+                  <SelectItem value="comprehensive">{t('ai.comprehensiveCoverage')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Target Audience</Label>
+              <Label>{t('ai.targetAudience')}</Label>
               <Select value={targetAudience} onValueChange={(value: 'beginner' | 'intermediate' | 'advanced' | 'mixed') => setTargetAudience(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="intermediate">Intermediate</SelectItem>
-                  <SelectItem value="advanced">Advanced</SelectItem>
-                  <SelectItem value="mixed">Mixed Levels</SelectItem>
+                  <SelectItem value="beginner">{t('ai.beginner')}</SelectItem>
+                  <SelectItem value="intermediate">{t('ai.intermediate')}</SelectItem>
+                  <SelectItem value="advanced">{t('ai.advanced')}</SelectItem>
+                  <SelectItem value="mixed">{t('ai.mixedLevels')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Information Depth: {informationDepth[0]}%</Label>
+            <Label>{t('ai.informationDepth')}: {informationDepth[0]}%</Label>
             <Slider
               value={informationDepth}
               onValueChange={setInformationDepth}
@@ -428,8 +436,8 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Surface Level</span>
-              <span>Deep Dive</span>
+              <span>{t('ai.surfaceLevel')}</span>
+              <span>{t('ai.deepDive')}</span>
             </div>
           </div>
 
@@ -440,7 +448,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                 checked={includeIntroOutro}
                 onCheckedChange={(checked) => setIncludeIntroOutro(checked as boolean)}
               />
-              <Label htmlFor="intro-outro" className="text-sm">Include Intro/Outro Cards</Label>
+              <Label htmlFor="intro-outro" className="text-sm">{t('ai.includeIntroOutroCards')}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -448,7 +456,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                 checked={includeSummary}
                 onCheckedChange={(checked) => setIncludeSummary(checked as boolean)}
               />
-              <Label htmlFor="summary" className="text-sm">Include Summary Cards</Label>
+              <Label htmlFor="summary" className="text-sm">{t('ai.includeSummaryCards')}</Label>
             </div>
           </div>
 
@@ -459,7 +467,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                 checked={includeDefinitions}
                 onCheckedChange={(checked) => setIncludeDefinitions(checked as boolean)}
               />
-              <Label htmlFor="definitions" className="text-sm">Auto-Generate Definitions</Label>
+              <Label htmlFor="definitions" className="text-sm">{t('ai.autoGenerateDefinitions')}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -467,7 +475,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                 checked={includeExamples}
                 onCheckedChange={(checked) => setIncludeExamples(checked as boolean)}
               />
-              <Label htmlFor="examples" className="text-sm">Include Examples</Label>
+              <Label htmlFor="examples" className="text-sm">{t('ai.includeExamples')}</Label>
             </div>
           </div>
         </div>
@@ -476,7 +484,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
         <div className="space-y-4 p-4 border rounded-lg">
           <div className="flex items-center gap-2">
             <Image className="w-4 h-4" />
-            <Label className="text-sm font-medium">Visual & Media Integration</Label>
+            <Label className="text-sm font-medium">{t('ai.visualMediaIntegration')}</Label>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -485,22 +493,22 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
               checked={autoIncludeImages}
               onCheckedChange={(checked) => setAutoIncludeImages(checked as boolean)}
             />
-            <Label htmlFor="auto-images">Auto-Search & Include Relevant Images</Label>
+            <Label htmlFor="auto-images">{t('ai.autoSearchIncludeImages')}</Label>
           </div>
 
           {autoIncludeImages && (
             <div className="space-y-4 pl-6">
               <div className="space-y-2">
-                <Label>Custom Image Search Terms (Optional)</Label>
+                <Label>{t('ai.customImageSearchTerms')}</Label>
                 <Input
                   value={imageSearchTerms}
                   onChange={(e) => setImageSearchTerms(e.target.value)}
-                  placeholder="Additional search terms for images..."
+                  placeholder={t('ai.customImageSearchPlaceholder')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Cards with Images: {imagePercentage[0]}%</Label>
+                <Label>{t('ai.cardsWithImages')}: {imagePercentage[0]}%</Label>
                 <Slider
                   value={imagePercentage}
                   onValueChange={setImagePercentage}
@@ -512,16 +520,16 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label>Preferred Image Style</Label>
+                <Label>{t('ai.preferredImageStyle')}</Label>
                 <Select value={preferredImageStyle} onValueChange={(value: 'realistic' | 'illustrations' | 'diagrams' | 'mixed') => setPreferredImageStyle(value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="realistic">Realistic Photos</SelectItem>
-                    <SelectItem value="illustrations">Illustrations</SelectItem>
-                    <SelectItem value="diagrams">Diagrams & Charts</SelectItem>
-                    <SelectItem value="mixed">Mixed Styles</SelectItem>
+                    <SelectItem value="realistic">{t('ai.realisticPhotos')}</SelectItem>
+                    <SelectItem value="illustrations">{t('ai.illustrations')}</SelectItem>
+                    <SelectItem value="diagrams">{t('ai.diagramsCharts')}</SelectItem>
+                    <SelectItem value="mixed">{t('ai.mixedStyles')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -533,7 +541,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
         <div className="space-y-4 p-4 border rounded-lg">
           <div className="flex items-center gap-2">
             <Brain className="w-4 h-4" />
-            <Label className="text-sm font-medium">Interactive Quiz Configuration</Label>
+            <Label className="text-sm font-medium">{t('ai.interactiveQuizConfiguration')}</Label>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -542,13 +550,13 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
               checked={includeQuiz}
               onCheckedChange={(checked) => setIncludeQuiz(checked as boolean)}
             />
-            <Label htmlFor="include-quiz">Include Interactive Quiz Questions</Label>
+            <Label htmlFor="include-quiz">{t('ai.includeInteractiveQuizQuestions')}</Label>
           </div>
 
           {includeQuiz && (
             <div className="space-y-4 pl-6">
               <div className="space-y-2">
-                <Label>Quiz Questions: {quizPercentage[0]}%</Label>
+                <Label>{t('ai.quizQuestions')}: {quizPercentage[0]}%</Label>
                 <Slider
                   value={quizPercentage}
                   onValueChange={setQuizPercentage}
@@ -560,7 +568,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label>Quiz Types</Label>
+                <Label>{t('ai.quizTypes')}</Label>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -570,7 +578,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                         setQuizTypes(prev => ({ ...prev, multipleChoice: checked as boolean }))
                       }
                     />
-                    <Label htmlFor="multiple-choice" className="text-sm">Multiple Choice</Label>
+                    <Label htmlFor="multiple-choice" className="text-sm">{t('ai.multipleChoice')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -580,7 +588,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                         setQuizTypes(prev => ({ ...prev, trueFalse: checked as boolean }))
                       }
                     />
-                    <Label htmlFor="true-false" className="text-sm">True/False</Label>
+                    <Label htmlFor="true-false" className="text-sm">{t('ai.trueFalse')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -590,7 +598,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                         setQuizTypes(prev => ({ ...prev, fillInBlank: checked as boolean }))
                       }
                     />
-                    <Label htmlFor="fill-blank" className="text-sm">Fill in Blank</Label>
+                    <Label htmlFor="fill-blank" className="text-sm">{t('ai.fillInBlank')}</Label>
                   </div>
                 </div>
               </div>
@@ -598,7 +606,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
               {/* Fill-in-blank specific settings */}
               {quizTypes.fillInBlank && (
                 <div className="space-y-4 p-3 bg-muted rounded-lg">
-                  <Label className="text-sm font-medium">Fill-in-Blank Settings</Label>
+                  <Label className="text-sm font-medium">{t('ai.fillInBlankSettings')}</Label>
                   
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -608,7 +616,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                         setFillInBlankSettings(prev => ({ ...prev, intelligentWordSelection: checked as boolean }))
                       }
                     />
-                    <Label htmlFor="intelligent-words" className="text-sm">Smart Word Selection (avoids common words)</Label>
+                    <Label htmlFor="intelligent-words" className="text-sm">{t('ai.smartWordSelection')}</Label>
                   </div>
 
                   <div className="flex items-center space-x-2">
@@ -619,11 +627,11 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                         setFillInBlankSettings(prev => ({ ...prev, avoidCommonWords: checked as boolean }))
                       }
                     />
-                    <Label htmlFor="avoid-common" className="text-sm">Avoid blanking articles, prepositions, etc.</Label>
+                    <Label htmlFor="avoid-common" className="text-sm">{t('ai.avoidBlankingArticles')}</Label>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Blank Percentage: {fillInBlankSettings.blankPercentage}%</Label>
+                    <Label>{t('ai.blankPercentage')}: {fillInBlankSettings.blankPercentage}%</Label>
                     <Slider
                       value={[fillInBlankSettings.blankPercentage]}
                       onValueChange={(values) =>
@@ -635,7 +643,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                       className="w-full"
                     />
                     <div className="text-xs text-muted-foreground">
-                      Percentage of important words to blank out in each sentence
+                      {t('ai.blankPercentageDescription')}
                     </div>
                   </div>
                 </div>
@@ -643,7 +651,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
 
               {(quizTypes.multipleChoice && quizTypes.trueFalse) && (
                 <div className="space-y-2">
-                  <Label>Multiple Choice vs True/False Ratio: {mcToTfRatio[0]}% MC</Label>
+                  <Label>{t('ai.multipleChoiceVsTrueFalse')}: {mcToTfRatio[0]}% MC</Label>
                   <Slider
                     value={mcToTfRatio}
                     onValueChange={setMcToTfRatio}
@@ -656,16 +664,16 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
               )}
 
               <div className="space-y-2">
-                <Label>Quiz Difficulty</Label>
+                <Label>{t('ai.quizDifficulty')}</Label>
                 <Select value={quizDifficulty} onValueChange={(value: 'easy' | 'medium' | 'hard' | 'mixed') => setQuizDifficulty(value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="easy">Easy</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="hard">Hard</SelectItem>
-                    <SelectItem value="mixed">Mixed Difficulty</SelectItem>
+                    <SelectItem value="easy">{t('ai.easy')}</SelectItem>
+                    <SelectItem value="medium">{t('ai.medium')}</SelectItem>
+                    <SelectItem value="hard">{t('ai.hard')}</SelectItem>
+                    <SelectItem value="mixed">{t('ai.mixedDifficulty')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -677,7 +685,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
         <div className="space-y-4 p-4 border rounded-lg">
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4" />
-            <Label className="text-sm font-medium">Advanced AI Features</Label>
+            <Label className="text-sm font-medium">{t('ai.advancedAiFeatures')}</Label>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -687,7 +695,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                 checked={generateRelatedTopics}
                 onCheckedChange={(checked) => setGenerateRelatedTopics(checked as boolean)}
               />
-              <Label htmlFor="related-topics" className="text-sm">Generate Related Topics</Label>
+              <Label htmlFor="related-topics" className="text-sm">{t('ai.generateRelatedTopics')}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -695,7 +703,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
                 checked={adaptiveContent}
                 onCheckedChange={(checked) => setAdaptiveContent(checked as boolean)}
               />
-              <Label htmlFor="adaptive-content" className="text-sm">Adaptive Content Flow</Label>
+              <Label htmlFor="adaptive-content" className="text-sm">{t('ai.adaptiveContentFlow')}</Label>
             </div>
           </div>
         </div>
@@ -704,7 +712,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Number of Cards: {cardCount[0]}</Label>
+              <Label>{t('ai.numberOfCards')}: {cardCount[0]}</Label>
               <Slider
                 value={cardCount}
                 onValueChange={setCardCount}
@@ -715,18 +723,18 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
               />
             </div>
             <div className="space-y-2">
-              <Label>Content Style</Label>
+              <Label>{t('ai.contentStyle')}</Label>
               <Select value={style} onValueChange={setStyle}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="standard">Standard</SelectItem>
-                  <SelectItem value="concise">Concise</SelectItem>
-                  <SelectItem value="detailed">Detailed</SelectItem>
-                  <SelectItem value="funny">Engaging & Fun</SelectItem>
-                  <SelectItem value="creative">Creative</SelectItem>
-                  <SelectItem value="academic">Academic</SelectItem>
+                  <SelectItem value="standard">{t('ai.standard')}</SelectItem>
+                  <SelectItem value="concise">{t('ai.concise')}</SelectItem>
+                  <SelectItem value="detailed">{t('ai.detailed')}</SelectItem>
+                  <SelectItem value="funny">{t('ai.engagingFun')}</SelectItem>
+                  <SelectItem value="creative">{t('ai.creative')}</SelectItem>
+                  <SelectItem value="academic">{t('ai.academic')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -737,7 +745,7 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
         {isGenerating && generationProgress > 0 && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Generating content...</span>
+              <span>{t('ai.generatingContent')}</span>
               <span>{generationProgress}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -759,14 +767,17 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
           {isGenerating ? (
             <>
               <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-              Generating Advanced Educational Content...
+              {t('ai.generatingAdvancedContent')}
             </>
           ) : (
             <>
               <BookOpen className="w-4 h-4 mr-2" />
-              Generate {cardCount[0]} Advanced Educational Card{cardCount[0] !== 1 ? 's' : ''}
-              {includeQuiz && ` (${Math.ceil((cardCount[0] * quizPercentage[0]) / 100)} quiz)`}
-              {autoIncludeImages && ` with Images`}
+              {cardCount[0] === 1 
+                ? t('ai.generateCardsSingular').replace('{count}', cardCount[0].toString())
+                : t('ai.generateCardsPlural').replace('{count}', cardCount[0].toString())
+              }
+              {includeQuiz && t('ai.withQuizText').replace('{quizCount}', Math.ceil((cardCount[0] * quizPercentage[0]) / 100).toString())}
+              {autoIncludeImages && t('ai.withImagesText')}
             </>
           )}
         </Button>
@@ -776,22 +787,22 @@ export const AIFlashcardGenerator: React.FC<AIFlashcardGeneratorProps> = ({
           <div className="text-sm text-muted-foreground space-y-1">
             <div className="flex flex-wrap gap-1">
               <Badge variant="outline" className="text-xs">
-                {templateMode === 'auto' ? 'Smart Templates' : templateMode === 'fixed' ? 'Fixed Layout' : 'Mixed Layouts'}
+                {templateMode === 'auto' ? t('ai.smartTemplates') : templateMode === 'fixed' ? t('ai.fixedLayout') : t('ai.mixedLayouts')}
               </Badge>
               <Badge variant="outline" className="text-xs">
-                {contentDensity} Content
+                {contentDensity} {t('common.content')}
               </Badge>
               {autoIncludeImages && (
-                <Badge variant="outline" className="text-xs">Auto Images</Badge>
+                <Badge variant="outline" className="text-xs">{t('ai.autoImages')}</Badge>
               )}
               {includeQuiz && (
-                <Badge variant="outline" className="text-xs">{quizPercentage[0]}% Quiz</Badge>
+                <Badge variant="outline" className="text-xs">{t('ai.percentageCards').replace('{percentage}', quizPercentage[0].toString())} {t('ai.withQuiz')}</Badge>
               )}
               {quizTypes.fillInBlank && (
-                <Badge variant="outline" className="text-xs">Smart Fill-in-Blank</Badge>
+                <Badge variant="outline" className="text-xs">{t('ai.smartFillInBlank')}</Badge>
               )}
               {adaptiveContent && (
-                <Badge variant="outline" className="text-xs">Adaptive Flow</Badge>
+                <Badge variant="outline" className="text-xs">{t('ai.adaptiveFlow')}</Badge>
               )}
             </div>
           </div>
