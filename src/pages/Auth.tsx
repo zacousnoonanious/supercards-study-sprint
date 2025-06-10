@@ -11,6 +11,7 @@ import { useEffect as useReactEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { useI18n } from '@/contexts/I18nContext';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
+import { WebGLFlashcards } from '@/components/WebGLFlashcards';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -62,74 +63,17 @@ const Auth = () => {
     return 'Strong';
   };
 
-  // Reduced flashcard facts for better performance
+  // Flashcard data for WebGL animation
   const flashcardFacts = useMemo(() => [
-    { front: "Capital of Japan", back: "Tokyo", color: "bg-blue-100 border-blue-300 text-blue-800" },
-    { front: "Speed of Light", back: "299,792,458 m/s", color: "bg-purple-100 border-purple-300 text-purple-800" },
-    { front: "Largest Planet", back: "Jupiter", color: "bg-orange-100 border-orange-300 text-orange-800" },
-    { front: "Chemical Symbol for Gold", back: "Au", color: "bg-yellow-100 border-yellow-300 text-yellow-800" },
-    { front: "Author of 1984", back: "George Orwell", color: "bg-green-100 border-green-300 text-green-800" },
-    { front: "Pythagorean Theorem", back: "a² + b² = c²", color: "bg-red-100 border-red-300 text-red-800" }
+    { front: "Capital of Japan", back: "Tokyo", color: "#3b82f6" },
+    { front: "Speed of Light", back: "299,792,458 m/s", color: "#8b5cf6" },
+    { front: "Largest Planet", back: "Jupiter", color: "#f97316" },
+    { front: "Chemical Symbol for Gold", back: "Au", color: "#eab308" },
+    { front: "Author of 1984", back: "George Orwell", color: "#22c55e" },
+    { front: "Pythagorean Theorem", back: "a² + b² = c²", color: "#ef4444" },
+    { front: "Capital of France", back: "Paris", color: "#06b6d4" },
+    { front: "Smallest Prime Number", back: "2", color: "#ec4899" }
   ], []);
-
-  // Simplified movement data with constant velocities
-  const [cardMovements, setCardMovements] = useState(() => 
-    flashcardFacts.map((_, index) => ({
-      id: index,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      vx: (Math.random() - 0.5) * 0.15, // Much slower, constant velocity
-      vy: (Math.random() - 0.5) * 0.15,
-      rotation: Math.random() * 360,
-      rotationSpeed: (Math.random() - 0.5) * 0.3,
-      flipTimer: Math.random() * 12000, // Slower flipping
-      isFlipped: false,
-      opacity: 0.4 + Math.random() * 0.3
-    }))
-  );
-
-  // Super simple card movement with wraparound
-  useEffect(() => {
-    let animationId: number;
-    let lastUpdate = 0;
-    
-    const updateCards = (timestamp: number) => {
-      if (timestamp - lastUpdate > 200) { // Even slower updates: 5fps
-        setCardMovements(prevMovements => 
-          prevMovements.map(movement => {
-            const newMovement = { ...movement };
-            
-            // Simple linear movement
-            newMovement.x += newMovement.vx;
-            newMovement.y += newMovement.vy;
-            
-            // Wraparound - much simpler than bouncing
-            if (newMovement.x < -10) newMovement.x = 110;
-            if (newMovement.x > 110) newMovement.x = -10;
-            if (newMovement.y < -10) newMovement.y = 110;
-            if (newMovement.y > 110) newMovement.y = -10;
-            
-            // Simple rotation
-            newMovement.rotation += newMovement.rotationSpeed;
-            
-            // Card flipping
-            newMovement.flipTimer += 200;
-            if (newMovement.flipTimer > 10000 + Math.random() * 8000) {
-              newMovement.isFlipped = !newMovement.isFlipped;
-              newMovement.flipTimer = 0;
-            }
-            
-            return newMovement;
-          })
-        );
-        lastUpdate = timestamp;
-      }
-      animationId = requestAnimationFrame(updateCards);
-    };
-
-    animationId = requestAnimationFrame(updateCards);
-    return () => cancelAnimationFrame(animationId);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -246,9 +190,9 @@ const Auth = () => {
     <div className="h-screen w-screen fixed inset-0 overflow-hidden">
       <Navigation />
       
-      {/* Simplified gradient background */}
+      {/* Gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-400 via-pink-500 to-blue-600">
-        {/* Reduced geometric shapes */}
+        {/* Simple geometric shapes */}
         <div className="absolute top-20 left-10 w-8 h-8 bg-pink-300 rounded-full opacity-50 animate-float"></div>
         <div 
           className="absolute top-32 right-20 w-6 h-6 bg-blue-300 opacity-40 animate-float-slow"
@@ -259,46 +203,8 @@ const Auth = () => {
         <div className="absolute bottom-40 right-10 w-10 h-10 bg-purple-300 rounded-full opacity-40 animate-float"></div>
       </div>
 
-      {/* Optimized floating flashcards */}
-      <div className="absolute inset-0 z-5 pointer-events-none overflow-hidden">
-        {flashcardFacts.map((card, index) => {
-          const movement = cardMovements[index];
-          return (
-            <div
-              key={index}
-              className="absolute will-change-transform"
-              style={{
-                left: `${movement.x}%`,
-                top: `${movement.y}%`,
-                transform: `translate3d(-50%, -50%, 0) rotate(${movement.rotation}deg)`,
-                opacity: movement.opacity,
-              }}
-            >
-              <div className="w-28 h-18 md:w-32 md:h-20 [perspective:1000px] drop-shadow-md">
-                <div
-                  className="relative w-full h-full transition-transform duration-700 ease-in-out will-change-transform"
-                  style={{
-                    transformStyle: 'preserve-3d',
-                    transform: movement.isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                  }}
-                >
-                  {/* Front of card */}
-                  <div className={`absolute inset-0 w-full h-full ${card.color} border rounded-lg shadow-lg p-2 md:p-3 flex items-center justify-center [backface-visibility:hidden]`}>
-                    <p className="text-xs font-semibold text-center leading-tight">{card.front}</p>
-                  </div>
-                  {/* Back of card */}
-                  <div 
-                    className={`absolute inset-0 w-full h-full ${card.color} border rounded-lg shadow-lg p-2 md:p-3 flex items-center justify-center [backface-visibility:hidden]`}
-                    style={{ transform: 'rotateY(180deg)' }}
-                  >
-                    <p className="text-xs font-medium text-center leading-tight">{card.back}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {/* WebGL Flashcards */}
+      <WebGLFlashcards flashcards={flashcardFacts} />
 
       {/* Content */}
       <div className="relative z-10 h-full flex items-center justify-center p-4 pt-16 pb-4">
@@ -420,7 +326,7 @@ const Auth = () => {
         </Card>
       </div>
 
-      {/* Simplified CSS animations */}
+      {/* CSS animations */}
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes scale-in {
