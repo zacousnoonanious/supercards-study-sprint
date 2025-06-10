@@ -1,8 +1,5 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Grid, Eye, EyeOff } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
 
 interface CanvasBackgroundProps {
   showGrid?: boolean;
@@ -15,21 +12,22 @@ export const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
   gridSize = 20,
   isDarkTheme = false,
 }) => {
+  if (!showGrid) {
+    return null;
+  }
+
   return (
-    <>
-      {/* Grid Pattern (if enabled) */}
-      {showGrid && (
-        <div
-          className="absolute inset-0 pointer-events-none opacity-20"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, ${isDarkTheme ? '#374151' : '#e5e7eb'} 1px, transparent 1px),
-              linear-gradient(to bottom, ${isDarkTheme ? '#374151' : '#e5e7eb'} 1px, transparent 1px)
-            `,
-            backgroundSize: `${gridSize}px ${gridSize}px`,
-          }}
-        />
-      )}
-    </>
+    <div
+      className="absolute inset-0 pointer-events-none"
+      style={{
+        backgroundImage: `
+          linear-gradient(to right, ${isDarkTheme ? '#4B5563' : '#D1D5DB'} 1px, transparent 1px),
+          linear-gradient(to bottom, ${isDarkTheme ? '#4B5563' : '#D1D5DB'} 1px, transparent 1px)
+        `,
+        backgroundSize: `${gridSize}px ${gridSize}px`,
+        opacity: 0.6,
+      }}
+      data-canvas-background="true"
+    />
   );
 };

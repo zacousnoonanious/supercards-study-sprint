@@ -118,7 +118,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     <div
       ref={canvasRef}
       className={`relative overflow-hidden ${isDarkTheme ? 'bg-gray-900' : 'bg-white'} ${
-        showBorder ? 'border-2 border-dashed border-gray-400' : ''
+        showBorder ? 'border-4 border-blue-500 border-solid' : ''
       }`}
       style={{
         ...style,

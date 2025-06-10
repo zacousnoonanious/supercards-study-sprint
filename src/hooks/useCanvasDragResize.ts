@@ -30,7 +30,7 @@ export const useCanvasDragResize = ({
     if (snapToGrid && gridSize > 0) {
       return Math.round(value / gridSize) * gridSize;
     }
-    return value;
+    return Math.round(value);
   }, [snapToGrid, gridSize]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent, canvasRect: DOMRect) => {
@@ -107,19 +107,21 @@ export const useCanvasDragResize = ({
           break;
       }
       
-      // Apply grid snapping if enabled
-      if (snapToGrid && gridSize > 0) {
-        newWidth = snapToGridIfEnabled(newWidth);
-        newHeight = snapToGridIfEnabled(newHeight);
-        newX = snapToGridIfEnabled(newX);
-        newY = snapToGridIfEnabled(newY);
-      }
+      // Apply grid snapping if enabled for resizing
+      newWidth = snapToGridIfEnabled(newWidth);
+      newHeight = snapToGridIfEnabled(newHeight);
+      newX = snapToGridIfEnabled(newX);
+      newY = snapToGridIfEnabled(newY);
       
       // Constrain to canvas bounds - ensure element doesn't go outside canvas
-      newX = Math.max(0, Math.min(newX, canvasWidth - newWidth));
-      newY = Math.max(0, Math.min(newY, canvasHeight - newHeight));
+      const maxWidth = canvasWidth - newX;
+      const maxHeight = canvasHeight - newY;
       
-      // Ensure element doesn't get smaller than minimum size
+      // Ensure element stays within bounds
+      newX = Math.max(0, Math.min(newX, canvasWidth - minSize));
+      newY = Math.max(0, Math.min(newY, canvasHeight - minSize));
+      
+      // Adjust width and height to fit within canvas
       newWidth = Math.max(minSize, Math.min(newWidth, canvasWidth - newX));
       newHeight = Math.max(minSize, Math.min(newHeight, canvasHeight - newY));
       
@@ -149,9 +151,6 @@ export const useCanvasDragResize = ({
     }
     
     setDragElementId(elementId);
-    
-    // Store mouse start position (will be calculated relative to canvas in the component)
-    setDragStart({ x: 0, y: 0 }); // Will be set by the component
     
     // Store the initial element state
     setDragElementStart({
