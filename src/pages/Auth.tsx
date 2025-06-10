@@ -21,33 +21,16 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const { signUp, signIn, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useI18n();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const lastMouseMoveRef = useRef(0);
 
   useReactEffect(() => {
     if (user) {
       navigate('/dashboard');
     }
   }, [user, navigate]);
-
-  // Throttled mouse tracking to reduce performance impact
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    const now = Date.now();
-    if (now - lastMouseMoveRef.current > 100) { // Throttle to 10fps instead of 60fps
-      setMousePos({ x: e.clientX, y: e.clientY });
-      lastMouseMoveRef.current = now;
-    }
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [handleMouseMove]);
 
   // Password strength calculation
   const getPasswordStrength = (password: string) => {
@@ -79,90 +62,59 @@ const Auth = () => {
     return 'Strong';
   };
 
-  // Reduced flashcard facts (from 18 to 8 for better performance)
+  // Reduced flashcard facts for better performance
   const flashcardFacts = useMemo(() => [
     { front: "Capital of Japan", back: "Tokyo", color: "bg-blue-100 border-blue-300 text-blue-800" },
     { front: "Speed of Light", back: "299,792,458 m/s", color: "bg-purple-100 border-purple-300 text-purple-800" },
     { front: "Largest Planet", back: "Jupiter", color: "bg-orange-100 border-orange-300 text-orange-800" },
     { front: "Chemical Symbol for Gold", back: "Au", color: "bg-yellow-100 border-yellow-300 text-yellow-800" },
     { front: "Author of 1984", back: "George Orwell", color: "bg-green-100 border-green-300 text-green-800" },
-    { front: "Pythagorean Theorem", back: "a² + b² = c²", color: "bg-red-100 border-red-300 text-red-800" },
-    { front: "DNA Structure", back: "Double Helix", color: "bg-pink-100 border-pink-300 text-pink-800" },
-    { front: "Newton's First Law", back: "Objects at rest stay at rest", color: "bg-emerald-100 border-emerald-300 text-emerald-800" }
+    { front: "Pythagorean Theorem", back: "a² + b² = c²", color: "bg-red-100 border-red-300 text-red-800" }
   ], []);
 
-  // Simplified movement data with reduced calculations
+  // Simplified movement data with constant velocities
   const [cardMovements, setCardMovements] = useState(() => 
     flashcardFacts.map((_, index) => ({
       id: index,
-      x: Math.random() * 70 + 15, // Keep cards more centered
-      y: Math.random() * 70 + 15,
-      vx: (Math.random() - 0.5) * 0.3, // Reduced velocity for smoother animation
-      vy: (Math.random() - 0.5) * 0.3,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      vx: (Math.random() - 0.5) * 0.15, // Much slower, constant velocity
+      vy: (Math.random() - 0.5) * 0.15,
       rotation: Math.random() * 360,
-      rotationSpeed: (Math.random() - 0.5) * 0.5, // Slower rotation
-      flipTimer: Math.random() * 10000,
+      rotationSpeed: (Math.random() - 0.5) * 0.3,
+      flipTimer: Math.random() * 12000, // Slower flipping
       isFlipped: false,
       opacity: 0.4 + Math.random() * 0.3
     }))
   );
 
-  // Optimized card movement with requestAnimationFrame and reduced frequency
+  // Super simple card movement with wraparound
   useEffect(() => {
     let animationId: number;
     let lastUpdate = 0;
     
     const updateCards = (timestamp: number) => {
-      if (timestamp - lastUpdate > 150) { // Update every 150ms instead of 50ms
+      if (timestamp - lastUpdate > 200) { // Even slower updates: 5fps
         setCardMovements(prevMovements => 
           prevMovements.map(movement => {
             const newMovement = { ...movement };
             
-            // Simplified mouse repulsion (only when mouse is moving)
-            if (containerRef.current && timestamp - lastMouseMoveRef.current < 1000) {
-              const rect = containerRef.current.getBoundingClientRect();
-              const cardX = (newMovement.x / 100) * rect.width + rect.left;
-              const cardY = (newMovement.y / 100) * rect.height + rect.top;
-              const mouseDistance = Math.sqrt(
-                Math.pow(mousePos.x - cardX, 2) + Math.pow(mousePos.y - cardY, 2)
-              );
-              
-              if (mouseDistance < 120 && mouseDistance > 0) {
-                const repulsionForce = (120 - mouseDistance) / 120 * 0.02;
-                const angle = Math.atan2(cardY - mousePos.y, cardX - mousePos.x);
-                newMovement.vx += Math.cos(angle) * repulsionForce;
-                newMovement.vy += Math.sin(angle) * repulsionForce;
-              }
-            }
-            
-            // Apply velocity
+            // Simple linear movement
             newMovement.x += newMovement.vx;
             newMovement.y += newMovement.vy;
             
-            // Simple edge bouncing
-            if (newMovement.x <= 10 || newMovement.x >= 90) {
-              newMovement.vx *= -0.8;
-              newMovement.x = Math.max(10, Math.min(90, newMovement.x));
-            }
-            if (newMovement.y <= 10 || newMovement.y >= 90) {
-              newMovement.vy *= -0.8;
-              newMovement.y = Math.max(10, Math.min(90, newMovement.y));
-            }
+            // Wraparound - much simpler than bouncing
+            if (newMovement.x < -10) newMovement.x = 110;
+            if (newMovement.x > 110) newMovement.x = -10;
+            if (newMovement.y < -10) newMovement.y = 110;
+            if (newMovement.y > 110) newMovement.y = -10;
             
-            // Simplified rotation
+            // Simple rotation
             newMovement.rotation += newMovement.rotationSpeed;
             
-            // Less frequent random changes
-            if (Math.random() < 0.003) {
-              newMovement.vx += (Math.random() - 0.5) * 0.1;
-              newMovement.vy += (Math.random() - 0.5) * 0.1;
-              newMovement.vx = Math.max(-0.5, Math.min(0.5, newMovement.vx));
-              newMovement.vy = Math.max(-0.5, Math.min(0.5, newMovement.vy));
-            }
-            
             // Card flipping
-            newMovement.flipTimer += 150;
-            if (newMovement.flipTimer > 8000 + Math.random() * 6000) {
+            newMovement.flipTimer += 200;
+            if (newMovement.flipTimer > 10000 + Math.random() * 8000) {
               newMovement.isFlipped = !newMovement.isFlipped;
               newMovement.flipTimer = 0;
             }
@@ -177,7 +129,7 @@ const Auth = () => {
 
     animationId = requestAnimationFrame(updateCards);
     return () => cancelAnimationFrame(animationId);
-  }, [mousePos]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,7 +195,7 @@ const Auth = () => {
         
         {/* Simplified celebration animation */}
         <div className="absolute inset-0 pointer-events-none">
-          {Array.from({ length: 20 }, (_, i) => (
+          {Array.from({ length: 15 }, (_, i) => (
             <div
               key={i}
               className="absolute w-2 h-2 bg-yellow-400 rounded-full animate-ping"
@@ -291,7 +243,7 @@ const Auth = () => {
   }
 
   return (
-    <div ref={containerRef} className="h-screen w-screen fixed inset-0 overflow-hidden">
+    <div className="h-screen w-screen fixed inset-0 overflow-hidden">
       <Navigation />
       
       {/* Simplified gradient background */}
