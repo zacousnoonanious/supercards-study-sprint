@@ -30,7 +30,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
         <div className="flex items-center gap-4">
           <EditableDeckTitle
             title={deckName}
-            onSave={onDeckTitleChange}
+            onChange={onDeckTitleChange}
           />
           <span className="text-sm text-muted-foreground">
             Card {currentCardIndex + 1} of {cards.length}

@@ -126,7 +126,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   });
 
   useKeyboardShortcuts({
-    addElement,
     selectedElementId,
     handleDeleteElement,
     currentCardIndex,
@@ -139,6 +138,13 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     showCardOverview,
     setShowCardOverview,
   });
+
+  const handleDeleteCard = async () => {
+    if (currentCard) {
+      return await deleteCard(currentCard.id);
+    }
+    return false;
+  };
 
   useEffect(() => {
     if (setId) {
@@ -186,7 +192,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         onCreateNewCard={createNewCard}
         onCreateNewCardWithLayout={createNewCardWithLayout}
         onCreateNewCardFromTemplate={createNewCardFromTemplate}
-        onDeleteCard={deleteCard}
+        onDeleteCard={handleDeleteCard}
         onCardTypeChange={(type) => updateCard(currentCard.id, { card_type: type })}
         onShowCardOverview={() => setShowCardOverview(!showCardOverview)}
         canvasRef={canvasContainerRef}

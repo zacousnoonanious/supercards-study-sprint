@@ -21,8 +21,8 @@ export const SidePanel: React.FC<SidePanelProps> = ({
       {selectedElement ? (
         <ElementOptionsPanel
           element={selectedElement}
-          onUpdateElement={onUpdateElement}
-          onDeleteElement={onDeleteElement}
+          onUpdate={(updates) => onUpdateElement(selectedElement.id, updates)}
+          onDelete={() => onDeleteElement(selectedElement.id)}
         />
       ) : (
         <div className="text-center text-muted-foreground py-8">
