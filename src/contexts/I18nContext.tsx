@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface I18nContextType {
@@ -294,8 +293,41 @@ const translations = {
     'lang.de': 'Deutsch',
     'lang.it': 'Italiano',
     'lang.zh': '中文',
+    'lang.hi': 'हिन्दी',
+    'lang.ar': 'العربية',
+    'lang.pt': 'Português',
+    'lang.ru': 'Русский',
+    'lang.ja': '日本語',
   },
-  // You can add other languages here following the same structure
+  // Mandarin Chinese (Simplified) - Most spoken language worldwide
+  zh: {
+    // Add Chinese translations here
+  },
+  // Hindi - Second most spoken language
+  hi: {
+    // Add Hindi translations here
+  },
+  // English is already defined above
+  // Spanish - Fourth most spoken language
+  es: {
+    // Add Spanish translations here
+  },
+  // French - Sixth most spoken language (in top 7 globally)
+  fr: {
+    // Add French translations here
+  },
+  // Arabic - Fifth most spoken language
+  ar: {
+    // Add Arabic translations here
+  },
+  // Portuguese - Seventh most spoken language
+  pt: {
+    // Add Portuguese translations here
+  },
+  // Russian - Eighth most spoken (but including as part of top 7 major languages)
+  ru: {
+    // Add Russian translations here
+  },
 };
 
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
