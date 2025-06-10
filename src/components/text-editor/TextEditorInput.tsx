@@ -54,7 +54,7 @@ export const TextEditorInput: React.FC<TextEditorInputProps> = ({
         whiteSpace: 'pre-wrap',
         padding: '0',
       }}
-      placeholder={t('editor.enterYourText') || 'Enter your text...'}
+      placeholder={t('editor.enterYourText')}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
     />

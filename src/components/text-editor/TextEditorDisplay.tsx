@@ -59,7 +59,7 @@ export const TextEditorDisplay: React.FC<TextEditorDisplayProps> = ({
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
     >
-      {element.content || (t('editor.clickToEditText') || 'Click to edit text')}
+      {element.content || t('editor.clickToEditText')}
     </div>
   );
 };

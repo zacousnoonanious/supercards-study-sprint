@@ -76,7 +76,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
           {isTextElement && (
             <>
               <div>
-                <Label className="text-sm font-medium">{t('editor.textFormatting') || 'Text Formatting'}</Label>
+                <Label className="text-sm font-medium">{t('editor.textFormatting')}</Label>
                 <div className="flex gap-2 mt-2">
                   <Button
                     variant={element.fontWeight === 'bold' ? 'default' : 'outline'}
@@ -104,7 +104,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
 
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <Label className="text-sm">{t('editor.fontSize') || 'Font Size'}</Label>
+                  <Label className="text-sm">{t('editor.fontSize')}</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Type className="w-4 h-4" />
                     <Input
@@ -119,7 +119,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
                 </div>
 
                 <div className="flex-1">
-                  <Label className="text-sm">{t('editor.color') || 'Color'}</Label>
+                  <Label className="text-sm">{t('editor.color')}</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Palette className="w-4 h-4" />
                     <Input
@@ -139,11 +139,11 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
           {/* Hyperlink option for image elements only */}
           {element.type === 'image' && (
             <div>
-              <Label className="text-sm font-medium">{t('editor.hyperlink') || 'Hyperlink'}</Label>
+              <Label className="text-sm font-medium">{t('editor.hyperlink')}</Label>
               <div className="flex items-center gap-2 mt-2">
                 <Link className="w-4 h-4" />
                 <Input
-                  placeholder={t('editor.enterUrl') || 'Enter URL (https://...)'}
+                  placeholder={t('editor.enterUrl')}
                   value={element.hyperlink || ''}
                   onChange={(e) => handleHyperlinkChange(e.target.value)}
                   className="flex-1 h-8"
@@ -155,7 +155,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
           {/* Upload option for image elements */}
           {element.type === 'image' && (
             <div>
-              <Label className="text-sm font-medium">{t('editor.uploadImage') || 'Upload Image'}</Label>
+              <Label className="text-sm font-medium">{t('editor.uploadImage')}</Label>
               <div className="flex items-center gap-2 mt-2">
                 <Upload className="w-4 h-4" />
                 <input
@@ -169,7 +169,7 @@ export const ElementPopupToolbar: React.FC<ElementPopupToolbarProps> = ({
           )}
 
           <Button onClick={onClose} className="w-full" size="sm">
-            {t('common.done') || 'Done'}
+            {t('common.done')}
           </Button>
         </div>
       </PopoverContent>

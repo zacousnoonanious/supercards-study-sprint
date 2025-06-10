@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ConsolidatedToolbar } from './ConsolidatedToolbar';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
 
 interface UndockableToolbarProps {
@@ -27,6 +28,7 @@ interface UndockableToolbarProps {
 
 export const UndockableToolbar: React.FC<UndockableToolbarProps> = (props) => {
   const { theme } = useTheme();
+  const { t } = useI18n();
   const [showText, setShowText] = useState(false);
 
   // Handle text toggle

@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Save, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { FlashcardSet } from '@/types/flashcard';
 import { EditableDeckTitle } from './EditableDeckTitle';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface EditorHeaderProps {
   set: FlashcardSet;
@@ -36,6 +37,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   onZoomChange,
   onFitToArea,
 }) => {
+  const { t } = useI18n();
   const [zoomInput, setZoomInput] = useState(Math.round(zoom * 100).toString());
 
   const handleZoomIn = () => {
@@ -70,7 +72,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
         <Separator orientation="vertical" className="h-6" />
         
         <div className="text-sm text-muted-foreground">
-          Created: {new Date(set.created_at).toLocaleDateString()}
+          {t('common.created')}: {new Date(set.created_at).toLocaleDateString()}
         </div>
       </div>
 
@@ -111,7 +113,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
               variant="outline"
               size="sm"
               onClick={onFitToArea}
-              title="Fit to area"
+              title={t('toolbar.arrangeScaleToFit')}
             >
               <Maximize2 className="w-4 h-4" />
             </Button>
@@ -122,7 +124,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
         
         <Button onClick={onSave} variant="default" size="sm">
           <Save className="w-4 h-4 mr-2" />
-          Save
+          {t('toolbar.save')}
         </Button>
       </div>
     </div>
