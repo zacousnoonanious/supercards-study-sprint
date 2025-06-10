@@ -145,7 +145,6 @@ export const en = {
     any: "Any",
     other: "Other",
     unknown: "Unknown",
-    loading: "Loading",
     cardNotFound: "Card not found",
   },
 
@@ -307,6 +306,53 @@ export const en = {
     endDate: "End Date",
     createdAt: "Created At",
     updatedAt: "Updated At",
+  },
+
+  // Marketplace translations
+  marketplace: {
+    title: "Marketplace",
+    subtitle: "Discover and download flashcard sets created by the community",
+    search: "Search flashcard sets...",
+    featured: "Featured Sets",
+    free: "Free",
+    preview: "Preview",
+    download: "Download",
+    noResults: "No results found",
+    noResultsMessage: "Try adjusting your search terms",
+    by: "by",
+  },
+
+  // Sets translations
+  sets: {
+    create: "Create New Set",
+    title: "Set Title",
+    description: "Description",
+    myDecks: "My Decks",
+    createdAt: "Created",
+    cards: "cards",
+    study: "Study",
+    edit: "Edit",
+    delete: "Delete",
+    noDeck: "No decks found",
+    createFirst: "Create your first flashcard deck to get started!",
+  },
+
+  // AI Generator translations
+  ai: {
+    generateDeck: "Generate AI Deck",
+    topic: "Topic",
+    enterTopic: "Enter a topic to generate flashcards about...",
+    numberOfCards: "Number of Cards",
+    difficulty: "Difficulty Level",
+    beginner: "Beginner",
+    intermediate: "Intermediate",
+    advanced: "Advanced",
+    language: "Language",
+    includeImages: "Include Images",
+    generateCards: "Generate Cards",
+    generating: "Generating flashcards...",
+    generationComplete: "Generation complete!",
+    generationFailed: "Failed to generate flashcards",
   },
 
   // Messages

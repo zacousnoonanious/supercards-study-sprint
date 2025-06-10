@@ -34,8 +34,8 @@ const CreateSet = () => {
     e.preventDefault();
     if (!title.trim()) {
       toast({
-        title: t('error.validation'),
-        description: 'Please enter a title for your set.',
+        title: t('messages.error.validation'),
+        description: t('messages.error.required'),
         variant: "destructive"
       });
       return;
@@ -58,16 +58,16 @@ const CreateSet = () => {
       if (error) throw error;
 
       toast({
-        title: t('success.created'),
-        description: 'Flashcard set created successfully!'
+        title: t('messages.success.created'),
+        description: t('messages.success.created')
       });
 
       navigate(`/edit-cards/${data.id}`);
     } catch (error) {
       console.error('Error creating set:', error);
       toast({
-        title: t('error.general'),
-        description: 'Failed to create flashcard set.',
+        title: t('messages.error.general'),
+        description: t('messages.error.general'),
         variant: "destructive"
       });
     } finally {
@@ -91,7 +91,7 @@ const CreateSet = () => {
             className="flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            {t('back')}
+            {t('common.back')}
           </Button>
           <h2 className="text-2xl font-bold text-foreground">{t('sets.create')}</h2>
         </div>
@@ -100,11 +100,11 @@ const CreateSet = () => {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="ai" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              AI-Generated Deck
+              {t('ai.generateDeck')}
             </TabsTrigger>
             <TabsTrigger value="manual" className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
-              Manual Creation
+              {t('sets.create')}
             </TabsTrigger>
           </TabsList>
 
@@ -113,7 +113,7 @@ const CreateSet = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-indigo-600" />
-                  Create AI-Generated Deck
+                  {t('ai.generateDeck')}
                 </CardTitle>
                 <CardDescription>
                   Let AI create a complete flashcard deck with advanced educational content, interactive quizzes, and visual elements.
@@ -145,7 +145,7 @@ const CreateSet = () => {
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Enter set title..."
+                      placeholder={t('placeholders.enterTitle')}
                       required
                     />
                   </div>
@@ -156,7 +156,7 @@ const CreateSet = () => {
                       id="description"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Enter set description (optional)..."
+                      placeholder={t('placeholders.enterDescription')}
                       rows={3}
                     />
                   </div>
@@ -167,11 +167,11 @@ const CreateSet = () => {
                       variant="outline"
                       onClick={() => navigate('/decks')}
                     >
-                      {t('cancel')}
+                      {t('common.cancel')}
                     </Button>
                     <Button type="submit" disabled={loading}>
                       <Save className="w-4 h-4 mr-2" />
-                      {loading ? t('loading') : t('create')}
+                      {loading ? t('common.loading') : t('common.create')}
                     </Button>
                   </div>
                 </form>

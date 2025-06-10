@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -113,7 +114,7 @@ const Marketplace = () => {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>by {set.author}</span>
+                      <span>{t('marketplace.by')} {set.author}</span>
                       <Badge variant="outline">{set.category}</Badge>
                     </div>
                     
@@ -147,8 +148,8 @@ const Marketplace = () => {
 
         {filteredSets.length === 0 && searchTerm && (
           <div className="text-center py-8">
-            <h3 className="text-lg font-medium text-foreground mb-2">No results found</h3>
-            <p className="text-muted-foreground">Try adjusting your search terms</p>
+            <h3 className="text-lg font-medium text-foreground mb-2">{t('marketplace.noResults')}</h3>
+            <p className="text-muted-foreground">{t('marketplace.noResultsMessage')}</p>
           </div>
         )}
       </main>
