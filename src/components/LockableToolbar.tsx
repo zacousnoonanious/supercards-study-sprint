@@ -88,8 +88,7 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <span className="text-sm font-medium">
-            {t('toolbar.cardNumber', { current: currentCardIndex + 1, total: totalCards }) || 
-             `${currentCardIndex + 1} / ${totalCards}`}
+            {`${currentCardIndex + 1} / ${totalCards}`}
           </span>
           <Button 
             variant="outline" 

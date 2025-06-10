@@ -154,7 +154,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                       onUpdateElement(element.id, { multipleChoiceOptions: newOptions });
                     }}
                     className="h-6 text-xs flex-1"
-                    placeholder={t('editor.optionPlaceholder', { number: index + 1 }) || `Option ${index + 1}`}
+                    placeholder={`Option ${index + 1}`}
                   />
                   <Button
                     variant={element.correctAnswer === index ? 'default' : 'outline'}
@@ -196,7 +196,7 @@ export const ElementSettingsPopup: React.FC<ElementSettingsPopupProps> = ({
                 size="sm"
                 onClick={() => {
                   const currentOptions = element.multipleChoiceOptions || [];
-                  const newOptions = [...currentOptions, t('editor.optionPlaceholder', { number: currentOptions.length + 1 }) || `Option ${currentOptions.length + 1}`];
+                  const newOptions = [...currentOptions, `Option ${currentOptions.length + 1}`];
                   
                   const newHeight = Math.max(element.height, 120 + (newOptions.length * 40));
                   
