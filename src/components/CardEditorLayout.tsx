@@ -72,9 +72,11 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   toolbarShowText,
   isPanning,
   showCardOverview,
+  showBorder,
   onZoomChange,
   onShowGridChange,
   onSnapToGridChange,
+  onShowBorderChange,
   onToolbarPositionChange,
   onToolbarDockChange,
   onToolbarShowTextChange,
@@ -234,6 +236,8 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
                 style={canvasStyle}
                 showGrid={showGrid}
                 snapToGrid={snapToGrid}
+                showBorder={showBorder}
+                onCanvasSizeChange={onCanvasSizeChange}
                 zoom={zoom}
               />
             </div>
@@ -254,9 +258,11 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
           toolbarPosition={toolbarPosition}
           toolbarIsDocked={toolbarIsDocked}
           toolbarShowText={toolbarShowText}
+          showBorder={showBorder}
           onZoomChange={onZoomChange}
           onShowGridChange={onShowGridChange}
           onSnapToGridChange={onSnapToGridChange}
+          onShowBorderChange={onShowBorderChange}
           onToolbarPositionChange={onToolbarPositionChange}
           onToolbarDockChange={onToolbarDockChange}
           onToolbarShowTextChange={onToolbarShowTextChange}

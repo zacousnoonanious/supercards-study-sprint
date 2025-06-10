@@ -17,6 +17,8 @@ interface PowerPointEditorProps {
   snapToGrid?: boolean;
   gridSize?: number;
   snapPrecision?: 'coarse' | 'medium' | 'fine';
+  showBorder?: boolean;
+  onCanvasSizeChange?: (newWidth: number, newHeight: number) => void;
 }
 
 export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
@@ -32,10 +34,13 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
   snapToGrid = false,
   gridSize = 20,
   snapPrecision = 'medium',
+  showBorder = false,
+  onCanvasSizeChange,
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [isCanvasResizing, setIsCanvasResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [editingElementId, setEditingElementId] = useState<string | null>(null);
   const [copiedElement, setCopiedElement] = useState<CanvasElement | null>(null);
@@ -210,6 +215,46 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
     }
   }, [isDragging, isResizing, savePendingUpdates]);
 
+  // Canvas resize handlers
+  const handleCanvasResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsCanvasResizing(true);
+    
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      setDragStart({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+    }
+  }, []);
+
+  const handleCanvasResize = useCallback((e: React.MouseEvent) => {
+    if (!isCanvasResizing || !onCanvasSizeChange) return;
+    
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+    
+    const deltaX = currentX - dragStart.x;
+    const deltaY = currentY - dragStart.y;
+    
+    let newWidth = Math.max(200, Math.min(cardWidth + deltaX, 2000));
+    let newHeight = Math.max(200, Math.min(cardHeight + deltaY, 2000));
+    
+    // Apply grid snapping
+    newWidth = snapToGridValue(newWidth);
+    newHeight = snapToGridValue(newHeight);
+    
+    onCanvasSizeChange(newWidth, newHeight);
+    
+    setDragStart({ x: currentX, y: currentY });
+  }, [isCanvasResizing, dragStart, cardWidth, cardHeight, onCanvasSizeChange, snapToGridValue]);
+
   // Resize handlers
   const handleResizeStart = useCallback((e: React.MouseEvent, elementId: string) => {
     e.preventDefault();
@@ -258,7 +303,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
   // Global mouse event handlers
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (isDragging || isResizing) {
+      if (isDragging || isResizing || isCanvasResizing) {
         const syntheticEvent = {
           clientX: e.clientX,
           clientY: e.clientY,
@@ -270,15 +315,22 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
           handleMouseMove(syntheticEvent);
         } else if (isResizing) {
           handleResize(syntheticEvent);
+        } else if (isCanvasResizing) {
+          handleCanvasResize(syntheticEvent);
         }
       }
     };
 
     const handleGlobalMouseUp = () => {
-      handleMouseUp();
+      setIsDragging(false);
+      setIsResizing(false);
+      setIsCanvasResizing(false);
+      if (isDragging || isResizing) {
+        savePendingUpdates();
+      }
     };
 
-    if (isDragging || isResizing) {
+    if (isDragging || isResizing || isCanvasResizing) {
       document.addEventListener('mousemove', handleGlobalMouseMove);
       document.addEventListener('mouseup', handleGlobalMouseUp);
     }
@@ -287,7 +339,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [isDragging, isResizing, handleMouseMove, handleResize, handleMouseUp]);
+  }, [isDragging, isResizing, isCanvasResizing, handleMouseMove, handleResize, handleCanvasResize, savePendingUpdates]);
 
   const handleDoubleClick = useCallback((e: React.MouseEvent, elementId: string) => {
     e.preventDefault();
@@ -385,7 +437,9 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
       <div className="relative">
         <div
           ref={canvasRef}
-          className="relative border-2 border-gray-300 bg-white shadow-lg overflow-hidden cursor-default focus:outline-none"
+          className={`relative bg-white shadow-lg overflow-hidden cursor-default focus:outline-none ${
+            showBorder ? 'border-4 border-blue-500' : 'border-2 border-gray-300'
+          }`}
           style={{ width: cardWidth, height: cardHeight }}
           onClick={handleCanvasClick}
           onContextMenu={handleCanvasContextMenu}
@@ -584,6 +638,15 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
             </div>
           )}
         </div>
+
+        {/* Canvas resize handle */}
+        {onCanvasSizeChange && (
+          <div
+            className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-se-resize opacity-75 hover:opacity-100"
+            onMouseDown={handleCanvasResizeStart}
+            title="Drag to resize canvas"
+          />
+        )}
 
         {/* Element Popup Toolbar */}
         {showPopupToolbar && selectedElement && (

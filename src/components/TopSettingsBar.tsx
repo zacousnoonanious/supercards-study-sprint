@@ -7,6 +7,7 @@ import { CanvasSizeControls } from './settings/CanvasSizeControls';
 import { GridControls } from './settings/GridControls';
 import { TimerControls } from './settings/TimerControls';
 import { ElementControls } from './settings/ElementControls';
+import { CardTypeSelector } from './settings/CardTypeSelector';
 
 interface TopSettingsBarProps {
   selectedElement: CanvasElement | null;
@@ -64,6 +65,14 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
           onShowGridChange={onShowGridChange}
           snapToGrid={snapToGrid}
           onSnapToGridChange={onSnapToGridChange}
+        />
+
+        <Separator orientation="vertical" className="h-8" />
+
+        {/* Card Type Selector */}
+        <CardTypeSelector
+          currentCard={currentCard}
+          onUpdateCard={onUpdateCard}
         />
 
         <Separator orientation="vertical" className="h-8" />

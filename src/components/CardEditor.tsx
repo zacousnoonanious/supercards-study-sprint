@@ -68,6 +68,8 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     setShowGrid,
     snapToGrid,
     setSnapToGrid,
+    showBorder,
+    setShowBorder,
     isTextSelecting,
     setIsTextSelecting,
     canvasContainerRef,
@@ -193,6 +195,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         zoom={zoom}
         showGrid={showGrid}
         snapToGrid={snapToGrid}
+        showBorder={showBorder}
         toolbarPosition={toolbarPosition}
         toolbarIsDocked={toolbarIsDocked}
         toolbarShowText={toolbarShowText}
@@ -201,6 +204,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         onZoomChange={setZoom}
         onShowGridChange={setShowGrid}
         onSnapToGridChange={setSnapToGrid}
+        onShowBorderChange={setShowBorder}
         onToolbarPositionChange={setToolbarPosition}
         onToolbarDockChange={setToolbarIsDocked}
         onToolbarShowTextChange={setToolbarShowText}

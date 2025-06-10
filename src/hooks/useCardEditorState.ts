@@ -16,6 +16,7 @@ export const useCardEditorState = () => {
   const [toolbarShowText, setToolbarShowText] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(false);
+  const [showBorder, setShowBorder] = useState(false);
   const [isTextSelecting, setIsTextSelecting] = useState(false);
   
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -51,6 +52,8 @@ export const useCardEditorState = () => {
     setShowGrid,
     snapToGrid,
     setSnapToGrid,
+    showBorder,
+    setShowBorder,
     isTextSelecting,
     setIsTextSelecting,
     canvasContainerRef,
