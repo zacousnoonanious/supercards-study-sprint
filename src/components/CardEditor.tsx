@@ -8,6 +8,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useCardEditorHandlers } from '@/hooks/useCardEditorHandlers';
 import { CardEditorLayout } from './CardEditorLayout';
 import { Navigation } from './Navigation';
+import { UndockableToolbar } from './UndockableToolbar';
 import { CanvasElement } from '@/types/flashcard';
 
 interface CardEditorProps {
@@ -125,8 +126,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   });
 
   useKeyboardShortcuts({
-    zoom,
-    setZoom,
     addElement,
     selectedElementId,
     handleDeleteElement,
@@ -173,6 +172,31 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   return (
     <div className="flex flex-col h-screen">
       <Navigation />
+      
+      {/* Tool Palette */}
+      <UndockableToolbar
+        onAddElement={addElement}
+        onAutoArrange={handleAutoArrange}
+        currentCard={currentCard}
+        currentCardIndex={currentCardIndex}
+        totalCards={cards.length}
+        currentSide={currentSide}
+        onNavigateCard={navigateCard}
+        onSideChange={setCurrentSide}
+        onCreateNewCard={createNewCard}
+        onCreateNewCardWithLayout={createNewCardWithLayout}
+        onCreateNewCardFromTemplate={createNewCardFromTemplate}
+        onDeleteCard={deleteCard}
+        onCardTypeChange={(type) => updateCard(currentCard.id, { card_type: type })}
+        onShowCardOverview={() => setShowCardOverview(!showCardOverview)}
+        canvasRef={canvasContainerRef}
+        topSettingsBarRef={topSettingsBarRef}
+        onPositionChange={(position, isDocked) => {
+          setToolbarPosition(position);
+          setToolbarIsDocked(isDocked);
+        }}
+        onTextToggle={setToolbarShowText}
+      />
       
       <CardEditorLayout
         cards={cards}
