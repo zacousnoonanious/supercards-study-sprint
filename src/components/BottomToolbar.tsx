@@ -27,6 +27,7 @@ interface BottomToolbarProps {
   onCardSideChange: (side: 'front' | 'back') => void;
   onFitToView?: () => void;
   onOpenFullscreen?: () => void;
+  isBackSideDisabled?: boolean;
 }
 
 export const BottomToolbar: React.FC<BottomToolbarProps> = ({
@@ -42,6 +43,7 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
   onCardSideChange,
   onFitToView,
   onOpenFullscreen,
+  isBackSideDisabled = false,
 }) => {
   const { t } = useI18n();
 
@@ -53,6 +55,7 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
           <CardSideToggle
             currentSide={currentSide}
             onSideChange={onCardSideChange}
+            isBackDisabled={isBackSideDisabled}
           />
 
           <Separator orientation="vertical" className="h-6" />

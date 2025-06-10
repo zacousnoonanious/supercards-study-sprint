@@ -43,6 +43,10 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
+  // Get canvas dimensions from style
+  const canvasWidth = (style?.width as number) || 600;
+  const canvasHeight = (style?.height as number) || 450;
+
   const {
     isDragging,
     isResizing,
@@ -54,7 +58,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   } = useCanvasDragResize({
     elements,
     onUpdateElement,
-    canvasStyle: style,
+    canvasWidth,
+    canvasHeight,
     snapToGrid,
     gridSize,
   });
@@ -115,7 +120,11 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       className={`relative overflow-hidden ${isDarkTheme ? 'bg-gray-900' : 'bg-white'} ${
         showBorder ? 'border-2 border-dashed border-gray-400' : ''
       }`}
-      style={style}
+      style={{
+        ...style,
+        width: canvasWidth,
+        height: canvasHeight,
+      }}
       onClick={handleCanvasClick}
       onMouseMove={handleCanvasMouseMove}
       onMouseUp={endDragOrResize}

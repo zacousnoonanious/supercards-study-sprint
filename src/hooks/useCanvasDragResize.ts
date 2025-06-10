@@ -5,7 +5,8 @@ import { CanvasElement } from '@/types/flashcard';
 interface UseCanvasDragResizeProps {
   elements: CanvasElement[];
   onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => void;
-  canvasStyle?: React.CSSProperties;
+  canvasWidth: number;
+  canvasHeight: number;
   snapToGrid: boolean;
   gridSize: number;
 }
@@ -13,7 +14,8 @@ interface UseCanvasDragResizeProps {
 export const useCanvasDragResize = ({
   elements,
   onUpdateElement,
-  canvasStyle,
+  canvasWidth,
+  canvasHeight,
   snapToGrid,
   gridSize,
 }: UseCanvasDragResizeProps) => {
@@ -23,6 +25,13 @@ export const useCanvasDragResize = ({
   const [dragElementId, setDragElementId] = useState<string | null>(null);
   const [dragElementStart, setDragElementStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [resizeHandle, setResizeHandle] = useState<string>('');
+
+  const snapToGridIfEnabled = useCallback((value: number) => {
+    if (snapToGrid && gridSize > 0) {
+      return Math.round(value / gridSize) * gridSize;
+    }
+    return value;
+  }, [snapToGrid, gridSize]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent, canvasRect: DOMRect) => {
     if ((!isDragging && !isResizing) || !dragElementId) return;
@@ -44,14 +53,10 @@ export const useCanvasDragResize = ({
       let newY = dragElementStart.y + deltaY;
       
       // Apply grid snapping if enabled
-      if (snapToGrid && gridSize > 0) {
-        newX = Math.round(newX / gridSize) * gridSize;
-        newY = Math.round(newY / gridSize) * gridSize;
-      }
+      newX = snapToGridIfEnabled(newX);
+      newY = snapToGridIfEnabled(newY);
       
       // Constrain to canvas bounds
-      const canvasWidth = canvasStyle?.width as number || 600;
-      const canvasHeight = canvasStyle?.height as number || 450;
       newX = Math.max(0, Math.min(newX, canvasWidth - element.width));
       newY = Math.max(0, Math.min(newY, canvasHeight - element.height));
       
@@ -64,8 +69,6 @@ export const useCanvasDragResize = ({
       let newY = dragElementStart.y;
       
       const minSize = 20;
-      const canvasWidth = canvasStyle?.width as number || 600;
-      const canvasHeight = canvasStyle?.height as number || 450;
       
       switch (resizeHandle) {
         case 'se': // Southeast - bottom right
@@ -106,17 +109,19 @@ export const useCanvasDragResize = ({
       
       // Apply grid snapping if enabled
       if (snapToGrid && gridSize > 0) {
-        newWidth = Math.round(newWidth / gridSize) * gridSize;
-        newHeight = Math.round(newHeight / gridSize) * gridSize;
-        newX = Math.round(newX / gridSize) * gridSize;
-        newY = Math.round(newY / gridSize) * gridSize;
+        newWidth = snapToGridIfEnabled(newWidth);
+        newHeight = snapToGridIfEnabled(newHeight);
+        newX = snapToGridIfEnabled(newX);
+        newY = snapToGridIfEnabled(newY);
       }
       
-      // Constrain to canvas bounds
+      // Constrain to canvas bounds - ensure element doesn't go outside canvas
       newX = Math.max(0, Math.min(newX, canvasWidth - newWidth));
       newY = Math.max(0, Math.min(newY, canvasHeight - newHeight));
-      newWidth = Math.min(newWidth, canvasWidth - newX);
-      newHeight = Math.min(newHeight, canvasHeight - newY);
+      
+      // Ensure element doesn't get smaller than minimum size
+      newWidth = Math.max(minSize, Math.min(newWidth, canvasWidth - newX));
+      newHeight = Math.max(minSize, Math.min(newHeight, canvasHeight - newY));
       
       onUpdateElement(dragElementId, { 
         x: newX, 
@@ -125,7 +130,7 @@ export const useCanvasDragResize = ({
         height: newHeight 
       });
     }
-  }, [isDragging, isResizing, dragElementId, dragStart, dragElementStart, elements, canvasStyle, snapToGrid, gridSize, onUpdateElement, resizeHandle]);
+  }, [isDragging, isResizing, dragElementId, dragStart, dragElementStart, elements, canvasWidth, canvasHeight, snapToGridIfEnabled, onUpdateElement, resizeHandle]);
 
   const startDragOrResize = useCallback((
     e: React.MouseEvent,
