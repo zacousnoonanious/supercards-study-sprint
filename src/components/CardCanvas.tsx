@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasElementRenderer } from './CanvasElementRenderer';
@@ -40,11 +41,17 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragElementId, setDragElementId] = useState<string | null>(null);
   const [dragElementStart, setDragElementStart] = useState({ x: 0, y: 0 });
+  const [editingElement, setEditingElement] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
   const handleElementMouseDown = useCallback((e: React.MouseEvent, elementId: string) => {
+    // Don't start dragging if we're editing this element
+    if (editingElement === elementId) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
     
@@ -69,7 +76,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         });
       }
     }
-  }, [onSelectElement, elements]);
+  }, [onSelectElement, elements, editingElement]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDragging || !dragElementId) return;
@@ -121,6 +128,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     
     if (isCanvasBackground) {
       onSelectElement(null);
+      setEditingElement(null);
     }
   }, [onSelectElement]);
 
@@ -128,6 +136,10 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     e.stopPropagation();
     onSelectElement(elementId);
   }, [onSelectElement]);
+
+  const handleEditingChange = useCallback((elementId: string | null) => {
+    setEditingElement(elementId);
+  }, []);
 
   return (
     <div
@@ -204,7 +216,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             transform: `rotate(${element.rotation || 0}deg)`,
             transformOrigin: 'center',
             zIndex: element.zIndex || 0,
-            cursor: isDragging && dragElementId === element.id ? 'grabbing' : 'grab',
+            cursor: isDragging && dragElementId === element.id ? 'grabbing' : 
+                   editingElement === element.id ? 'text' : 'grab',
           }}
           onMouseDown={(e) => handleElementMouseDown(e, element.id)}
           onClick={(e) => handleElementClick(e, element.id)}
@@ -212,16 +225,16 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         >
           <CanvasElementRenderer
             element={element}
-            editingElement={null}
+            editingElement={editingElement}
             onUpdateElement={onUpdateElement}
-            onEditingChange={() => {}}
+            onEditingChange={handleEditingChange}
             zoom={zoom}
             onElementDragStart={(e, elementId) => handleElementMouseDown(e, elementId)}
             isDragging={isDragging && dragElementId === element.id}
             isSelected={selectedElement === element.id}
           />
           
-          {selectedElement === element.id && (
+          {selectedElement === element.id && editingElement !== element.id && (
             <div
               className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 cursor-se-resize"
               onMouseDown={(e) => {

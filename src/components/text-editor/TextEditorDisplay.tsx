@@ -54,10 +54,8 @@ export const TextEditorDisplay: React.FC<TextEditorDisplayProps> = ({
   return (
     <div
       ref={textDisplayRef}
-      className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words"
+      className="w-full h-full flex items-center justify-center whitespace-pre-wrap break-words pointer-events-none"
       style={textStyle}
-      onMouseDown={(e) => e.stopPropagation()}
-      onMouseUp={(e) => e.stopPropagation()}
     >
       {element.content || t('editor.clickToEditText')}
     </div>

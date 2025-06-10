@@ -57,6 +57,7 @@ export const TextEditorInput: React.FC<TextEditorInputProps> = ({
       placeholder={t('editor.enterYourText')}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     />
   );
 };

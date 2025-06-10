@@ -103,12 +103,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           element.hasTTS ? 'border-blue-200' : ''
         } ${isSelected ? 'ring-2 ring-primary ring-opacity-50' : ''}`}
         style={{ padding: '8px' }}
-        onDoubleClick={(e) => {
-          e.stopPropagation();
-          if (!isStudyMode) {
-            startEditing();
-          }
-        }}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
       >
         {isEditing ? (
           <TextEditorInput
