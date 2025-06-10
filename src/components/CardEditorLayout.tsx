@@ -210,7 +210,10 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
           </div>
 
           {/* Canvas Area */}
-          <div className="flex-1 flex items-center justify-center p-4 overflow-hidden relative">
+          <div 
+            className="flex-1 flex items-center justify-center p-4 overflow-hidden relative"
+            data-canvas-background="true"
+          >
             <div
               className="relative"
               style={{

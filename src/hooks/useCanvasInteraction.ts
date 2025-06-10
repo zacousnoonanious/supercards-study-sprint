@@ -94,8 +94,23 @@ export const useCanvasInteraction = ({
     }
   }, [cardWidth, cardHeight, setZoom, setPanOffset, canvasViewportRef]);
 
+  const isInCanvasArea = useCallback((target: Node) => {
+    // Check if we're in fullscreen mode
+    if (canvasViewportRef.current?.contains(target)) {
+      return true;
+    }
+    
+    // Check if we're in normal mode canvas area
+    const normalCanvasArea = document.querySelector('.flex-1.flex.items-center.justify-center');
+    if (normalCanvasArea?.contains(target)) {
+      return true;
+    }
+    
+    return false;
+  }, [canvasViewportRef]);
+
   const handleWheel = useCallback((e: WheelEvent) => {
-    if (!canvasViewportRef.current?.contains(e.target as Node)) return;
+    if (!isInCanvasArea(e.target as Node)) return;
     
     e.preventDefault();
     
@@ -109,11 +124,11 @@ export const useCanvasInteraction = ({
         y: prev.y - e.deltaY * 0.5
       }));
     }
-  }, [zoom, setZoom, setPanOffset, canvasViewportRef]);
+  }, [zoom, setZoom, setPanOffset, isInCanvasArea]);
 
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
-      if (!canvasViewportRef.current?.contains(e.target as Node)) return;
+      if (!isInCanvasArea(e.target as Node)) return;
       
       // Right click or middle mouse button for panning
       if (e.button === 2 || e.button === 1) {
@@ -122,14 +137,16 @@ export const useCanvasInteraction = ({
         setIsPanning(true);
         setPanStart({ x: e.clientX, y: e.clientY });
         
-        if (canvasViewportRef.current) {
-          canvasViewportRef.current.style.cursor = 'grabbing';
+        // Set cursor on the appropriate container
+        const container = canvasViewportRef.current || document.querySelector('.flex-1.flex.items-center.justify-center') as HTMLElement;
+        if (container) {
+          container.style.cursor = 'grabbing';
         }
         return;
       }
       
       // Left click on canvas background for panning
-      if (e.button === 0 && canvasViewportRef.current?.contains(e.target as Node)) {
+      if (e.button === 0 && isInCanvasArea(e.target as Node)) {
         const target = e.target as HTMLElement;
         const isCanvasBackground = target.hasAttribute('data-canvas-background') || 
                                  target.closest('[data-canvas-background]');
@@ -140,8 +157,9 @@ export const useCanvasInteraction = ({
           setIsPanning(true);
           setPanStart({ x: e.clientX, y: e.clientY });
           
-          if (canvasViewportRef.current) {
-            canvasViewportRef.current.style.cursor = 'grabbing';
+          const container = canvasViewportRef.current || document.querySelector('.flex-1.flex.items-center.justify-center') as HTMLElement;
+          if (container) {
+            container.style.cursor = 'grabbing';
           }
         }
       }
@@ -170,14 +188,15 @@ export const useCanvasInteraction = ({
         e.stopPropagation();
         setIsPanning(false);
         
-        if (canvasViewportRef.current) {
-          canvasViewportRef.current.style.cursor = zoom > 1 ? 'grab' : 'default';
+        const container = canvasViewportRef.current || document.querySelector('.flex-1.flex.items-center.justify-center') as HTMLElement;
+        if (container) {
+          container.style.cursor = zoom > 1 ? 'grab' : 'default';
         }
       }
     };
 
     const handleContextMenu = (e: MouseEvent) => {
-      if (canvasViewportRef.current?.contains(e.target as Node)) {
+      if (isInCanvasArea(e.target as Node)) {
         e.preventDefault(); // Prevent context menu on right click
       }
     };
@@ -195,7 +214,7 @@ export const useCanvasInteraction = ({
       document.removeEventListener('mouseup', handleMouseUp, { capture: true });
       document.removeEventListener('contextmenu', handleContextMenu, { capture: true });
     };
-  }, [zoom, panOffset, isPanning, panStart, canvasViewportRef, setZoom, setPanOffset, setIsPanning, setPanStart, handleWheel]);
+  }, [zoom, panOffset, isPanning, panStart, isInCanvasArea, setZoom, setPanOffset, setIsPanning, setPanStart, handleWheel, canvasViewportRef]);
 
   return {
     startPan,
