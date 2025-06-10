@@ -13,14 +13,20 @@ export const ProfileLanguageSettings: React.FC<ProfileLanguageSettingsProps> = (
   language,
   onLanguageChange,
 }) => {
-  const { t } = useI18n();
+  const { t, setLanguage } = useI18n();
+
+  const handleLanguageChange = (value: string) => {
+    // Update both the profile language and the global I18n context
+    setLanguage(value);
+    onLanguageChange(value);
+  };
 
   return (
     <div className="space-y-2">
       <Label htmlFor="language">{t('profile.language')}</Label>
       <Select
         value={language}
-        onValueChange={onLanguageChange}
+        onValueChange={handleLanguageChange}
       >
         <SelectTrigger>
           <SelectValue placeholder="Select language" />

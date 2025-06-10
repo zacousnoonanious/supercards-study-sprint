@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -19,7 +18,7 @@ interface Profile {
 
 const Profile = () => {
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, language: globalLanguage, setLanguage } = useI18n();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -35,6 +34,13 @@ const Profile = () => {
     fetchProfile();
   }, [user, navigate]);
 
+  // Sync profile language with global language context
+  useEffect(() => {
+    if (profile && profile.language !== globalLanguage) {
+      setLanguage(profile.language);
+    }
+  }, [profile, globalLanguage, setLanguage]);
+
   const fetchProfile = async () => {
     try {
       const { data, error } = await supabase
@@ -45,13 +51,20 @@ const Profile = () => {
 
       if (error && error.code !== 'PGRST116') throw error;
       
-      setProfile(data || {
+      const profileData = data || {
         id: user?.id || '',
         first_name: '',
         last_name: '',
         avatar_url: null,
-        language: 'en'
-      });
+        language: globalLanguage || 'en'
+      };
+      
+      setProfile(profileData);
+      
+      // Set global language to match profile language
+      if (profileData.language) {
+        setLanguage(profileData.language);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
