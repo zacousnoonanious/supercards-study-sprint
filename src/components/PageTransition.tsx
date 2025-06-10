@@ -19,12 +19,12 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
       // After half the animation, update content
       const timer = setTimeout(() => {
         setDisplayLocation(location);
-      }, 200); // Half of the 400ms total animation time
+      }, 300); // Half of the 600ms total animation time
 
       // Complete the flip animation
       const completeTimer = setTimeout(() => {
         setIsFlipping(false);
-      }, 400);
+      }, 600);
 
       return () => {
         clearTimeout(timer);
@@ -34,13 +34,16 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
   }, [location.pathname, displayLocation.pathname]);
 
   return (
-    <div className="w-full min-h-screen perspective-1000">
+    <div className="w-full min-h-screen perspective-1000 overflow-hidden">
       <div
-        className={`w-full min-h-screen transition-all duration-400 ease-in-out transform-style-preserve-3d ${
-          isFlipping ? 'rotate-y-180 scale-95' : 'rotate-y-0 scale-100'
+        className={`w-full min-h-screen transition-all duration-600 ease-in-out ${
+          isFlipping ? 'scale-90 opacity-80' : 'scale-100 opacity-100'
         }`}
+        style={{
+          transform: isFlipping ? 'rotateY(10deg) rotateX(5deg)' : 'rotateY(0deg) rotateX(0deg)',
+        }}
       >
-        <div key={displayLocation.pathname} className="w-full min-h-screen backface-hidden">
+        <div key={displayLocation.pathname} className="w-full min-h-screen">
           {children}
         </div>
       </div>
