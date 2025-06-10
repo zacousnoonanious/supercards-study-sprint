@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { TTSComponent } from './TTSComponent';
+import { ElementPopupToolbar } from './ElementPopupToolbar';
 
 interface RichTextEditorProps {
   element: CanvasElement;
@@ -11,6 +12,7 @@ interface RichTextEditorProps {
   isStudyMode?: boolean;
   onTextSelectionStart?: () => void;
   onTextSelectionEnd?: () => void;
+  isSelected?: boolean;
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -21,8 +23,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   isStudyMode = false,
   onTextSelectionStart,
   onTextSelectionEnd,
+  isSelected = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(false);
+  const [toolbarTimer, setToolbarTimer] = useState<NodeJS.Timeout | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const textDisplayRef = useRef<HTMLDivElement>(null);
 
@@ -46,17 +51,78 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const startEditing = () => {
     if (isStudyMode && element.hasTTS && element.ttsEnabled) {
-      // In study mode with TTS, clicking should play audio instead of editing
       return;
     }
     setIsEditing(true);
     onEditingChange(true);
+    setShowToolbar(false);
   };
 
   const stopEditing = () => {
     setIsEditing(false);
     onEditingChange(false);
   };
+
+  // Handle toolbar visibility with proper timing
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (isEditing || isStudyMode) return;
+    
+    // Clear any existing timer
+    if (toolbarTimer) {
+      clearTimeout(toolbarTimer);
+      setToolbarTimer(null);
+    }
+    
+    // Set a timer to show toolbar after hold
+    const timer = setTimeout(() => {
+      setShowToolbar(true);
+    }, 300);
+    
+    setToolbarTimer(timer);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Clear timer if mouse is released quickly
+    if (toolbarTimer) {
+      clearTimeout(toolbarTimer);
+      setToolbarTimer(null);
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!isEditing && !showToolbar) {
+      startEditing();
+    }
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    startEditing();
+  };
+
+  // Handle keyboard events for selected text elements
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isSelected && !isEditing && e.key === 'Delete') {
+        e.preventDefault();
+        console.log('Delete key pressed for text element:', element.id);
+        // This will be handled by the parent component through onDeleteElement
+      }
+    };
+
+    if (isSelected) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isSelected, isEditing, element.id]);
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -111,20 +177,27 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </div>
       )}
 
+      {/* Popup Toolbar */}
+      {showToolbar && !isEditing && (
+        <div className="absolute top-0 left-0 z-20">
+          <ElementPopupToolbar
+            element={element}
+            onUpdate={onUpdate}
+            onClose={() => setShowToolbar(false)}
+          />
+        </div>
+      )}
+
       {/* Text Content */}
       <div
         className={`w-full h-full flex items-center justify-center border rounded cursor-text bg-background ${
           element.hasTTS ? 'border-blue-200' : ''
-        }`}
+        } ${isSelected ? 'ring-2 ring-primary ring-opacity-50' : ''}`}
         style={{ padding: '8px' }}
-        onClick={(e) => {
-          e.stopPropagation(); // Prevent canvas deselection
-          startEditing();
-        }}
-        onDoubleClick={(e) => {
-          e.stopPropagation(); // Prevent canvas deselection
-          startEditing();
-        }}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
       >
         {isEditing ? (
           <textarea

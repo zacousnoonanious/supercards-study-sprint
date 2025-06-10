@@ -23,6 +23,7 @@ interface CanvasElementRendererProps {
   isDragging?: boolean;
   isStudyMode?: boolean;
   onElementSelect?: (elementId: string) => void;
+  isSelected?: boolean;
 }
 
 export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
@@ -36,6 +37,7 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   isDragging = false,
   isStudyMode = false,
   onElementSelect,
+  isSelected = false,
 }) => {
   const { theme } = useTheme();
   const [activeDrawingElement, setActiveDrawingElement] = useState<string | null>(null);
@@ -267,11 +269,12 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
           <RichTextEditor
             element={{
               ...element,
-              color: getTextColor() // Override color based on global theme
+              color: getTextColor()
             }}
             onUpdate={(updates) => onUpdateElement(element.id, updates)}
             onEditingChange={(editing) => onEditingChange(editing ? element.id : null)}
             textScale={textScale}
+            isSelected={isSelected}
           />
         </div>
       );

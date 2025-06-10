@@ -349,6 +349,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   }, [setToolbarShowText]);
 
   const handleAddElement = useCallback((type: CanvasElement['type']) => {
+    console.log('Adding element of type:', type);
     if (type === 'tts') {
       // Create a text element with TTS enabled
       addElement('text', {
