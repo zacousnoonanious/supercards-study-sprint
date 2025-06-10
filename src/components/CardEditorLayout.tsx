@@ -7,6 +7,7 @@ import { SimpleEditorFooter } from './SimpleEditorFooter';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { EditorCardOverview } from './EditorCardOverview';
 import { CardCanvas } from './CardCanvas';
+import { HoverElementPopup } from './HoverElementPopup';
 import { FlashcardSet, Flashcard, CanvasElement } from '@/types/flashcard';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -138,6 +139,22 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
     return {};
   };
 
+  // Get selected element data and position for popup
+  const selectedElement = getSelectedElementData();
+  const getElementPosition = () => {
+    if (!selectedElement || !canvasViewportRef.current) return { x: 0, y: 0 };
+    
+    // Calculate the element's position relative to the viewport
+    const canvasRect = canvasViewportRef.current.getBoundingClientRect();
+    const elementX = selectedElement.x * zoom + panOffset.x;
+    const elementY = selectedElement.y * zoom + panOffset.y;
+    
+    return {
+      x: elementX + canvasRect.left + 10, // Add small offset
+      y: elementY + canvasRect.top + 10
+    };
+  };
+
   // Show card overview if toggled
   if (showCardOverview) {
     return (
@@ -192,7 +209,7 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 relative">
         <div className="flex-1 flex items-center justify-center p-1" ref={canvasContainerRef}>
           <div className="flex items-start gap-1 h-full w-full max-w-none">
             {/* Canvas-Left Toolbar Position */}
@@ -284,6 +301,17 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Element Selection Popup */}
+        {selectedElement && selectedElementId && (
+          <HoverElementPopup
+            element={selectedElement}
+            position={getElementPosition()}
+            onUpdate={(updates) => onUpdateElement(selectedElementId, updates)}
+            onDelete={() => onDeleteElement(selectedElementId)}
+            isSelected={true}
+          />
+        )}
       </div>
 
       {/* Other Toolbar Positions */}
