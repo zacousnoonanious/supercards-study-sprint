@@ -44,7 +44,10 @@ export const I18nTester: React.FC = () => {
                 key={lang}
                 variant={language === lang ? "default" : "outline"}
                 size="sm"
-                onClick={() => setLanguage(lang)}
+                onClick={() => {
+                  console.log(`Switching to language: ${lang}`);
+                  setLanguage(lang);
+                }}
               >
                 {lang.toUpperCase()}
               </Button>
@@ -56,12 +59,16 @@ export const I18nTester: React.FC = () => {
         <div className="space-y-2">
           <h4 className="font-medium">Test Translations:</h4>
           <div className="space-y-1 text-sm">
-            {testKeys.map((key) => (
-              <div key={key} className="flex justify-between p-2 bg-muted rounded">
-                <code className="text-xs text-muted-foreground">{key}:</code>
-                <span className="font-medium">{t(key)}</span>
-              </div>
-            ))}
+            {testKeys.map((key) => {
+              const translation = t(key);
+              console.log(`Translation for ${key} in ${language}:`, translation);
+              return (
+                <div key={key} className="flex justify-between p-2 bg-muted rounded">
+                  <code className="text-xs text-muted-foreground">{key}:</code>
+                  <span className="font-medium">{translation}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -72,6 +79,7 @@ export const I18nTester: React.FC = () => {
             <div>Language: {JSON.stringify(language)}</div>
             <div>Available Languages: {JSON.stringify(availableLanguages)}</div>
             <div>Sample Translation Test: {t('welcome') || 'NOT FOUND'}</div>
+            <div>Chinese Test (直接): {language === 'zh' ? t('welcome') : 'Not in Chinese mode'}</div>
           </div>
         </div>
       </CardContent>
