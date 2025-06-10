@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { CanvasElement, CardTemplate, Flashcard } from '@/types/flashcard';
+import { SetViewSkeleton } from '@/components/LoadingSkeletons';
+import { useRoutePreloader } from '@/hooks/useRoutePreloader';
+import { useDataPrefetcher } from '@/hooks/useDataPrefetcher';
 
 interface FlashcardSet {
   id: string;
@@ -35,9 +39,11 @@ const SetView = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [set, setSet] = useState<FlashcardSet | null>(null);
-  const [cards, setCards] = useState<Flashcard[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // Enable route preloading and data prefetching
+  useRoutePreloader();
+  useDataPrefetcher(user?.id);
+
   const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [showCardCreator, setShowCardCreator] = useState(false);
   const [showEnhancedOverview, setShowEnhancedOverview] = useState(false);
@@ -45,39 +51,36 @@ const SetView = () => {
   const [showPermanentShuffleSettings, setShowPermanentShuffleSettings] = useState(false);
   const [defaultTemplate, setDefaultTemplate] = useState<CardTemplate | undefined>(undefined);
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    if (setId) {
-      fetchSetAndCards();
-    }
-  }, [user, setId, navigate]);
-
-  const fetchSetAndCards = async () => {
-    try {
-      // Fetch set details
-      const { data: setData, error: setError } = await supabase
+  // Optimized data fetching with React Query
+  const { data: setData, isLoading: setLoading, error: setError } = useQuery({
+    queryKey: ['flashcard_set', setId],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from('flashcard_sets')
         .select('*')
         .eq('id', setId)
         .single();
+      
+      if (error) throw error;
+      return data as FlashcardSet;
+    },
+    enabled: !!setId && !!user,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
 
-      if (setError) throw setError;
-      setSet(setData);
-
-      // Fetch cards
-      const { data: cardsData, error: cardsError } = await supabase
+  const { data: cardsData, isLoading: cardsLoading, error: cardsError, refetch: refetchCards } = useQuery({
+    queryKey: ['flashcards', setId],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from('flashcards')
         .select('*')
         .eq('set_id', setId)
         .order('created_at', { ascending: true });
-
-      if (cardsError) throw cardsError;
+      
+      if (error) throw error;
       
       // Transform the data to match our Flashcard interface
-      const transformedCards: Flashcard[] = (cardsData || []).map((card, index) => ({
+      const transformedCards: Flashcard[] = (data || []).map((card, index) => ({
         ...card,
         front_elements: (card.front_elements as unknown as CanvasElement[]) || [],
         back_elements: (card.back_elements as unknown as CanvasElement[]) || [],
@@ -96,22 +99,26 @@ const SetView = () => {
         countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
       }));
       
-      setCards(transformedCards);
-    } catch (error) {
-      console.error('Error fetching set and cards:', error);
-      toast({
-        title: t('error.general'),
-        description: 'Failed to load set details.',
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      return transformedCards;
+    },
+    enabled: !!setId && !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const isLoading = setLoading || cardsLoading;
+  const set = setData;
+  const cards = cardsData || [];
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+      return;
     }
-  };
+  }, [user, navigate]);
 
   const handleAIGenerated = () => {
     setShowAIGenerator(false);
-    fetchSetAndCards();
+    refetchCards();
     toast({
       title: t('setView.success'),
       description: t('setView.aiCardsAdded'),
@@ -120,7 +127,7 @@ const SetView = () => {
 
   const handleCardCreated = () => {
     setShowCardCreator(false);
-    fetchSetAndCards();
+    refetchCards();
   };
 
   const handleCreateCard = async () => {
@@ -148,7 +155,7 @@ const SetView = () => {
 
       if (error) throw error;
 
-      fetchSetAndCards();
+      refetchCards();
       toast({
         title: t('setView.success'),
         description: t('setView.cardCreated'),
@@ -198,7 +205,7 @@ const SetView = () => {
 
       if (error) throw error;
 
-      fetchSetAndCards();
+      refetchCards();
       toast({
         title: t('setView.success'),
         description: t('setView.cardCreatedFromTemplate').replace('{templateName}', template.name),
@@ -231,7 +238,7 @@ const SetView = () => {
 
       if (error) throw error;
 
-      fetchSetAndCards();
+      refetchCards();
       toast({
         title: t('setView.success'),
         description: t('setView.cardDeleted'),
@@ -247,8 +254,6 @@ const SetView = () => {
   };
 
   const handleReorderCards = async (reorderedCards: Flashcard[]) => {
-    setCards(reorderedCards);
-    
     try {
       const updates = reorderedCards.map((card, index) => 
         supabase
@@ -258,6 +263,7 @@ const SetView = () => {
       );
       
       await Promise.all(updates);
+      refetchCards();
     } catch (error) {
       console.error('Error reordering cards:', error);
     }
@@ -298,7 +304,6 @@ const SetView = () => {
 
       if (error) throw error;
 
-      setSet(prev => prev ? { ...prev, permanent_shuffle: enabled } : null);
       toast({
         title: t('setView.success'),
         description: enabled ? t('setView.shuffleEnabled') : t('setView.shuffleDisabled'),
@@ -331,13 +336,11 @@ const SetView = () => {
       if (e.altKey) {
         if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          // Navigate to first card in editor
           if (cards.length > 0) {
             navigate(`/sets/${setId}/cards/${cards[0].id}`);
           }
         } else if (e.key === 'ArrowRight') {
           e.preventDefault();
-          // Navigate to last card in editor
           if (cards.length > 0) {
             navigate(`/sets/${setId}/cards/${cards[cards.length - 1].id}`);
           }
@@ -349,12 +352,9 @@ const SetView = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [cards, setId, navigate]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg text-foreground">{t('loading')}</div>
-      </div>
-    );
+  // Show skeleton loading immediately
+  if (isLoading) {
+    return <SetViewSkeleton />;
   }
 
   if (!set) {

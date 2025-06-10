@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { I18nProvider } from '@/contexts/I18nContext';
-import { PageTransition } from '@/components/PageTransition';
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import SetView from "./pages/SetView";
@@ -21,7 +20,15 @@ import Profile from "./pages/Profile";
 import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -32,25 +39,23 @@ const App = () => (
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <PageTransition>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/decks" element={<Decks />} />
-                  <Route path="/marketplace" element={<Marketplace />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/sets/:setId" element={<SetView />} />
-                  <Route path="/sets/:setId/study" element={<StudyMode />} />
-                  <Route path="/sets/:setId/cards/:cardId" element={<CardEditorPage />} />
-                  <Route path="/sets/:setId/add" element={<AddCard />} />
-                  <Route path="/create-set" element={<CreateSet />} />
-                  <Route path="/set/:setId" element={<SetView />} />
-                  <Route path="/study/:setId" element={<StudyMode />} />
-                  <Route path="/edit-cards/:setId" element={<CardEditorPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </PageTransition>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/decks" element={<Decks />} />
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/sets/:setId" element={<SetView />} />
+                <Route path="/sets/:setId/study" element={<StudyMode />} />
+                <Route path="/sets/:setId/cards/:cardId" element={<CardEditorPage />} />
+                <Route path="/sets/:setId/add" element={<AddCard />} />
+                <Route path="/create-set" element={<CreateSet />} />
+                <Route path="/set/:setId" element={<SetView />} />
+                <Route path="/study/:setId" element={<StudyMode />} />
+                <Route path="/edit-cards/:setId" element={<CardEditorPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
             </TooltipProvider>
           </ThemeProvider>
         </I18nProvider>
