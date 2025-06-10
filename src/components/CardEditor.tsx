@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -91,7 +91,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   }, [deleteElement, setSelectedElementId]);
 
   // Create a wrapper function that matches TopSettingsBar's expected signature
-  const handleDeleteElementForTopBar = useCallback((elementId: string, _secondParam?: any) => {
+  const handleDeleteElementForTopBar = useCallback((elementId: string) => {
     handleDeleteElement(elementId);
   }, [handleDeleteElement]);
 
