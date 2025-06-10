@@ -72,6 +72,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   };
 
+  const handleContainerMouseDown = (e: React.MouseEvent) => {
+    // Only prevent propagation when not in editing mode to allow dragging
+    if (!isEditing) {
+      e.stopPropagation();
+    }
+    handleMouseDown(e);
+  };
+
   return (
     <div className="w-full h-full relative">
       {/* TTS Component */}
@@ -105,7 +113,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         style={{ padding: '8px' }}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
-        onMouseDown={handleMouseDown}
+        onMouseDown={handleContainerMouseDown}
         onMouseUp={handleMouseUp}
       >
         {isEditing ? (
