@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,94 +10,82 @@ import { BookOpen, Brain, Clock, TrendingUp, Play, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
-
-interface FlashcardSet {
-  id: string;
-  title: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface DashboardStats {
-  totalDecks: number;
-  totalCards: number;
-  studyStreak: number;
-  cardsReviewed: number;
-}
+import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import { RecentDecks } from '@/components/dashboard/RecentDecks';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { DecksSkeleton } from '@/components/LoadingSkeletons';
+import { useDataPrefetcher } from '@/hooks/useDataPrefetcher';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { t } = useI18n();
-  const [recentSets, setRecentSets] = useState<FlashcardSet[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({
-    totalDecks: 0,
-    totalCards: 0,
-    studyStreak: 3,
-    cardsReviewed: 45
-  });
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Enable data prefetching
+  useDataPrefetcher(user?.id);
+
+  // Concurrent data fetching with React Query
+  const { data: recentSets, isLoading: setsLoading } = useQuery({
+    queryKey: ['flashcard_sets', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('flashcard_sets')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('updated_at', { ascending: false })
+        .limit(3);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['dashboard_stats', user?.id],
+    queryFn: async () => {
+      // Run all queries concurrently
+      const [setsCount, cardsCount] = await Promise.all([
+        supabase
+          .from('flashcard_sets')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user?.id),
+        supabase
+          .from('flashcards')
+          .select('set_id', { count: 'exact', head: true })
+          .in('set_id', 
+            supabase
+              .from('flashcard_sets')
+              .select('id')
+              .eq('user_id', user?.id)
+          )
+      ]);
+
+      if (setsCount.error) throw setsCount.error;
+      if (cardsCount.error) throw cardsCount.error;
+
+      return {
+        totalDecks: setsCount.count || 0,
+        totalCards: cardsCount.count || 0,
+        studyStreak: 3, // This could be calculated from actual data
+        cardsReviewed: 45 // This could be calculated from actual data
+      };
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   useEffect(() => {
     if (!user) {
       navigate('/auth');
       return;
     }
-    fetchDashboardData();
   }, [user, navigate]);
 
-  const fetchDashboardData = async () => {
-    try {
-      // Fetch recent sets (limit to 3)
-      const { data: setsData, error: setsError } = await supabase
-        .from('flashcard_sets')
-        .select('*')
-        .order('updated_at', { ascending: false })
-        .limit(3);
-
-      if (setsError) throw setsError;
-      setRecentSets(setsData || []);
-
-      // Fetch total decks count
-      const { count: decksCount, error: decksCountError } = await supabase
-        .from('flashcard_sets')
-        .select('*', { count: 'exact', head: true });
-
-      if (decksCountError) throw decksCountError;
-
-      // Fetch total cards count
-      const { count: cardsCount, error: cardsCountError } = await supabase
-        .from('flashcards')
-        .select('*', { count: 'exact', head: true });
-
-      if (cardsCountError) throw cardsCountError;
-
-      setStats(prev => ({
-        ...prev,
-        totalDecks: decksCount || 0,
-        totalCards: cardsCount || 0
-      }));
-
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      toast({
-        title: t('error.general'),
-        description: t('decks.loadError'),
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg text-foreground animate-pulse">{t('loading')}</div>
-      </div>
-    );
+  if (setsLoading || statsLoading) {
+    return <DecksSkeleton />;
   }
 
   return (
@@ -108,93 +98,9 @@ const Dashboard = () => {
           <p className="text-muted-foreground">{t('dashboard.subtitle')}</p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          {[
-            { title: t('decks.title'), value: stats.totalDecks, icon: BookOpen },
-            { title: t('dashboard.totalCards'), value: stats.totalCards, icon: Brain },
-            { title: t('dashboard.studyStreak'), value: `${stats.studyStreak} ${t('dashboard.days')}`, icon: TrendingUp },
-            { title: t('dashboard.cardsReviewed'), value: stats.cardsReviewed, subtitle: t('dashboard.thisWeek'), icon: Clock }
-          ].map((stat, index) => (
-            <Card key={stat.title}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                {stat.subtitle && <p className="text-xs text-muted-foreground">{stat.subtitle}</p>}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Recent Decks Section */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-foreground">{t('dashboard.recentDecks')}</h3>
-            <Button variant="outline" onClick={() => navigate('/decks')}>
-              {t('dashboard.viewAllDecks')}
-            </Button>
-          </div>
-          
-          {recentSets.length === 0 ? (
-            <Card className="text-center py-8">
-              <CardContent>
-                <BookOpen className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <h4 className="text-md font-medium text-foreground mb-2">{t('decks.noDecks')}</h4>
-                <p className="text-muted-foreground mb-4">{t('decks.noDecksDesc')}</p>
-                <Button onClick={() => navigate('/create-set')}>
-                  {t('decks.createFirst')}
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {recentSets.map((set) => (
-                <Card key={set.id} className="hover:shadow-lg transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="text-sm truncate">{set.title}</CardTitle>
-                    <CardDescription className="text-xs">{set.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => navigate(`/sets/${set.id}`)} className="flex-1">
-                        <Eye className="w-3 h-3 mr-1" />
-                        {t('view')}
-                      </Button>
-                      <Button size="sm" onClick={() => navigate(`/sets/${set.id}/study`)} className="flex-1">
-                        <Play className="w-3 h-3 mr-1" />
-                        {t('study.title')}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('dashboard.quickActions')}</CardTitle>
-            <CardDescription>{t('dashboard.quickActionsDesc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button onClick={() => navigate('/create-set')} className="flex-1">
-                {t('dashboard.createNewDeck')}
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/decks')} className="flex-1">
-                {t('dashboard.browseDecks')}
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/marketplace')} className="flex-1">
-                {t('dashboard.exploreMarketplace')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <DashboardStats stats={stats} />
+        <RecentDecks recentSets={recentSets || []} />
+        <QuickActions />
       </main>
     </div>
   );
