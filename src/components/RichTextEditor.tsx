@@ -72,14 +72,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   };
 
-  const handleContainerMouseDown = (e: React.MouseEvent) => {
-    // Only prevent propagation when editing to allow dragging when not editing
-    if (isEditing) {
-      e.stopPropagation();
-    }
-    handleMouseDown(e);
-  };
-
   return (
     <div className="w-full h-full relative">
       {/* TTS Component */}
@@ -111,10 +103,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           element.hasTTS ? 'border-blue-200' : ''
         } ${isSelected ? 'ring-2 ring-primary ring-opacity-50' : ''}`}
         style={{ padding: '8px' }}
-        onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
-        onMouseDown={handleContainerMouseDown}
-        onMouseUp={handleMouseUp}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          if (!isStudyMode) {
+            startEditing();
+          }
+        }}
       >
         {isEditing ? (
           <TextEditorInput

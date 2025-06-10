@@ -33,25 +33,8 @@ export const TextElementRenderer: React.FC<TextElementRendererProps> = ({
     return element.color || (isDarkTheme ? '#ffffff' : '#000000');
   };
 
-  const handleElementClick = (e: React.MouseEvent) => {
-    // Only handle clicks in study mode, let canvas handle dragging in edit mode
-    if (isStudyMode && onElementSelect) {
-      e.stopPropagation();
-      onElementSelect(element.id);
-    }
-  };
-
   const textContent = (
-    <div 
-      className={`w-full h-full ${isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
-      onClick={handleElementClick}
-      onMouseDown={(e) => {
-        // Don't stop propagation in edit mode to allow dragging
-        if (isStudyMode) {
-          e.stopPropagation();
-        }
-      }}
-    >
+    <div className="w-full h-full">
       <RichTextEditor
         element={{
           ...element,
@@ -61,6 +44,7 @@ export const TextElementRenderer: React.FC<TextElementRendererProps> = ({
         onEditingChange={(editing) => onEditingChange(editing ? element.id : null)}
         textScale={textScale}
         isSelected={isSelected}
+        isStudyMode={isStudyMode}
       />
     </div>
   );

@@ -15,7 +15,6 @@ export const useTextEditorInteractions = ({
   element,
 }: UseTextEditorInteractionsProps) => {
   const [showToolbar, setShowToolbar] = useState(false);
-  const [toolbarTimer, setToolbarTimer] = useState<NodeJS.Timeout | null>(null);
 
   const startEditing = useCallback(() => {
     if (isStudyMode && element.hasTTS && element.ttsEnabled) {
@@ -29,41 +28,18 @@ export const useTextEditorInteractions = ({
     onEditingChange(false);
   }, [onEditingChange]);
 
+  // Simplified interactions - remove complex mouse event handling
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (isEditing || isStudyMode) return;
-    
-    // Clear any existing timer
-    if (toolbarTimer) {
-      clearTimeout(toolbarTimer);
-    }
-    
-    // Set a timer to show toolbar after hold
-    const timer = setTimeout(() => {
-      setShowToolbar(true);
-    }, 300);
-    
-    setToolbarTimer(timer);
-  }, [isEditing, isStudyMode, toolbarTimer]);
+    // Let canvas handle dragging
+  }, []);
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    // Clear timer if mouse is released quickly
-    if (toolbarTimer) {
-      clearTimeout(toolbarTimer);
-      setToolbarTimer(null);
-    }
-  }, [toolbarTimer]);
+    // Let canvas handle dragging
+  }, []);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!isEditing && !showToolbar) {
-      startEditing();
-    }
-  }, [isEditing, showToolbar, startEditing]);
+    // Don't interfere with canvas selection
+  }, []);
 
   const handleDoubleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
