@@ -1,14 +1,14 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
 import { useCardEditorState } from '@/hooks/useCardEditorState';
 import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useCardEditorHandlers } from '@/hooks/useCardEditorHandlers';
 import { CardEditorLayout } from './CardEditorLayout';
 import { Navigation } from './Navigation';
 import { CanvasElement } from '@/types/flashcard';
-import { updateFlashcardSet } from '@/lib/api/sets';
-import { useToast } from '@/hooks/use-toast';
 
 interface CardEditorProps {
   setId?: string;
@@ -16,7 +16,6 @@ interface CardEditorProps {
 
 export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const { t } = useI18n();
-  const { toast } = useToast();
 
   const {
     set,
@@ -79,26 +78,30 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   // Get current card early in the component
   const currentCard = cards[currentCardIndex];
 
-  // Define callback functions first, before they're used in other functions
-  const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
-    updateElement(elementId, updates);
-  }, [updateElement]);
-
-  const handleDeleteElement = useCallback((elementId: string) => {
-    deleteElement(elementId);
-    setSelectedElementId(null);
-  }, [deleteElement, setSelectedElementId]);
-
-  const handleElementSelect = useCallback((elementId: string | null) => {
-    // Don't change selection during text selection
-    if (isTextSelecting) return;
-    setSelectedElementId(elementId);
-  }, [setSelectedElementId, isTextSelecting]);
-
-  const handleNavigateToCard = useCallback((cardIndex: number) => {
-    setCurrentCardIndex(cardIndex);
-    setSelectedElementId(null);
-  }, [setCurrentCardIndex, setSelectedElementId]);
+  // Use handlers hook
+  const {
+    handleUpdateElement,
+    handleDeleteElement,
+    handleElementSelect,
+    handleNavigateToCard,
+    handleUpdateDeckTitle,
+    handleAutoArrange,
+    handleCanvasSizeChange,
+    handleCardUpdate,
+  } = useCardEditorHandlers({
+    updateElement,
+    deleteElement,
+    setSelectedElementId,
+    setCurrentCardIndex,
+    cards,
+    currentCard,
+    navigateCard,
+    setCurrentSide,
+    updateCard,
+    isTextSelecting,
+    set,
+    setDeckName,
+  });
 
   // Use canvas interaction hook
   useCanvasInteraction({
@@ -152,7 +155,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
       if (selection && selection.toString().length > 0) {
         setIsTextSelecting(true);
       } else {
-        // Delay clearing to allow for proper event handling
         setTimeout(() => {
           setIsTextSelecting(false);
         }, 100);
@@ -184,13 +186,11 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     const viewportWidth = viewportRect.width;
     const viewportHeight = viewportRect.height;
     
-    // Calculate zoom to fit with some padding
     const padding = 40;
     const zoomX = (viewportWidth - padding) / cardWidth;
     const zoomY = (viewportHeight - padding) / cardHeight;
-    const newZoom = Math.min(zoomX, zoomY, 3); // Cap at 3x zoom
+    const newZoom = Math.min(zoomX, zoomY, 3);
     
-    // Center the canvas
     const scaledWidth = cardWidth * newZoom;
     const scaledHeight = cardHeight * newZoom;
     const centerX = (viewportWidth - scaledWidth) / 2;
@@ -216,134 +216,11 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     }
   };
 
-  const handleUpdateDeckTitle = async (newTitle: string) => {
-    if (!set) return;
-    
-    try {
-      await updateFlashcardSet(set.id, { title: newTitle });
-      // Update local state immediately for real-time update
-      setDeckName(newTitle);
-      toast({
-        title: "Success",
-        description: "Deck title updated successfully"
-      });
-    } catch (error) {
-      console.error('Error updating deck title:', error);
-      toast({
-        title: "Error", 
-        description: "Failed to update deck title",
-        variant: "destructive"
-      });
-      throw error;
-    }
-  };
-
-  // Handle auto-arrange function
-  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => {
-    const elements = getCurrentElements();
-    if (elements.length === 0) return;
-
-    const updatedElements = [...elements];
-    
-    switch (type) {
-      case 'grid':
-        const cols = Math.ceil(Math.sqrt(elements.length));
-        const spacing = 120;
-        elements.forEach((element, index) => {
-          const row = Math.floor(index / cols);
-          const col = index % cols;
-          updatedElements[index] = {
-            ...element,
-            x: 50 + col * spacing,
-            y: 50 + row * spacing
-          };
-        });
-        break;
-        
-      case 'center':
-        elements.forEach((element, index) => {
-          updatedElements[index] = {
-            ...element,
-            x: (cardWidth - element.width) / 2,
-            y: element.y
-          };
-        });
-        break;
-
-      case 'center-horizontal':
-        elements.forEach((element, index) => {
-          updatedElements[index] = {
-            ...element,
-            x: (cardWidth - element.width) / 2
-          };
-        });
-        break;
-
-      case 'center-vertical':
-        elements.forEach((element, index) => {
-          updatedElements[index] = {
-            ...element,
-            y: (cardHeight - element.height) / 2
-          };
-        });
-        break;
-        
-      case 'stack':
-        let currentY = 50;
-        elements.forEach((element, index) => {
-          updatedElements[index] = {
-            ...element,
-            x: 50,
-            y: currentY
-          };
-          currentY += element.height + 20;
-        });
-        break;
-        
-      case 'align-left':
-      case 'align-center':
-      case 'align-right':
-        const alignment = type.replace('align-', '') as 'left' | 'center' | 'right';
-        elements.forEach((element, index) => {
-          if (element.type === 'text') {
-            updatedElements[index] = {
-              ...element,
-              textAlign: alignment
-            };
-          }
-        });
-        break;
-    }
-
-    updatedElements.forEach(element => {
-      updateElement(element.id, element);
-    });
-  };
-
-  const handleCanvasSizeChange = useCallback((width: number, height: number) => {
-    setCardWidth(width);
-    setCardHeight(height);
-    
-    // Update the current card with new dimensions
-    if (currentCard) {
-      updateCard(currentCard.id, { 
-        canvas_width: width, 
-        canvas_height: height 
-      });
-    }
-  }, [currentCard, updateCard, setCardWidth, setCardHeight]);
-
-  const handleCardUpdate = useCallback((cardId: string, updates: Partial<typeof currentCard>) => {
-    updateCard(cardId, updates);
-  }, [updateCard]);
-
-  // Handle toolbar position changes
   const handleToolbarPositionChange = useCallback((position: 'left' | 'very-top' | 'canvas-left' | 'floating', isDocked: boolean) => {
     setToolbarPosition(position);
     setToolbarIsDocked(isDocked);
   }, [setToolbarPosition, setToolbarIsDocked]);
 
-  // Handle toolbar text toggle
   const handleToolbarTextToggle = useCallback((showText: boolean) => {
     setToolbarShowText(showText);
   }, [setToolbarShowText]);
@@ -351,7 +228,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const handleAddElement = useCallback((type: CanvasElement['type']) => {
     console.log('Adding element of type:', type);
     if (type === 'tts') {
-      // Create a text element with TTS enabled
       addElement('text', {
         hasTTS: true,
         ttsEnabled: true,
@@ -366,10 +242,8 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   }, [addElement]);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
-    // Don't deselect during text selection
     if (isTextSelecting) return;
     
-    // Only deselect if clicking directly on the canvas background
     if (e.target === e.currentTarget || (e.target as Element).hasAttribute('data-canvas-background')) {
       setSelectedElementId(null);
     }

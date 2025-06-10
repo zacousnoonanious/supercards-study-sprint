@@ -48,7 +48,7 @@ interface CardEditorLayoutProps {
   onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => void;
   onDeleteElement: (elementId: string) => void;
   onCanvasSizeChange: (width: number, height: number) => void;
-  onUpdateCard: (cardId: string, updates: Partial<Flashcard>) => void;
+  onUpdateCard: (updates: Partial<Flashcard>) => void;
   onElementSelect: (elementId: string | null) => void;
   onCanvasClick: (e: React.MouseEvent) => void;
   onNavigateToCard: (cardIndex: number) => void;
@@ -182,7 +182,7 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
           canvasHeight={cardHeight}
           onCanvasSizeChange={onCanvasSizeChange}
           currentCard={currentCard}
-          onUpdateCard={(updates) => onUpdateCard(currentCard.id, updates)}
+          onUpdateCard={onUpdateCard}
           showGrid={showGrid}
           onShowGridChange={() => {}}
           snapToGrid={snapToGrid}
@@ -276,7 +276,7 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
                   currentCardIndex={currentCardIndex}
                   totalCards={cards.length}
                   selectedElement={getSelectedElementData()}
-                  onUpdateCard={(updates) => onUpdateCard(currentCard.id, updates)}
+                  onUpdateCard={onUpdateCard}
                   onNavigateCard={onNavigateCard}
                   cardWidth={Math.max(cardWidth * 0.5, 400)}
                 />
