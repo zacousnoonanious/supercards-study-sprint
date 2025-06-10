@@ -13,23 +13,25 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
 
   useEffect(() => {
     if (location.pathname !== displayLocation.pathname) {
+      // Start fade out animation
       setTransitionStage('fadeOut');
-      
-      // After fade out completes, update the displayed content and fade in
-      const timer = setTimeout(() => {
-        setDisplayLocation(location);
-        setTransitionStage('fadeIn');
-      }, 200); // Half of the total transition time
-
-      return () => clearTimeout(timer);
     }
   }, [location.pathname, displayLocation.pathname]);
 
+  const handleTransitionEnd = () => {
+    if (transitionStage === 'fadeOut') {
+      // Only update the displayed content after fade out completes
+      setDisplayLocation(location);
+      setTransitionStage('fadeIn');
+    }
+  };
+
   return (
     <div
-      className={`transition-opacity duration-200 ease-in-out ${
+      className={`transition-opacity duration-300 ease-in-out ${
         transitionStage === 'fadeOut' ? 'opacity-0' : 'opacity-100'
       }`}
+      onTransitionEnd={handleTransitionEnd}
     >
       <div key={displayLocation.pathname}>
         {children}
