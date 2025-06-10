@@ -27,8 +27,8 @@ export const ProfileLanguageSettings: React.FC<ProfileLanguageSettingsProps> = (
     { code: 'fr', label: t('lang.fr') || 'Français' },
     { code: 'de', label: t('lang.de') || 'Deutsch' },
     { code: 'it', label: t('lang.it') || 'Italiano' },
-    { code: 'zh-CN', label: t('lang.zh-CN') || '简体中文' },
-    { code: 'zh-TW', label: t('lang.zh-TW') || '繁體中文' },
+    { code: 'zh-CN', label: t('lang.zh') || '简体中文' },
+    { code: 'zh-TW', label: t('lang.zh') || '繁體中文' },
     { code: 'hi', label: t('lang.hi') || 'हिन्दी' },
     { code: 'ar', label: t('lang.ar') || 'العربية' },
     { code: 'pt', label: t('lang.pt') || 'Português' },
@@ -41,7 +41,7 @@ export const ProfileLanguageSettings: React.FC<ProfileLanguageSettingsProps> = (
     { code: 'vi', label: t('lang.vi') || 'Tiếng Việt' },
     { code: 'tr', label: t('lang.tr') || 'Türkçe' },
     { code: 'ur', label: t('lang.ur') || 'اردو' },
-    { code: 'ta', label: t('lang.ta') || 'தமிழ்' },
+    { code: 'ta', label: t('lang.ta') || 'தমிழ்' },
   ];
 
   return (
