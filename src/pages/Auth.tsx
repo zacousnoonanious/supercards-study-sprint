@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -69,17 +68,88 @@ const Auth = () => {
     return 'Strong';
   };
 
-  // Animated flashcards data
-  const flashcards = [
-    { front: "Welcome!", back: "Start your learning journey", delay: 0, angle: 0 },
-    { front: "Study Smart", back: "Effective spaced repetition", delay: 0.5, angle: 45 },
-    { front: "Track Progress", back: "Monitor your improvement", delay: 1, angle: 90 },
-    { front: "AI Powered", back: "Generate cards with AI", delay: 1.5, angle: 135 },
-    { front: "Share & Learn", back: "Collaborate with others", delay: 2, angle: 180 },
-    { front: "Mobile Ready", back: "Study anywhere, anytime", delay: 2.5, angle: 225 },
-    { front: "Custom Themes", back: "Personalize your experience", delay: 3, angle: 270 },
-    { front: "Analytics", back: "Detailed learning insights", delay: 3.5, angle: 315 },
+  // Real flashcard facts for background animation
+  const flashcardFacts = [
+    { front: "Capital of Japan", back: "Tokyo", color: "bg-blue-100 border-blue-300 text-blue-800" },
+    { front: "Speed of Light", back: "299,792,458 m/s", color: "bg-purple-100 border-purple-300 text-purple-800" },
+    { front: "Largest Planet", back: "Jupiter", color: "bg-orange-100 border-orange-300 text-orange-800" },
+    { front: "Chemical Symbol for Gold", back: "Au", color: "bg-yellow-100 border-yellow-300 text-yellow-800" },
+    { front: "Author of 1984", back: "George Orwell", color: "bg-green-100 border-green-300 text-green-800" },
+    { front: "Pythagorean Theorem", back: "a² + b² = c²", color: "bg-red-100 border-red-300 text-red-800" },
+    { front: "First Element", back: "Hydrogen", color: "bg-indigo-100 border-indigo-300 text-indigo-800" },
+    { front: "Longest River", back: "Nile River", color: "bg-teal-100 border-teal-300 text-teal-800" },
+    { front: "DNA Structure", back: "Double Helix", color: "bg-pink-100 border-pink-300 text-pink-800" },
+    { front: "Square Root of 144", back: "12", color: "bg-cyan-100 border-cyan-300 text-cyan-800" },
+    { front: "Boiling Point of Water", back: "100°C", color: "bg-lime-100 border-lime-300 text-lime-800" },
+    { front: "Shakespeare's Hamlet", back: "To be or not to be", color: "bg-violet-100 border-violet-300 text-violet-800" },
+    { front: "Newton's First Law", back: "Objects at rest stay at rest", color: "bg-emerald-100 border-emerald-300 text-emerald-800" },
+    { front: "Capital of Australia", back: "Canberra", color: "bg-rose-100 border-rose-300 text-rose-800" },
+    { front: "Photosynthesis Product", back: "Oxygen", color: "bg-amber-100 border-amber-300 text-amber-800" },
+    { front: "π (Pi) Value", back: "3.14159...", color: "bg-slate-100 border-slate-300 text-slate-800" },
+    { front: "Human Heart Chambers", back: "4", color: "bg-stone-100 border-stone-300 text-stone-800" },
+    { front: "Smallest Country", back: "Vatican City", color: "bg-zinc-100 border-zinc-300 text-zinc-800" }
   ];
+
+  // Generate random movement data for each card
+  const [cardMovements] = useState(() => 
+    flashcardFacts.map((_, index) => ({
+      id: index,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 2,
+      scale: 0.8 + Math.random() * 0.4,
+      flipTimer: Math.random() * 10000,
+      isFlipped: false
+    }))
+  );
+
+  // Update card positions
+  useEffect(() => {
+    const interval = setInterval(() => {
+      cardMovements.forEach(movement => {
+        // Update position
+        movement.x += movement.vx;
+        movement.y += movement.vy;
+        
+        // Bounce off edges with some randomness
+        if (movement.x <= 0 || movement.x >= 95) {
+          movement.vx *= -1;
+          movement.vx += (Math.random() - 0.5) * 0.1;
+          movement.x = Math.max(0, Math.min(95, movement.x));
+        }
+        if (movement.y <= 0 || movement.y >= 95) {
+          movement.vy *= -1;
+          movement.vy += (Math.random() - 0.5) * 0.1;
+          movement.y = Math.max(0, Math.min(95, movement.y));
+        }
+        
+        // Update rotation
+        movement.rotation += movement.rotationSpeed;
+        
+        // Update flip state
+        movement.flipTimer += 100;
+        if (movement.flipTimer > 8000) {
+          movement.isFlipped = !movement.isFlipped;
+          movement.flipTimer = 0;
+        }
+        
+        // Occasionally change direction slightly
+        if (Math.random() < 0.02) {
+          movement.vx += (Math.random() - 0.5) * 0.1;
+          movement.vy += (Math.random() - 0.5) * 0.1;
+          
+          // Keep speeds reasonable
+          movement.vx = Math.max(-0.5, Math.min(0.5, movement.vx));
+          movement.vy = Math.max(-0.5, Math.min(0.5, movement.vy));
+        }
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [cardMovements]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,29 +286,47 @@ const Auth = () => {
         ></div>
       </div>
 
-      {/* Animated flashcards emanating from center like sun rays */}
-      <div className="absolute inset-0 z-5 pointer-events-none">
-        {flashcards.map((card, index) => (
-          <div
-            key={index}
-            className="absolute top-1/2 left-1/2"
-            style={{
-              transform: `translate(-50%, -50%) rotate(${card.angle}deg) translateY(-200px) rotate(-${card.angle}deg)`,
-              animation: `orbit 20s linear infinite`,
-              animationDelay: `${card.delay}s`
-            }}
-          >
-            <div 
-              className="w-32 h-20 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-white/30 p-3 flex items-center justify-center animate-float-cards"
-              style={{ animationDelay: `${card.delay}s` }}
+      {/* Animated flashcards moving like a crowd */}
+      <div className="absolute inset-0 z-5 pointer-events-none overflow-hidden">
+        {flashcardFacts.map((card, index) => {
+          const movement = cardMovements[index];
+          return (
+            <div
+              key={index}
+              className="absolute transition-all duration-100 ease-linear"
+              style={{
+                left: `${movement.x}%`,
+                top: `${movement.y}%`,
+                transform: `rotate(${movement.rotation}deg) scale(${movement.scale})`,
+                opacity: 0.7,
+              }}
             >
-              <div className="text-center">
-                <p className="text-xs font-semibold text-purple-800">{card.front}</p>
-                <p className="text-xs text-purple-600 mt-1">{card.back}</p>
+              <div 
+                className="w-36 h-24 [perspective:1000px]"
+              >
+                <div
+                  className="relative w-full h-full transition-transform duration-700"
+                  style={{
+                    transformStyle: 'preserve-3d',
+                    transform: movement.isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                  }}
+                >
+                  {/* Front of card */}
+                  <div className={`absolute inset-0 w-full h-full ${card.color} border-2 rounded-lg shadow-lg p-3 flex items-center justify-center [backface-visibility:hidden]`}>
+                    <p className="text-xs font-semibold text-center leading-tight">{card.front}</p>
+                  </div>
+                  {/* Back of card */}
+                  <div 
+                    className={`absolute inset-0 w-full h-full ${card.color} border-2 rounded-lg shadow-lg p-3 flex items-center justify-center [backface-visibility:hidden]`}
+                    style={{ transform: 'rotateY(180deg)' }}
+                  >
+                    <p className="text-xs font-medium text-center leading-tight">{card.back}</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Content */}
@@ -361,18 +449,9 @@ const Auth = () => {
         </Card>
       </div>
 
-      {/* Additional styles for orbit animation */}
+      {/* Additional styles for animations */}
       <style dangerouslySetInnerHTML={{
         __html: `
-          @keyframes orbit {
-            from {
-              transform: translate(-50%, -50%) rotate(0deg) translateY(-200px) rotate(0deg);
-            }
-            to {
-              transform: translate(-50%, -50%) rotate(360deg) translateY(-200px) rotate(-360deg);
-            }
-          }
-          
           @keyframes scale-in {
             from {
               transform: scale(0.8);
