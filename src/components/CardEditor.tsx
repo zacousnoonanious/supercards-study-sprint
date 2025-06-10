@@ -126,12 +126,12 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   });
 
   useKeyboardShortcuts({
+    addElement,
     selectedElementId,
     handleDeleteElement,
     currentCardIndex,
     cards,
     navigateCard,
-    currentSide,
     setCurrentSide,
     handleAutoArrange,
     isTextSelecting,
