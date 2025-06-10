@@ -778,3 +778,5 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     </div>
   );
 };
+
+export default CardEditor;
