@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,6 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
   const { signUp, signIn, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -31,12 +31,6 @@ const Auth = () => {
       navigate('/dashboard');
     }
   }, [user, navigate]);
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Password strength calculation
   const getPasswordStrength = (password: string) => {
@@ -108,7 +102,7 @@ const Auth = () => {
     }))
   );
 
-  // Update card positions with smooth gliding
+  // Update card positions with smooth gliding - continuous movement
   useEffect(() => {
     const interval = setInterval(() => {
       cardMovements.forEach(movement => {
@@ -217,7 +211,7 @@ const Auth = () => {
 
   if (showCelebration) {
     return (
-      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
+      <div className="h-screen w-screen fixed inset-0 overflow-hidden bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
         <Navigation />
         
         {/* Celebration confetti animation */}
@@ -236,7 +230,7 @@ const Auth = () => {
           ))}
         </div>
 
-        <div className="relative z-10 min-h-screen flex items-center justify-center p-4 pt-16">
+        <div className="relative z-10 h-full flex items-center justify-center p-4 pt-16">
           <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm border-0 shadow-2xl animate-scale-in text-center">
             <CardHeader>
               <div className="w-20 h-20 bg-green-500 rounded-full mx-auto mb-4 flex items-center justify-center animate-bounce">
@@ -270,27 +264,20 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="h-screen w-screen fixed inset-0 overflow-hidden">
       <Navigation />
       
-      {/* Animated gradient background similar to homepage */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-400 via-pink-500 to-blue-600 pt-12">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-400 via-pink-500 to-blue-600">
         {/* Geometric shapes scattered in background */}
-        <div 
-          className="absolute top-20 left-10 w-8 h-8 bg-pink-300 rounded-full opacity-70 animate-float"
-          style={{ transform: `translateY(${scrollY * 0.1}px)` }}
-        ></div>
+        <div className="absolute top-20 left-10 w-8 h-8 bg-pink-300 rounded-full opacity-70 animate-float"></div>
         <div 
           className="absolute top-32 right-20 w-6 h-6 bg-blue-300 opacity-60 animate-float-slow"
           style={{ 
-            transform: `translateY(${scrollY * 0.15}px) rotate(45deg)`,
             clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
           }}
         ></div>
-        <div 
-          className="absolute bottom-40 right-10 w-10 h-10 bg-purple-300 rounded-full opacity-60 animate-float"
-          style={{ transform: `translateY(${scrollY * 0.12}px)` }}
-        ></div>
+        <div className="absolute bottom-40 right-10 w-10 h-10 bg-purple-300 rounded-full opacity-60 animate-float"></div>
       </div>
 
       {/* Smoothly gliding flashcards background */}
@@ -310,7 +297,7 @@ const Auth = () => {
               }}
             >
               <div 
-                className="w-40 h-28 [perspective:1000px] drop-shadow-lg"
+                className="w-32 h-20 md:w-40 md:h-28 [perspective:1000px] drop-shadow-lg"
               >
                 <div
                   className="relative w-full h-full transition-transform duration-1000 ease-in-out"
@@ -320,15 +307,15 @@ const Auth = () => {
                   }}
                 >
                   {/* Front of card */}
-                  <div className={`absolute inset-0 w-full h-full ${card.color} border-2 rounded-xl shadow-xl p-4 flex items-center justify-center [backface-visibility:hidden] backdrop-blur-sm`}>
-                    <p className="text-sm font-semibold text-center leading-tight">{card.front}</p>
+                  <div className={`absolute inset-0 w-full h-full ${card.color} border-2 rounded-xl shadow-xl p-2 md:p-4 flex items-center justify-center [backface-visibility:hidden] backdrop-blur-sm`}>
+                    <p className="text-xs md:text-sm font-semibold text-center leading-tight">{card.front}</p>
                   </div>
                   {/* Back of card */}
                   <div 
-                    className={`absolute inset-0 w-full h-full ${card.color} border-2 rounded-xl shadow-xl p-4 flex items-center justify-center [backface-visibility:hidden] backdrop-blur-sm`}
+                    className={`absolute inset-0 w-full h-full ${card.color} border-2 rounded-xl shadow-xl p-2 md:p-4 flex items-center justify-center [backface-visibility:hidden] backdrop-blur-sm`}
                     style={{ transform: 'rotateY(180deg)' }}
                   >
-                    <p className="text-sm font-medium text-center leading-tight">{card.back}</p>
+                    <p className="text-xs md:text-sm font-medium text-center leading-tight">{card.back}</p>
                   </div>
                 </div>
               </div>
@@ -338,18 +325,18 @@ const Auth = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 pt-16">
-        <Card className="w-full max-w-md bg-white/10 backdrop-blur-lg border-white/20 shadow-2xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold text-white">{t('auth.title')}</CardTitle>
-            <CardDescription className="text-white/80">
+      <div className="relative z-10 h-full flex items-center justify-center p-4 pt-16 pb-4">
+        <Card className="w-full max-w-sm md:max-w-md bg-white/10 backdrop-blur-lg border-white/20 shadow-2xl">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl md:text-3xl font-bold text-white">{t('auth.title')}</CardTitle>
+            <CardDescription className="text-white/80 text-sm">
               {isLogin ? t('auth.signInSubtitle') : t('auth.signUpSubtitle')}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="email" className="text-white">{t('auth.email')}</Label>
+                <Label htmlFor="email" className="text-white text-sm">{t('auth.email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -357,12 +344,12 @@ const Auth = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder={t('auth.emailPlaceholder')}
-                  className="bg-white/20 border-white/30 text-white placeholder:text-white/60 focus:border-white/50"
+                  className="bg-white/20 border-white/30 text-white placeholder:text-white/60 focus:border-white/50 h-10"
                 />
               </div>
               
               <div>
-                <Label htmlFor="password" className="text-white">{t('auth.password')}</Label>
+                <Label htmlFor="password" className="text-white text-sm">{t('auth.password')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -372,7 +359,7 @@ const Auth = () => {
                     required
                     placeholder={t('auth.passwordPlaceholder')}
                     minLength={6}
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/60 focus:border-white/50 pr-10"
+                    className="bg-white/20 border-white/30 text-white placeholder:text-white/60 focus:border-white/50 pr-10 h-10"
                   />
                   <button
                     type="button"
@@ -386,7 +373,7 @@ const Auth = () => {
                 {!isLogin && password && (
                   <div className="mt-2">
                     <div className="flex items-center gap-2 mb-1">
-                      <div className="flex-1 bg-white/20 rounded-full h-2">
+                      <div className="flex-1 bg-white/20 rounded-full h-1.5">
                         <div 
                           className={`h-full rounded-full transition-all duration-300 ${getStrengthColor(passwordStrength)}`}
                           style={{ width: `${(passwordStrength / 5) * 100}%` }}
@@ -400,7 +387,7 @@ const Auth = () => {
 
               {!isLogin && (
                 <div>
-                  <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword" className="text-white text-sm">Confirm Password</Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
@@ -409,7 +396,7 @@ const Auth = () => {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       placeholder="Confirm your password"
-                      className="bg-white/20 border-white/30 text-white placeholder:text-white/60 focus:border-white/50 pr-10"
+                      className="bg-white/20 border-white/30 text-white placeholder:text-white/60 focus:border-white/50 pr-10 h-10"
                     />
                     <button
                       type="button"
@@ -423,9 +410,9 @@ const Auth = () => {
                   {confirmPassword && (
                     <div className="mt-2 flex items-center gap-2">
                       {passwordsMatch ? (
-                        <Check className="h-4 w-4 text-green-400" />
+                        <Check className="h-3 w-3 text-green-400" />
                       ) : (
-                        <X className="h-4 w-4 text-red-400" />
+                        <X className="h-3 w-3 text-red-400" />
                       )}
                       <span className={`text-xs ${passwordsMatch ? 'text-green-400' : 'text-red-400'}`}>
                         {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
@@ -437,14 +424,14 @@ const Auth = () => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm" 
+                className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm h-10" 
                 disabled={loading || (!isLogin && (!passwordsMatch || passwordStrength < 3))}
               >
                 {loading ? t('auth.loading') : (isLogin ? t('auth.signIn') : t('auth.signUp'))}
               </Button>
             </form>
             
-            <div className="mt-4 text-center">
+            <div className="text-center pt-2">
               <button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
@@ -473,6 +460,24 @@ const Auth = () => {
           
           .animate-scale-in {
             animation: scale-in 0.5s ease-out;
+          }
+          
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+          }
+          
+          @keyframes float-slow {
+            0%, 100% { transform: translateY(0px) rotate(45deg); }
+            50% { transform: translateY(-15px) rotate(45deg); }
+          }
+          
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
+          }
+          
+          .animate-float-slow {
+            animation: float-slow 4s ease-in-out infinite;
           }
         `
       }} />
