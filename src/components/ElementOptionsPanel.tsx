@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { useI18n } from '@/contexts/I18nContext';
@@ -177,14 +178,14 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
                     <div className="space-y-2">
                       <Label className="text-xs">Voice</Label>
                       <Select
-                        value={element.ttsVoice || ''}
-                        onValueChange={(value) => onUpdate({ ttsVoice: value })}
+                        value={element.ttsVoice || 'default'}
+                        onValueChange={(value) => onUpdate({ ttsVoice: value === 'default' ? undefined : value })}
                       >
                         <SelectTrigger className="h-8">
                           <SelectValue placeholder="Default voice" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Default voice</SelectItem>
+                          <SelectItem value="default">Default voice</SelectItem>
                           {availableVoices.map((voice) => (
                             <SelectItem key={voice.name} value={voice.name}>
                               {voice.name} ({voice.lang})
@@ -262,14 +263,14 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
                 <div className="space-y-2">
                   <Label className="text-xs">Voice</Label>
                   <Select
-                    value={element.ttsVoice || ''}
-                    onValueChange={(value) => onUpdate({ ttsVoice: value })}
+                    value={element.ttsVoice || 'default'}
+                    onValueChange={(value) => onUpdate({ ttsVoice: value === 'default' ? undefined : value })}
                   >
                     <SelectTrigger className="h-8">
                       <SelectValue placeholder="Default voice" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Default voice</SelectItem>
+                      <SelectItem value="default">Default voice</SelectItem>
                       {availableVoices.map((voice) => (
                         <SelectItem key={voice.name} value={voice.name}>
                           {voice.name} ({voice.lang})
