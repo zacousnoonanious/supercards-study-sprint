@@ -1033,5 +1033,3 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
     </div>
   );
 };
-
-</edits_to_apply>
