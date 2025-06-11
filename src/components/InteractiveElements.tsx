@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Check, X } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
+import { FillInBlankRenderer as AdvancedFillInBlankRenderer } from './FillInBlankRenderer';
 
 interface ElementRendererProps {
   element: CanvasElement;
@@ -426,6 +427,26 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   isCorrect,
   allowMultipleAttempts = true
 }) => {
+  // If this element has the advanced fill-in-blank data (fillInBlankText and fillInBlankBlanks),
+  // use the advanced renderer
+  if (element.fillInBlankText && element.fillInBlankBlanks && element.fillInBlankBlanks.length > 0) {
+    return (
+      <AdvancedFillInBlankRenderer
+        element={element}
+        textScale={textScale}
+        onAnswer={(isCorrect, userAnswers) => {
+          if (onAnswer) {
+            onAnswer(isCorrect);
+          }
+        }}
+        showAnswers={false}
+        disabled={false}
+        isStudyMode={true}
+      />
+    );
+  }
+
+  // Fallback to simple fill-in-blank for backward compatibility
   const [userAnswer, setUserAnswer] = useState('');
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
