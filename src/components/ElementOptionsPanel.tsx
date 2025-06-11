@@ -1,37 +1,16 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Trash2, Upload, Play, Square } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
 import { useI18n } from '@/contexts/I18nContext';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Trash2, 
-  ChevronDown, 
-  ChevronUp, 
-  Plus, 
-  Minus, 
-  Upload,
-  Bold,
-  Italic,
-  Underline,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify
-} from 'lucide-react';
-import { ColorPicker } from './ColorPicker';
+import { FillInBlankEditor } from './FillInBlankEditor';
 
 interface ElementOptionsPanelProps {
   element: CanvasElement | null;
@@ -45,991 +24,476 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
   onDelete,
 }) => {
   const { t } = useI18n();
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [googleTTSKey, setGoogleTTSKey] = useState(localStorage.getItem('google_tts_api_key') || '');
-
-  // Load available voices for TTS
-  useEffect(() => {
-    const loadVoices = () => {
-      const voices = speechSynthesis.getVoices();
-      setAvailableVoices(voices);
-    };
-
-    loadVoices();
-    speechSynthesis.onvoiceschanged = loadVoices;
-
-    return () => {
-      speechSynthesis.onvoiceschanged = null;
-    };
-  }, []);
-
-  const handleGoogleTTSKeyChange = (key: string) => {
-    setGoogleTTSKey(key);
-    if (key.trim()) {
-      localStorage.setItem('google_tts_api_key', key.trim());
-    } else {
-      localStorage.removeItem('google_tts_api_key');
-    }
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        onUpdate({ imageUrl: result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const extractVideoId = (url: string) => {
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const match = url.match(regex);
-    return match ? match[1] : null;
-  };
-
-  const handleYouTubeUrlChange = (url: string) => {
-    const videoId = extractVideoId(url);
-    onUpdate({ 
-      youtubeUrl: url,
-      youtubeVideoId: videoId || undefined
-    });
-  };
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
 
   if (!element) {
     return (
-      <div className="w-80 p-4 border-l bg-background overflow-y-auto">
-        <div className="text-center text-muted-foreground py-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-dashed border-muted-foreground/50" />
-          </div>
-          <p className="font-medium">{t('editor.noElementSelected')}</p>
-          <p className="text-sm mt-1">{t('editor.clickElementToEdit')}</p>
-        </div>
-      </div>
+      <Card className="w-80 h-full">
+        <CardContent className="p-4">
+          <p className="text-sm text-muted-foreground text-center">
+            {t('editor.selectElement') || 'Select an element to edit its properties'}
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const imageUrl = URL.createObjectURL(file);
+      onUpdate({ imageUrl });
+    }
+  };
+
+  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAudioFile(file);
+      const audioUrl = URL.createObjectURL(file);
+      onUpdate({ audioUrl });
+    }
+  };
+
   return (
-    <div className="w-80 p-4 border-l bg-background overflow-y-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium capitalize">{t(`editor.${element.type}Settings`)}</h3>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={onDelete}
-          className="h-8 px-2"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <Tabs defaultValue="content" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="content">{t('editor.content')}</TabsTrigger>
-          <TabsTrigger value="style">{t('editor.style')}</TabsTrigger>
-          <TabsTrigger value="layout">{t('editor.layout')}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="content" className="space-y-4">
-          {/* Text Element Content */}
-          {element.type === 'text' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.content')}</Label>
-                <Textarea
-                  value={element.content || ''}
-                  onChange={(e) => onUpdate({ content: e.target.value })}
-                  placeholder={t('placeholders.enterTextContent')}
-                  rows={4}
-                />
-              </div>
-
-              {/* TTS Controls */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Text-to-Speech</Label>
-                  <Switch
-                    checked={element.hasTTS || false}
-                    onCheckedChange={(checked) => onUpdate({
-                      hasTTS: checked,
-                      ttsEnabled: checked,
-                      ttsAutoplay: false,
-                      ttsRate: 1,
-                      ttsPitch: 1
-                    })}
-                  />
-                </div>
-
-                {element.hasTTS && (
-                  <div className="space-y-3 pl-2 border-l-2 border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs">Auto-play</Label>
-                      <Switch
-                        checked={element.ttsAutoplay || false}
-                        onCheckedChange={(checked) => onUpdate({ ttsAutoplay: checked })}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Voice</Label>
-                      <Select
-                        value={element.ttsVoice || 'default'}
-                        onValueChange={(value) => onUpdate({ ttsVoice: value === 'default' ? undefined : value })}
-                      >
-                        <SelectTrigger className="h-8">
-                          <SelectValue placeholder="Default voice" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="default">Default voice</SelectItem>
-                          {availableVoices.map((voice) => (
-                            <SelectItem key={voice.name} value={voice.name}>
-                              {voice.name} ({voice.lang})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Speed: {element.ttsRate || 1}x</Label>
-                      <Slider
-                        value={[element.ttsRate || 1]}
-                        onValueChange={([value]) => onUpdate({ ttsRate: value })}
-                        min={0.5}
-                        max={2}
-                        step={0.1}
-                        className="w-full"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Pitch: {element.ttsPitch || 1}</Label>
-                      <Slider
-                        value={[element.ttsPitch || 1]}
-                        onValueChange={([value]) => onUpdate({ ttsPitch: value })}
-                        min={0.5}
-                        max={2}
-                        step={0.1}
-                        className="w-full"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Google Neural TTS API Key</Label>
-                      <Input
-                        type="password"
-                        value={googleTTSKey}
-                        onChange={(e) => handleGoogleTTSKeyChange(e.target.value)}
-                        placeholder="Optional: For high-quality voices"
-                        className="h-8 text-xs"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Add your Google Cloud TTS API key for premium neural voices
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TTS Element Content */}
-          {element.type === 'tts' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.content')}</Label>
-                <Textarea
-                  value={element.content || ''}
-                  onChange={(e) => onUpdate({ content: e.target.value })}
-                  placeholder="Enter text to speak..."
-                  rows={4}
-                />
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Auto-play</Label>
-                  <Switch
-                    checked={element.ttsAutoplay || false}
-                    onCheckedChange={(checked) => onUpdate({ ttsAutoplay: checked })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs">Voice</Label>
-                  <Select
-                    value={element.ttsVoice || 'default'}
-                    onValueChange={(value) => onUpdate({ ttsVoice: value === 'default' ? undefined : value })}
-                  >
-                    <SelectTrigger className="h-8">
-                      <SelectValue placeholder="Default voice" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="default">Default voice</SelectItem>
-                      {availableVoices.map((voice) => (
-                        <SelectItem key={voice.name} value={voice.name}>
-                          {voice.name} ({voice.lang})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs">Speed: {element.ttsRate || 1}x</Label>
-                  <Slider
-                    value={[element.ttsRate || 1]}
-                    onValueChange={([value]) => onUpdate({ ttsRate: value })}
-                    min={0.5}
-                    max={2}
-                    step={0.1}
-                    className="w-full"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs">Pitch: {element.ttsPitch || 1}</Label>
-                  <Slider
-                    value={[element.ttsPitch || 1]}
-                    onValueChange={([value]) => onUpdate({ ttsPitch: value })}
-                    min={0.5}
-                    max={2}
-                    step={0.1}
-                    className="w-full"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs">Google Neural TTS API Key</Label>
-                  <Input
-                    type="password"
-                    value={googleTTSKey}
-                    onChange={(e) => handleGoogleTTSKeyChange(e.target.value)}
-                    placeholder="Optional: For high-quality voices"
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Image Element Content */}
-          {element.type === 'image' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.imageUrl')}</Label>
-                <Input
-                  type="url"
-                  value={element.imageUrl || ''}
-                  onChange={(e) => onUpdate({ imageUrl: e.target.value })}
-                  placeholder="https://..."
-                  className="h-8"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('editor.uploadImage')}</Label>
-                <div className="flex items-center gap-2">
-                  <Upload className="w-4 h-4" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="flex-1 text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* YouTube Element Content */}
-          {element.type === 'youtube' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.youTubeUrl')}</Label>
-                <Input
-                  type="url"
-                  value={element.youtubeUrl || ''}
-                  onChange={(e) => handleYouTubeUrlChange(e.target.value)}
-                  placeholder={t('placeholders.enterYouTubeUrl')}
-                  className="h-8"
-                />
-                {element.youtubeVideoId && (
-                  <p className="text-xs text-green-600">✓ Valid YouTube URL</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs">Start Time (seconds)</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={element.youtubeStartTime || ''}
-                    onChange={(e) => onUpdate({ youtubeStartTime: parseInt(e.target.value) || 0 })}
-                    min="0"
-                    className="h-7 text-xs flex-1"
-                  />
-                  {element.youtubeStartTime && (
-                    <span className="text-xs text-gray-500">
-                      {Math.floor(element.youtubeStartTime / 60)}:{(element.youtubeStartTime % 60).toString().padStart(2, '0')}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Autoplay</Label>
-                  <Switch
-                    checked={element.youtubeAutoplay || false}
-                    onCheckedChange={(checked) => onUpdate({ youtubeAutoplay: checked })}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Muted</Label>
-                  <Switch
-                    checked={element.youtubeMuted || false}
-                    onCheckedChange={(checked) => onUpdate({ youtubeMuted: checked })}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Drawing Element Content */}
-          {element.type === 'drawing' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Drawing Tools</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Brush Color</Label>
-                    <ColorPicker
-                      color={element.strokeColor || '#000000'}
-                      onChange={(color) => onUpdate({ strokeColor: color })}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Brush Width</Label>
-                    <Slider
-                      value={[element.strokeWidth || 2]}
-                      onValueChange={([value]) => onUpdate({ strokeWidth: value })}
-                      min={1}
-                      max={20}
-                      step={1}
-                      className="w-full"
-                    />
-                    <span className="text-xs text-center block">{element.strokeWidth || 2}px</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Highlighting Mode</Label>
-                  <Switch
-                    checked={element.highlightMode || false}
-                    onCheckedChange={(checked) => onUpdate({ 
-                      highlightMode: checked,
-                      strokeColor: checked ? '#ffff00' : (element.strokeColor || '#000000'),
-                      opacity: checked ? 0.6 : (element.opacity || 1)
-                    })}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Enable for semi-transparent highlighting
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Quiz Elements Content */}
-          {element.type === 'multiple-choice' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.question')}</Label>
-                <Textarea
-                  value={element.content || ''}
-                  onChange={(e) => onUpdate({ content: e.target.value })}
-                  placeholder={t('placeholders.enterQuestion')}
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>{t('editor.options')}</Label>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() => {
-                      const currentOptions = element.multipleChoiceOptions || [];
-                      const newOptions = [...currentOptions, t('placeholders.enterContent')];
-                      
-                      const newHeight = Math.max(element.height, 120 + (newOptions.length * 40));
-                      
-                      onUpdate({ 
-                        multipleChoiceOptions: newOptions,
-                        height: newHeight
-                      });
-                    }}
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </div>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {(element.multipleChoiceOptions || []).map((option, index) => (
-                    <div key={index} className="flex gap-1 items-center">
-                      <Input
-                        value={option}
-                        onChange={(e) => {
-                          const newOptions = [...(element.multipleChoiceOptions || [])];
-                          newOptions[index] = e.target.value;
-                          onUpdate({ multipleChoiceOptions: newOptions });
-                        }}
-                        className="h-6 text-xs flex-1"
-                        placeholder={t('placeholders.enterContent')}
-                      />
-                      <Button
-                        variant={element.correctAnswer === index ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => onUpdate({ correctAnswer: index })}
-                        className="h-6 w-6 p-0 text-xs"
-                        title={t('placeholders.correctAnswer')}
-                      >
-                        ✓
-                      </Button>
-                      {(element.multipleChoiceOptions?.length || 0) > 2 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const newOptions = (element.multipleChoiceOptions || []).filter((_, i) => i !== index);
-                            const currentCorrectAnswer = typeof element.correctAnswer === 'number' ? element.correctAnswer : 0;
-                            const newCorrectAnswer = currentCorrectAnswer === index ? 0 : 
-                              currentCorrectAnswer > index ? currentCorrectAnswer - 1 : currentCorrectAnswer;
-                            
-                            const newHeight = Math.max(120, 120 + (newOptions.length * 40));
-                            
-                            onUpdate({ 
-                              multipleChoiceOptions: newOptions,
-                              correctAnswer: newCorrectAnswer,
-                              height: newHeight
-                            });
-                          }}
-                          className="h-6 w-6 p-0 text-red-500"
-                          title={t('common.delete')}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {element.type === 'audio' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.audioUrl')}</Label>
-                <Input
-                  type="url"
-                  value={element.audioUrl || ''}
-                  onChange={(e) => onUpdate({ audioUrl: e.target.value })}
-                  placeholder={t('placeholders.enterAudioUrl')}
-                  className="h-8"
-                />
-              </div>
-            </div>
-          )}
-
-          {element.type === 'fill-in-blank' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.sentence')}</Label>
-                <Textarea
-                  value={element.fillInBlankText || element.content || ''}
-                  onChange={(e) => onUpdate({ 
-                    fillInBlankText: e.target.value,
-                    content: e.target.value 
-                  })}
-                  placeholder="Enter your text here. Use the editor to create blanks by double-clicking words."
-                  rows={4}
-                />
-                <p className="text-xs text-gray-500">
-                  You can also edit this text in the element editor by double-clicking words to create blanks.
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Ignore Case</Label>
-                  <Switch
-                    checked={element.ignoreCase !== false}
-                    onCheckedChange={(checked) => onUpdate({ ignoreCase: checked })}
-                  />
-                </div>
-                <p className="text-xs text-gray-500">
-                  When enabled, answers are case-insensitive (recommended)
-                </p>
-
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Show Letter Count</Label>
-                  <Switch
-                    checked={element.showLetterCount || false}
-                    onCheckedChange={(checked) => onUpdate({ showLetterCount: checked })}
-                  />
-                </div>
-                <p className="text-xs text-gray-500">
-                  Show the number of letters in the answer as a hint
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Current Blanks</Label>
-                  <span className="text-sm text-gray-500">
-                    {(element.fillInBlankBlanks || []).length} blanks
-                  </span>
-                </div>
-                
-                {(element.fillInBlankBlanks || []).length > 0 && (
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {(element.fillInBlankBlanks || []).map((blank, index) => (
-                      <div key={blank.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
-                        <span className="font-medium">#{index + 1}</span>
-                        <span className="flex-1 mx-2 text-center">{blank.word}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const newBlanks = (element.fillInBlankBlanks || []).filter(
-                              (b) => b.id !== blank.id
-                            );
-                            onUpdate({ fillInBlankBlanks: newBlanks });
-                          }}
-                          className="h-6 w-6 p-0 text-red-500"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {(element.fillInBlankBlanks || []).length === 0 && (
-                  <div className="text-center py-4 text-gray-500 text-sm">
-                    No blanks created yet. Double-click words in the element editor to create blanks.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="style" className="space-y-4">
-          {/* Text Style Controls */}
-          {element.type === 'text' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.fontSize')}</Label>
-                <div className="flex items-center space-x-2">
-                  <Slider
-                    value={[element.fontSize || 16]}
-                    min={8}
-                    max={72}
-                    step={1}
-                    onValueChange={(value) => onUpdate({ fontSize: value[0] })}
-                    className="flex-1"
-                  />
-                  <span className="text-sm w-8 text-right">{element.fontSize || 16}</span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('editor.textColor')}</Label>
-                <ColorPicker
-                  color={element.color || '#000000'}
-                  onChange={(color) => onUpdate({ color })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('editor.backgroundColor')}</Label>
-                <ColorPicker
-                  color={element.backgroundColor || 'transparent'}
-                  onChange={(color) => onUpdate({ backgroundColor: color })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('editor.fontFamily')}</Label>
-                <Select
-                  value={element.fontFamily || 'Arial'}
-                  onValueChange={(value) => onUpdate({ fontFamily: value })}
-                >
-                  <SelectTrigger className="h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Arial">Arial</SelectItem>
-                    <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                    <SelectItem value="Helvetica">Helvetica</SelectItem>
-                    <SelectItem value="Georgia">Georgia</SelectItem>
-                    <SelectItem value="Verdana">Verdana</SelectItem>
-                    <SelectItem value="Courier New">Courier New</SelectItem>
-                    <SelectItem value="Impact">Impact</SelectItem>
-                    <SelectItem value="Comic Sans MS">Comic Sans MS</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('editor.textAlign')}</Label>
-                <div className="flex space-x-1">
-                  <Button
-                    variant={element.textAlign === 'left' ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1 h-8"
-                    onClick={() => onUpdate({ textAlign: 'left' })}
-                  >
-                    <AlignLeft className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={element.textAlign === 'center' ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1 h-8"
-                    onClick={() => onUpdate({ textAlign: 'center' })}
-                  >
-                    <AlignCenter className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={element.textAlign === 'right' ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1 h-8"
-                    onClick={() => onUpdate({ textAlign: 'right' })}
-                  >
-                    <AlignRight className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={element.textAlign === 'justify' ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1 h-8"
-                    onClick={() => onUpdate({ textAlign: 'justify' })}
-                  >
-                    <AlignJustify className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('editor.textStyle')}</Label>
-                <div className="flex space-x-1">
-                  <Button
-                    variant={element.fontWeight === 'bold' ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1 h-8 font-bold"
-                    onClick={() =>
-                      onUpdate({
-                        fontWeight: element.fontWeight === 'bold' ? 'normal' : 'bold',
-                      })
-                    }
-                  >
-                    <Bold className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={element.fontStyle === 'italic' ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1 h-8 italic"
-                    onClick={() =>
-                      onUpdate({
-                        fontStyle: element.fontStyle === 'italic' ? 'normal' : 'italic',
-                      })
-                    }
-                  >
-                    <Italic className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={element.textDecoration === 'underline' ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1 h-8 underline"
-                    onClick={() =>
-                      onUpdate({
-                        textDecoration:
-                          element.textDecoration === 'underline' ? 'none' : 'underline',
-                      })
-                    }
-                  >
-                    <Underline className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Image Style Controls */}
-          {element.type === 'image' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.opacity')}</Label>
-                <div className="flex items-center space-x-2">
-                  <Slider
-                    value={[element.opacity || 1]}
-                    min={0.1}
-                    max={1}
-                    step={0.1}
-                    onValueChange={(value) => onUpdate({ opacity: value[0] })}
-                    className="flex-1"
-                  />
-                  <span className="text-sm w-12 text-right">
-                    {Math.round((element.opacity || 1) * 100)}%
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('editor.border')}</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs">{t('editor.width')}</Label>
-                    <Input
-                      type="number"
-                      value={element.borderWidth || 0}
-                      onChange={(e) =>
-                        onUpdate({ borderWidth: Number(e.target.value) })
-                      }
-                      className="h-8"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">{t('editor.color')}</Label>
-                    <ColorPicker
-                      color={element.borderColor || '#000000'}
-                      onChange={(color) => onUpdate({ borderColor: color })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>{t('editor.borderRadius')}</Label>
-                  <Switch
-                    checked={element.borderRadius || false}
-                    onCheckedChange={(checked) => onUpdate({ borderRadius: checked })}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* YouTube Style Controls */}
-          {element.type === 'youtube' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.opacity')}</Label>
-                <div className="flex items-center space-x-2">
-                  <Slider
-                    value={[element.opacity || 1]}
-                    min={0.1}
-                    max={1}
-                    step={0.1}
-                    onValueChange={(value) => onUpdate({ opacity: value[0] })}
-                    className="flex-1"
-                  />
-                  <span className="text-sm w-12 text-right">
-                    {Math.round((element.opacity || 1) * 100)}%
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('editor.border')}</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs">{t('editor.width')}</Label>
-                    <Input
-                      type="number"
-                      value={element.borderWidth || 0}
-                      onChange={(e) =>
-                        onUpdate({ borderWidth: Number(e.target.value) })
-                      }
-                      className="h-8"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">{t('editor.color')}</Label>
-                    <ColorPicker
-                      color={element.borderColor || '#000000'}
-                      onChange={(color) => onUpdate({ borderColor: color })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>{t('editor.borderRadius')}</Label>
-                  <Switch
-                    checked={element.borderRadius || false}
-                    onCheckedChange={(checked) => onUpdate({ borderRadius: checked })}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Drawing Style Controls */}
-          {element.type === 'drawing' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.opacity')}</Label>
-                <div className="flex items-center space-x-2">
-                  <Slider
-                    value={[element.opacity || 1]}
-                    min={0.1}
-                    max={1}
-                    step={0.1}
-                    onValueChange={(value) => onUpdate({ opacity: value[0] })}
-                    className="flex-1"
-                  />
-                  <span className="text-sm w-12 text-right">
-                    {Math.round((element.opacity || 1) * 100)}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="layout" className="space-y-4">
-          {/* Common layout controls for all elements */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('editor.position')}</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-xs">X</Label>
-                  <Input
-                    type="number"
-                    value={element.x}
-                    onChange={(e) => onUpdate({ x: Number(e.target.value) })}
-                    className="h-8"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Y</Label>
-                  <Input
-                    type="number"
-                    value={element.y}
-                    onChange={(e) => onUpdate({ y: Number(e.target.value) })}
-                    className="h-8"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t('editor.size')}</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-xs">{t('editor.width')}</Label>
-                  <Input
-                    type="number"
-                    value={element.width}
-                    onChange={(e) => onUpdate({ width: Number(e.target.value) })}
-                    className="h-8"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">{t('editor.height')}</Label>
-                  <Input
-                    type="number"
-                    value={element.height}
-                    onChange={(e) => onUpdate({ height: Number(e.target.value) })}
-                    className="h-8"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t('editor.rotation')}</Label>
-              <div className="flex items-center space-x-2">
-                <Slider
-                  value={[element.rotation || 0]}
-                  min={0}
-                  max={360}
-                  step={1}
-                  onValueChange={(value) => onUpdate({ rotation: value[0] })}
-                  className="flex-1"
-                />
-                <span className="text-sm w-8 text-right">{element.rotation || 0}°</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t('editor.hyperlink')}</Label>
+    <Card className="w-80 h-full flex flex-col">
+      <CardHeader className="flex-shrink-0">
+        <CardTitle className="text-lg flex items-center justify-between">
+          {t('editor.elementProperties') || 'Element Properties'}
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={onDelete}
+            className="h-8 w-8 p-0"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="flex-1 space-y-4 overflow-auto">
+        {/* Common Properties */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">{t('editor.position') || 'Position'}</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">X</Label>
               <Input
-                type="url"
-                value={element.hyperlink || ''}
-                onChange={(e) => onUpdate({ hyperlink: e.target.value })}
-                placeholder="https://..."
+                type="number"
+                value={element.x}
+                onChange={(e) => onUpdate({ x: Number(e.target.value) })}
+                className="h-8"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Y</Label>
+              <Input
+                type="number"
+                value={element.y}
+                onChange={(e) => onUpdate({ y: Number(e.target.value) })}
                 className="h-8"
               />
             </div>
           </div>
+        </div>
 
-          {/* Advanced layout options */}
-          <div className="pt-4 border-t">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full flex justify-between"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-            >
-              <span>{t('editor.advancedOptions')}</span>
-              {showAdvanced ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">{t('editor.size') || 'Size'}</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">{t('editor.width') || 'Width'}</Label>
+              <Input
+                type="number"
+                value={element.width}
+                onChange={(e) => onUpdate({ width: Number(e.target.value) })}
+                className="h-8"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">{t('editor.height') || 'Height'}</Label>
+              <Input
+                type="number"
+                value={element.height}
+                onChange={(e) => onUpdate({ height: Number(e.target.value) })}
+                className="h-8"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Text Element Properties */}
+        {element.type === 'text' && (
+          <>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.content') || 'Content'}</Label>
+              <Textarea
+                value={element.content || ''}
+                onChange={(e) => onUpdate({ content: e.target.value })}
+                placeholder={t('placeholders.enterText') || 'Enter text...'}
+                className="min-h-[60px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.fontSize') || 'Font Size'}</Label>
+              <Input
+                type="number"
+                value={element.fontSize || 16}
+                onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
+                min="8"
+                max="72"
+                className="h-8"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.fontFamily') || 'Font Family'}</Label>
+              <Select
+                value={element.fontFamily || 'Arial'}
+                onValueChange={(value) => onUpdate({ fontFamily: value })}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Arial">Arial</SelectItem>
+                  <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                  <SelectItem value="Helvetica">Helvetica</SelectItem>
+                  <SelectItem value="Georgia">Georgia</SelectItem>
+                  <SelectItem value="Verdana">Verdana</SelectItem>
+                  <SelectItem value="Courier New">Courier New</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.textColor') || 'Text Color'}</Label>
+              <Input
+                type="color"
+                value={element.color || '#000000'}
+                onChange={(e) => onUpdate({ color: e.target.value })}
+                className="h-8 w-full"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.backgroundColor') || 'Background Color'}</Label>
+              <Input
+                type="color"
+                value={element.backgroundColor || '#ffffff'}
+                onChange={(e) => onUpdate({ backgroundColor: e.target.value })}
+                className="h-8 w-full"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.textAlign') || 'Text Alignment'}</Label>
+              <Select
+                value={element.textAlign || 'left'}
+                onValueChange={(value) => onUpdate({ textAlign: value as 'left' | 'center' | 'right' | 'justify' })}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">{t('editor.alignLeft') || 'Left'}</SelectItem>
+                  <SelectItem value="center">{t('editor.alignCenter') || 'Center'}</SelectItem>
+                  <SelectItem value="right">{t('editor.alignRight') || 'Right'}</SelectItem>
+                  <SelectItem value="justify">{t('editor.alignJustify') || 'Justify'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
+
+        {/* Image Element Properties */}
+        {element.type === 'image' && (
+          <>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.image') || 'Image'}</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="h-8"
+              />
+              {element.imageUrl && (
+                <div className="mt-2">
+                  <img
+                    src={element.imageUrl}
+                    alt="Preview"
+                    className="max-w-full h-20 object-cover rounded border"
+                  />
+                </div>
               )}
-            </Button>
+            </div>
 
-            {showAdvanced && (
-              <div className="mt-4 space-y-4">
-                <div className="space-y-2">
-                  <Label>{t('editor.zIndex')}</Label>
-                  <div className="flex items-center space-x-2">
-                    <Slider
-                      value={[element.zIndex || 0]}
-                      min={0}
-                      max={100}
-                      step={1}
-                      onValueChange={(value) => onUpdate({ zIndex: value[0] })}
-                      className="flex-1"
-                    />
-                    <span className="text-sm w-8 text-right">{element.zIndex || 0}</span>
-                  </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.altText') || 'Alt Text'}</Label>
+              <Input
+                value={element.altText || ''}
+                onChange={(e) => onUpdate({ altText: e.target.value })}
+                placeholder={t('placeholders.altText') || 'Describe the image...'}
+                className="h-8"
+              />
+            </div>
+          </>
+        )}
+
+        {/* Audio Element Properties */}
+        {element.type === 'audio' && (
+          <>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.audio') || 'Audio'}</Label>
+              <Input
+                type="file"
+                accept="audio/*"
+                onChange={handleAudioUpload}
+                className="h-8"
+              />
+              {element.audioUrl && (
+                <div className="mt-2">
+                  <audio controls className="w-full">
+                    <source src={element.audioUrl} />
+                  </audio>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={element.autoplay || false}
+                onCheckedChange={(checked) => onUpdate({ autoplay: checked })}
+              />
+              <Label className="text-sm">{t('editor.autoplay') || 'Autoplay'}</Label>
+            </div>
+          </>
+        )}
+
+        {/* TTS Element Properties */}
+        {element.type === 'tts' && (
+          <>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.textToSpeak') || 'Text to Speak'}</Label>
+              <Textarea
+                value={element.content || ''}
+                onChange={(e) => onUpdate({ content: e.target.value })}
+                placeholder={t('placeholders.enterTextToSpeak') || 'Enter text to speak...'}
+                className="min-h-[60px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.voice') || 'Voice'}</Label>
+              <Select
+                value={element.voice || 'default'}
+                onValueChange={(value) => onUpdate({ voice: value })}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Default</SelectItem>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.speed') || 'Speed'}</Label>
+              <Input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={element.speed || 1}
+                onChange={(e) => onUpdate({ speed: Number(e.target.value) })}
+                className="h-8"
+              />
+              <div className="text-xs text-muted-foreground text-center">
+                {element.speed || 1}x
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={element.autoplay || false}
+                onCheckedChange={(checked) => onUpdate({ autoplay: checked })}
+              />
+              <Label className="text-sm">{t('editor.autoplay') || 'Autoplay'}</Label>
+            </div>
+          </>
+        )}
+
+        {/* Multiple Choice Element Properties */}
+        {element.type === 'multiple-choice' && (
+          <>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.question') || 'Question'}</Label>
+              <Textarea
+                value={element.content || ''}
+                onChange={(e) => onUpdate({ content: e.target.value })}
+                placeholder={t('placeholders.enterQuestion') || 'Enter your question...'}
+                className="min-h-[60px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.options') || 'Options'}</Label>
+              {(element.multipleChoiceOptions || []).map((option, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input
+                    value={option}
+                    onChange={(e) => {
+                      const newOptions = [...(element.multipleChoiceOptions || [])];
+                      newOptions[index] = e.target.value;
+                      onUpdate({ multipleChoiceOptions: newOptions });
+                    }}
+                    className="h-8 flex-1"
+                  />
+                  <Button
+                    variant={element.correctAnswer === index ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onUpdate({ correctAnswer: index })}
+                    className="h-8 px-2"
+                  >
+                    {element.correctAnswer === index ? '✓' : '○'}
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newOptions = [...(element.multipleChoiceOptions || []), `Option ${(element.multipleChoiceOptions || []).length + 1}`];
+                  onUpdate({ multipleChoiceOptions: newOptions });
+                }}
+                className="h-8 w-full"
+              >
+                {t('editor.addOption') || 'Add Option'}
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* True/False Element Properties */}
+        {element.type === 'true-false' && (
+          <>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.question') || 'Question'}</Label>
+              <Textarea
+                value={element.content || ''}
+                onChange={(e) => onUpdate({ content: e.target.value })}
+                placeholder={t('placeholders.enterTrueFalseQuestion') || 'Enter your true/false question...'}
+                className="min-h-[60px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.correctAnswer') || 'Correct Answer'}</Label>
+              <div className="flex gap-2">
+                <Button
+                  variant={element.correctAnswer === 1 ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onUpdate({ correctAnswer: 1 })}
+                  className="flex-1"
+                >
+                  {t('common.true') || 'True'}
+                </Button>
+                <Button
+                  variant={element.correctAnswer === 0 ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onUpdate({ correctAnswer: 0 })}
+                  className="flex-1"
+                >
+                  {t('common.false') || 'False'}
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Fill in Blank Element Properties */}
+        {element.type === 'fill-in-blank' && (
+          <>
+            <div className="space-y-3">
+              <FillInBlankEditor
+                element={element}
+                onUpdate={onUpdate}
+              />
+              
+              <div className="space-y-3 pt-3 border-t">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={element.ignoreCase !== false}
+                    onCheckedChange={(checked) => onUpdate({ ignoreCase: checked })}
+                  />
+                  <Label className="text-sm">{t('editor.ignoreCase') || 'Ignore Case'}</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={element.showLetterCount === true}
+                    onCheckedChange={(checked) => onUpdate({ showLetterCount: checked })}
+                  />
+                  <Label className="text-sm">{t('editor.showLetterCount') || 'Show Letter Count'}</Label>
                 </div>
               </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+            </div>
+          </>
+        )}
+
+        {/* YouTube Element Properties */}
+        {element.type === 'youtube' && (
+          <>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.youtubeUrl') || 'YouTube URL'}</Label>
+              <Input
+                value={element.youtubeUrl || ''}
+                onChange={(e) => onUpdate({ youtubeUrl: e.target.value })}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="h-8"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={element.autoplay || false}
+                onCheckedChange={(checked) => onUpdate({ autoplay: checked })}
+              />
+              <Label className="text-sm">{t('editor.autoplay') || 'Autoplay'}</Label>
+            </div>
+          </>
+        )}
+
+        {/* Deck Embed Element Properties */}
+        {element.type === 'deck-embed' && (
+          <>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.deckId') || 'Deck ID'}</Label>
+              <Input
+                value={element.deckId || ''}
+                onChange={(e) => onUpdate({ deckId: e.target.value })}
+                placeholder={t('placeholders.enterDeckId') || 'Enter deck ID...'}
+                className="h-8"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('editor.deckTitle') || 'Deck Title'}</Label>
+              <Input
+                value={element.deckTitle || ''}
+                onChange={(e) => onUpdate({ deckTitle: e.target.value })}
+                placeholder={t('placeholders.enterDeckTitle') || 'Enter deck title...'}
+                className="h-8"
+              />
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 };
