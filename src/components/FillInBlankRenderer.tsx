@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Check, X, RotateCcw } from 'lucide-react';
@@ -11,6 +11,7 @@ interface FillInBlankRendererProps {
   showAnswers?: boolean;
   disabled?: boolean;
   textScale?: number;
+  isStudyMode?: boolean;
 }
 
 // Levenshtein distance for spell checking
@@ -64,7 +65,8 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   onAnswer,
   showAnswers = false,
   disabled = false,
-  textScale = 1
+  textScale = 1,
+  isStudyMode = false
 }) => {
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
@@ -82,30 +84,22 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
     setSubmitted(false);
     setResults([]);
     setActiveBlankIndex(null);
-  }, [blanks.length]);
+  }, [blanks.length, element.fillInBlankText]);
 
-  if (!content || blanks.length === 0) {
-    return (
-      <div className="p-4 border border-dashed border-gray-300 rounded text-center text-gray-500">
-        No fill-in-the-blank content configured for this element
-      </div>
-    );
-  }
-
-  const handleAnswerChange = (index: number, value: string) => {
+  const handleAnswerChange = useCallback((index: number, value: string) => {
     if (disabled || submitted) return;
     
     const newAnswers = [...userAnswers];
     newAnswers[index] = value;
     setUserAnswers(newAnswers);
-  };
+  }, [disabled, submitted, userAnswers]);
 
-  const handleBlankClick = (index: number) => {
+  const handleBlankClick = useCallback((index: number) => {
     if (disabled || submitted) return;
     setActiveBlankIndex(index);
-  };
+  }, [disabled, submitted]);
 
-  const handleKeyPress = (e: React.KeyboardEvent, index: number) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent, index: number) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       
@@ -113,17 +107,14 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
       const nextBlankIndex = index + 1;
       if (nextBlankIndex < blanks.length) {
         setActiveBlankIndex(nextBlankIndex);
-      } else {
-        // Check if all blanks are filled
-        const allFilled = userAnswers.every((answer, i) => answer.trim() !== '');
-        if (allFilled) {
-          checkAnswers();
-        }
+      } else if (isStudyMode) {
+        // Auto-check answers in study mode
+        checkAnswers();
       }
     }
-  };
+  }, [blanks.length, isStudyMode]);
 
-  const checkAnswers = () => {
+  const checkAnswers = useCallback(() => {
     const newResults = blanks.map((blank, index) => {
       const userAnswer = userAnswers[index] || '';
       const correctAnswer = blank.word;
@@ -136,113 +127,124 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
     
     const allCorrect = newResults.every(result => result === 'correct');
     onAnswer?.(allCorrect, userAnswers);
-  };
+  }, [blanks, userAnswers, ignoreCase, onAnswer]);
 
-  const resetAnswers = () => {
+  const resetAnswers = useCallback(() => {
     setUserAnswers(new Array(blanks.length).fill(''));
     setSubmitted(false);
     setResults([]);
     setActiveBlankIndex(null);
-  };
+  }, [blanks.length]);
+
+  if (!content || blanks.length === 0) {
+    return (
+      <div 
+        className="p-4 border border-dashed border-gray-300 rounded text-center text-gray-500 flex items-center justify-center h-full"
+        style={{ fontSize: `${12 * textScale}px` }}
+      >
+        Configure text and blanks in the options panel →
+      </div>
+    );
+  }
 
   const renderContent = () => {
     let renderedContent = content;
-    let blankIndex = 0;
+    const words = content.split(/(\s+)/);
+    let currentWordIndex = 0;
+    
+    return words.map((segment, segmentIndex) => {
+      if (segment.trim()) {
+        const wordIndex = currentWordIndex++;
+        const blank = blanks.find(b => b.position === wordIndex);
+        
+        if (blank) {
+          const blankIndex = blanks.indexOf(blank);
+          const result = results[blankIndex];
+          const isActive = activeBlankIndex === blankIndex;
+          const userAnswer = userAnswers[blankIndex] || '';
 
-    // Sort blanks by position to replace them in order
-    const sortedBlanks = [...blanks].sort((a, b) => a.position - b.position);
+          if (showAnswers) {
+            return (
+              <span 
+                key={segmentIndex} 
+                className="inline-block font-semibold text-blue-600 bg-blue-50 px-1 rounded mx-1"
+                style={{ fontSize: `${14 * textScale}px` }}
+              >
+                {blank.word}
+              </span>
+            );
+          }
 
-    sortedBlanks.forEach((blank) => {
-      const placeholder = `[${blank.word}]`;
-      const blankInput = showAnswers ? (
-        `<span class="answer-shown">${blank.word}</span>`
-      ) : (
-        `<input-placeholder data-index="${blankIndex}" data-word="${blank.word}" />`
-      );
-      
-      renderedContent = renderedContent.replace(placeholder, blankInput);
-      blankIndex++;
+          return (
+            <span key={segmentIndex} className="inline-block mx-1 relative">
+              {isActive ? (
+                <Input
+                  value={userAnswer}
+                  onChange={(e) => handleAnswerChange(blankIndex, e.target.value)}
+                  onKeyPress={(e) => handleKeyPress(e, blankIndex)}
+                  onBlur={() => setActiveBlankIndex(null)}
+                  autoFocus
+                  className="inline-block w-auto min-w-[80px] text-center border-b-2 border-t-0 border-l-0 border-r-0 rounded-none bg-transparent border-blue-500 focus:border-blue-600 px-1 py-0"
+                  placeholder={showLetterCount ? `(${blank.word.length})` : '___'}
+                  style={{ 
+                    fontSize: `${14 * textScale}px`,
+                    height: 'auto',
+                    minHeight: `${20 * textScale}px`
+                  }}
+                />
+              ) : (
+                <span
+                  onClick={() => handleBlankClick(blankIndex)}
+                  className={`inline-block min-w-[80px] text-center px-2 py-1 border-b-2 cursor-pointer transition-colors ${
+                    result === 'correct' ? 'border-green-500 bg-green-50 text-green-800' :
+                    result === 'close' ? 'border-yellow-500 bg-yellow-50 text-yellow-800' :
+                    result === 'incorrect' ? 'border-red-500 bg-red-50 text-red-800' :
+                    userAnswer ? 'border-gray-400 bg-gray-50' :
+                    'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                  }`}
+                  style={{ fontSize: `${14 * textScale}px` }}
+                >
+                  {userAnswer || (showLetterCount ? `(${blank.word.length})` : '___')}
+                </span>
+              )}
+              {submitted && (
+                <span className="ml-1 align-middle">
+                  {result === 'correct' ? (
+                    <Check className="w-3 h-3 text-green-500 inline" />
+                  ) : result === 'close' ? (
+                    <span className="text-yellow-500 text-xs font-bold">~</span>
+                  ) : (
+                    <X className="w-3 h-3 text-red-500 inline" />
+                  )}
+                </span>
+              )}
+            </span>
+          );
+        }
+        
+        return (
+          <span key={segmentIndex} style={{ fontSize: `${14 * textScale}px` }}>
+            {segment}
+          </span>
+        );
+      } else {
+        return <span key={segmentIndex}>{segment}</span>;
+      }
     });
-
-    return renderedContent;
   };
 
-  const contentWithInputs = renderContent();
-  const parts = contentWithInputs.split(/(<input-placeholder[^>]*\/>|<span class="answer-shown">[^<]*<\/span>)/);
-
   return (
-    <div className="space-y-4" style={{ fontSize: `${14 * textScale}px` }}>
-      <div className="text-base leading-relaxed">
-        {parts.map((part, index) => {
-          if (part.includes('<input-placeholder')) {
-            const match = part.match(/data-index="(\d+)" data-word="([^"]+)"/);
-            if (!match) return null;
-            
-            const inputIndex = parseInt(match[1]);
-            const word = match[2];
-            const result = results[inputIndex];
-            const isActive = activeBlankIndex === inputIndex;
-
-            return (
-              <span key={index} className="inline-block mx-1 relative">
-                {isActive ? (
-                  <Input
-                    value={userAnswers[inputIndex] || ''}
-                    onChange={(e) => handleAnswerChange(inputIndex, e.target.value)}
-                    onKeyPress={(e) => handleKeyPress(e, inputIndex)}
-                    onBlur={() => setActiveBlankIndex(null)}
-                    autoFocus
-                    className={`inline-block w-auto min-w-[80px] text-center border-b-2 border-t-0 border-l-0 border-r-0 rounded-none bg-transparent border-blue-500 focus:border-blue-600`}
-                    placeholder={showLetterCount ? `(${word.length} letters)` : ''}
-                    style={{ fontSize: `${12 * textScale}px` }}
-                  />
-                ) : (
-                  <span
-                    onClick={() => handleBlankClick(inputIndex)}
-                    className={`inline-block min-w-[80px] text-center px-2 py-1 border-b-2 cursor-pointer ${
-                      result === 'correct' ? 'border-green-500 bg-green-50 text-green-800' :
-                      result === 'close' ? 'border-yellow-500 bg-yellow-50 text-yellow-800' :
-                      result === 'incorrect' ? 'border-red-500 bg-red-50 text-red-800' :
-                      userAnswers[inputIndex] ? 'border-gray-400 bg-gray-50' :
-                      'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                    }`}
-                    style={{ fontSize: `${12 * textScale}px` }}
-                  >
-                    {userAnswers[inputIndex] || '_____'}
-                  </span>
-                )}
-                {submitted && (
-                  <span className="ml-1">
-                    {result === 'correct' ? (
-                      <Check className="w-4 h-4 text-green-500 inline" />
-                    ) : result === 'close' ? (
-                      <span className="text-yellow-500 text-xs">~</span>
-                    ) : (
-                      <X className="w-4 h-4 text-red-500 inline" />
-                    )}
-                  </span>
-                )}
-              </span>
-            );
-          } else if (part.includes('<span class="answer-shown"')) {
-            const match = part.match(/<span class="answer-shown">([^<]+)<\/span>/);
-            if (!match) return null;
-            return (
-              <span key={index} className="font-semibold text-blue-600 bg-blue-50 px-1 rounded">
-                {match[1]}
-              </span>
-            );
-          } else {
-            return <span key={index}>{part}</span>;
-          }
-        })}
+    <div className="space-y-4 h-full flex flex-col" style={{ fontSize: `${14 * textScale}px` }}>
+      <div className="flex-1 text-base leading-relaxed">
+        {renderContent()}
       </div>
 
       {!showAnswers && !disabled && (
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-auto">
           <Button 
             onClick={checkAnswers} 
             disabled={submitted || userAnswers.every(answer => !answer.trim())}
+            size="sm"
             style={{ fontSize: `${12 * textScale}px` }}
           >
             Check Answers
@@ -251,9 +253,10 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
             <Button 
               variant="outline" 
               onClick={resetAnswers}
+              size="sm"
               style={{ fontSize: `${12 * textScale}px` }}
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
+              <RotateCcw className="w-3 h-3 mr-1" />
               Try Again
             </Button>
           )}
@@ -261,7 +264,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
       )}
 
       {submitted && (
-        <div className="space-y-2">
+        <div className="space-y-2 mt-2">
           <div className="text-sm text-gray-600" style={{ fontSize: `${11 * textScale}px` }}>
             Score: {results.filter(r => r === 'correct').length} / {results.length} correct
             {results.some(r => r === 'close') && (
@@ -273,7 +276,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
           
           {results.some(r => r === 'close') && (
             <div className="text-xs text-yellow-600" style={{ fontSize: `${10 * textScale}px` }}>
-              Yellow answers are close but have spelling or capitalization errors
+              ~ indicates close answers with minor spelling/case differences
             </div>
           )}
         </div>

@@ -31,6 +31,11 @@ export const InteractiveElementRenderer: React.FC<InteractiveElementRendererProp
     onUpdateElement(element.id, updates);
   };
 
+  const handleFillInBlankAnswer = (isCorrect: boolean, userAnswers: string[]) => {
+    // In study mode, we can track the user's performance
+    console.log('Fill-in-blank answered:', { isCorrect, userAnswers });
+  };
+
   switch (element.type) {
     case 'multiple-choice':
       return (
@@ -57,13 +62,15 @@ export const InteractiveElementRenderer: React.FC<InteractiveElementRendererProp
     case 'fill-in-blank':
       return (
         <div 
-          className={`w-full h-full ${isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
-          onClick={handleElementClick}
+          className={`w-full h-full ${!isStudyMode ? 'cursor-pointer hover:bg-gray-50 rounded' : ''}`}
+          onClick={!isStudyMode ? handleElementClick : undefined}
         >
           {isStudyMode ? (
             <FillInBlankRenderer
               element={element}
               textScale={textScale}
+              onAnswer={handleFillInBlankAnswer}
+              isStudyMode={true}
             />
           ) : (
             <FillInBlankEditor

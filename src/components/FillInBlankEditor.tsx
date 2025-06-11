@@ -11,8 +11,6 @@ interface FillInBlankEditorProps {
   textScale?: number;
 }
 
-type FillInBlankMode = 'every-nth' | 'random' | 'sentence-start' | 'manual' | 'significant-words';
-
 export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   element,
   onUpdate,
@@ -93,24 +91,48 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
     });
   };
 
+  if (!originalText && !element.fillInBlankText) {
+    return (
+      <Card className="w-full h-full">
+        <CardContent className="p-3 space-y-3 flex flex-col items-center justify-center h-full">
+          <div className="text-center">
+            <Label className="text-sm font-medium text-gray-600">Fill-in-the-Blank Exercise</Label>
+            <div className="mt-2">
+              <TextInputModal
+                value=""
+                onSave={handleTextChange}
+                placeholder="Enter your text here. You can then double-click words to turn them into blanks..."
+                buttonText="Add Text"
+                title="Fill-in-the-Blank Text"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Configure advanced settings in the options panel →
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full h-full">
       <CardContent className="p-3 space-y-3">
         <div>
-          <Label className="text-xs font-medium">Enter your text:</Label>
+          <Label className="text-xs font-medium">Text Content:</Label>
           <div className="space-y-2">
             <TextInputModal
               value={originalText}
               onSave={handleTextChange}
-              placeholder="Type a sentence, paragraph, or multiple paragraphs here. This text area will expand as you type more content..."
+              placeholder="Type your exercise text here..."
               buttonText={originalText ? "Edit Text" : "Add Text"}
               title="Fill-in-the-Blank Text"
             />
             {originalText && (
               <div className="text-xs text-muted-foreground p-2 bg-gray-50 dark:bg-gray-900 rounded border">
-                Preview: {originalText.substring(0, 100)}{originalText.length > 100 ? '...' : ''}
+                Preview: {originalText.substring(0, 60)}{originalText.length > 60 ? '...' : ''}
                 <br />
-                {originalText.length} characters • {originalText.trim().split(/\s+/).filter(w => w.length > 0).length} words
+                Words: {originalText.trim().split(/\s+/).filter(w => w.length > 0).length} • Blanks: {blanks.length}
               </div>
             )}
           </div>
@@ -119,7 +141,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
         {originalText && (
           <div>
             <Label className="text-xs font-medium">
-              Double-click words to turn into blanks:
+              Double-click words to create blanks:
             </Label>
             <div 
               className="p-2 border rounded min-h-[60px] max-h-[200px] overflow-y-auto text-xs leading-relaxed bg-gray-50 dark:bg-gray-900"
@@ -128,7 +150,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
               {renderTextWithBlanks()}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Tip: Double-click any word to toggle it as a blank. Configure advanced settings in the options panel.
+              Double-click words to toggle blanks • Configure case sensitivity and hints in options panel →
             </p>
           </div>
         )}

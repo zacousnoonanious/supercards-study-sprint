@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { useI18n } from '@/contexts/I18nContext';
@@ -558,69 +557,84 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
               <div className="space-y-2">
                 <Label>{t('editor.sentence')}</Label>
                 <Textarea
-                  value={element.content || ''}
-                  onChange={(e) => onUpdate({ content: e.target.value })}
-                  placeholder={t('placeholders.enterSentence')}
-                  rows={3}
+                  value={element.fillInBlankText || element.content || ''}
+                  onChange={(e) => onUpdate({ 
+                    fillInBlankText: e.target.value,
+                    content: e.target.value 
+                  })}
+                  placeholder="Enter your text here. Use the editor to create blanks by double-clicking words."
+                  rows={4}
                 />
+                <p className="text-xs text-gray-500">
+                  You can also edit this text in the element editor by double-clicking words to create blanks.
+                </p>
               </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Ignore Case</Label>
+                  <Switch
+                    checked={element.ignoreCase !== false}
+                    onCheckedChange={(checked) => onUpdate({ ignoreCase: checked })}
+                  />
+                </div>
+                <p className="text-xs text-gray-500">
+                  When enabled, answers are case-insensitive (recommended)
+                </p>
+
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Show Letter Count</Label>
+                  <Switch
+                    checked={element.showLetterCount || false}
+                    onCheckedChange={(checked) => onUpdate({ showLetterCount: checked })}
+                  />
+                </div>
+                <p className="text-xs text-gray-500">
+                  Show the number of letters in the answer as a hint
+                </p>
+              </div>
+
+              <Separator />
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>{t('editor.blanks')}</Label>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() => {
-                      const content = element.content || '';
-                      const blanks = element.blanks || [];
-                      const newBlank = {
-                        id: `blank_${Date.now()}`,
-                        word: 'answer',
-                        startIndex: content.length,
-                        endIndex: content.length + 6,
-                      };
-                      onUpdate({
-                        content: content + ' [answer]',
-                        blanks: [...blanks, newBlank],
-                      });
-                    }}
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
+                  <Label>Current Blanks</Label>
+                  <span className="text-sm text-gray-500">
+                    {(element.fillInBlankBlanks || []).length} blanks
+                  </span>
                 </div>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {(element.blanks || []).map((blank, index) => (
-                    <div key={blank.id} className="flex items-center space-x-1">
-                      <Input
-                        value={blank.word}
-                        onChange={(e) => {
-                          const newBlanks = [...(element.blanks || [])];
-                          newBlanks[index] = {
-                            ...blank,
-                            word: e.target.value,
-                          };
-                          onUpdate({ blanks: newBlanks });
-                        }}
-                        className="h-7 text-xs flex-1"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={() => {
-                          const newBlanks = (element.blanks || []).filter(
-                            (b) => b.id !== blank.id
-                          );
-                          onUpdate({ blanks: newBlanks });
-                        }}
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                
+                {(element.fillInBlankBlanks || []).length > 0 && (
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {(element.fillInBlankBlanks || []).map((blank, index) => (
+                      <div key={blank.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
+                        <span className="font-medium">#{index + 1}</span>
+                        <span className="flex-1 mx-2 text-center">{blank.word}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newBlanks = (element.fillInBlankBlanks || []).filter(
+                              (b) => b.id !== blank.id
+                            );
+                            onUpdate({ fillInBlankBlanks: newBlanks });
+                          }}
+                          className="h-6 w-6 p-0 text-red-500"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {(element.fillInBlankBlanks || []).length === 0 && (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    No blanks created yet. Double-click words in the element editor to create blanks.
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1019,3 +1033,5 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
     </div>
   );
 };
+
+</edits_to_apply>

@@ -36,8 +36,11 @@ export const placeholders = {
   addDrawing: "Add Drawing",
   addMultipleChoice: "Add Quiz",
   addTTS: "Add TTS",
+  addFillInBlank: "Add Fill-in-Blank",
   clickToAddElement: "Click to add element",
   or: "or",
   dragElementFromToolbar: "Drag element from toolbar",
   noVideoSelected: "No video selected",
+  fillInBlanksHere: "Fill in the blanks here...",
+  enterFillInBlankText: "Enter text for fill-in-the-blank exercise...",
 };
