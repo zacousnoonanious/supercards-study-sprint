@@ -5,10 +5,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Sparkles, LayoutTemplate } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { CanvasElement } from '@/types/flashcard';
+import { CanvasElement, CardTemplate } from '@/types/flashcard';
+import { TemplateLibrary } from './TemplateLibrary';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface InteractiveCardCreatorProps {
   setId: string;
@@ -21,6 +23,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
   onCardCreated,
   onClose,
 }) => {
+  const { t } = useI18n();
   const [cardType, setCardType] = useState<'standard' | 'informational' | 'no-back' | 'password-protected'>('standard');
   const [interactiveType, setInteractiveType] = useState<'none' | 'multiple-choice' | 'true-false' | 'fill-in-blank'>('none');
   const [question, setQuestion] = useState('');
@@ -29,6 +32,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
   const [password, setPassword] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   
   // Multiple choice options
   const [mcOptions, setMcOptions] = useState(['', '', '', '']);
@@ -289,209 +293,273 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
     setInteractiveType(value as 'none' | 'multiple-choice' | 'true-false' | 'fill-in-blank');
   };
 
+  const handleTemplateSelect = (template: CardTemplate) => {
+    // Create card from template
+    const createCardFromTemplate = async () => {
+      try {
+        const cardData: any = {
+          set_id: setId,
+          question: template.name,
+          answer: template.description,
+          front_elements: template.front_elements,
+          back_elements: template.back_elements || [],
+          card_type: template.card_type,
+          canvas_width: template.canvas_width,
+          canvas_height: template.canvas_height,
+        };
+
+        const { error } = await supabase
+          .from('flashcards')
+          .insert(cardData);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Card created from template successfully!",
+        });
+        
+        onCardCreated();
+        onClose();
+      } catch (error) {
+        console.error('Error creating card from template:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create card from template.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    createCardFromTemplate();
+    setShowTemplateLibrary(false);
+  };
+
   return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>Create New Card</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* AI Generation */}
-        <div className="space-y-2">
-          <Label>AI Card Generation (Optional)</Label>
-          <div className="flex gap-2">
-            <Textarea
-              placeholder="e.g., 'Create a fill-in-blank about the solar system' or 'Make a multiple choice question about World War 2'"
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              className="flex-1"
-            />
-            <Button onClick={generateWithAI} disabled={isGenerating}>
-              {isGenerating ? (
-                <Sparkles className="w-4 h-4 animate-spin" />
-              ) : (
-                <Sparkles className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Card Type */}
-        <div className="space-y-2">
-          <Label>Card Type</Label>
-          <Select value={cardType} onValueChange={handleCardTypeChange}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="standard">Standard Card</SelectItem>
-              <SelectItem value="informational">Informational Card (Full View)</SelectItem>
-              <SelectItem value="no-back">No Back Side</SelectItem>
-              <SelectItem value="password-protected">Password Protected</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Password field for protected cards */}
-        {cardType === 'password-protected' && (
+    <>
+      <Card className="w-full max-w-2xl">
+        <CardHeader>
+          <CardTitle>Create New Card</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* AI Generation */}
           <div className="space-y-2">
-            <Label>Password</Label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter card password"
-            />
+            <Label>AI Card Generation (Optional)</Label>
+            <div className="flex gap-2">
+              <Textarea
+                placeholder="e.g., 'Create a fill-in-blank about the solar system' or 'Make a multiple choice question about World War 2'"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                className="flex-1"
+              />
+              <Button onClick={generateWithAI} disabled={isGenerating}>
+                {isGenerating ? (
+                  <Sparkles className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
           </div>
-        )}
 
-        {/* Interactive Type */}
-        <div className="space-y-2">
-          <Label>Interactive Elements</Label>
-          <Select value={interactiveType} onValueChange={handleInteractiveTypeChange}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
-              <SelectItem value="true-false">True/False</SelectItem>
-              <SelectItem value="fill-in-blank">Fill in the Blank</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Question */}
-        <div className="space-y-2">
-          <Label>Question</Label>
-          <Textarea
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Enter the question..."
-            className={cardType === 'informational' ? 'min-h-[120px]' : 'min-h-[80px]'}
-          />
-        </div>
-
-        {/* Interactive Elements Configuration */}
-        {interactiveType === 'multiple-choice' && (
-          <div className="space-y-4">
-            <Label>Multiple Choice Options</Label>
-            {mcOptions.map((option, index) => (
-              <div key={index} className="flex gap-2 items-center">
-                <Input
-                  value={option}
-                  onChange={(e) => updateMcOption(index, e.target.value)}
-                  placeholder={`Option ${index + 1}`}
-                  className="flex-1"
-                />
-                <Button
-                  variant={correctAnswer === index ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCorrectAnswer(index)}
-                >
-                  Correct
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {interactiveType === 'true-false' && (
+          {/* Card Type */}
           <div className="space-y-2">
-            <Label>Correct Answer</Label>
-            <Select value={tfAnswer.toString()} onValueChange={(value) => setTfAnswer(value === 'true')}>
+            <Label>Card Type</Label>
+            <Select value={cardType} onValueChange={handleCardTypeChange}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="true">True</SelectItem>
-                <SelectItem value="false">False</SelectItem>
+                <SelectItem value="standard">Standard Card</SelectItem>
+                <SelectItem value="informational">Informational Card (Full View)</SelectItem>
+                <SelectItem value="no-back">No Back Side</SelectItem>
+                <SelectItem value="password-protected">Password Protected</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        )}
 
-        {interactiveType === 'fill-in-blank' && (
-          <div className="space-y-4">
+          {/* Password field for protected cards */}
+          {cardType === 'password-protected' && (
             <div className="space-y-2">
-              <Label>Text with Blanks</Label>
-              <Textarea
-                value={blankText}
-                onChange={(e) => setBlankText(e.target.value)}
-                placeholder="Enter your text. You'll specify the blank answers below."
-                className="min-h-[100px]"
+              <Label>Password</Label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter card password"
               />
-              <p className="text-sm text-muted-foreground">
-                Tip: Type your complete text above, then specify which words should be blanks using the fields below.
-              </p>
             </div>
-            
-            <div className="space-y-2">
-              <Label>Blank Answers</Label>
-              {blankAnswers.map((answer, index) => (
-                <div key={index} className="flex gap-2 items-center">
-                  <Input
-                    value={answer}
-                    onChange={(e) => updateBlankAnswer(index, e.target.value)}
-                    placeholder={`Answer for blank ${index + 1}`}
-                    className="flex-1"
-                  />
-                  {blankAnswers.length > 1 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeBlankAnswer(index)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={addBlankAnswer}
-                className="w-full"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Another Blank
-              </Button>
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Answer (for non-interactive or fallback) */}
-        {(interactiveType === 'none' || cardType !== 'no-back') && (
+          {/* Interactive Type */}
           <div className="space-y-2">
-            <Label>Answer</Label>
+            <Label>Interactive Elements</Label>
+            <Select value={interactiveType} onValueChange={handleInteractiveTypeChange}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
+                <SelectItem value="true-false">True/False</SelectItem>
+                <SelectItem value="fill-in-blank">Fill in the Blank</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Question */}
+          <div className="space-y-2">
+            <Label>Question</Label>
             <Textarea
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Enter the answer..."
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="Enter the question..."
               className={cardType === 'informational' ? 'min-h-[120px]' : 'min-h-[80px]'}
             />
           </div>
-        )}
 
-        {/* Hint */}
-        <div className="space-y-2">
-          <Label>Hint (Optional)</Label>
-          <Input
-            value={hint}
-            onChange={(e) => setHint(e.target.value)}
-            placeholder="Enter a helpful hint..."
-          />
-        </div>
+          {/* Interactive Elements Configuration */}
+          {interactiveType === 'multiple-choice' && (
+            <div className="space-y-4">
+              <Label>Multiple Choice Options</Label>
+              {mcOptions.map((option, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <Input
+                    value={option}
+                    onChange={(e) => updateMcOption(index, e.target.value)}
+                    placeholder={`Option ${index + 1}`}
+                    className="flex-1"
+                  />
+                  <Button
+                    variant={correctAnswer === index ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCorrectAnswer(index)}
+                  >
+                    Correct
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
 
-        {/* Actions */}
-        <div className="flex gap-2">
-          <Button onClick={onClose} variant="outline" className="flex-1">
-            Cancel
-          </Button>
-          <Button onClick={createCard} className="flex-1">
-            Create Card
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          {interactiveType === 'true-false' && (
+            <div className="space-y-2">
+              <Label>Correct Answer</Label>
+              <Select value={tfAnswer.toString()} onValueChange={(value) => setTfAnswer(value === 'true')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">True</SelectItem>
+                  <SelectItem value="false">False</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {interactiveType === 'fill-in-blank' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Text with Blanks</Label>
+                <Textarea
+                  value={blankText}
+                  onChange={(e) => setBlankText(e.target.value)}
+                  placeholder="Enter your text. You'll specify the blank answers below."
+                  className="min-h-[100px]"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Tip: Type your complete text above, then specify which words should be blanks using the fields below.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Blank Answers</Label>
+                {blankAnswers.map((answer, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <Input
+                      value={answer}
+                      onChange={(e) => updateBlankAnswer(index, e.target.value)}
+                      placeholder={`Answer for blank ${index + 1}`}
+                      className="flex-1"
+                    />
+                    {blankAnswers.length > 1 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeBlankAnswer(index)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addBlankAnswer}
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Another Blank
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Answer (for non-interactive or fallback) */}
+          {(interactiveType === 'none' || cardType !== 'no-back') && (
+            <div className="space-y-2">
+              <Label>Answer</Label>
+              <Textarea
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Enter the answer..."
+                className={cardType === 'informational' ? 'min-h-[120px]' : 'min-h-[80px]'}
+              />
+            </div>
+          )}
+
+          {/* Hint */}
+          <div className="space-y-2">
+            <Label>Hint (Optional)</Label>
+            <Input
+              value={hint}
+              onChange={(e) => setHint(e.target.value)}
+              placeholder="Enter a helpful hint..."
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-2">
+              <Button onClick={onClose} variant="outline" className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={createCard} className="flex-1">
+                Create Card
+              </Button>
+            </div>
+            
+            {/* Template Library Button */}
+            <Button 
+              onClick={() => setShowTemplateLibrary(true)} 
+              variant="outline" 
+              className="w-full flex items-center gap-2"
+            >
+              <LayoutTemplate className="w-4 h-4" />
+              {t('placeholders.browseAllTemplates')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Template Library Dialog */}
+      {showTemplateLibrary && (
+        <TemplateLibrary
+          onSelectTemplate={handleTemplateSelect}
+          onClose={() => setShowTemplateLibrary(false)}
+        />
+      )}
+    </>
   );
 };
