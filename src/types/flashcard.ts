@@ -114,6 +114,8 @@ export interface CanvasElement {
   ttsVoice?: string;
   ttsRate?: number;
   ttsPitch?: number;
+  voice?: string;
+  speed?: number;
   
   // Image properties
   imageUrl?: string;
@@ -122,6 +124,7 @@ export interface CanvasElement {
   borderColor?: string;
   borderStyle?: string;
   borderRadius?: boolean;
+  altText?: string;
   
   // Audio properties
   audioUrl?: string;
