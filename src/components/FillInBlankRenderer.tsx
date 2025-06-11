@@ -128,8 +128,13 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
     setSubmitted(true);
     setActiveBlankIndex(null);
     
-    const allCorrect = newResults.every(result => result === 'correct');
-    onAnswer?.(allCorrect, userAnswers);
+    // Calculate if all answers are correct (including close answers as correct)
+    const allCorrect = newResults.every(result => result === 'correct' || result === 'close');
+    
+    // Call the callback with the overall result
+    if (onAnswer) {
+      onAnswer(allCorrect, userAnswers);
+    }
   }, [blanks, userAnswers, ignoreCase, onAnswer]);
 
   const resetAnswers = useCallback(() => {
@@ -238,7 +243,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
     });
   };
 
-  const correctCount = results.filter(r => r === 'correct').length;
+  const correctCount = results.filter(r => r === 'correct' || r === 'close').length;
   const totalBlanks = results.length;
 
   return (
