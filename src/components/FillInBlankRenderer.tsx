@@ -44,7 +44,10 @@ const getAnswerScore = (userAnswer: string, correctAnswer: string, ignoreCase: b
   const normalizedUser = normalize(userAnswer);
   const normalizedCorrect = normalize(correctAnswer);
   
+  console.log('Comparing:', { userAnswer, correctAnswer, normalizedUser, normalizedCorrect, ignoreCase });
+  
   if (normalizedUser === normalizedCorrect) {
+    console.log('Exact match - correct');
     return 'correct';
   }
   
@@ -53,10 +56,14 @@ const getAnswerScore = (userAnswer: string, correctAnswer: string, ignoreCase: b
   const maxLength = Math.max(normalizedUser.length, normalizedCorrect.length);
   const similarity = 1 - (distance / maxLength);
   
+  console.log('Similarity check:', { distance, maxLength, similarity });
+  
   if (similarity >= 0.8) { // 80% similarity threshold
+    console.log('Close match - close');
     return 'close';
   }
   
+  console.log('No match - incorrect');
   return 'incorrect';
 };
 
@@ -79,6 +86,8 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   const ignoreCase = element.ignoreCase !== false;
   const showLetterCount = element.showLetterCount || false;
 
+  console.log('FillInBlank data:', { content, blanks, ignoreCase });
+
   useEffect(() => {
     setUserAnswers(new Array(blanks.length).fill(''));
     setSubmitted(false);
@@ -92,6 +101,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
     const newAnswers = [...userAnswers];
     newAnswers[index] = value;
     setUserAnswers(newAnswers);
+    console.log('Answer changed:', { index, value, newAnswers });
   }, [disabled, submitted, userAnswers]);
 
   const handleBlankClick = useCallback((index: number) => {
@@ -118,12 +128,19 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   }, [blanks.length, isStudyMode]);
 
   const checkAnswers = useCallback(() => {
-    const newResults = blanks.map((blank, index) => {
+    console.log('Checking answers:', { userAnswers, blanks });
+    
+    // Sort blanks by position to ensure correct order
+    const sortedBlanks = [...blanks].sort((a, b) => a.position - b.position);
+    
+    const newResults = sortedBlanks.map((blank, index) => {
       const userAnswer = userAnswers[index] || '';
       const correctAnswer = blank.word;
+      console.log(`Checking blank ${index}:`, { userAnswer, correctAnswer, blank });
       return getAnswerScore(userAnswer, correctAnswer, ignoreCase);
     });
     
+    console.log('Results:', newResults);
     setResults(newResults);
     setSubmitted(true);
     setActiveBlankIndex(null);
@@ -159,13 +176,16 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
     const words = content.split(/(\s+)/);
     let currentWordIndex = 0;
     
+    // Sort blanks by position for proper mapping
+    const sortedBlanks = [...blanks].sort((a, b) => a.position - b.position);
+    
     return words.map((segment, segmentIndex) => {
       if (segment.trim()) {
         const wordIndex = currentWordIndex++;
-        const blank = blanks.find(b => b.position === wordIndex);
+        const blankIndex = sortedBlanks.findIndex(b => b.position === wordIndex);
+        const blank = blankIndex >= 0 ? sortedBlanks[blankIndex] : null;
         
         if (blank) {
-          const blankIndex = blanks.indexOf(blank);
           const result = results[blankIndex];
           const isActive = activeBlankIndex === blankIndex;
           const userAnswer = userAnswers[blankIndex] || '';
