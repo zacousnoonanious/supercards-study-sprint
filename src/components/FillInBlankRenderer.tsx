@@ -40,7 +40,11 @@ const levenshteinDistance = (str1: string, str2: string): number => {
 };
 
 const getAnswerScore = (userAnswer: string, correctAnswer: string, ignoreCase: boolean): 'correct' | 'close' | 'incorrect' => {
-  const normalize = (text: string) => ignoreCase ? text.toLowerCase().trim() : text.trim();
+  const normalize = (text: string) => {
+    const trimmed = text.trim();
+    return ignoreCase ? trimmed.toLowerCase() : trimmed;
+  };
+  
   const normalizedUser = normalize(userAnswer);
   const normalizedCorrect = normalize(correctAnswer);
   
@@ -51,7 +55,7 @@ const getAnswerScore = (userAnswer: string, correctAnswer: string, ignoreCase: b
     return 'correct';
   }
   
-  // Check if it's close (spelling error, capitalization)
+  // Check if it's close (spelling error)
   const distance = levenshteinDistance(normalizedUser, normalizedCorrect);
   const maxLength = Math.max(normalizedUser.length, normalizedCorrect.length);
   const similarity = 1 - (distance / maxLength);
@@ -86,7 +90,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   const ignoreCase = element.ignoreCase !== false;
   const showLetterCount = element.showLetterCount || false;
 
-  console.log('FillInBlank data:', { content, blanks, ignoreCase });
+  console.log('FillInBlank data:', { content, blanks, ignoreCase, showLetterCount });
 
   useEffect(() => {
     setUserAnswers(new Array(blanks.length).fill(''));
@@ -204,6 +208,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
 
           // Show underscores when not active and no user input
           const displayText = !isActive && !userAnswer ? '____' : userAnswer;
+          const placeholderText = showLetterCount ? `(${blank.word.length} letters)` : '____';
 
           return (
             <span key={segmentIndex} className="inline-block mx-1 relative">
@@ -215,7 +220,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
                   onBlur={() => setActiveBlankIndex(null)}
                   autoFocus
                   className="inline-block w-auto min-w-[80px] text-center border-b-2 border-t-0 border-l-0 border-r-0 rounded-none bg-transparent border-blue-500 focus:border-blue-600 px-1 py-0"
-                  placeholder={showLetterCount ? `(${blank.word.length})` : '____'}
+                  placeholder={placeholderText}
                   style={{ 
                     fontSize: `${14 * textScale}px`,
                     height: 'auto',
@@ -233,8 +238,12 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
                     'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                   }`}
                   style={{ fontSize: `${14 * textScale}px` }}
+                  title={showLetterCount ? `${blank.word.length} letters` : undefined}
                 >
                   {displayText}
+                  {showLetterCount && !userAnswer && !isActive && (
+                    <span className="text-xs text-gray-400 ml-1">({blank.word.length})</span>
+                  )}
                 </span>
               )}
               {submitted && (
