@@ -11,19 +11,66 @@ export const useTemplateConfiguration = () => {
     autoAdvanceOnAnswer: boolean;
   } | null>(null);
 
+  const fitElementToCanvas = useCallback((element: CanvasElement, canvasWidth: number, canvasHeight: number): CanvasElement => {
+    // Ensure element doesn't extend beyond canvas boundaries
+    const maxX = Math.max(0, canvasWidth - element.width);
+    const maxY = Math.max(0, canvasHeight - element.height);
+    
+    // Adjust position if it extends beyond canvas
+    const adjustedX = Math.min(element.x, maxX);
+    const adjustedY = Math.min(element.y, maxY);
+    
+    // If element is still too wide/tall for canvas, resize it
+    let adjustedWidth = element.width;
+    let adjustedHeight = element.height;
+    
+    if (adjustedX + element.width > canvasWidth) {
+      adjustedWidth = canvasWidth - adjustedX;
+    }
+    
+    if (adjustedY + element.height > canvasHeight) {
+      adjustedHeight = canvasHeight - adjustedY;
+    }
+    
+    // Ensure minimum size
+    adjustedWidth = Math.max(adjustedWidth, 50);
+    adjustedHeight = Math.max(adjustedHeight, 30);
+    
+    return {
+      ...element,
+      x: adjustedX,
+      y: adjustedY,
+      width: adjustedWidth,
+      height: adjustedHeight,
+    };
+  }, []);
+
   const applyTemplateToCard = useCallback((template: CardTemplate): Partial<Flashcard> => {
+    const canvasWidth = template.canvas_width;
+    const canvasHeight = template.canvas_height;
+    
+    // Fit all front elements to canvas
+    const fittedFrontElements = template.front_elements.map(el => 
+      fitElementToCanvas({
+        ...el,
+        id: `${el.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      }, canvasWidth, canvasHeight)
+    );
+    
+    // Fit all back elements to canvas
+    const fittedBackElements = template.back_elements.map(el => 
+      fitElementToCanvas({
+        ...el,
+        id: `${el.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      }, canvasWidth, canvasHeight)
+    );
+
     return {
       card_type: template.card_type,
       canvas_width: template.canvas_width,
       canvas_height: template.canvas_height,
-      front_elements: template.front_elements.map(el => ({
-        ...el,
-        id: `${el.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      })),
-      back_elements: template.back_elements.map(el => ({
-        ...el,
-        id: `${el.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      })),
+      front_elements: fittedFrontElements,
+      back_elements: fittedBackElements,
       allowedElementTypes: template.allowedElementTypes,
       autoAdvanceOnAnswer: template.autoAdvanceOnAnswer,
       showBackSide: template.showBackSide,
@@ -34,7 +81,7 @@ export const useTemplateConfiguration = () => {
       countdown_behavior_front: template.countdown_behavior_front,
       countdown_behavior_back: template.countdown_behavior_back,
     };
-  }, []);
+  }, [fitElementToCanvas]);
 
   const getCardTemplateSettings = useCallback((card: Flashcard) => {
     if (card.templateId) {
