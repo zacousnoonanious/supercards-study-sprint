@@ -55,6 +55,8 @@ export const MediaElementRenderer: React.FC<MediaElementRendererProps> = ({
         >
           <EmbeddedDeckViewer
             deckId={element.deckId || ''}
+            width={element.width}
+            height={element.height}
           />
         </div>
       );
