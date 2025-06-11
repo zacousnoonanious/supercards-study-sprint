@@ -1,28 +1,151 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CardTypeSelector } from './CardTypeSelector';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { CountdownBehaviorSelector } from '@/components/CountdownBehaviorSelector';
+import { AdvancedCountdownSettings } from '@/components/AdvancedCountdownSettings';
 import { Flashcard } from '@/types/flashcard';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { ChevronDown } from 'lucide-react';
 
-interface CardTypePanelProps {
-  currentCard: Flashcard;
+interface CardTypeSelectorProps {
+  card: Flashcard;
   onUpdateCard: (updates: Partial<Flashcard>) => void;
 }
 
-export const CardTypePanel: React.FC<CardTypePanelProps> = ({
-  currentCard,
+export const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({
+  card,
   onUpdateCard,
 }) => {
+  const cardTypes = [
+    { value: 'normal', label: 'Normal', description: 'Customizable front and back with flexible sizing' },
+    { value: 'simple', label: 'Simple Flashcard', description: 'Standard 600×900 size with single text elements' },
+    { value: 'informational', label: 'Informational', description: 'Large format (900×1800) for detailed content' },
+    { value: 'single-sided', label: 'Single-sided', description: 'Only shows the front side' },
+  ];
+
+  const quizTemplates = [
+    { 
+      value: 'multiple-choice-quiz', 
+      label: 'Multiple Choice Quiz', 
+      description: 'Quiz with multiple choice questions' 
+    },
+    { 
+      value: 'true-false-quiz', 
+      label: 'True/False Quiz', 
+      description: 'Quiz with true or false questions' 
+    },
+    { 
+      value: 'fill-in-blank-study', 
+      label: 'Fill-in-the-Blank Study', 
+      description: 'Interactive fill-in-the-blank exercises' 
+    },
+  ];
+
+  const selectedType = cardTypes.find(type => type.value === card.card_type) || cardTypes[0];
+
   return (
-    <div className="absolute top-1 right-1 z-30 pointer-events-none">
-      <Card className="bg-white/90 backdrop-blur-sm border shadow-sm pointer-events-auto w-64">
-        <CardContent className="p-2">
-          <CardTypeSelector
-            card={currentCard}
-            onUpdateCard={(updates) => onUpdateCard(updates)}
-          />
-        </CardContent>
-      </Card>
+    <div className="space-y-4">
+      <div>
+        <Label className="text-sm font-medium">Card Type</Label>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-full justify-between"
+            >
+              {selectedType.label}
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 bg-background">
+            {cardTypes.map((type) => (
+              <DropdownMenuItem
+                key={type.value}
+                onClick={() => onUpdateCard({ card_type: type.value as Flashcard['card_type'] })}
+              >
+                <div>
+                  <div className="font-medium">{type.label}</div>
+                  <div className="text-xs text-gray-500">{type.description}</div>
+                </div>
+              </DropdownMenuItem>
+            ))}
+            
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <div>
+                  <div className="font-medium">Quiz Templates</div>
+                  <div className="text-xs text-gray-500">Interactive quiz cards</div>
+                </div>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="bg-background">
+                {quizTemplates.map((template) => (
+                  <DropdownMenuItem
+                    key={template.value}
+                    onClick={() => onUpdateCard({ card_type: template.value as Flashcard['card_type'] })}
+                  >
+                    <div>
+                      <div className="font-medium">{template.label}</div>
+                      <div className="text-xs text-gray-500">{template.description}</div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Legacy single timer (kept for backwards compatibility) */}
+      <div>
+        <Label className="text-sm font-medium">Legacy Timer (both sides)</Label>
+        <Input
+          type="number"
+          min="0"
+          value={card.countdown_timer || 0}
+          onChange={(e) => onUpdateCard({ countdown_timer: parseInt(e.target.value) || 0 })}
+          placeholder="0 = no timer"
+          className="w-full"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          This applies the same timer to both sides. Use Advanced Timer Settings below for more control.
+        </p>
+      </div>
+
+      {card.countdown_timer && card.countdown_timer > 0 && (
+        <CountdownBehaviorSelector
+          card={card}
+          onUpdateCard={onUpdateCard}
+        />
+      )}
+
+      {/* Advanced Timer Settings */}
+      <AdvancedCountdownSettings
+        card={card}
+        onUpdateCard={onUpdateCard}
+      />
+
+      <div>
+        <Label className="text-sm font-medium">Hint</Label>
+        <Textarea
+          value={card.hint || ''}
+          onChange={(e) => onUpdateCard({ hint: e.target.value })}
+          placeholder="Optional hint for this card"
+          className="w-full h-16 resize-none"
+        />
+      </div>
     </div>
   );
 };
