@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -87,10 +86,10 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   // Get the content and blanks, with fallbacks
   const content = element.fillInBlankText || element.content || '';
   const blanks = element.fillInBlankBlanks || [];
-  const ignoreCase = element.ignoreCase !== false;
-  const showLetterCount = element.showLetterCount || false;
+  const ignoreCase = element.ignoreCase !== false; // Default to true if not specified
+  const showLetterCount = element.showLetterCount === true; // Default to false, only true if explicitly set
 
-  console.log('FillInBlank data:', { content, blanks, ignoreCase, showLetterCount });
+  console.log('FillInBlank data:', { content, blanks, ignoreCase, showLetterCount, elementShowLetterCount: element.showLetterCount });
 
   useEffect(() => {
     setUserAnswers(new Array(blanks.length).fill(''));
