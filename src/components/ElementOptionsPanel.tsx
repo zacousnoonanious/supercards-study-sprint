@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { useI18n } from '@/contexts/I18nContext';
@@ -86,6 +85,20 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
     }
   };
 
+  const extractVideoId = (url: string) => {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  };
+
+  const handleYouTubeUrlChange = (url: string) => {
+    const videoId = extractVideoId(url);
+    onUpdate({ 
+      youtubeUrl: url,
+      youtubeVideoId: videoId || undefined
+    });
+  };
+
   if (!element) {
     return (
       <div className="w-80 p-4 border-l bg-background overflow-y-auto">
@@ -122,7 +135,7 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
         </TabsList>
 
         <TabsContent value="content" className="space-y-4">
-          {/* Content-specific controls */}
+          {/* Text Element Content */}
           {element.type === 'text' && (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -224,6 +237,87 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
             </div>
           )}
 
+          {/* TTS Element Content */}
+          {element.type === 'tts' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>{t('editor.content')}</Label>
+                <Textarea
+                  value={element.content || ''}
+                  onChange={(e) => onUpdate({ content: e.target.value })}
+                  placeholder="Enter text to speak..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Auto-play</Label>
+                  <Switch
+                    checked={element.ttsAutoplay || false}
+                    onCheckedChange={(checked) => onUpdate({ ttsAutoplay: checked })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Voice</Label>
+                  <Select
+                    value={element.ttsVoice || ''}
+                    onValueChange={(value) => onUpdate({ ttsVoice: value })}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder="Default voice" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Default voice</SelectItem>
+                      {availableVoices.map((voice) => (
+                        <SelectItem key={voice.name} value={voice.name}>
+                          {voice.name} ({voice.lang})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Speed: {element.ttsRate || 1}x</Label>
+                  <Slider
+                    value={[element.ttsRate || 1]}
+                    onValueChange={([value]) => onUpdate({ ttsRate: value })}
+                    min={0.5}
+                    max={2}
+                    step={0.1}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Pitch: {element.ttsPitch || 1}</Label>
+                  <Slider
+                    value={[element.ttsPitch || 1]}
+                    onValueChange={([value]) => onUpdate({ ttsPitch: value })}
+                    min={0.5}
+                    max={2}
+                    step={0.1}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Google Neural TTS API Key</Label>
+                  <Input
+                    type="password"
+                    value={googleTTSKey}
+                    onChange={(e) => handleGoogleTTSKeyChange(e.target.value)}
+                    placeholder="Optional: For high-quality voices"
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Image Element Content */}
           {element.type === 'image' && (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -252,21 +346,7 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
             </div>
           )}
 
-          {element.type === 'audio' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('editor.audioUrl')}</Label>
-                <Input
-                  type="url"
-                  value={element.audioUrl || ''}
-                  onChange={(e) => onUpdate({ audioUrl: e.target.value })}
-                  placeholder={t('placeholders.enterAudioUrl')}
-                  className="h-8"
-                />
-              </div>
-            </div>
-          )}
-
+          {/* YouTube Element Content */}
           {element.type === 'youtube' && (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -274,14 +354,102 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
                 <Input
                   type="url"
                   value={element.youtubeUrl || ''}
-                  onChange={(e) => onUpdate({ youtubeUrl: e.target.value })}
+                  onChange={(e) => handleYouTubeUrlChange(e.target.value)}
                   placeholder={t('placeholders.enterYouTubeUrl')}
                   className="h-8"
                 />
+                {element.youtubeVideoId && (
+                  <p className="text-xs text-green-600">✓ Valid YouTube URL</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs">Start Time (seconds)</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={element.youtubeStartTime || ''}
+                    onChange={(e) => onUpdate({ youtubeStartTime: parseInt(e.target.value) || 0 })}
+                    min="0"
+                    className="h-7 text-xs flex-1"
+                  />
+                  {element.youtubeStartTime && (
+                    <span className="text-xs text-gray-500">
+                      {Math.floor(element.youtubeStartTime / 60)}:{(element.youtubeStartTime % 60).toString().padStart(2, '0')}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Autoplay</Label>
+                  <Switch
+                    checked={element.youtubeAutoplay || false}
+                    onCheckedChange={(checked) => onUpdate({ youtubeAutoplay: checked })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Muted</Label>
+                  <Switch
+                    checked={element.youtubeMuted || false}
+                    onCheckedChange={(checked) => onUpdate({ youtubeMuted: checked })}
+                  />
+                </div>
               </div>
             </div>
           )}
 
+          {/* Drawing Element Content */}
+          {element.type === 'drawing' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Drawing Tools</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Brush Color</Label>
+                    <ColorPicker
+                      color={element.strokeColor || '#000000'}
+                      onChange={(color) => onUpdate({ strokeColor: color })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Brush Width</Label>
+                    <Slider
+                      value={[element.strokeWidth || 2]}
+                      onValueChange={([value]) => onUpdate({ strokeWidth: value })}
+                      min={1}
+                      max={20}
+                      step={1}
+                      className="w-full"
+                    />
+                    <span className="text-xs text-center block">{element.strokeWidth || 2}px</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Highlighting Mode</Label>
+                  <Switch
+                    checked={element.highlightMode || false}
+                    onCheckedChange={(checked) => onUpdate({ 
+                      highlightMode: checked,
+                      strokeColor: checked ? '#ffff00' : (element.strokeColor || '#000000'),
+                      opacity: checked ? 0.6 : (element.opacity || 1)
+                    })}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Enable for semi-transparent highlighting
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Quiz Elements Content */}
           {element.type === 'multiple-choice' && (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -369,6 +537,21 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
             </div>
           )}
 
+          {element.type === 'audio' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>{t('editor.audioUrl')}</Label>
+                <Input
+                  type="url"
+                  value={element.audioUrl || ''}
+                  onChange={(e) => onUpdate({ audioUrl: e.target.value })}
+                  placeholder={t('placeholders.enterAudioUrl')}
+                  className="h-8"
+                />
+              </div>
+            </div>
+          )}
+
           {element.type === 'fill-in-blank' && (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -443,7 +626,7 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
         </TabsContent>
 
         <TabsContent value="style" className="space-y-4">
-          {/* Style controls for text elements */}
+          {/* Text Style Controls */}
           {element.type === 'text' && (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -472,7 +655,7 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
               <div className="space-y-2">
                 <Label>{t('editor.backgroundColor')}</Label>
                 <ColorPicker
-                  color={element.backgroundColor || '#ffffff'}
+                  color={element.backgroundColor || 'transparent'}
                   onChange={(color) => onUpdate({ backgroundColor: color })}
                 />
               </div>
@@ -493,6 +676,8 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
                     <SelectItem value="Georgia">Georgia</SelectItem>
                     <SelectItem value="Verdana">Verdana</SelectItem>
                     <SelectItem value="Courier New">Courier New</SelectItem>
+                    <SelectItem value="Impact">Impact</SelectItem>
+                    <SelectItem value="Comic Sans MS">Comic Sans MS</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -580,7 +765,7 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
             </div>
           )}
 
-          {/* Image-specific style controls */}
+          {/* Image Style Controls */}
           {element.type === 'image' && (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -631,6 +816,84 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
                     checked={element.borderRadius || false}
                     onCheckedChange={(checked) => onUpdate({ borderRadius: checked })}
                   />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* YouTube Style Controls */}
+          {element.type === 'youtube' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>{t('editor.opacity')}</Label>
+                <div className="flex items-center space-x-2">
+                  <Slider
+                    value={[element.opacity || 1]}
+                    min={0.1}
+                    max={1}
+                    step={0.1}
+                    onValueChange={(value) => onUpdate({ opacity: value[0] })}
+                    className="flex-1"
+                  />
+                  <span className="text-sm w-12 text-right">
+                    {Math.round((element.opacity || 1) * 100)}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t('editor.border')}</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">{t('editor.width')}</Label>
+                    <Input
+                      type="number"
+                      value={element.borderWidth || 0}
+                      onChange={(e) =>
+                        onUpdate({ borderWidth: Number(e.target.value) })
+                      }
+                      className="h-8"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">{t('editor.color')}</Label>
+                    <ColorPicker
+                      color={element.borderColor || '#000000'}
+                      onChange={(color) => onUpdate({ borderColor: color })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>{t('editor.borderRadius')}</Label>
+                  <Switch
+                    checked={element.borderRadius || false}
+                    onCheckedChange={(checked) => onUpdate({ borderRadius: checked })}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Drawing Style Controls */}
+          {element.type === 'drawing' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>{t('editor.opacity')}</Label>
+                <div className="flex items-center space-x-2">
+                  <Slider
+                    value={[element.opacity || 1]}
+                    min={0.1}
+                    max={1}
+                    step={0.1}
+                    onValueChange={(value) => onUpdate({ opacity: value[0] })}
+                    className="flex-1"
+                  />
+                  <span className="text-sm w-12 text-right">
+                    {Math.round((element.opacity || 1) * 100)}%
+                  </span>
                 </div>
               </div>
             </div>

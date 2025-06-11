@@ -8,6 +8,7 @@ import { ImageElementRenderer } from './canvas-elements/ImageElementRenderer';
 import { AudioElementRenderer } from './canvas-elements/AudioElementRenderer';
 import { InteractiveElementRenderer } from './canvas-elements/InteractiveElementRenderer';
 import { MediaElementRenderer } from './canvas-elements/MediaElementRenderer';
+import { TTSElementRenderer } from './canvas-elements/TTSElementRenderer';
 
 interface CanvasElementRendererProps {
   element: CanvasElement;
@@ -80,6 +81,14 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
       return (
         <div {...containerProps}>
           <AudioElementRenderer
+            {...commonProps}
+          />
+        </div>
+      );
+    case 'tts':
+      return (
+        <div {...containerProps}>
+          <TTSElementRenderer
             {...commonProps}
           />
         </div>

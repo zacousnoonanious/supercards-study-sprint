@@ -131,6 +131,7 @@ export interface CanvasElement {
   drawingData?: string;
   strokeColor?: string;
   strokeWidth?: number;
+  highlightMode?: boolean;
   
   // Interactive properties
   options?: string[];

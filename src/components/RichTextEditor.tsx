@@ -99,10 +99,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
       {/* Text Content */}
       <div
-        className={`w-full h-full flex items-center justify-center border rounded cursor-text bg-background ${
+        className={`w-full h-full flex items-center justify-center border rounded cursor-text ${
           element.hasTTS ? 'border-blue-200' : ''
         } ${isSelected ? 'ring-2 ring-primary ring-opacity-50' : ''}`}
-        style={{ padding: '8px' }}
+        style={{ 
+          padding: '8px',
+          backgroundColor: element.backgroundColor && element.backgroundColor !== 'transparent' 
+            ? element.backgroundColor 
+            : 'transparent'
+        }}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onClick={handleClick}
