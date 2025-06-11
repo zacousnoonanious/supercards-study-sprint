@@ -100,16 +100,19 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   }, [disabled, submitted]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent, index: number) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
       
       // Move to next blank or submit if this is the last one
       const nextBlankIndex = index + 1;
       if (nextBlankIndex < blanks.length) {
         setActiveBlankIndex(nextBlankIndex);
-      } else if (isStudyMode) {
-        // Auto-check answers in study mode
-        checkAnswers();
+      } else {
+        setActiveBlankIndex(null);
+        if (isStudyMode) {
+          // Auto-check answers in study mode
+          checkAnswers();
+        }
       }
     }
   }, [blanks.length, isStudyMode]);
@@ -148,7 +151,6 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
   }
 
   const renderContent = () => {
-    let renderedContent = content;
     const words = content.split(/(\s+)/);
     let currentWordIndex = 0;
     
@@ -175,17 +177,20 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
             );
           }
 
+          // Show underscores when not active and no user input
+          const displayText = !isActive && !userAnswer ? '____' : userAnswer;
+
           return (
             <span key={segmentIndex} className="inline-block mx-1 relative">
               {isActive ? (
                 <Input
                   value={userAnswer}
                   onChange={(e) => handleAnswerChange(blankIndex, e.target.value)}
-                  onKeyPress={(e) => handleKeyPress(e, blankIndex)}
+                  onKeyDown={(e) => handleKeyPress(e, blankIndex)}
                   onBlur={() => setActiveBlankIndex(null)}
                   autoFocus
                   className="inline-block w-auto min-w-[80px] text-center border-b-2 border-t-0 border-l-0 border-r-0 rounded-none bg-transparent border-blue-500 focus:border-blue-600 px-1 py-0"
-                  placeholder={showLetterCount ? `(${blank.word.length})` : '___'}
+                  placeholder={showLetterCount ? `(${blank.word.length})` : '____'}
                   style={{ 
                     fontSize: `${14 * textScale}px`,
                     height: 'auto',
@@ -195,7 +200,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
               ) : (
                 <span
                   onClick={() => handleBlankClick(blankIndex)}
-                  className={`inline-block min-w-[80px] text-center px-2 py-1 border-b-2 cursor-pointer transition-colors ${
+                  className={`inline-block min-w-[60px] text-center px-2 py-1 border-b-2 cursor-pointer transition-colors ${
                     result === 'correct' ? 'border-green-500 bg-green-50 text-green-800' :
                     result === 'close' ? 'border-yellow-500 bg-yellow-50 text-yellow-800' :
                     result === 'incorrect' ? 'border-red-500 bg-red-50 text-red-800' :
@@ -204,7 +209,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
                   }`}
                   style={{ fontSize: `${14 * textScale}px` }}
                 >
-                  {userAnswer || (showLetterCount ? `(${blank.word.length})` : '___')}
+                  {displayText}
                 </span>
               )}
               {submitted && (
@@ -233,6 +238,9 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
     });
   };
 
+  const correctCount = results.filter(r => r === 'correct').length;
+  const totalBlanks = results.length;
+
   return (
     <div className="space-y-4 h-full flex flex-col" style={{ fontSize: `${14 * textScale}px` }}>
       <div className="flex-1 text-base leading-relaxed">
@@ -247,7 +255,7 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
             size="sm"
             style={{ fontSize: `${12 * textScale}px` }}
           >
-            Check Answers
+            Submit
           </Button>
           {submitted && (
             <Button 
@@ -265,13 +273,8 @@ export const FillInBlankRenderer: React.FC<FillInBlankRendererProps> = ({
 
       {submitted && (
         <div className="space-y-2 mt-2">
-          <div className="text-sm text-gray-600" style={{ fontSize: `${11 * textScale}px` }}>
-            Score: {results.filter(r => r === 'correct').length} / {results.length} correct
-            {results.some(r => r === 'close') && (
-              <span className="ml-2 text-yellow-600">
-                ({results.filter(r => r === 'close').length} close)
-              </span>
-            )}
+          <div className="text-sm font-medium" style={{ fontSize: `${12 * textScale}px` }}>
+            You got {correctCount} out of {totalBlanks} correct.
           </div>
           
           {results.some(r => r === 'close') && (
