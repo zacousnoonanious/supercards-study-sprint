@@ -14,7 +14,6 @@ export const useCardEditor = () => {
   const [currentSide, setCurrentSide] = useState<'front' | 'back'>('front');
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     if (!user || !setId) {
@@ -67,7 +66,7 @@ export const useCardEditor = () => {
           countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
           flips_before_next: card.flips_before_next || 2,
           password: card.password || null,
-          position: index, // Add position based on array index
+          position: index,
           countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
         }));
         
@@ -95,19 +94,15 @@ export const useCardEditor = () => {
     fetchSetAndCards();
   }, [user, setId, cardId, navigate]);
 
-  // Update URL when card index changes - with debouncing to prevent jumping
+  // Update URL when card index changes - simplified without timeout
   useEffect(() => {
-    if (cards.length > 0 && cards[currentCardIndex] && !isNavigating) {
-      const timeoutId = setTimeout(() => {
-        const currentCard = cards[currentCardIndex];
-        if (currentCard) {
-          navigate(`/sets/${setId}/cards/${currentCard.id}`, { replace: true });
-        }
-      }, 100);
-
-      return () => clearTimeout(timeoutId);
+    if (cards.length > 0 && cards[currentCardIndex]) {
+      const currentCard = cards[currentCardIndex];
+      if (currentCard) {
+        navigate(`/sets/${setId}/cards/${currentCard.id}`, { replace: true });
+      }
     }
-  }, [currentCardIndex, cards, setId, navigate, isNavigating]);
+  }, [currentCardIndex, cards, setId, navigate]);
 
   const saveCard = async () => {
     if (!setId || cards.length === 0) return;
@@ -253,10 +248,6 @@ export const useCardEditor = () => {
   };
 
   const navigateCard = useCallback((direction: 'prev' | 'next') => {
-    if (isNavigating) return; // Prevent multiple navigation calls
-    
-    setIsNavigating(true);
-    
     // Clear any selected element when navigating
     setSelectedElement(null);
     
@@ -265,12 +256,7 @@ export const useCardEditor = () => {
     } else if (direction === 'next' && currentCardIndex < cards.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
     }
-    
-    // Reset navigation flag after a short delay
-    setTimeout(() => {
-      setIsNavigating(false);
-    }, 200);
-  }, [currentCardIndex, cards.length, isNavigating]);
+  }, [currentCardIndex, cards.length]);
 
   const createNewCard = async () => {
     if (!setId) {

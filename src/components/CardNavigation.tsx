@@ -66,10 +66,8 @@ export const CardNavigation: React.FC<CardNavigationProps> = ({
     if (direction === 'prev' && currentIndex <= 0) return;
     if (direction === 'next' && currentIndex >= totalCards - 1) return;
     
-    // Use requestAnimationFrame to ensure smooth navigation
-    requestAnimationFrame(() => {
-      onNavigate(direction);
-    });
+    // Direct navigation without requestAnimationFrame to avoid timing issues
+    onNavigate(direction);
   };
 
   const showBackSide = cardType !== 'single-sided' && cardType !== 'informational';
