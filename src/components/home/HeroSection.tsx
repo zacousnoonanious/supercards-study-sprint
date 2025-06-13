@@ -23,81 +23,89 @@ export const HeroSection = () => {
     { front: "Gravity", back: "The force that attracts objects toward the center of the Earth" },
   ];
 
-  // Generate glitter particles
-  const glitterParticles = Array.from({ length: 15 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    delay: Math.random() * 3,
-    duration: 2 + Math.random() * 2,
-  }));
-
   return (
     <>
       <GlobalStyles />
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background with gradient similar to homepage.png */}
+        {/* Background with gradient matching the reference design */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-400 via-purple-500 to-blue-600">
-          {/* Geometric shapes scattered in background - matching the homepage.png pattern */}
+          {/* Geometric shapes scattered in background - matching the reference pattern */}
           <div 
-            className="absolute top-20 left-10 w-8 h-8 bg-pink-300 rounded-full opacity-70"
-            style={{ transform: `translateY(${scrollY * 0.1}px)` }}
-          ></div>
-          <div 
-            className="absolute top-32 right-20 w-6 h-6 bg-blue-300 opacity-60"
+            className="absolute top-20 left-20 w-12 h-12 bg-pink-300 opacity-70"
             style={{ 
-              transform: `translateY(${scrollY * 0.15}px) rotate(45deg)`,
+              transform: `translateY(${scrollY * 0.1}px)`,
               clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
             }}
           ></div>
           <div 
-            className="absolute top-40 left-1/4 w-4 h-4 bg-yellow-300 opacity-50"
+            className="absolute top-32 right-32 w-16 h-16 bg-blue-300 rounded-full opacity-60"
+            style={{ transform: `translateY(${scrollY * 0.15}px)` }}
+          ></div>
+          <div 
+            className="absolute top-1/4 left-1/4 w-8 h-8 bg-cyan-300 opacity-70"
             style={{ 
-              transform: `translateY(${scrollY * 0.08}px) rotate(12deg)`,
+              transform: `translateY(${scrollY * 0.12}px)`,
               clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
             }}
           ></div>
           <div 
-            className="absolute bottom-40 right-10 w-10 h-10 bg-purple-300 rounded-full opacity-60"
-            style={{ transform: `translateY(${scrollY * 0.12}px)` }}
+            className="absolute bottom-40 right-20 w-20 h-20 bg-purple-300 rounded-full opacity-50"
+            style={{ transform: `translateY(${scrollY * 0.08}px)` }}
           ></div>
           <div 
-            className="absolute bottom-60 left-16 w-5 h-5 bg-cyan-300 opacity-70"
+            className="absolute bottom-1/3 left-16 w-10 h-10 bg-pink-400 opacity-60"
             style={{ 
-              transform: `translateY(${scrollY * 0.2}px) rotate(45deg)`,
+              transform: `translateY(${scrollY * 0.18}px)`,
               clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
             }}
           ></div>
           <div 
-            className="absolute top-1/3 right-1/4 w-6 h-6 bg-pink-300 opacity-50"
-            style={{ 
-              transform: `translateY(${scrollY * 0.18}px) rotate(12deg)`,
-              clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-            }}
-          ></div>
-          <div 
-            className="absolute bottom-1/3 left-1/3 w-8 h-8 bg-blue-300 rounded-full opacity-40"
-            style={{ transform: `translateY(${scrollY * 0.14}px)` }}
-          ></div>
-          <div 
-            className="absolute top-1/4 left-1/2 w-3 h-3 bg-cyan-400 rounded-full opacity-60"
+            className="absolute top-1/3 right-1/4 w-6 h-6 bg-cyan-400 rounded-full opacity-80"
             style={{ transform: `translateY(${scrollY * 0.25}px)` }}
           ></div>
           <div 
-            className="absolute bottom-1/4 right-1/3 w-7 h-7 bg-pink-400 rounded-full opacity-50"
-            style={{ transform: `translateY(${scrollY * 0.16}px)` }}
+            className="absolute bottom-1/4 left-1/3 w-14 h-14 bg-blue-300 rounded-full opacity-40"
+            style={{ transform: `translateY(${scrollY * 0.14}px)` }}
           ></div>
           <div 
-            className="absolute top-3/4 left-1/5 w-4 h-4 bg-purple-400 opacity-65"
+            className="absolute top-3/4 right-1/5 w-8 h-8 bg-pink-300 opacity-65"
             style={{ 
-              transform: `translateY(${scrollY * 0.11}px) rotate(45deg)`,
+              transform: `translateY(${scrollY * 0.11}px)`,
               clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
             }}
           ></div>
         </div>
 
-        {/* Parallax floating flashcards */}
-        <ParallaxFlashcards flashcards={flashcards} scrollY={scrollY} />
+        {/* Floating flashcards in the background */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Top left flashcards */}
+          <div 
+            className="absolute top-32 left-16 w-20 h-12 bg-white/90 rounded-lg shadow-lg border border-gray-200 opacity-80"
+            style={{ 
+              transform: `translateY(${Math.sin(scrollY * 0.01) * 10}px) rotate(-8deg)`,
+            }}
+          ></div>
+          <div 
+            className="absolute top-40 left-24 w-20 h-12 bg-white/90 rounded-lg shadow-lg border border-gray-200 opacity-70"
+            style={{ 
+              transform: `translateY(${Math.sin(scrollY * 0.01 + 1) * 12}px) rotate(-12deg)`,
+            }}
+          ></div>
+          
+          {/* Bottom right flashcards */}
+          <div 
+            className="absolute bottom-32 right-16 w-20 h-12 bg-white/90 rounded-lg shadow-lg border border-gray-200 opacity-75"
+            style={{ 
+              transform: `translateY(${Math.sin(scrollY * 0.01 + 2) * 8}px) rotate(10deg)`,
+            }}
+          ></div>
+          <div 
+            className="absolute bottom-40 right-24 w-20 h-12 bg-white/90 rounded-lg shadow-lg border border-gray-200 opacity-65"
+            style={{ 
+              transform: `translateY(${Math.sin(scrollY * 0.01 + 3) * 15}px) rotate(15deg)`,
+            }}
+          ></div>
+        </div>
 
         {/* Navigation Header */}
         <div className="absolute top-0 left-0 right-0 z-20 p-6">
@@ -119,65 +127,14 @@ export const HeroSection = () => {
           </div>
         </div>
 
+        {/* Main Content */}
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
-          {/* Main Heading with effects */}
-          <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight relative">
-            <div className="relative inline-block">
-              <span 
-                className="bg-gradient-to-r from-red-400 via-yellow-400 via-green-400 via-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent animate-pulse"
-                style={{
-                  backgroundSize: '200% 200%',
-                  animation: 'rainbow 3s ease-in-out infinite'
-                }}
-              >
-                Smarter
-              </span>
-              
-              {/* Glitter particles for "Smarter" */}
-              {glitterParticles.slice(0, 8).map((particle) => (
-                <div
-                  key={`smarter-${particle.id}`}
-                  className="absolute w-1 h-1 bg-yellow-300 rounded-full opacity-80"
-                  style={{
-                    left: `${particle.x}%`,
-                    top: `${particle.y}%`,
-                    animation: `glitter ${particle.duration}s ease-in-out infinite`,
-                    animationDelay: `${particle.delay}s`
-                  }}
-                />
-              ))}
-            </div>
-            {' '}Cards.{' '}
+          <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight">
+            Master your studies
             <br />
-            <div className="relative inline-block">
-              <span 
-                className="bg-gradient-to-r from-red-400 via-yellow-400 via-green-400 via-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent animate-pulse"
-                style={{
-                  backgroundSize: '200% 200%',
-                  animation: 'rainbow 3s ease-in-out infinite 1.5s'
-                }}
-              >
-                Better
-              </span>
-              
-              {/* Glitter particles for "Better" */}
-              {glitterParticles.slice(8).map((particle) => (
-                <div
-                  key={`better-${particle.id}`}
-                  className="absolute w-1 h-1 bg-yellow-300 rounded-full opacity-80"
-                  style={{
-                    left: `${particle.x}%`,
-                    top: `${particle.y}%`,
-                    animation: `glitter ${particle.duration}s ease-in-out infinite`,
-                    animationDelay: `${particle.delay + 1.5}s`
-                  }}
-                />
-              ))}
-            </div>
-            {' '}Learning.
+            with flashcards
           </h1>
 
-          {/* CTA Button */}
           <Link to="/auth">
             <Button 
               size="lg" 
@@ -188,55 +145,60 @@ export const HeroSection = () => {
           </Link>
         </div>
 
-        {/* Character Assets positioned like in homepage.png - only teal robot and owl */}
-        <div className="absolute bottom-0 left-0 right-0">
-          {/* Teal robot character (right side) */}
+        {/* Character Assets positioned like in the reference image */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Yellow monster character (bottom left) */}
           <div 
-            className="absolute bottom-8 right-8 md:right-16"
+            className="absolute bottom-8 left-8 md:left-16"
             style={{ transform: `translateY(${scrollY * 0.04}px)` }}
           >
             <img 
-              src="/lovable-uploads/f6e4da9c-18c9-4b36-bfd7-4c93052c5f0f.png" 
-              alt="Teal robot with checkmark" 
-              className="w-30 h-30 md:w-38 md:h-38 object-contain animate-float"
+              src="/lovable-uploads/133e0452-917c-4305-aa4a-1d436866de4e.png" 
+              alt="Yellow monster with flashcards" 
+              className="w-40 h-40 md:w-48 md:h-48 object-contain animate-float"
+              style={{ animationDelay: '0s' }}
+            />
+          </div>
+
+          {/* Purple character at desk (center) */}
+          <div 
+            className="absolute bottom-16 left-1/2 transform -translate-x-1/2"
+            style={{ transform: `translateX(-50%) translateY(${scrollY * 0.06}px)` }}
+          >
+            <img 
+              src="/lovable-uploads/9587cfcb-3432-4562-81d3-492e69418674.png" 
+              alt="Purple character studying at desk" 
+              className="w-48 h-48 md:w-56 md:h-56 object-contain animate-float"
               style={{ animationDelay: '1s' }}
+            />
+          </div>
+
+          {/* Teal robot character (bottom right) */}
+          <div 
+            className="absolute bottom-8 right-8 md:right-16"
+            style={{ transform: `translateY(${scrollY * 0.05}px)` }}
+          >
+            <img 
+              src="/lovable-uploads/04cf0a2e-0c62-48c6-b97b-b195a67b0df1.png" 
+              alt="Teal robot with checkmark" 
+              className="w-40 h-40 md:w-48 md:h-48 object-contain animate-float"
+              style={{ animationDelay: '2s' }}
             />
           </div>
 
           {/* Owl character (top right) */}
           <div 
-            className="absolute top-40 right-12 md:right-24"
-            style={{ transform: `translateY(${scrollY * 0.06}px)` }}
+            className="absolute top-32 right-12 md:right-24"
+            style={{ transform: `translateY(${scrollY * 0.03}px)` }}
           >
             <img 
-              src="/lovable-uploads/a6282a15-30cb-4623-9be5-1d696af06c06.png" 
+              src="/lovable-uploads/3198da55-ccb8-4305-94b4-12c41dddfe6d.png" 
               alt="Orange owl character" 
-              className="w-24 h-24 md:w-32 md:h-32 object-contain animate-float"
+              className="w-32 h-32 md:w-40 md:h-40 object-contain animate-float"
               style={{ animationDelay: '1.5s' }}
             />
           </div>
         </div>
-
-        {/* Additional styles for rainbow and glitter effects */}
-        <style dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes rainbow {
-              0%, 100% { background-position: 0% 50%; }
-              50% { background-position: 100% 50%; }
-            }
-            
-            @keyframes glitter {
-              0%, 100% { 
-                opacity: 0;
-                transform: translateY(0px) scale(0);
-              }
-              50% { 
-                opacity: 1;
-                transform: translateY(-10px) scale(1);
-              }
-            }
-          `
-        }} />
       </div>
     </>
   );
