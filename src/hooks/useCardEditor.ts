@@ -14,6 +14,7 @@ export const useCardEditor = () => {
   const [currentSide, setCurrentSide] = useState<'front' | 'back'>('front');
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isUrlUpdating, setIsUrlUpdating] = useState(false);
 
   useEffect(() => {
     if (!user || !setId) {
@@ -76,10 +77,12 @@ export const useCardEditor = () => {
         if (cardId && typedCards.length > 0) {
           const cardIndex = typedCards.findIndex(card => card.id === cardId);
           if (cardIndex >= 0) {
+            console.log('Setting card index from URL:', cardIndex);
             setCurrentCardIndex(cardIndex);
           } else {
             // Card not found, redirect to first card
             if (typedCards[0]) {
+              console.log('Card not found, redirecting to first card');
               navigate(`/sets/${setId}/cards/${typedCards[0].id}`, { replace: true });
             }
           }
@@ -94,15 +97,22 @@ export const useCardEditor = () => {
     fetchSetAndCards();
   }, [user, setId, cardId, navigate]);
 
-  // Update URL when card index changes - simplified without timeout
+  // Update URL when card index changes - only when not already updating
   useEffect(() => {
-    if (cards.length > 0 && cards[currentCardIndex]) {
+    if (cards.length > 0 && cards[currentCardIndex] && !isUrlUpdating) {
       const currentCard = cards[currentCardIndex];
-      if (currentCard) {
+      if (currentCard && currentCard.id !== cardId) {
+        console.log('Updating URL for card:', currentCard.id, 'at index:', currentCardIndex);
+        setIsUrlUpdating(true);
         navigate(`/sets/${setId}/cards/${currentCard.id}`, { replace: true });
+        
+        // Reset the flag after navigation
+        setTimeout(() => {
+          setIsUrlUpdating(false);
+        }, 100);
       }
     }
-  }, [currentCardIndex, cards, setId, navigate]);
+  }, [currentCardIndex, cards, setId, navigate, cardId, isUrlUpdating]);
 
   const saveCard = async () => {
     if (!setId || cards.length === 0) return;
@@ -248,13 +258,21 @@ export const useCardEditor = () => {
   };
 
   const navigateCard = useCallback((direction: 'prev' | 'next') => {
+    console.log('Navigation requested:', direction, 'current index:', currentCardIndex);
+    
     // Clear any selected element when navigating
     setSelectedElement(null);
     
+    let newIndex = currentCardIndex;
     if (direction === 'prev' && currentCardIndex > 0) {
-      setCurrentCardIndex(currentCardIndex - 1);
+      newIndex = currentCardIndex - 1;
     } else if (direction === 'next' && currentCardIndex < cards.length - 1) {
-      setCurrentCardIndex(currentCardIndex + 1);
+      newIndex = currentCardIndex + 1;
+    }
+    
+    if (newIndex !== currentCardIndex) {
+      console.log('Setting new card index:', newIndex);
+      setCurrentCardIndex(newIndex);
     }
   }, [currentCardIndex, cards.length]);
 
