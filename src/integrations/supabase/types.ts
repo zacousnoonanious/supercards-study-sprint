@@ -50,29 +50,130 @@ export type Database = {
           },
         ]
       }
+      deck_collaborators: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          role: string
+          set_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          role?: string
+          set_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          role?: string
+          set_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deck_collaborators_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "flashcard_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      editing_sessions: {
+        Row: {
+          card_id: string | null
+          created_at: string | null
+          cursor_position: Json | null
+          id: string
+          last_seen: string | null
+          set_id: string
+          user_avatar: string | null
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          card_id?: string | null
+          created_at?: string | null
+          cursor_position?: Json | null
+          id?: string
+          last_seen?: string | null
+          set_id: string
+          user_avatar?: string | null
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          card_id?: string | null
+          created_at?: string | null
+          cursor_position?: Json | null
+          id?: string
+          last_seen?: string | null
+          set_id?: string
+          user_avatar?: string | null
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "editing_sessions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "flashcards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "editing_sessions_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "flashcard_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flashcard_sets: {
         Row: {
+          collaboration_settings: Json | null
           created_at: string
           description: string | null
           id: string
+          is_collaborative: boolean | null
           permanent_shuffle: boolean | null
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          collaboration_settings?: Json | null
           created_at?: string
           description?: string | null
           id?: string
+          is_collaborative?: boolean | null
           permanent_shuffle?: boolean | null
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          collaboration_settings?: Json | null
           created_at?: string
           description?: string | null
           id?: string
+          is_collaborative?: boolean | null
           permanent_shuffle?: boolean | null
           title?: string
           updated_at?: string
@@ -198,7 +299,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_editing_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

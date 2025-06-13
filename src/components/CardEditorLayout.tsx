@@ -8,7 +8,9 @@ import { TopSettingsBar } from './TopSettingsBar';
 import { ConsolidatedToolbar } from './ConsolidatedToolbar';
 import { EnhancedSetOverview } from './EnhancedSetOverview';
 import { Navigation } from './Navigation';
+import { CollaborationDialog } from './collaboration/CollaborationDialog';
 import { Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
+import { CollaboratorInfo } from '@/hooks/useCollaborativeEditing';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CardEditorLayoutProps {
@@ -54,6 +56,11 @@ interface CardEditorLayoutProps {
   onShowCardOverview?: () => void;
   onFitToView?: () => void;
   onOpenFullscreen?: () => void;
+  // Collaboration props
+  isCollaborative?: boolean;
+  collaborators?: CollaboratorInfo[];
+  onInviteCollaborator?: (email: string, role: 'editor' | 'viewer') => Promise<boolean>;
+  onEnableCollaboration?: () => Promise<boolean>;
 }
 
 export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
@@ -99,6 +106,11 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   onShowCardOverview,
   onFitToView,
   onOpenFullscreen,
+  // Collaboration props
+  isCollaborative = false,
+  collaborators = [],
+  onInviteCollaborator,
+  onEnableCollaboration,
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
@@ -168,6 +180,16 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
           showCardOverview={showCardOverview}
           onDeckTitleChange={onDeckTitleChange}
           onShowCardOverviewChange={onShowCardOverviewChange}
+          collaborationDialog={
+            onInviteCollaborator && onEnableCollaboration ? (
+              <CollaborationDialog
+                collaborators={collaborators}
+                isCollaborative={isCollaborative}
+                onInviteCollaborator={onInviteCollaborator}
+                onEnableCollaboration={onEnableCollaboration}
+              />
+            ) : undefined
+          }
         />
         
         <TopSettingsBar

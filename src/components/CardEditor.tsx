@@ -5,8 +5,11 @@ import { useCardEditorState } from '@/hooks/useCardEditorState';
 import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useCardEditorHandlers } from '@/hooks/useCardEditorHandlers';
+import { useCollaborativeEditing } from '@/hooks/useCollaborativeEditing';
 import { CardEditorLayout } from './CardEditorLayout';
 import { FullscreenEditor } from './FullscreenEditor';
+import { CollaborationIndicator } from './collaboration/CollaborationIndicator';
+import { CollaborationDialog } from './collaboration/CollaborationDialog';
 import { CanvasElement } from '@/types/flashcard';
 import { useTemplateConfiguration } from '@/hooks/useTemplateConfiguration';
 
@@ -44,6 +47,19 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   } = useCardEditor();
 
   const currentCard = cards[currentCardIndex];
+
+  // Initialize collaborative editing
+  const {
+    activeUsers,
+    collaborators,
+    isCollaborative,
+    updateUserPosition,
+    inviteCollaborator,
+    enableCollaboration,
+  } = useCollaborativeEditing({
+    setId: setId || '',
+    cardId: currentCard?.id,
+  });
 
   const {
     showShortcuts,
@@ -150,6 +166,13 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     setShowCardOverview,
   });
 
+  // Update user position when card changes
+  useEffect(() => {
+    if (currentCard && updateUserPosition) {
+      updateUserPosition(currentCard.id);
+    }
+  }, [currentCard?.id, updateUserPosition]);
+
   const handleDeleteCard = async () => {
     if (currentCard) {
       return await deleteCard(currentCard.id);
@@ -213,6 +236,18 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
 
   return (
     <div className="flex flex-col h-screen">
+      {/* Collaboration Indicator */}
+      {isCollaborative && (
+        <div className="absolute top-20 right-4 z-50">
+          <CollaborationIndicator
+            activeUsers={activeUsers}
+            collaborators={collaborators}
+            currentCardId={currentCard.id}
+            isCollaborative={isCollaborative}
+          />
+        </div>
+      )}
+
       <CardEditorLayout
         cards={cards}
         currentCard={currentCard}
@@ -256,6 +291,11 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         onShowCardOverview={() => setShowCardOverview(!showCardOverview)}
         onFitToView={fitToView}
         onOpenFullscreen={handleOpenFullscreen}
+        // Collaboration props
+        isCollaborative={isCollaborative}
+        collaborators={collaborators}
+        onInviteCollaborator={inviteCollaborator}
+        onEnableCollaboration={enableCollaboration}
       />
       
       <FullscreenEditor
