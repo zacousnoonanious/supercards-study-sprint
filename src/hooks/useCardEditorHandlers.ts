@@ -14,6 +14,7 @@ interface UseCardEditorHandlersProps {
   navigateCard: (direction: 'prev' | 'next') => void;
   setCurrentSide: (side: 'front' | 'back') => void;
   updateCard: (cardId: string, updates: Partial<Flashcard>) => Promise<void>;
+  updateCanvasSize: (width: number, height: number) => Promise<void>;
   isTextSelecting: boolean;
   set: any;
   setDeckName: (name: string) => void;
@@ -29,6 +30,7 @@ export const useCardEditorHandlers = ({
   navigateCard,
   setCurrentSide,
   updateCard,
+  updateCanvasSize,
   isTextSelecting,
   set,
   setDeckName,
@@ -160,13 +162,9 @@ export const useCardEditorHandlers = ({
   };
 
   const handleCanvasSizeChange = useCallback((width: number, height: number) => {
-    if (currentCard) {
-      updateCard(currentCard.id, { 
-        canvas_width: width, 
-        canvas_height: height 
-      });
-    }
-  }, [currentCard, updateCard]);
+    console.log('Canvas size change handler called:', width, height);
+    updateCanvasSize(width, height);
+  }, [updateCanvasSize]);
 
   const handleCardUpdate = useCallback((updates: Partial<Flashcard>) => {
     if (currentCard) {

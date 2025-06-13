@@ -109,6 +109,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     navigateCard,
     setCurrentSide,
     updateCard,
+    updateCanvasSize,
     isTextSelecting,
     set,
     setDeckName,
@@ -193,19 +194,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   useEffect(() => {
     setHasAppliedTemplateSettings(false);
   }, [currentCard?.id]);
-
-  const handleCanvasSizeChange = useCallback((width: number, height: number) => {
-    console.log('Canvas size change handler called:', width, height);
-    
-    // Update the card editor state
-    setCardWidth(width);
-    setCardHeight(height);
-    
-    // Update the database and local card state
-    if (updateCanvasSize) {
-      updateCanvasSize(width, height);
-    }
-  }, [setCardWidth, setCardHeight, updateCanvasSize]);
 
   if (loading) {
     return (

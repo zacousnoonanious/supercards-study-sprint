@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -548,6 +549,7 @@ export const useCardEditor = () => {
 
   // New function to handle canvas size changes
   const updateCanvasSize = async (width: number, height: number) => {
+    const currentCard = cards[currentCardIndex];
     if (!currentCard) return;
 
     try {
