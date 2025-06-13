@@ -1,7 +1,8 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface CollaborativeUser {
   id: string;
@@ -23,6 +24,17 @@ export interface CollaboratorInfo {
 interface UseCollaborativeEditingProps {
   setId: string;
   cardId?: string;
+}
+
+interface PresenceState {
+  [key: string]: Array<{
+    user_id: string;
+    user_name: string;
+    user_avatar?: string;
+    card_id?: string;
+    cursor_position?: any;
+    last_seen: string;
+  }>;
 }
 
 export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditingProps) => {
@@ -58,8 +70,8 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
 
           const userName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Anonymous User' : 'Anonymous User';
 
-          // Set up realtime channel
-          const channel = supabase.channel(`set-${setId}`, {
+          // Set up realtime channel with explicit typing
+          const channel: RealtimeChannel = supabase.channel(`set-${setId}`, {
             config: {
               presence: {
                 key: user.id,
@@ -67,23 +79,23 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
             },
           });
 
-          // Track user presence
+          // Track user presence with simplified event handling
           channel
             .on('presence', { event: 'sync' }, () => {
-              const state = channel.presenceState();
+              const state = channel.presenceState() as PresenceState;
               const users: CollaborativeUser[] = [];
               
               Object.keys(state).forEach((userId) => {
-                const presences = state[userId] as any[];
-                if (presences.length > 0) {
+                const presences = state[userId];
+                if (presences && presences.length > 0) {
                   const presence = presences[0];
                   users.push({
                     id: userId,
                     name: presence.user_name || 'Anonymous User',
-                    avatar: presence.user_avatar,
+                    avatar: presence.user_avatar || null,
                     cursor_position: presence.cursor_position,
                     card_id: presence.card_id,
-                    last_seen: new Date().toISOString(),
+                    last_seen: presence.last_seen || new Date().toISOString(),
                   });
                 }
               });
@@ -115,14 +127,14 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
               fetchCollaborators();
             });
 
-          await channel.subscribe(async (status) => {
+          const subscribeResult = await channel.subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
               // Track current user presence
               await channel.track({
                 user_id: user.id,
                 user_name: userName,
-                user_avatar: profile?.avatar_url,
-                card_id: cardId,
+                user_avatar: profile?.avatar_url || null,
+                card_id: cardId || null,
                 last_seen: new Date().toISOString(),
               });
             }
@@ -136,8 +148,8 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
               await channelRef.current.track({
                 user_id: user.id,
                 user_name: userName,
-                user_avatar: profile?.avatar_url,
-                card_id: cardId,
+                user_avatar: profile?.avatar_url || null,
+                card_id: cardId || null,
                 last_seen: new Date().toISOString(),
               });
             }
@@ -183,7 +195,7 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
           user_id: collab.user_id,
           role: collab.role,
           user_name: `${collab.profiles.first_name || ''} ${collab.profiles.last_name || ''}`.trim() || 'Anonymous User',
-          user_avatar: collab.profiles.avatar_url,
+          user_avatar: collab.profiles.avatar_url || undefined,
         }));
         
         setCollaborators(formattedCollaborators);
@@ -195,22 +207,26 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
 
   const updateUserPosition = async (cardId: string | null, cursorPosition?: any) => {
     if (channelRef.current && user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, avatar_url')
-        .eq('id', user.id)
-        .single();
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, avatar_url')
+          .eq('id', user.id)
+          .single();
 
-      const userName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Anonymous User' : 'Anonymous User';
+        const userName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Anonymous User' : 'Anonymous User';
 
-      await channelRef.current.track({
-        user_id: user.id,
-        user_name: userName,
-        user_avatar: profile?.avatar_url,
-        card_id: cardId,
-        cursor_position: cursorPosition,
-        last_seen: new Date().toISOString(),
-      });
+        await channelRef.current.track({
+          user_id: user.id,
+          user_name: userName,
+          user_avatar: profile?.avatar_url || null,
+          card_id: cardId,
+          cursor_position: cursorPosition,
+          last_seen: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('Error updating user position:', error);
+      }
     }
   };
 
