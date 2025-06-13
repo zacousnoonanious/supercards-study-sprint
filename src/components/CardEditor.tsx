@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -34,6 +33,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     addElement,
     updateElement,
     updateCard,
+    updateCanvasSize,
     deleteElement,
     navigateCard,
     createNewCard,
@@ -42,6 +42,8 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     deleteCard,
     reorderCards,
   } = useCardEditor();
+
+  const currentCard = cards[currentCardIndex];
 
   const {
     showShortcuts,
@@ -79,9 +81,8 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     canvasContainerRef,
     topSettingsBarRef,
     canvasViewportRef,
-  } = useCardEditorState();
+  } = useCardEditorState(currentCard);
 
-  const currentCard = cards[currentCardIndex];
   const selectedElement = currentCard ? 
     [...(currentCard.front_elements || []), ...(currentCard.back_elements || [])]
       .find(el => el.id === selectedElementId) || null : null;
@@ -192,6 +193,19 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   useEffect(() => {
     setHasAppliedTemplateSettings(false);
   }, [currentCard?.id]);
+
+  const handleCanvasSizeChange = useCallback((width: number, height: number) => {
+    console.log('Canvas size change handler called:', width, height);
+    
+    // Update the card editor state
+    setCardWidth(width);
+    setCardHeight(height);
+    
+    // Update the database and local card state
+    if (updateCanvasSize) {
+      updateCanvasSize(width, height);
+    }
+  }, [setCardWidth, setCardHeight, updateCanvasSize]);
 
   if (loading) {
     return (

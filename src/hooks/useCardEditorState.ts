@@ -1,7 +1,8 @@
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { Flashcard } from '@/types/flashcard';
 
-export const useCardEditorState = () => {
+export const useCardEditorState = (currentCard?: Flashcard) => {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showCardOverview, setShowCardOverview] = useState(false);
   const [deckName, setDeckName] = useState('');
@@ -22,6 +23,16 @@ export const useCardEditorState = () => {
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const topSettingsBarRef = useRef<HTMLDivElement>(null);
   const canvasViewportRef = useRef<HTMLDivElement>(null);
+
+  // Sync canvas dimensions with current card
+  useEffect(() => {
+    if (currentCard) {
+      const width = currentCard.canvas_width || 600;
+      const height = currentCard.canvas_height || 450;
+      setCardWidth(width);
+      setCardHeight(height);
+    }
+  }, [currentCard?.id, currentCard?.canvas_width, currentCard?.canvas_height]);
 
   return {
     showShortcuts,

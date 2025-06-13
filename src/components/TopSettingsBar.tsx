@@ -46,6 +46,11 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
   const bothSidesFlip = currentCard?.countdown_behavior_front === 'flip' && currentCard?.countdown_behavior_back === 'flip';
   const showFlipCount = bothSidesHaveTimers && bothSidesFlip;
 
+  const handleCanvasSizeChange = (width: number, height: number) => {
+    console.log('Canvas size change requested:', width, height);
+    onCanvasSizeChange(width, height);
+  };
+
   return (
     <div className={`border-b p-2 ${isDarkTheme ? 'bg-gray-800 border-gray-600' : 'bg-background border-border'}`}>
       <div className="flex items-center gap-4 flex-wrap">
@@ -53,7 +58,7 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
         <CanvasSizeControls
           canvasWidth={canvasWidth}
           canvasHeight={canvasHeight}
-          onCanvasSizeChange={onCanvasSizeChange}
+          onCanvasSizeChange={handleCanvasSizeChange}
         />
 
         <Separator orientation="vertical" className="h-8" />

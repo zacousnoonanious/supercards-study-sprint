@@ -546,6 +546,32 @@ export const useCardEditor = () => {
     }
   };
 
+  // New function to handle canvas size changes
+  const updateCanvasSize = async (width: number, height: number) => {
+    if (!currentCard) return;
+
+    try {
+      // Update local state immediately for responsive UI
+      setCards(prevCards => 
+        prevCards.map(card => 
+          card.id === currentCard.id 
+            ? { ...card, canvas_width: width, canvas_height: height }
+            : card
+        )
+      );
+
+      // Update database
+      await updateCard(currentCard.id, { 
+        canvas_width: width, 
+        canvas_height: height 
+      });
+
+      console.log('Canvas size updated:', width, height);
+    } catch (error) {
+      console.error('Error updating canvas size:', error);
+    }
+  };
+
   return {
     set,
     cards,
@@ -560,6 +586,7 @@ export const useCardEditor = () => {
     addElement,
     updateElement,
     updateCard,
+    updateCanvasSize,
     deleteElement,
     navigateCard,
     createNewCard,
