@@ -1,19 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganization } from '@/contexts/OrganizationContext';
-import { OrganizationSetup } from '@/components/OrganizationSetup';
+import { OptionalOrganizationSetup } from '@/components/OptionalOrganizationSetup';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Plus, BookOpen, Users, BarChart3 } from 'lucide-react';
+import { Plus, BookOpen, Users, BarChart3, Building, UserPlus } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const { currentOrganization, userOrganizations, isLoading } = useOrganization();
   const { t } = useI18n();
+  const [showOrgSetup, setShowOrgSetup] = useState(false);
 
   if (loading || isLoading) {
     return (
@@ -47,12 +48,12 @@ const Dashboard = () => {
     );
   }
 
-  // Show organization setup if user has no organizations
-  if (userOrganizations.length === 0) {
+  // Show organization setup if user wants to see it
+  if (showOrgSetup) {
     return (
       <>
         <Navigation />
-        <OrganizationSetup />
+        <OptionalOrganizationSetup onSkip={() => setShowOrgSetup(false)} />
       </>
     );
   }
@@ -72,6 +73,29 @@ const Dashboard = () => {
             }
           </p>
         </div>
+
+        {/* Show organization invitation banner for individual users */}
+        {userOrganizations.length === 0 && (
+          <Card className="mb-8 border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <Building className="h-8 w-8 text-primary" />
+                  <div>
+                    <h3 className="font-semibold">Ready to collaborate?</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Join or create an organization to work with your team on flashcard decks.
+                    </p>
+                  </div>
+                </div>
+                <Button onClick={() => setShowOrgSetup(true)}>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Get Started
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <Card>
@@ -150,6 +174,16 @@ const Dashboard = () => {
                   View All Decks
                 </Button>
               </Link>
+              {userOrganizations.length === 0 && (
+                <Button 
+                  variant="secondary" 
+                  className="w-full justify-start"
+                  onClick={() => setShowOrgSetup(true)}
+                >
+                  <Building className="mr-2 h-4 w-4" />
+                  Join or Create Organization
+                </Button>
+              )}
             </CardContent>
           </Card>
 

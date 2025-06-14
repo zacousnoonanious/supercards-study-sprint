@@ -10,19 +10,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, Building, Plus } from 'lucide-react';
+import { ChevronDown, Building, Plus, User } from 'lucide-react';
 import { CreateOrganizationDialog } from './CreateOrganizationDialog';
 
 export const OrganizationSelector: React.FC = () => {
   const { currentOrganization, userOrganizations, switchOrganization, userRole } = useOrganization();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  if (!currentOrganization && userOrganizations.length === 0) {
+  // If user has no organizations, show individual mode indicator
+  if (userOrganizations.length === 0) {
     return (
       <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <User className="w-4 h-4" />
+          <span className="hidden sm:inline">Individual Mode</span>
+        </Button>
         <Button onClick={() => setShowCreateDialog(true)} size="sm">
           <Plus className="w-4 h-4 mr-2" />
-          Create Organization
+          <span className="hidden sm:inline">Create Org</span>
         </Button>
         <CreateOrganizationDialog 
           open={showCreateDialog} 
