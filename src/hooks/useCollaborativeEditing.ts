@@ -37,6 +37,18 @@ interface PresenceState {
   }>;
 }
 
+// Define explicit types for database responses
+interface CollaboratorQueryResult {
+  id: string;
+  user_id: string;
+  role: string;
+  profiles: {
+    first_name: string | null;
+    last_name: string | null;
+    avatar_url: string | null;
+  };
+}
+
 export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditingProps) => {
   const { user } = useAuth();
   const [activeUsers, setActiveUsers] = useState<CollaborativeUser[]>([]);
@@ -70,8 +82,8 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
 
           const userName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Anonymous User' : 'Anonymous User';
 
-          // Set up realtime channel with explicit typing
-          const channel: RealtimeChannel = supabase.channel(`set-${setId}`, {
+          // Set up realtime channel
+          const channel = supabase.channel(`set-${setId}`, {
             config: {
               presence: {
                 key: user.id,
@@ -79,7 +91,7 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
             },
           });
 
-          // Track user presence with simplified event handling
+          // Track user presence
           channel
             .on('presence', { event: 'sync' }, () => {
               const state = channel.presenceState() as PresenceState;
@@ -127,7 +139,7 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
               fetchCollaborators();
             });
 
-          const subscribeResult = await channel.subscribe(async (status) => {
+          await channel.subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
               // Track current user presence
               await channel.track({
@@ -190,13 +202,22 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
         .not('accepted_at', 'is', null);
 
       if (collaboratorsData) {
-        const formattedCollaborators: CollaboratorInfo[] = collaboratorsData.map((collab: any) => ({
-          id: collab.id,
-          user_id: collab.user_id,
-          role: collab.role,
-          user_name: `${collab.profiles.first_name || ''} ${collab.profiles.last_name || ''}`.trim() || 'Anonymous User',
-          user_avatar: collab.profiles.avatar_url || undefined,
-        }));
+        // Explicitly type the mapping operation to avoid infinite recursion
+        const formattedCollaborators: CollaboratorInfo[] = [];
+        
+        for (const collab of collaboratorsData as CollaboratorQueryResult[]) {
+          const firstName = collab.profiles.first_name || '';
+          const lastName = collab.profiles.last_name || '';
+          const fullName = `${firstName} ${lastName}`.trim() || 'Anonymous User';
+          
+          formattedCollaborators.push({
+            id: collab.id,
+            user_id: collab.user_id,
+            role: collab.role as 'owner' | 'editor' | 'viewer',
+            user_name: fullName,
+            user_avatar: collab.profiles.avatar_url || undefined,
+          });
+        }
         
         setCollaborators(formattedCollaborators);
       }
