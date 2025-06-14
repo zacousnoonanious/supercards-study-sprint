@@ -59,8 +59,8 @@ interface CardEditorLayoutProps {
   // Collaboration props
   isCollaborative?: boolean;
   collaborators?: CollaboratorInfo[];
-  onInviteCollaborator?: (email: string, role: 'editor' | 'viewer') => Promise<boolean>;
   onEnableCollaboration?: () => Promise<boolean>;
+  onRemoveCollaborator?: (collaboratorId: string) => Promise<boolean>;
 }
 
 export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
@@ -109,8 +109,8 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   // Collaboration props
   isCollaborative = false,
   collaborators = [],
-  onInviteCollaborator,
   onEnableCollaboration,
+  onRemoveCollaborator,
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
@@ -181,12 +181,13 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
           onDeckTitleChange={onDeckTitleChange}
           onShowCardOverviewChange={onShowCardOverviewChange}
           collaborationDialog={
-            onInviteCollaborator && onEnableCollaboration ? (
+            onEnableCollaboration ? (
               <CollaborationDialog
+                setId={currentCard.set_id}
                 collaborators={collaborators}
                 isCollaborative={isCollaborative}
-                onInviteCollaborator={onInviteCollaborator}
                 onEnableCollaboration={onEnableCollaboration}
+                onRemoveCollaborator={onRemoveCollaborator}
               />
             ) : undefined
           }

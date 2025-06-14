@@ -54,8 +54,8 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     collaborators,
     isCollaborative,
     updateUserPosition,
-    inviteCollaborator,
     enableCollaboration,
+    removeCollaborator,
   } = useCollaborativeEditing({
     setId: setId || '',
     cardId: currentCard?.id,
@@ -294,8 +294,8 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         // Collaboration props
         isCollaborative={isCollaborative}
         collaborators={collaborators}
-        onInviteCollaborator={inviteCollaborator}
         onEnableCollaboration={enableCollaboration}
+        onRemoveCollaborator={removeCollaborator}
       />
       
       <FullscreenEditor
