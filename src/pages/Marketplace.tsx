@@ -36,6 +36,7 @@ const Marketplace = () => {
   const [priceFilter, setPriceFilter] = useState('all');
   const [decks, setDecks] = useState<MarketplaceDeck[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -47,6 +48,11 @@ const Marketplace = () => {
 
   const fetchMarketplaceDecks = async () => {
     try {
+      setError(null);
+      setIsLoading(true);
+      
+      console.log('Fetching marketplace decks...');
+      
       // First, get the marketplace decks
       const { data: marketplaceDecks, error: decksError } = await supabase
         .from('marketplace_decks')
@@ -55,7 +61,12 @@ const Marketplace = () => {
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false });
 
-      if (decksError) throw decksError;
+      if (decksError) {
+        console.error('Error fetching marketplace decks:', decksError);
+        throw decksError;
+      }
+
+      console.log('Marketplace decks fetched:', marketplaceDecks?.length || 0);
 
       if (!marketplaceDecks || marketplaceDecks.length === 0) {
         setDecks([]);
@@ -64,6 +75,7 @@ const Marketplace = () => {
 
       // Get unique seller IDs
       const sellerIds = [...new Set(marketplaceDecks.map(deck => deck.seller_id))];
+      console.log('Fetching profiles for seller IDs:', sellerIds);
 
       // Fetch seller profiles separately
       const { data: profiles, error: profilesError } = await supabase
@@ -73,7 +85,10 @@ const Marketplace = () => {
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
+        // Don't throw here, just continue without seller names
       }
+
+      console.log('Profiles fetched:', profiles?.length || 0);
 
       // Combine the data
       const decksWithSellerNames = marketplaceDecks.map(deck => {
@@ -87,8 +102,10 @@ const Marketplace = () => {
       });
 
       setDecks(decksWithSellerNames);
+      console.log('Final decks set:', decksWithSellerNames.length);
     } catch (error) {
       console.error('Error fetching marketplace decks:', error);
+      setError('Failed to load marketplace decks');
       toast.error('Failed to load marketplace decks');
     } finally {
       setIsLoading(false);
@@ -99,6 +116,8 @@ const Marketplace = () => {
     if (!user) return;
 
     try {
+      console.log('Purchasing deck:', deckId, 'for price:', price);
+      
       // For now, simulate a purchase - in production you'd integrate with Stripe
       const { error } = await supabase
         .from('marketplace_purchases')
@@ -109,7 +128,10 @@ const Marketplace = () => {
           status: 'completed'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Purchase error:', error);
+        throw error;
+      }
 
       // Update download count manually
       const { data: currentDeck } = await supabase
@@ -129,10 +151,10 @@ const Marketplace = () => {
       // Refresh the data to show updated download count
       fetchMarketplaceDecks();
     } catch (error: any) {
+      console.error('Error purchasing deck:', error);
       if (error.code === '23505') {
         toast.error('You have already purchased this deck');
       } else {
-        console.error('Error purchasing deck:', error);
         toast.error('Failed to purchase deck');
       }
     }
@@ -159,7 +181,25 @@ const Marketplace = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <div className="text-center">Loading marketplace...</div>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Loading marketplace...</h2>
+            <p className="text-muted-foreground">Please wait while we fetch the latest decks</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4 text-destructive">Error Loading Marketplace</h2>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={fetchMarketplaceDecks}>Try Again</Button>
+          </div>
         </main>
       </div>
     );
@@ -265,10 +305,14 @@ const Marketplace = () => {
           ))}
         </div>
 
-        {filteredDecks.length === 0 && searchTerm && (
+        {filteredDecks.length === 0 && !isLoading && (
           <div className="text-center py-8">
-            <h3 className="text-lg font-medium text-foreground mb-2">{t('marketplace.noResults')}</h3>
-            <p className="text-muted-foreground">{t('marketplace.noResultsMessage')}</p>
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              {searchTerm ? t('marketplace.noResults') : 'No decks available'}
+            </h3>
+            <p className="text-muted-foreground">
+              {searchTerm ? t('marketplace.noResultsMessage') : 'Be the first to list a deck for sale!'}
+            </p>
           </div>
         )}
       </main>
