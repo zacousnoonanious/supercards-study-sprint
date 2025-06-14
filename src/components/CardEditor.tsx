@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -242,9 +243,9 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Collaboration Indicator */}
+      {/* Collaboration Indicator - moved to top */}
       {isCollaborative && (
-        <div className="absolute top-20 right-4 z-50">
+        <div className="absolute top-4 right-4 z-50">
           <CollaborationIndicator
             activeUsers={activeUsers}
             collaborators={collaborators}

@@ -40,7 +40,7 @@ export const CollaborationIndicator: React.FC<CollaborationIndicatorProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-2 p-2 bg-background/80 backdrop-blur-sm rounded-lg border">
+    <div className="flex items-center gap-2 p-2 bg-background/95 backdrop-blur-sm rounded-lg border shadow-sm">
       <Users className="w-4 h-4 text-muted-foreground" />
       
       {/* Users on current card */}
