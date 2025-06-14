@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -8,6 +9,7 @@ import { UserDropdown } from '@/components/UserDropdown';
 import { StudyContent } from '@/components/study/StudyContent';
 import { StudySettingsDialog } from '@/components/study/StudySettingsDialog';
 import { StudyHeader } from '@/components/study/StudyHeader';
+import { BottomToolbar } from '@/components/BottomToolbar';
 import { useStudyMode } from '@/hooks/useStudyMode';
 
 const StudyMode = () => {
@@ -33,7 +35,6 @@ const StudyMode = () => {
     setFlipCount,
     getActiveTimer,
     fetchSetAndCards,
-    applyStudySettings,
     handleNavigate,
     handleFlipCard,
     handleTimeUp,
@@ -57,10 +58,8 @@ const StudyMode = () => {
     }
   }, [user, setId, navigate]);
 
-  // Remove the redundant applyStudySettings call since it's now handled in fetchSetAndCards
   useEffect(() => {
     console.log('StudyMode: Cards changed, shuffledCards length:', shuffledCards.length);
-    // Study settings are now applied automatically in fetchSetAndCards
   }, [shuffledCards, shuffle, mode]);
 
   // Timer effect for advanced countdown functionality
@@ -242,6 +241,36 @@ const StudyMode = () => {
           </div>
         </div>
       )}
+
+      {/* Add BottomToolbar with navigation props */}
+      <BottomToolbar
+        zoom={1}
+        showGrid={false}
+        snapToGrid={false}
+        showBorder={false}
+        toolbarPosition="floating"
+        toolbarIsDocked={true}
+        toolbarShowText={true}
+        onZoomChange={() => {}}
+        onShowGridChange={() => {}}
+        onSnapToGridChange={() => {}}
+        onShowBorderChange={() => {}}
+        onToolbarPositionChange={() => {}}
+        onToolbarDockChange={() => {}}
+        onToolbarShowTextChange={() => {}}
+        currentSide={showAnswer ? 'back' : 'front'}
+        onCardSideChange={(side) => {
+          if (side === 'back' && !showAnswer) {
+            handleFlipCard();
+          } else if (side === 'front' && showAnswer) {
+            handleFlipCard();
+          }
+        }}
+        isBackSideDisabled={false}
+        currentCardIndex={currentCardIndex}
+        totalCards={shuffledCards.length}
+        onNavigateCard={handleNavigate}
+      />
 
       <StudySettingsDialog
         open={showSettings}
