@@ -45,6 +45,7 @@ function App() {
                       <Route path="/set/:id" element={<SetView />} />
                       <Route path="/study/:id" element={<StudyMode />} />
                       <Route path="/sets/:id/study" element={<StudyMode />} />
+                      <Route path="/set/:id/study" element={<StudyMode />} />
                       <Route path="/sets/:id/cards" element={<CardEditorPage />} />
                       <Route path="/sets/:id/cards/:cardId" element={<CardEditorPage />} />
                       <Route path="/profile" element={<Profile />} />
