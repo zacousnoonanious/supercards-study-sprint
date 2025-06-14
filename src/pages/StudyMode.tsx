@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -99,6 +98,7 @@ const StudyMode = () => {
   // Keyboard navigation useEffect
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in input fields
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -108,40 +108,50 @@ const StudyMode = () => {
       switch (e.key) {
         case 'ArrowLeft':
           e.preventDefault();
+          e.stopPropagation();
           if (currentCardIndex > 0) {
+            console.log('Keyboard: Navigate to previous card');
             handleNavigate('prev');
           }
           break;
         case 'ArrowRight':
           e.preventDefault();
+          e.stopPropagation();
           if (currentCardIndex < shuffledCards.length - 1) {
+            console.log('Keyboard: Navigate to next card');
             handleNavigate('next');
           }
           break;
         case 'ArrowUp':
           e.preventDefault();
+          e.stopPropagation();
           if (!showAnswer && currentCard?.card_type !== 'quiz-only') {
+            console.log('Keyboard: Flip card (up arrow)');
             handleFlipCard();
           }
           break;
         case 'ArrowDown':
           e.preventDefault();
+          e.stopPropagation();
           if (showAnswer && currentCard?.card_type !== 'quiz-only') {
+            console.log('Keyboard: Flip card (down arrow)');
             handleFlipCard();
           }
           break;
         case ' ':
           e.preventDefault();
+          e.stopPropagation();
           if (currentCard?.card_type !== 'quiz-only') {
+            console.log('Keyboard: Flip card (spacebar)');
             handleFlipCard();
           }
           break;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentCardIndex, shuffledCards.length, showAnswer, shuffledCards]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [currentCardIndex, shuffledCards.length, showAnswer, shuffledCards, handleNavigate, handleFlipCard]);
 
   console.log('StudyMode: Rendering. Loading:', loading, 'Set:', !!set, 'Cards:', shuffledCards.length, 'Current card:', !!currentCard);
 
