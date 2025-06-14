@@ -49,9 +49,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
 
   // Initialize the editor when setId is provided
   useEffect(() => {
-    console.log('CardEditor: setId changed:', setId);
     if (setId) {
-      console.log('CardEditor: Initializing editor with setId:', setId);
       initializeEditor(setId);
     }
   }, [setId, initializeEditor]);
