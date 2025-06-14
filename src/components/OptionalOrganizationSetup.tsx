@@ -14,7 +14,6 @@ interface OptionalOrganizationSetupProps {
 export const OptionalOrganizationSetup: React.FC<OptionalOrganizationSetupProps> = ({ onSkip }) => {
   const { userOrganizations, isLoading } = useOrganization();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showJoinDialog, setShowJoinDialog] = useState(false);
 
   if (isLoading) {
     return (
@@ -77,14 +76,14 @@ export const OptionalOrganizationSetup: React.FC<OptionalOrganizationSetupProps>
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => setShowJoinDialog(true)}
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  Join with Invite Code
-                </Button>
+                <JoinDeckDialog 
+                  trigger={
+                    <Button variant="outline" className="w-full">
+                      <Users className="w-4 h-4 mr-2" />
+                      Join with Invite Code
+                    </Button>
+                  }
+                />
               </CardContent>
             </Card>
           </div>
@@ -133,11 +132,6 @@ export const OptionalOrganizationSetup: React.FC<OptionalOrganizationSetupProps>
       <CreateOrganizationDialog 
         open={showCreateDialog} 
         onOpenChange={setShowCreateDialog} 
-      />
-      
-      <JoinDeckDialog 
-        open={showJoinDialog} 
-        onOpenChange={setShowJoinDialog} 
       />
     </div>
   );
