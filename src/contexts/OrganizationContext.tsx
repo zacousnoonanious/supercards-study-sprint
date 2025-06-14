@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
@@ -231,28 +232,35 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           user_id,
           role,
           pending_reason,
-          created_at,
-          profiles!user_id (first_name, last_name)
+          created_at
         `)
         .eq('organization_id', currentOrganization.id)
         .eq('status', 'pending_approval');
 
       if (error) throw error;
 
-      // Get user emails from auth.users (we need a separate approach for this)
-      const userIds = data?.map(d => d.user_id) || [];
-      
-      if (userIds.length > 0) {
-        // Since we can't directly query auth.users from the client,
-        // we'll create the pending data without emails for now
-        // In a production app, you'd want to store emails in profiles or use a server function
-        const pendingData = data?.map(approval => ({
-          ...approval,
-          organization_name: currentOrganization.name,
-          first_name: approval.profiles?.first_name || '',
-          last_name: approval.profiles?.last_name || '',
-          email: 'Email not available' // Placeholder - in production, store email in profiles
-        })) || [];
+      if (data && data.length > 0) {
+        // Fetch profiles separately to avoid join issues
+        const userIds = data.map(d => d.user_id);
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.warn('Could not fetch profiles:', profilesError);
+        }
+
+        const pendingData = data.map(approval => {
+          const profile = profiles?.find(p => p.id === approval.user_id);
+          return {
+            ...approval,
+            organization_name: currentOrganization.name,
+            first_name: profile?.first_name || '',
+            last_name: profile?.last_name || '',
+            email: 'Email not available' // Placeholder - in production, store email in profiles
+          };
+        });
 
         setPendingApprovals(pendingData);
       } else {
