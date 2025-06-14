@@ -31,11 +31,12 @@ export const SetViewHeader: React.FC<SetViewHeaderProps> = ({
   const { t } = useI18n();
 
   const handleStartStudy = () => {
+    console.log('Navigating to study mode for set:', setId);
     navigate(`/study/${setId}`);
   };
 
   const handleOpenEditor = () => {
-    // Navigate to the first card in editor mode
+    console.log('Navigating to visual editor for set:', setId);
     navigate(`/sets/${setId}/cards`);
   };
 
