@@ -8,8 +8,6 @@ import { useCardEditorHandlers } from '@/hooks/useCardEditorHandlers';
 import { useCollaborativeEditing } from '@/hooks/useCollaborativeEditing';
 import { CardEditorLayout } from './CardEditorLayout';
 import { FullscreenEditor } from './FullscreenEditor';
-import { CollaborationIndicator } from './collaboration/CollaborationIndicator';
-import { CollaborationDialog } from './collaboration/CollaborationDialog';
 import { CanvasElement } from '@/types/flashcard';
 import { useTemplateConfiguration } from '@/hooks/useTemplateConfiguration';
 
@@ -242,18 +240,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Collaboration Indicator - moved to top */}
-      {isCollaborative && (
-        <div className="absolute top-4 right-4 z-50">
-          <CollaborationIndicator
-            activeUsers={activeUsers}
-            collaborators={collaborators}
-            currentCardId={currentCard.id}
-            isCollaborative={isCollaborative}
-          />
-        </div>
-      )}
-
       <CardEditorLayout
         cards={cards}
         currentCard={currentCard}
