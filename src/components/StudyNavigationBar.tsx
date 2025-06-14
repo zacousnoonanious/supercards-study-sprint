@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, RotateCcw, Timer } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface StudyNavigationBarProps {
@@ -28,123 +27,72 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
 }) => {
   const { t } = useI18n();
   const [timeLeft, setTimeLeft] = useState(countdownTimer);
-  const [isActive, setIsActive] = useState(false);
-  const [animationKey, setAnimationKey] = useState(0);
 
   useEffect(() => {
     if (countdownTimer > 0) {
       setTimeLeft(countdownTimer);
-      setIsActive(true);
-      // Force re-render of progress bar with new animation
-      setAnimationKey(prev => prev + 1);
-    } else {
-      setIsActive(false);
-    }
-  }, [countdownTimer, currentIndex, showAnswer]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    
-    if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((time) => {
-          if (time <= 1) {
-            setIsActive(false);
+      
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
             onTimeUp?.();
             return 0;
           }
-          return time - 1;
+          return prev - 1;
         });
       }, 1000);
-    } else if (!isActive) {
-      if (interval) clearInterval(interval);
-    }
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isActive, timeLeft, onTimeUp]);
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
+      return () => clearInterval(timer);
+    }
+  }, [countdownTimer, onTimeUp]);
 
   return (
-    <div className="bg-card border-t border-border p-4">
-      <style>
-        {`
-          @keyframes slideProgress {
-            from {
-              transform: translateX(-100%);
-            }
-            to {
-              transform: translateX(0%);
-            }
-          }
-        `}
-      </style>
-      {countdownTimer > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Timer className="w-4 h-4" />
-              <span>{t('common.timeRemaining')}: {formatTime(timeLeft)}</span>
-            </div>
-          </div>
-          <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
-            <div 
-              key={animationKey}
-              className="h-full bg-primary rounded-full transition-all ease-linear"
-              style={{
-                width: '100%',
-                transform: 'translateX(-100%)',
-                animation: isActive ? `slideProgress ${countdownTimer}s linear forwards` : 'none'
-              }}
-            />
-          </div>
-        </div>
-      )}
-      
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onNavigate('prev')}
-            disabled={!allowNavigation || currentIndex === 0}
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline ml-1">{t('common.previous')}</span>
-          </Button>
-          
-          <span className="text-sm font-medium px-3">
+    <div className="border-t bg-background p-4">
+      <div className="flex items-center justify-between max-w-4xl mx-auto">
+        {/* Previous Button */}
+        <Button
+          variant="outline"
+          onClick={() => onNavigate('prev')}
+          disabled={!allowNavigation || currentIndex <= 0}
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          {t('study.previousCard')}
+        </Button>
+
+        {/* Center: Card Counter and Front/Back Toggle */}
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground">
             {currentIndex + 1} / {totalCards}
           </span>
           
+          {/* Single Toggleable Front/Back Button */}
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onNavigate('next')}
-            disabled={!allowNavigation || currentIndex === totalCards - 1}
-          >
-            <span className="hidden sm:inline mr-1">{t('common.next')}</span>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button
-            variant="default"
-            size="sm"
+            variant={showAnswer ? "default" : "outline"}
             onClick={onFlipCard}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 min-w-[100px]"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>{showAnswer ? t('study.showQuestion') : t('study.revealAnswer')}</span>
+            {showAnswer ? 'Back' : 'Front'}
           </Button>
+
+          {countdownTimer > 0 && timeLeft > 0 && (
+            <div className="text-sm text-muted-foreground">
+              {timeLeft}s
+            </div>
+          )}
         </div>
+
+        {/* Next Button */}
+        <Button
+          variant="outline"
+          onClick={() => onNavigate('next')}
+          disabled={!allowNavigation || currentIndex >= totalCards - 1}
+          className="flex items-center gap-2"
+        >
+          {t('study.nextCard')}
+          <ChevronRight className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );

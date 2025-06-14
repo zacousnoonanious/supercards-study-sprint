@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -44,7 +43,6 @@ const StudyMode = () => {
     setId
   } = useStudyMode();
 
-  // Move all useEffect hooks to the top, before any conditional logic
   useEffect(() => {
     console.log('StudyMode: useEffect - user:', !!user, 'setId:', setId);
     if (!user) {
@@ -62,7 +60,6 @@ const StudyMode = () => {
     console.log('StudyMode: Cards changed, shuffledCards length:', shuffledCards.length);
   }, [shuffledCards, shuffle, mode]);
 
-  // Timer effect for advanced countdown functionality
   useEffect(() => {
     if (!currentCard) return;
 
@@ -84,7 +81,6 @@ const StudyMode = () => {
     }
   }, [currentCard, showAnswer, currentCardIndex]);
 
-  // Reset flip count when card changes
   useEffect(() => {
     setFlipCount(0);
     if (setCurrentTimer) {
@@ -92,7 +88,6 @@ const StudyMode = () => {
     }
   }, [currentCardIndex]);
 
-  // Keyboard navigation useEffect
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if user is typing in input fields
@@ -241,36 +236,6 @@ const StudyMode = () => {
           </div>
         </div>
       )}
-
-      {/* Add BottomToolbar with navigation props */}
-      <BottomToolbar
-        zoom={1}
-        showGrid={false}
-        snapToGrid={false}
-        showBorder={false}
-        toolbarPosition="floating"
-        toolbarIsDocked={true}
-        toolbarShowText={true}
-        onZoomChange={() => {}}
-        onShowGridChange={() => {}}
-        onSnapToGridChange={() => {}}
-        onShowBorderChange={() => {}}
-        onToolbarPositionChange={() => {}}
-        onToolbarDockChange={() => {}}
-        onToolbarShowTextChange={() => {}}
-        currentSide={showAnswer ? 'back' : 'front'}
-        onCardSideChange={(side) => {
-          if (side === 'back' && !showAnswer) {
-            handleFlipCard();
-          } else if (side === 'front' && showAnswer) {
-            handleFlipCard();
-          }
-        }}
-        isBackSideDisabled={false}
-        currentCardIndex={currentCardIndex}
-        totalCards={shuffledCards.length}
-        onNavigateCard={handleNavigate}
-      />
 
       <StudySettingsDialog
         open={showSettings}

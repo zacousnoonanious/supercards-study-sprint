@@ -2,7 +2,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { CardSideToggle } from './CardSideToggle';
 import { CardBorderToggle } from './settings/CardBorderToggle';
 import { GridControls } from './settings/GridControls';
 import { ZoomIn, ZoomOut, Maximize2, Maximize } from 'lucide-react';
@@ -58,18 +57,9 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
     <div className="border-t bg-background p-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {/* Card Side Toggle */}
-          <CardSideToggle
-            currentSide={currentSide}
-            onSideChange={onCardSideChange}
-            isBackDisabled={isBackSideDisabled}
-          />
-
-          {/* Only show other controls if we're not in study mode (when navigation is present) */}
+          {/* Only show editor controls if we're not in study mode (when navigation is present) */}
           {!onNavigateCard && (
             <>
-              <Separator orientation="vertical" className="h-6" />
-
               {/* Grid Controls */}
               <GridControls
                 showGrid={showGrid}
