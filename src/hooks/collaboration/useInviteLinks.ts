@@ -34,7 +34,14 @@ export const useInviteLinks = ({ setId }: UseInviteLinksProps) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setInviteLinks(data || []);
+      
+      // Cast the data to ensure proper typing
+      const typedData: InviteLink[] = (data || []).map(link => ({
+        ...link,
+        role: link.role as 'editor' | 'viewer'
+      }));
+      
+      setInviteLinks(typedData);
     } catch (error) {
       console.error('Error fetching invite links:', error);
     }

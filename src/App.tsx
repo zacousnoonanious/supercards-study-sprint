@@ -1,11 +1,12 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Home from './pages/Home';
+import Index from './pages/Index';
 import Decks from './pages/Decks';
 import SetView from './pages/SetView';
-import EditCards from './pages/EditCards';
+import CardEditorPage from './pages/CardEditorPage';
 import CreateSet from './pages/CreateSet';
-import Study from './pages/Study';
+import StudyMode from './pages/StudyMode';
 import Auth from './pages/Auth';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -16,12 +17,12 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Index />} />
           <Route path="/decks" element={<Decks />} />
           <Route path="/set/:id" element={<SetView />} />
-          <Route path="/edit-cards/:id" element={<EditCards />} />
+          <Route path="/edit-cards/:id" element={<CardEditorPage />} />
           <Route path="/create-set" element={<CreateSet />} />
-          <Route path="/study/:id" element={<Study />} />
+          <Route path="/study/:id" element={<StudyMode />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/invite/:inviteToken" element={<JoinDeck />} />
         </Routes>
