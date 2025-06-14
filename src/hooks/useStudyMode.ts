@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -66,6 +67,33 @@ export const useStudyMode = () => {
     } else {
       return frontTimer || globalTimer;
     }
+  };
+
+  const shuffleArray = (array: any[]) => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  };
+
+  const applyStudySettings = (cardsToShuffle: Flashcard[]) => {
+    console.log('StudyMode: Applying study settings. Cards count:', cardsToShuffle.length);
+    let cardPool = [...cardsToShuffle];
+
+    if (shuffle || set?.permanent_shuffle) {
+      console.log('StudyMode: Shuffling cards');
+      cardPool = shuffleArray([...cardPool]);
+    }
+
+    if (searchParams.get('startIndex')) {
+      const startIndex = parseInt(searchParams.get('startIndex') || '0', 10);
+      setCurrentCardIndex(startIndex);
+    }
+
+    console.log('StudyMode: Setting shuffled cards:', cardPool.length);
+    setShuffledCards(cardPool);
   };
 
   const fetchSetAndCards = async () => {
@@ -210,6 +238,9 @@ export const useStudyMode = () => {
       console.log('StudyMode: Transformed cards:', transformedCards.length);
       setCards(transformedCards);
       
+      // Apply study settings immediately with the fetched cards
+      applyStudySettings(transformedCards);
+      
     } catch (error) {
       console.error('StudyMode: Error in fetchSetAndCards:', error);
       toast({
@@ -220,33 +251,6 @@ export const useStudyMode = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const applyStudySettings = () => {
-    console.log('StudyMode: Applying study settings. Cards count:', cards.length);
-    let cardPool = [...cards];
-
-    if (shuffle || set?.permanent_shuffle) {
-      console.log('StudyMode: Shuffling cards');
-      cardPool = shuffleArray([...cardPool]);
-    }
-
-    if (searchParams.get('startIndex')) {
-      const startIndex = parseInt(searchParams.get('startIndex') || '0', 10);
-      setCurrentCardIndex(startIndex);
-    }
-
-    console.log('StudyMode: Setting shuffled cards:', cardPool.length);
-    setShuffledCards(cardPool);
-  };
-
-  const shuffleArray = (array: any[]) => {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
   };
 
   const handleNavigate = (direction: 'prev' | 'next') => {
@@ -319,6 +323,50 @@ export const useStudyMode = () => {
     }
   };
 
+  // Move all useEffect hooks to the top, before any conditional logic
+  useEffect(() => {
+    console.log('StudyMode: useEffect - user:', !!user, 'setId:', setId);
+    if (!user) {
+      console.log('StudyMode: No user, redirecting to auth');
+      navigate('/auth');
+      return;
+    }
+    if (setId) {
+      console.log('StudyMode: Fetching set and cards for setId:', setId);
+      fetchSetAndCards();
+    }
+  }, [user, setId, navigate]);
+
+  // Timer effect for advanced countdown functionality
+  useEffect(() => {
+    if (!currentCard) return;
+
+    const frontTimer = currentCard.countdown_timer_front || 0;
+    const backTimer = currentCard.countdown_timer_back || 0;
+    const currentTimerValue = showAnswer ? backTimer : frontTimer;
+
+    if (currentTimerValue > 0) {
+      const timer = setTimeout(() => {
+        handleTimeUp();
+      }, currentTimerValue * 1000);
+
+      setCurrentTimer(timer);
+
+      return () => {
+        clearTimeout(timer);
+        setCurrentTimer(null);
+      };
+    }
+  }, [currentCard, showAnswer, currentCardIndex]);
+
+  // Reset flip count when card changes
+  useEffect(() => {
+    setFlipCount(0);
+    if (setCurrentTimer) {
+      setCurrentTimer(null);
+    }
+  }, [currentCardIndex]);
+
   return {
     // State
     set,
@@ -351,7 +399,7 @@ export const useStudyMode = () => {
     // Methods
     getActiveTimer,
     fetchSetAndCards,
-    applyStudySettings,
+    applyStudySettings: (cards: Flashcard[]) => applyStudySettings(cards),
     handleNavigate,
     handleFlipCard,
     handleTimeUp,
