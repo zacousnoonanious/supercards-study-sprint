@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganization } from '@/contexts/OrganizationContext';
@@ -9,12 +9,53 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Plus, BookOpen, Users, BarChart3, Building, UserPlus } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
+import { supabase } from '@/integrations/supabase/client';
+import { RecentDecks } from '@/components/dashboard/RecentDecks';
+
+interface FlashcardSet {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const { currentOrganization, userOrganizations, isLoading } = useOrganization();
   const { t } = useI18n();
   const [showOrgSetup, setShowOrgSetup] = useState(false);
+  const [recentSets, setRecentSets] = useState<FlashcardSet[]>([]);
+  const [totalDecks, setTotalDecks] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
+
+  const fetchDashboardData = async () => {
+    try {
+      console.log('Fetching dashboard data for user:', user?.id);
+      
+      const { data, error } = await supabase
+        .from('flashcard_sets')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(3);
+
+      if (error) {
+        console.error('Error fetching dashboard data:', error);
+        return;
+      }
+      
+      console.log('Dashboard data fetched:', data);
+      setRecentSets(data || []);
+      setTotalDecks(data?.length || 0);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    }
+  };
 
   if (loading || isLoading) {
     return (
@@ -104,9 +145,9 @@ const Dashboard = () => {
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold">{totalDecks}</div>
               <p className="text-xs text-muted-foreground">
-                +0 from last month
+                Your flashcard decks
               </p>
             </CardContent>
           </Card>
@@ -154,6 +195,9 @@ const Dashboard = () => {
             </>
           )}
         </div>
+
+        {/* Add recent decks section */}
+        <RecentDecks recentSets={recentSets} />
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card>

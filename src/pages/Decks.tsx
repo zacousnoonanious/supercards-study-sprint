@@ -34,27 +34,24 @@ const Decks = () => {
       return;
     }
     fetchSets();
-  }, [user, navigate, currentOrganization]);
+  }, [user, navigate]);
 
   const fetchSets = async () => {
     try {
-      let query = supabase
+      console.log('Fetching sets for user:', user?.id);
+      
+      // Simplified query - just get user's sets based on RLS policies
+      const { data, error } = await supabase
         .from('flashcard_sets')
         .select('*')
         .order('updated_at', { ascending: false });
 
-      // If user has organization, show both personal and org decks
-      if (currentOrganization) {
-        // Show personal decks (no org) and current org decks
-        query = query.or(`organization_id.is.null,organization_id.eq.${currentOrganization.id}`);
-      } else {
-        // Show only personal decks
-        query = query.is('organization_id', null);
+      if (error) {
+        console.error('Error fetching sets:', error);
+        throw error;
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
+      
+      console.log('Sets fetched successfully:', data);
       setSets(data || []);
     } catch (error) {
       console.error('Error fetching sets:', error);
