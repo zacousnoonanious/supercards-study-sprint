@@ -133,11 +133,6 @@ const Decks = () => {
     );
   }
 
-  // Show organization setup if user has no organizations
-  if (userOrganizations.length === 0) {
-    return <OrganizationSetup />;
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
