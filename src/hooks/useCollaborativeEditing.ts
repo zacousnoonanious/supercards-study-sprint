@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -242,34 +243,33 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
     }
   };
 
-  const inviteCollaborator = async (email: string, role: 'editor' | 'viewer' = 'editor') => {
+  const inviteCollaborator = async (email: string, role: 'editor' | 'viewer' = 'editor'): Promise<boolean> => {
     try {
-      // Completely avoid complex type inference by using basic types
-      const profileResult = await supabase
+      // Use raw supabase client with explicit casting to avoid type inference
+      const { data: profileData, error: profileError } = await (supabase as any)
         .from('profiles')
         .select('id')
         .eq('email', email)
         .maybeSingle();
 
-      if (profileResult.error) {
-        console.error('Profile query error:', profileResult.error);
+      if (profileError) {
+        console.error('Profile query error:', profileError);
         return false;
       }
 
-      const profileData = profileResult.data;
       if (profileData?.id) {
-        const insertResult = await supabase
+        const { error: insertError } = await (supabase as any)
           .from('deck_collaborators')
           .insert({
             set_id: setId,
             user_id: profileData.id,
             role,
             invited_by: user?.id,
-            accepted_at: new Date().toISOString(), // Auto-accept for now
+            accepted_at: new Date().toISOString(),
           });
 
-        if (insertResult.error) {
-          console.error('Insert error:', insertResult.error);
+        if (insertError) {
+          console.error('Insert error:', insertError);
           return false;
         }
         
