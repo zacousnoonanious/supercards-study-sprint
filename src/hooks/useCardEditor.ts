@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +25,7 @@ export const useCardEditor = () => {
       return;
     }
 
+    console.log('useCardEditor: Initializing editor with setId:', providedSetId);
     setSetId(providedSetId);
     setLoading(true);
 
@@ -36,8 +38,11 @@ export const useCardEditor = () => {
         .single();
 
       if (setError) {
+        console.error('useCardEditor: Error fetching set:', setError);
         throw setError;
       }
+      
+      console.log('useCardEditor: Set fetched successfully:', setData);
       
       // Transform set data to match FlashcardSet interface
       const transformedSet: FlashcardSet = {
@@ -56,8 +61,11 @@ export const useCardEditor = () => {
         .order('created_at', { ascending: true });
 
       if (cardsError) {
+        console.error('useCardEditor: Error fetching cards:', cardsError);
         throw cardsError;
       }
+      
+      console.log('useCardEditor: Cards fetched successfully:', cardsData?.length || 0, 'cards');
       
       // Type cast the data to match our Flashcard interface
       const typedCards: Flashcard[] = (cardsData || []).map((card, index) => ({
@@ -85,19 +93,22 @@ export const useCardEditor = () => {
       if (cardId && typedCards.length > 0) {
         const cardIndex = typedCards.findIndex(card => card.id === cardId);
         if (cardIndex >= 0) {
+          console.log('useCardEditor: Setting card index to:', cardIndex);
           setCurrentCardIndex(cardIndex);
         } else {
           // Card not found, redirect to first card
           if (typedCards[0]) {
+            console.log('useCardEditor: Card not found, redirecting to first card');
             navigate(`/sets/${providedSetId}/cards/${typedCards[0].id}`, { replace: true });
           }
         }
       } else if (typedCards.length > 0) {
         // No specific card requested, go to first card
+        console.log('useCardEditor: No card specified, setting to first card');
         setCurrentCardIndex(0);
       }
     } catch (error) {
-      console.error('Error initializing editor:', error);
+      console.error('useCardEditor: Error initializing editor:', error);
     } finally {
       setLoading(false);
     }

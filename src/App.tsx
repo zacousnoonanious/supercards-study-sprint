@@ -73,6 +73,12 @@ function App() {
                         <Profile />
                       </ProtectedRoute>
                     } />
+                    {/* Fixed card editor routes - using setId instead of id to match CardEditorPage expectations */}
+                    <Route path="/sets/:setId/cards/:cardId?" element={
+                      <ProtectedRoute>
+                        <CardEditorPage />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/editor/:setId/:cardId?" element={
                       <ProtectedRoute>
                         <CardEditorPage />
