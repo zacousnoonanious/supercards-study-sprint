@@ -7,6 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { ChevronLeft, ChevronRight, MoreHorizontal, Eye } from 'lucide-react';
 import { Flashcard } from '@/types/flashcard';
 import { EditableDeckTitle } from './EditableDeckTitle';
+import { CollaborationIndicator } from './collaboration/CollaborationIndicator';
+import { CollaborativeUser, CollaboratorInfo } from '@/hooks/useCollaborativeEditing';
 
 interface TopToolbarProps {
   deckName: string;
@@ -17,6 +19,11 @@ interface TopToolbarProps {
   onDeckTitleChange: (title: string) => Promise<void>;
   onShowCardOverviewChange: (show: boolean) => void;
   collaborationDialog?: React.ReactNode;
+  // Collaboration props
+  activeUsers?: CollaborativeUser[];
+  collaborators?: CollaboratorInfo[];
+  currentCardId?: string;
+  isCollaborative?: boolean;
 }
 
 export const TopToolbar: React.FC<TopToolbarProps> = ({
@@ -28,6 +35,10 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   onDeckTitleChange,
   onShowCardOverviewChange,
   collaborationDialog,
+  activeUsers = [],
+  collaborators = [],
+  currentCardId,
+  isCollaborative = false,
 }) => {
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -45,6 +56,16 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Collaboration Indicator - inline */}
+        {isCollaborative && (
+          <CollaborationIndicator
+            activeUsers={activeUsers}
+            collaborators={collaborators}
+            currentCardId={currentCardId}
+            isCollaborative={isCollaborative}
+          />
+        )}
+        
         {collaborationDialog}
         
         <Button

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -303,6 +302,9 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         collaborators={collaborators}
         onEnableCollaboration={enableCollaboration}
         onRemoveCollaborator={removeCollaborator}
+        // Pass collaboration data to TopToolbar
+        activeUsers={activeUsers}
+        currentCardId={currentCard?.id}
       />
       
       <FullscreenEditor
