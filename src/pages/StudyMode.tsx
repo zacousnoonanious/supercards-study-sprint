@@ -27,7 +27,7 @@ interface FlashcardSet {
 }
 
 const StudyMode = () => {
-  const { setId } = useParams<{ setId: string }>();
+  const { id: setId } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -203,6 +203,8 @@ const StudyMode = () => {
 
   const fetchSetAndCards = async () => {
     try {
+      console.log('Fetching set and cards for setId:', setId);
+      
       // Fetch set details
       const { data: setData, error: setError } = await supabase
         .from('flashcard_sets')
@@ -210,7 +212,12 @@ const StudyMode = () => {
         .eq('id', setId)
         .single();
 
-      if (setError) throw setError;
+      if (setError) {
+        console.error('Error fetching set:', setError);
+        throw setError;
+      }
+      
+      console.log('Set data fetched:', setData);
       setSet(setData);
 
       // Fetch cards
@@ -220,7 +227,12 @@ const StudyMode = () => {
         .eq('set_id', setId)
         .order('created_at', { ascending: true });
 
-      if (cardsError) throw cardsError;
+      if (cardsError) {
+        console.error('Error fetching cards:', cardsError);
+        throw cardsError;
+      }
+      
+      console.log('Cards data fetched:', cardsData);
       
       // Transform the data to match our Flashcard interface
       const transformedCards: Flashcard[] = (cardsData || []).map((card, index) => ({
@@ -531,6 +543,107 @@ const StudyMode = () => {
       </Dialog>
     </div>
   );
+
+  // Helper functions
+  function applyStudySettings() {
+    let cardPool = [...cards];
+
+    if (shuffle || set?.permanent_shuffle) {
+      cardPool = shuffleArray([...cardPool]);
+    }
+
+    if (searchParams.get('startIndex')) {
+      const startIndex = parseInt(searchParams.get('startIndex') || '0', 10);
+      setCurrentCardIndex(startIndex);
+    }
+
+    setShuffledCards(cardPool);
+  }
+
+  function shuffleArray(array: any[]) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  }
+
+  function handleNavigate(direction: 'prev' | 'next') {
+    if (direction === 'prev' && currentCardIndex > 0) {
+      setCurrentCardIndex(currentCardIndex - 1);
+      setShowAnswer(false);
+      setUserAnswer('');
+      setAnswerResult(null);
+      setHasAnswered(false);
+      setFlipCount(0);
+    } else if (direction === 'next' && currentCardIndex < shuffledCards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1);
+      setShowAnswer(false);
+      setUserAnswer('');
+      setAnswerResult(null);
+      setHasAnswered(false);
+      setFlipCount(0);
+    }
+  }
+
+  function handleFlipCard() {
+    setShowAnswer(!showAnswer);
+  }
+
+  function handleTimeUp() {
+    if (!currentCard) return;
+    
+    const behavior = showAnswer ? 
+      (currentCard.countdown_behavior_back || 'next') : 
+      (currentCard.countdown_behavior_front || 'flip');
+
+    if (behavior === 'flip') {
+      if (!showAnswer) {
+        setShowAnswer(true);
+        setFlipCount(prev => prev + 1);
+      } else {
+        const maxFlipsForCard = currentCard.flips_before_next || 2;
+        if (flipCount < maxFlipsForCard - 1) {
+          setShowAnswer(false);
+          setFlipCount(prev => prev + 1);
+        } else {
+          handleNextCard();
+          setFlipCount(0);
+        }
+      }
+    } else {
+      handleNextCard();
+      setFlipCount(0);
+    }
+  }
+
+  function handleSettingsChange(newSettings: { shuffle: boolean; mode: 'flashcard' | 'quiz' | 'mixed' }) {
+    setShuffle(newSettings.shuffle);
+    setMode(newSettings.mode);
+    setShowSettings(false);
+  }
+
+  function handleAnswerSubmit(isCorrect: boolean) {
+    setHasAnswered(true);
+    setAnswerResult(isCorrect);
+  }
+
+  function handleNextCard() {
+    if (currentCardIndex < shuffledCards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1);
+      setShowAnswer(false);
+      setUserAnswer('');
+      setAnswerResult(null);
+      setHasAnswered(false);
+      setFlipCount(0);
+    } else {
+      toast({
+        title: t('study.deckComplete'),
+        description: t('study.deckCompleteMessage'),
+      });
+    }
+  }
 };
 
 export default StudyMode;
