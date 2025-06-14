@@ -14,6 +14,8 @@ export const useCollaboratorManager = ({ setId }: UseCollaboratorManagerProps) =
   const [isCollaborative, setIsCollaborative] = useState(false);
 
   const fetchCollaborators = async () => {
+    if (!setId) return;
+    
     try {
       const { data: collaboratorsData } = await supabase
         .from('deck_collaborators')
@@ -53,6 +55,8 @@ export const useCollaboratorManager = ({ setId }: UseCollaboratorManagerProps) =
   };
 
   const checkCollaborativeStatus = async () => {
+    if (!setId) return;
+    
     try {
       const { data: setData } = await supabase
         .from('flashcard_sets')
@@ -69,9 +73,11 @@ export const useCollaboratorManager = ({ setId }: UseCollaboratorManagerProps) =
   };
 
   const inviteCollaborator = async (email: string, role: 'editor' | 'viewer' = 'editor'): Promise<boolean> => {
+    if (!user || !setId) return false;
+    
     try {
-      // Use raw supabase client with explicit casting to avoid type inference
-      const { data: profileData, error: profileError } = await (supabase as any)
+      // First find the user by email
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
@@ -83,13 +89,13 @@ export const useCollaboratorManager = ({ setId }: UseCollaboratorManagerProps) =
       }
 
       if (profileData?.id) {
-        const { error: insertError } = await (supabase as any)
+        const { error: insertError } = await supabase
           .from('deck_collaborators')
           .insert({
             set_id: setId,
             user_id: profileData.id,
             role,
-            invited_by: user?.id,
+            invited_by: user.id,
             accepted_at: new Date().toISOString(),
           });
 
@@ -109,6 +115,8 @@ export const useCollaboratorManager = ({ setId }: UseCollaboratorManagerProps) =
   };
 
   const enableCollaboration = async () => {
+    if (!setId) return false;
+    
     try {
       const { error } = await supabase
         .from('flashcard_sets')

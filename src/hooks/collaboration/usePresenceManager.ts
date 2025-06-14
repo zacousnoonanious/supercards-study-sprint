@@ -17,7 +17,20 @@ export const usePresenceManager = ({ setId, cardId, isCollaborative }: UsePresen
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!user || !setId || !isCollaborative) return;
+    // Early return if conditions aren't met, but don't call hooks conditionally
+    if (!user || !setId || !isCollaborative) {
+      // Clean up existing connections if conditions change
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+        channelRef.current = null;
+      }
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current);
+        heartbeatIntervalRef.current = null;
+      }
+      setActiveUsers([]);
+      return;
+    }
 
     const initializePresence = async () => {
       try {
@@ -29,6 +42,11 @@ export const usePresenceManager = ({ setId, cardId, isCollaborative }: UsePresen
           .single();
 
         const userName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Anonymous User' : 'Anonymous User';
+
+        // Clean up existing channel before creating new one
+        if (channelRef.current) {
+          await channelRef.current.unsubscribe();
+        }
 
         // Set up realtime channel
         const channel = supabase.channel(`set-${setId}`, {
@@ -92,6 +110,11 @@ export const usePresenceManager = ({ setId, cardId, isCollaborative }: UsePresen
 
         channelRef.current = channel;
 
+        // Clean up existing heartbeat before setting new one
+        if (heartbeatIntervalRef.current) {
+          clearInterval(heartbeatIntervalRef.current);
+        }
+
         // Set up heartbeat to keep session alive
         const heartbeat = setInterval(async () => {
           if (channelRef.current) {
@@ -126,13 +149,12 @@ export const usePresenceManager = ({ setId, cardId, isCollaborative }: UsePresen
   const updateUserPosition = async (cardId: string | null, cursorPosition?: any) => {
     if (channelRef.current && user) {
       try {
-        const profileQuery = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('first_name, last_name, avatar_url')
           .eq('id', user.id)
           .single();
 
-        const profile = profileQuery.data;
         const userName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Anonymous User' : 'Anonymous User';
 
         await channelRef.current.track({
