@@ -124,6 +124,8 @@ export const useCardEditor = () => {
 
     try {
       const currentCard = cards[currentCardIndex];
+      console.log('useCardEditor: Saving card:', currentCard.id);
+      
       const { error } = await supabase
         .from('flashcards')
         .update({
@@ -134,6 +136,11 @@ export const useCardEditor = () => {
           back_elements: currentCard.back_elements as any,
           card_type: currentCard.card_type,
           countdown_timer: currentCard.countdown_timer,
+          countdown_timer_front: currentCard.countdown_timer_front,
+          countdown_timer_back: currentCard.countdown_timer_back,
+          countdown_behavior_front: currentCard.countdown_behavior_front,
+          countdown_behavior_back: currentCard.countdown_behavior_back,
+          flips_before_next: currentCard.flips_before_next,
           password: currentCard.password,
           canvas_width: currentCard.canvas_width,
           canvas_height: currentCard.canvas_height,
@@ -142,14 +149,16 @@ export const useCardEditor = () => {
         .eq('id', currentCard.id);
 
       if (error) throw error;
-      console.log('Card saved successfully');
+      console.log('useCardEditor: Card saved successfully');
     } catch (error) {
-      console.error('Error saving card:', error);
+      console.error('useCardEditor: Error saving card:', error);
     }
   };
 
   const updateCard = async (cardId: string, updates: Partial<Flashcard>) => {
     try {
+      console.log('useCardEditor: Updating card:', cardId, 'with updates:', Object.keys(updates));
+      
       // Prepare the update data for Supabase
       const updateData: any = {};
       
@@ -185,9 +194,9 @@ export const useCardEditor = () => {
         )
       );
 
-      console.log('Card updated successfully');
+      console.log('useCardEditor: Card updated successfully in database');
     } catch (error) {
-      console.error('Error updating card:', error);
+      console.error('useCardEditor: Error updating card:', error);
     }
   };
 
@@ -221,6 +230,8 @@ export const useCardEditor = () => {
   };
 
   const updateElement = (elementId: string, updates: Partial<CanvasElement>) => {
+    console.log('useCardEditor: Updating element:', elementId, 'with updates:', Object.keys(updates));
+    
     setCards(prevCards => {
       const newCards = [...prevCards];
       const currentCard = newCards[currentCardIndex];
@@ -243,6 +254,11 @@ export const useCardEditor = () => {
       
       return newCards;
     });
+
+    // Auto-save the card after element update
+    setTimeout(() => {
+      saveCard();
+    }, 500);
   };
 
   const deleteElement = (elementId: string) => {

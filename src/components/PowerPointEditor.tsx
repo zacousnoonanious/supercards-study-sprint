@@ -49,6 +49,9 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
   // Local state for real-time updates during interactions
   const [localElements, setLocalElements] = useState<CanvasElement[]>(elements);
   const [pendingUpdates, setPendingUpdates] = useState<Map<string, Partial<CanvasElement>>>(new Map());
+  
+  // Auto-save timer ref
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync external elements with local state
   useEffect(() => {
@@ -69,14 +72,52 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
       newMap.set(elementId, { ...existing, ...updates });
       return newMap;
     });
+
+    // Schedule auto-save
+    scheduleAutoSave();
+  }, []);
+
+  // Schedule auto-save with debouncing
+  const scheduleAutoSave = useCallback(() => {
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    
+    autoSaveTimerRef.current = setTimeout(() => {
+      savePendingUpdates();
+    }, 1000); // Save after 1 second of inactivity
   }, []);
 
   // Save pending updates to database
   const savePendingUpdates = useCallback(() => {
+    if (pendingUpdates.size === 0) return;
+    
+    console.log('PowerPointEditor: Saving pending updates:', pendingUpdates.size, 'elements');
+    
     pendingUpdates.forEach((updates, elementId) => {
       onUpdateElement(elementId, updates);
     });
     setPendingUpdates(new Map());
+    
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+  }, [pendingUpdates, onUpdateElement]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+      // Save any pending updates on unmount
+      if (pendingUpdates.size > 0) {
+        pendingUpdates.forEach((updates, elementId) => {
+          onUpdateElement(elementId, updates);
+        });
+      }
+    };
   }, [pendingUpdates, onUpdateElement]);
 
   // Snap to grid helper with precision levels
@@ -147,7 +188,14 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
       setShowPopupToolbar(false);
       setEditingElementId(null);
     }
-  }, [selectedElementId, localElements, copiedElement, editingElementId, onDeleteElement, onUpdateElement, onElementSelect]);
+
+    // Save changes (Ctrl+S)
+    if (e.ctrlKey && e.key === 's') {
+      e.preventDefault();
+      savePendingUpdates();
+      return;
+    }
+  }, [selectedElementId, localElements, copiedElement, editingElementId, onDeleteElement, onUpdateElement, onElementSelect, savePendingUpdates]);
 
   // Add keyboard event listeners
   useEffect(() => {
@@ -205,15 +253,13 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
   const handleMouseUp = useCallback(() => {
     if (isDragging) {
       setIsDragging(false);
-      // Save to database when dragging stops
-      savePendingUpdates();
+      console.log('PowerPointEditor: Drag ended, scheduling save');
     }
     if (isResizing) {
       setIsResizing(false);
-      // Save to database when resizing stops
-      savePendingUpdates();
+      console.log('PowerPointEditor: Resize ended, scheduling save');
     }
-  }, [isDragging, isResizing, savePendingUpdates]);
+  }, [isDragging, isResizing]);
 
   // Canvas resize handlers
   const handleCanvasResizeStart = useCallback((e: React.MouseEvent) => {
@@ -357,7 +403,11 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
 
   const handleTextBlur = useCallback(() => {
     setEditingElementId(null);
-    savePendingUpdates();
+    console.log('PowerPointEditor: Text editing ended, saving immediately');
+    // Save immediately when text editing ends
+    setTimeout(() => {
+      savePendingUpdates();
+    }, 100);
   }, [savePendingUpdates]);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
@@ -459,27 +509,30 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
             />
           )}
 
+          {/* Show save indicator when there are pending updates */}
+          {pendingUpdates.size > 0 && (
+            <div className="absolute top-2 right-2 bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
+              Saving... ({pendingUpdates.size} changes)
+            </div>
+          )}
+
           {currentElements.map((element) => (
             <ElementContextMenu
               key={element.id}
               onMoveUp={() => {
                 updateLocalElement(element.id, { zIndex: (element.zIndex || 0) + 1 });
-                savePendingUpdates();
               }}
               onMoveDown={() => {
                 if ((element.zIndex || 0) > 0) {
                   updateLocalElement(element.id, { zIndex: (element.zIndex || 0) - 1 });
-                  savePendingUpdates();
                 }
               }}
               onMoveToTop={() => {
                 const maxZ = Math.max(...currentElements.map(el => el.zIndex || 0));
                 updateLocalElement(element.id, { zIndex: maxZ + 1 });
-                savePendingUpdates();
               }}
               onMoveToBottom={() => {
                 updateLocalElement(element.id, { zIndex: 0 });
-                savePendingUpdates();
               }}
               onDuplicate={() => {
                 const newElement: CanvasElement = {
@@ -499,7 +552,6 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
               onRotate={() => {
                 const newRotation = ((element.rotation || 0) + 90) % 360;
                 updateLocalElement(element.id, { rotation: newRotation });
-                savePendingUpdates();
               }}
             >
               <div
@@ -633,7 +685,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
               <div className="text-center">
                 <p>No elements yet</p>
                 <p className="text-sm mt-2">Use the toolbar above to add elements</p>
-                <p className="text-xs mt-1">Press Delete to remove, Ctrl+C to copy, Ctrl+V to paste, Space for options</p>
+                <p className="text-xs mt-1">Press Delete to remove, Ctrl+C to copy, Ctrl+V to paste, Ctrl+S to save, Space for options</p>
               </div>
             </div>
           )}
