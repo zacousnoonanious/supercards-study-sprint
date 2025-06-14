@@ -39,15 +39,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Redirect to auth page if user signs out
+        // Handle sign out
         if (event === 'SIGNED_OUT') {
-          navigate('/auth');
+          console.log('User signed out, redirecting to auth page');
+          // Clear any local state
+          setUser(null);
+          setSession(null);
+          // Force navigation to auth page
+          setTimeout(() => {
+            navigate('/auth', { replace: true });
+          }, 100);
+        }
+        
+        // Handle sign in
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('User signed in, redirecting to dashboard');
+          navigate('/dashboard', { replace: true });
         }
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -78,11 +92,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "See you next time! :)",
-      description: "Thanks for using our app!",
-    });
+    console.log('Sign out initiated');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+        toast({
+          title: "Error signing out",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        console.log('Sign out successful');
+        toast({
+          title: "See you next time! :)",
+          description: "Thanks for using our app!",
+        });
+      }
+    } catch (error) {
+      console.error('Unexpected sign out error:', error);
+    }
     // Navigation will be handled by the auth state change listener
   };
 

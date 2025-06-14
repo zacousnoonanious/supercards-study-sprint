@@ -4,22 +4,23 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { I18nProvider } from "@/contexts/I18nContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
+import { I18nProvider } from "@/contexts/I18nContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import Decks from "./pages/Decks";
+import Auth from "./pages/Auth";
 import CreateSet from "./pages/CreateSet";
-import AddCard from "./pages/AddCard";
 import SetView from "./pages/SetView";
 import StudyMode from "./pages/StudyMode";
-import CardEditorPage from "./pages/CardEditorPage";
+import Decks from "./pages/Decks";
 import Profile from "./pages/Profile";
-import Marketplace from "./pages/Marketplace";
+import CardEditorPage from "./pages/CardEditorPage";
+import AddCard from "./pages/AddCard";
 import JoinDeck from "./pages/JoinDeck";
+import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,41 +28,76 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <OrganizationProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
             <I18nProvider>
-              <ThemeProvider>
-                <TooltipProvider>
-                  <div className="min-h-screen bg-background font-sans antialiased">
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/decks" element={<Decks />} />
-                      <Route path="/create-set" element={<CreateSet />} />
-                      <Route path="/add-card/:setId" element={<AddCard />} />
-                      <Route path="/sets/:id" element={<SetView />} />
-                      <Route path="/set/:id" element={<SetView />} />
-                      <Route path="/study/:id" element={<StudyMode />} />
-                      <Route path="/sets/:id/study" element={<StudyMode />} />
-                      <Route path="/set/:id/study" element={<StudyMode />} />
-                      <Route path="/sets/:id/cards" element={<CardEditorPage />} />
-                      <Route path="/sets/:id/cards/:cardId" element={<CardEditorPage />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/marketplace" element={<Marketplace />} />
-                      <Route path="/join/:token" element={<JoinDeck />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </div>
-                  <Toaster />
-                  <Sonner />
-                </TooltipProvider>
-              </ThemeProvider>
+              <AuthProvider>
+                <OrganizationProvider>
+                  <Routes>
+                    {/* Public routes */}
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/join/:token" element={<JoinDeck />} />
+                    
+                    {/* Protected routes */}
+                    <Route path="/dashboard" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/create-set" element={
+                      <ProtectedRoute>
+                        <CreateSet />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/set/:id" element={
+                      <ProtectedRoute>
+                        <SetView />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/study/:id" element={
+                      <ProtectedRoute>
+                        <StudyMode />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/decks" element={
+                      <ProtectedRoute>
+                        <Decks />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/profile" element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/editor/:setId/:cardId?" element={
+                      <ProtectedRoute>
+                        <CardEditorPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/add-card/:setId" element={
+                      <ProtectedRoute>
+                        <AddCard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/marketplace" element={
+                      <ProtectedRoute>
+                        <Marketplace />
+                      </ProtectedRoute>
+                    } />
+                    
+                    {/* 404 route */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </OrganizationProvider>
+              </AuthProvider>
             </I18nProvider>
-          </OrganizationProvider>
-        </AuthProvider>
-      </BrowserRouter>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

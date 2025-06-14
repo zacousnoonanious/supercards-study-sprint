@@ -6,7 +6,7 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { OptionalOrganizationSetup } from '@/components/OptionalOrganizationSetup';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Plus, BookOpen, Users, BarChart3, Building, UserPlus } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,17 +24,9 @@ const Dashboard = () => {
   const { user, loading } = useAuth();
   const { currentOrganization, userOrganizations, isLoading } = useOrganization();
   const { t } = useI18n();
-  const navigate = useNavigate();
   const [showOrgSetup, setShowOrgSetup] = useState(false);
   const [recentSets, setRecentSets] = useState<FlashcardSet[]>([]);
   const [totalDecks, setTotalDecks] = useState(0);
-
-  // Redirect to auth if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -75,10 +67,6 @@ const Dashboard = () => {
         </div>
       </div>
     );
-  }
-
-  if (!user) {
-    return null; // Will redirect to auth page
   }
 
   // Show organization setup if user wants to see it
