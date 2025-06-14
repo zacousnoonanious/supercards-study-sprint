@@ -18,14 +18,16 @@ interface FlashcardSet {
 }
 
 export const useStudyMode = () => {
-  // Try multiple possible parameter names to handle different route patterns
-  const params = useParams();
-  const setId = params.id || params.setId;
+  // Get setId from the 'id' parameter to match the /study/:id route
+  const { id } = useParams();
+  const setId = id; // Use id parameter for study mode
   const { user } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+
+  console.log('useStudyMode: Initialized with setId:', setId);
 
   const [set, setSet] = useState<FlashcardSet | null>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);

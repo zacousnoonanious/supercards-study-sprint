@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -58,6 +57,7 @@ function App() {
                         <SetView />
                       </ProtectedRoute>
                     } />
+                    {/* Study mode route - keeping the original pattern */}
                     <Route path="/study/:id" element={
                       <ProtectedRoute>
                         <StudyMode />
@@ -73,7 +73,7 @@ function App() {
                         <Profile />
                       </ProtectedRoute>
                     } />
-                    {/* Fixed card editor routes - using setId instead of id to match CardEditorPage expectations */}
+                    {/* Card editor routes - supporting both patterns for compatibility */}
                     <Route path="/sets/:setId/cards/:cardId?" element={
                       <ProtectedRoute>
                         <CardEditorPage />
