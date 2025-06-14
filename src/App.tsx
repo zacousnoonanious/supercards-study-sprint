@@ -22,6 +22,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/decks" element={<Decks />} />
         <Route path="/set/:id" element={<SetView />} />
+        <Route path="/sets/:id" element={<SetView />} />
         <Route path="/edit-cards/:id" element={<CardEditorPage />} />
         <Route path="/create-set" element={<CreateSet />} />
         <Route path="/study/:id" element={<StudyMode />} />
