@@ -27,6 +27,7 @@ const Dashboard = () => {
   const [showOrgSetup, setShowOrgSetup] = useState(false);
   const [recentSets, setRecentSets] = useState<FlashcardSet[]>([]);
   const [totalDecks, setTotalDecks] = useState(0);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -36,24 +37,34 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      console.log('Fetching dashboard data for user:', user?.id);
+      console.log('Starting fetchDashboardData for user:', user?.id);
+      setFetchError(null);
       
-      const { data, error } = await supabase
+      // Try a very simple query first
+      console.log('Attempting simple query...');
+      const { data, error, count } = await supabase
         .from('flashcard_sets')
-        .select('*')
+        .select('id, title, description, created_at, updated_at', { count: 'exact' })
         .order('updated_at', { ascending: false });
 
+      console.log('Query completed. Data:', data, 'Error:', error, 'Count:', count);
+
       if (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error('Supabase error:', error);
+        setFetchError(`Database error: ${error.message}`);
         return;
       }
       
-      console.log('Dashboard data fetched:', data);
       const sets = data || [];
-      setRecentSets(sets.slice(0, 3)); // Show only 3 most recent
-      setTotalDecks(sets.length); // Set total count
+      console.log('Setting recentSets to:', sets.slice(0, 3));
+      console.log('Setting totalDecks to:', sets.length);
+      
+      setRecentSets(sets.slice(0, 3));
+      setTotalDecks(sets.length);
+      
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('JavaScript error in fetchDashboardData:', error);
+      setFetchError(`JavaScript error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -114,6 +125,19 @@ const Dashboard = () => {
             }
           </p>
         </div>
+
+        {/* Debug info */}
+        {fetchError && (
+          <Card className="mb-8 border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <p className="text-red-800">Debug Info: {fetchError}</p>
+              <p className="text-sm text-red-600 mt-2">User ID: {user?.id}</p>
+              <Button onClick={fetchDashboardData} className="mt-2">
+                Retry Fetch
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Show organization invitation banner for individual users */}
         {userOrganizations.length === 0 && (
