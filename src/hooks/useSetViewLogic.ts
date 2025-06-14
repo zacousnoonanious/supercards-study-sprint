@@ -20,7 +20,8 @@ interface FlashcardSet {
 }
 
 export const useSetViewLogic = () => {
-  const { setId } = useParams<{ setId: string }>();
+  const { id: urlSetId } = useParams<{ id: string }>();
+  const setId = urlSetId;
   const { user } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -37,13 +38,18 @@ export const useSetViewLogic = () => {
   const { data: setData, isLoading: setLoading, error: setError } = useQuery({
     queryKey: ['flashcard_set', setId],
     queryFn: async () => {
+      console.log('Fetching set data for ID:', setId);
       const { data, error } = await supabase
         .from('flashcard_sets')
         .select('*')
         .eq('id', setId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching set:', error);
+        throw error;
+      }
+      console.log('Set data fetched:', data);
       return data as FlashcardSet;
     },
     enabled: !!setId && !!user,
@@ -53,13 +59,19 @@ export const useSetViewLogic = () => {
   const { data: cardsData, isLoading: cardsLoading, error: cardsError, refetch: refetchCards } = useQuery({
     queryKey: ['flashcards', setId],
     queryFn: async () => {
+      console.log('Fetching cards for set ID:', setId);
       const { data, error } = await supabase
         .from('flashcards')
         .select('*')
         .eq('set_id', setId)
         .order('created_at', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching cards:', error);
+        throw error;
+      }
+      
+      console.log('Cards data fetched:', data);
       
       // Transform the data to match our Flashcard interface
       const transformedCards: Flashcard[] = (data || []).map((card, index) => ({

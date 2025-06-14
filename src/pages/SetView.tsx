@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useI18n } from '@/contexts/I18nContext';
 import { SetViewSkeleton } from '@/components/LoadingSkeletons';
 import { useRoutePreloader } from '@/hooks/useRoutePreloader';
@@ -21,6 +22,7 @@ const SetView = () => {
   const { user } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
+  const { id: urlSetId } = useParams<{ id: string }>();
 
   // Enable route preloading and data prefetching
   useRoutePreloader();
@@ -62,7 +64,7 @@ const SetView = () => {
     isCollaborative,
     enableCollaboration,
     removeCollaborator,
-  } = useCollaborativeEditing({ setId: setId || '', cardId: undefined });
+  } = useCollaborativeEditing({ setId: urlSetId || '', cardId: undefined });
 
   // Show skeleton loading immediately
   if (isLoading) {
@@ -90,7 +92,7 @@ const SetView = () => {
     return (
       <EnhancedSetOverview
         cards={cards}
-        setId={setId!}
+        setId={urlSetId!}
         onReorderCards={handleReorderCards}
         onNavigateToCard={handleNavigateToCard}
         onBackToSet={() => setShowEnhancedOverview(false)}
@@ -113,7 +115,7 @@ const SetView = () => {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <SetViewHeader
           set={set}
-          setId={setId!}
+          setId={urlSetId!}
           onShowPermanentShuffleSettings={() => setShowPermanentShuffleSettings(true)}
           onShowEnhancedOverview={() => setShowEnhancedOverview(true)}
           onShowAIGenerator={() => setShowAIGenerator(true)}
@@ -129,7 +131,7 @@ const SetView = () => {
               isCollaborative={isCollaborative}
             />
             <CollaborationDialog
-              setId={setId!}
+              setId={urlSetId!}
               collaborators={collaborators}
               isCollaborative={isCollaborative}
               onEnableCollaboration={enableCollaboration}
@@ -142,7 +144,7 @@ const SetView = () => {
         {!isCollaborative && set?.user_id === user?.id && (
           <div className="mb-4 flex justify-end">
             <CollaborationDialog
-              setId={setId!}
+              setId={urlSetId!}
               collaborators={collaborators}
               isCollaborative={isCollaborative}
               onEnableCollaboration={enableCollaboration}
@@ -169,7 +171,7 @@ const SetView = () => {
         onShowStudySettings={setShowStudySettings}
         showPermanentShuffleSettings={showPermanentShuffleSettings}
         onShowPermanentShuffleSettings={setShowPermanentShuffleSettings}
-        setId={setId!}
+        setId={urlSetId!}
         set={set}
         cards={cards}
         onAIGenerated={handleAIGenerated}
