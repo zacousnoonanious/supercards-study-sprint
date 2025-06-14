@@ -6,7 +6,7 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { OptionalOrganizationSetup } from '@/components/OptionalOrganizationSetup';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, BookOpen, Users, BarChart3, Building, UserPlus } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,9 +24,17 @@ const Dashboard = () => {
   const { user, loading } = useAuth();
   const { currentOrganization, userOrganizations, isLoading } = useOrganization();
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [showOrgSetup, setShowOrgSetup] = useState(false);
   const [recentSets, setRecentSets] = useState<FlashcardSet[]>([]);
   const [totalDecks, setTotalDecks] = useState(0);
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -70,24 +78,7 @@ const Dashboard = () => {
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <CardTitle>Welcome to FlashCards</CardTitle>
-              <CardDescription>Please sign in to access your dashboard</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link to="/auth">
-                <Button className="w-full">Sign In</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return null; // Will redirect to auth page
   }
 
   // Show organization setup if user wants to see it
