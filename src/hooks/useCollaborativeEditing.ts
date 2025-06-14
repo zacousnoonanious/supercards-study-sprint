@@ -12,9 +12,9 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
   const {
     collaborators,
     isCollaborative,
-    inviteCollaborator,
     enableCollaboration,
     fetchCollaborators,
+    removeCollaborator,
   } = useCollaboratorManager({ setId });
 
   // Use the presence manager to handle real-time user presence
@@ -50,8 +50,8 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
     collaborators,
     isCollaborative,
     updateUserPosition,
-    inviteCollaborator,
     enableCollaboration,
     fetchCollaborators,
+    removeCollaborator,
   };
 };

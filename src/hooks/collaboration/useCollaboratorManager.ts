@@ -72,25 +72,6 @@ export const useCollaboratorManager = ({ setId }: UseCollaboratorManagerProps) =
     }
   };
 
-  const inviteCollaborator = async (email: string, role: 'editor' | 'viewer' = 'editor'): Promise<boolean> => {
-    if (!user || !setId) return false;
-    
-    try {
-      // For now, we'll need to use a different approach since we can't directly query auth.users
-      // This is a simplified implementation that assumes the user provides a valid user ID
-      // In a real implementation, you'd need a server-side function to lookup users by email
-      console.log('Attempting to invite user with email:', email);
-      
-      // Since we can't query auth.users directly, we'll return false for now
-      // This would need to be implemented with a server-side function or edge function
-      console.log('User invitation requires server-side implementation to lookup users by email');
-      return false;
-    } catch (error) {
-      console.error('Error inviting collaborator:', error);
-      return false;
-    }
-  };
-
   const enableCollaboration = async () => {
     if (!setId) return false;
     
@@ -113,6 +94,23 @@ export const useCollaboratorManager = ({ setId }: UseCollaboratorManagerProps) =
     }
   };
 
+  const removeCollaborator = async (collaboratorId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('deck_collaborators')
+        .delete()
+        .eq('id', collaboratorId);
+
+      if (error) throw error;
+      
+      await fetchCollaborators();
+      return true;
+    } catch (error) {
+      console.error('Error removing collaborator:', error);
+      return false;
+    }
+  };
+
   // Initial load
   useEffect(() => {
     if (setId) {
@@ -124,8 +122,8 @@ export const useCollaboratorManager = ({ setId }: UseCollaboratorManagerProps) =
   return {
     collaborators,
     isCollaborative,
-    inviteCollaborator,
     enableCollaboration,
     fetchCollaborators,
+    removeCollaborator,
   };
 };

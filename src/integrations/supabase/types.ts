@@ -94,6 +94,56 @@ export type Database = {
           },
         ]
       }
+      deck_invite_links: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          current_uses: number | null
+          expires_at: string | null
+          id: string
+          invite_token: string
+          is_active: boolean | null
+          max_uses: number | null
+          role: string
+          set_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          invite_token: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          role?: string
+          set_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          invite_token?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          role?: string
+          set_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deck_invite_links_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "flashcard_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       editing_sessions: {
         Row: {
           card_id: string | null
@@ -302,6 +352,10 @@ export type Database = {
       cleanup_old_editing_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_invite_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
     }
     Enums: {

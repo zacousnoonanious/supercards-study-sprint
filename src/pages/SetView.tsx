@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,9 @@ import { SetViewHeader } from '@/components/set-view/SetViewHeader';
 import { CardGrid } from '@/components/set-view/CardGrid';
 import { SetViewDialogs } from '@/components/set-view/SetViewDialogs';
 import { useSetViewLogic } from '@/hooks/useSetViewLogic';
+import { CollaborationDialog } from '@/components/collaboration/CollaborationDialog';
+import { CollaborationIndicator } from '@/components/collaboration/CollaborationIndicator';
+import { useCollaborativeEditing } from '@/hooks/useCollaborativeEditing';
 
 const SetView = () => {
   const { user } = useAuth();
@@ -52,6 +54,15 @@ const SetView = () => {
     handleStartStudyWithSettings,
     handlePermanentShuffleToggle,
   } = useSetViewLogic();
+
+  // Add collaborative editing functionality
+  const {
+    activeUsers,
+    collaborators,
+    isCollaborative,
+    enableCollaboration,
+    removeCollaborator,
+  } = useCollaborativeEditing({ setId: setId || '', cardId: undefined });
 
   // Show skeleton loading immediately
   if (isLoading) {
@@ -108,6 +119,37 @@ const SetView = () => {
           onShowAIGenerator={() => setShowAIGenerator(true)}
           onShowStudySettings={() => setShowStudySettings(true)}
         />
+
+        {/* Add collaboration indicator if collaborative */}
+        {isCollaborative && (
+          <div className="mb-4 flex justify-between items-center">
+            <CollaborationIndicator
+              activeUsers={activeUsers}
+              collaborators={collaborators}
+              isCollaborative={isCollaborative}
+            />
+            <CollaborationDialog
+              setId={setId!}
+              collaborators={collaborators}
+              isCollaborative={isCollaborative}
+              onEnableCollaboration={enableCollaboration}
+              onRemoveCollaborator={removeCollaborator}
+            />
+          </div>
+        )}
+
+        {/* Add collaboration button if not collaborative yet */}
+        {!isCollaborative && set?.user_id === user?.id && (
+          <div className="mb-4 flex justify-end">
+            <CollaborationDialog
+              setId={setId!}
+              collaborators={collaborators}
+              isCollaborative={isCollaborative}
+              onEnableCollaboration={enableCollaboration}
+              onRemoveCollaborator={removeCollaborator}
+            />
+          </div>
+        )}
 
         <CardGrid
           cards={cards}
