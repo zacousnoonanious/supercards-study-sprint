@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { CardSideToggle } from './CardSideToggle';
 import { CardBorderToggle } from './settings/CardBorderToggle';
 import { GridControls } from './settings/GridControls';
-import { ZoomIn, ZoomOut, Maximize2, Maximize, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Maximize } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface BottomToolbarProps {
@@ -58,41 +58,6 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
     <div className="border-t bg-background p-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {/* Card Navigation - Make sure this is always visible when conditions are met */}
-          {onNavigateCard && typeof currentCardIndex === 'number' && typeof totalCards === 'number' && totalCards > 0 && (
-            <>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onNavigateCard('prev')}
-                  disabled={currentCardIndex <= 0}
-                  className="min-w-[80px]"
-                >
-                  <ChevronLeft className="w-4 h-4 mr-1" />
-                  {t('forms.previous')}
-                </Button>
-                
-                <span className="text-sm font-medium px-2 min-w-[60px] text-center">
-                  {currentCardIndex + 1} / {totalCards}
-                </span>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onNavigateCard('next')}
-                  disabled={currentCardIndex >= totalCards - 1}
-                  className="min-w-[80px]"
-                >
-                  {t('forms.next')}
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-
-              <Separator orientation="vertical" className="h-6" />
-            </>
-          )}
-
           {/* Card Side Toggle */}
           <CardSideToggle
             currentSide={currentSide}
