@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TopToolbar } from './TopToolbar';
 import { BottomToolbar } from './BottomToolbar';
 import { CardCanvas } from './CardCanvas';
@@ -114,6 +114,65 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
+
+  // Add keyboard navigation for card switching
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in input fields or textareas
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Only handle if Ctrl/Cmd is pressed to avoid conflicts with other shortcuts
+      const isModifierPressed = e.ctrlKey || e.metaKey;
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          if (isModifierPressed) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentCardIndex > 0) {
+              console.log('CardEditor: Keyboard navigate to previous card');
+              onNavigateCard('prev');
+            }
+          }
+          break;
+        case 'ArrowRight':
+          if (isModifierPressed) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentCardIndex < cards.length - 1) {
+              console.log('CardEditor: Keyboard navigate to next card');
+              onNavigateCard('next');
+            }
+          }
+          break;
+        case 'ArrowUp':
+          if (isModifierPressed) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentSide === 'back') {
+              console.log('CardEditor: Keyboard switch to front side');
+              onCardSideChange('front');
+            }
+          }
+          break;
+        case 'ArrowDown':
+          if (isModifierPressed) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentSide === 'front') {
+              console.log('CardEditor: Keyboard switch to back side');
+              onCardSideChange('back');
+            }
+          }
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [currentCardIndex, cards.length, currentSide, onNavigateCard, onCardSideChange]);
 
   const canvasStyle = {
     width: cardWidth,
