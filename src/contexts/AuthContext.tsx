@@ -94,8 +94,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     console.log('Sign out initiated');
     try {
+      // Clear local state immediately to prevent UI issues
+      setUser(null);
+      setSession(null);
+      
       const { error } = await supabase.auth.signOut();
-      if (error) {
+      
+      // Don't treat "session_not_found" as an error since the user is already signed out
+      if (error && !error.message?.includes('session_not_found')) {
         console.error('Sign out error:', error);
         toast({
           title: "Error signing out",
@@ -109,10 +115,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: "Thanks for using our app!",
         });
       }
+      
+      // Always navigate to auth page regardless of API response
+      navigate('/auth', { replace: true });
+      
     } catch (error) {
       console.error('Unexpected sign out error:', error);
+      // Even if there's an error, clear the state and redirect
+      setUser(null);
+      setSession(null);
+      navigate('/auth', { replace: true });
     }
-    // Navigation will be handled by the auth state change listener
   };
 
   const value = {
