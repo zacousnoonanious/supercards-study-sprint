@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React from 'react';
 import { TopToolbar } from './TopToolbar';
 import { BottomToolbar } from './BottomToolbar';
 import { CardCanvas } from './CardCanvas';

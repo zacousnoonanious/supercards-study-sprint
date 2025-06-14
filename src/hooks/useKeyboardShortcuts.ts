@@ -29,8 +29,12 @@ export const useKeyboardShortcuts = ({
 }: UseKeyboardShortcutsProps) => {
   // Handle keyboard events for delete functionality and navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // Don't handle keyboard shortcuts during text selection
-    if (isTextSelecting) return;
+    // Don't handle keyboard shortcuts during text selection or if user is typing in input fields
+    if (isTextSelecting || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      return;
+    }
+
+    console.log('KeyboardShortcuts: Key pressed:', e.key, 'Ctrl:', e.ctrlKey, 'Meta:', e.metaKey);
 
     // Delete key - delete selected element
     if (e.key === 'Delete' && selectedElementId) {
@@ -42,42 +46,51 @@ export const useKeyboardShortcuts = ({
     // Escape key - deselect element
     if (e.key === 'Escape') {
       e.preventDefault();
-      //setSelectedElementId(null);
       return;
     }
 
-    // Navigation keys
-    if (e.key === 'ArrowLeft') {
+    // Card navigation with modifier keys to avoid conflicts
+    const isModifierPressed = e.ctrlKey || e.metaKey;
+
+    // Navigation keys - Left/Right for cards
+    if (e.key === 'ArrowLeft' && isModifierPressed) {
       e.preventDefault();
+      e.stopPropagation();
       if (currentCardIndex > 0) {
+        console.log('KeyboardShortcuts: Navigate to previous card');
         navigateCard('prev');
       }
       return;
     }
 
-    if (e.key === 'ArrowRight') {
+    if (e.key === 'ArrowRight' && isModifierPressed) {
       e.preventDefault();
+      e.stopPropagation();
       if (currentCardIndex < cards.length - 1) {
+        console.log('KeyboardShortcuts: Navigate to next card');
         navigateCard('next');
       }
       return;
     }
 
-    // Card side navigation - Up for back, Down for front
-    if (e.key === 'ArrowUp') {
+    // Card side navigation - Up/Down for front/back
+    if (e.key === 'ArrowUp' && isModifierPressed) {
       e.preventDefault();
-      //if (currentCard?.card_type !== 'single-sided') {
-        setCurrentSide('back');
-      //}
+      e.stopPropagation();
+      console.log('KeyboardShortcuts: Switch to back side');
+      setCurrentSide('back');
       return;
     }
 
-    if (e.key === 'ArrowDown') {
+    if (e.key === 'ArrowDown' && isModifierPressed) {
       e.preventDefault();
+      e.stopPropagation();
+      console.log('KeyboardShortcuts: Switch to front side');
       setCurrentSide('front');
       return;
     }
 
+    // Other shortcuts with Ctrl/Cmd
     if (e.key === 'a' && e.ctrlKey) {
       e.preventDefault();
       addElement('text');
@@ -99,8 +112,10 @@ export const useKeyboardShortcuts = ({
 
   // Add keyboard event listener
   useEffect(() => {
+    console.log('KeyboardShortcuts: Adding event listener');
     document.addEventListener('keydown', handleKeyDown);
     return () => {
+      console.log('KeyboardShortcuts: Removing event listener');
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleKeyDown]);
