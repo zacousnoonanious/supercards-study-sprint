@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,18 +35,6 @@ interface PresenceState {
     cursor_position?: any;
     last_seen: string;
   }>;
-}
-
-// Define explicit types for database responses
-interface CollaboratorQueryResult {
-  id: string;
-  user_id: string;
-  role: string;
-  profiles: {
-    first_name: string | null;
-    last_name: string | null;
-    avatar_url: string | null;
-  };
 }
 
 export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditingProps) => {
@@ -256,27 +245,37 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
 
   const inviteCollaborator = async (email: string, role: 'editor' | 'viewer' = 'editor') => {
     try {
-      // Simplify query to avoid type recursion
-      const profileQuery = await supabase
+      // Use explicit type annotation to avoid recursion
+      const { data, error: profileError }: { 
+        data: { id: string } | null; 
+        error: any 
+      } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
         .maybeSingle();
 
-      const invitedUser = profileQuery.data;
+      if (profileError) {
+        console.error('Profile query error:', profileError);
+        return false;
+      }
 
-      if (invitedUser) {
-        const insertResult = await supabase
+      if (data && data.id) {
+        const { error: insertError } = await supabase
           .from('deck_collaborators')
           .insert({
             set_id: setId,
-            user_id: invitedUser.id,
+            user_id: data.id,
             role,
             invited_by: user?.id,
             accepted_at: new Date().toISOString(), // Auto-accept for now
           });
 
-        if (insertResult.error) throw insertResult.error;
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          return false;
+        }
+        
         await fetchCollaborators();
         return true;
       }
@@ -289,12 +288,16 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
 
   const enableCollaboration = async () => {
     try {
-      const updateResult = await supabase
+      const { error } = await supabase
         .from('flashcard_sets')
         .update({ is_collaborative: true })
         .eq('id', setId);
 
-      if (updateResult.error) throw updateResult.error;
+      if (error) {
+        console.error('Update error:', error);
+        return false;
+      }
+      
       setIsCollaborative(true);
       return true;
     } catch (error) {
