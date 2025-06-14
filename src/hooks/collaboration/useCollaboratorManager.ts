@@ -76,12 +76,15 @@ export const useCollaboratorManager = ({ setId }: UseCollaboratorManagerProps) =
     if (!user || !setId) return false;
     
     try {
-      // First find the user by email
-      const { data: profileData, error: profileError } = await supabase
+      // Use explicit type annotation to avoid type inference issues
+      const profileQuery = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
         .maybeSingle();
+
+      const profileData = profileQuery.data;
+      const profileError = profileQuery.error;
 
       if (profileError) {
         console.error('Profile query error:', profileError);
