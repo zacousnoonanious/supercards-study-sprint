@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 const AddCard = () => {
-  const { id: setId } = useParams();
+  const { setId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  console.log('AddCard: setId from params:', setId);
 
   useEffect(() => {
     if (!user) {
@@ -19,12 +21,22 @@ const AddCard = () => {
   }, [user, navigate]);
 
   const handleCardCreated = () => {
-    navigate(`/set/${setId}`);
+    console.log('AddCard: Card created, navigating back to set:', setId);
+    navigate(`/sets/${setId}`);
   };
 
   const handleClose = () => {
-    navigate(`/set/${setId}`);
+    console.log('AddCard: Closing, navigating back to set:', setId);
+    navigate(`/sets/${setId}`);
   };
+
+  if (!setId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-lg">Set ID not found</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,7 +57,7 @@ const AddCard = () => {
         
         <div className="flex items-center justify-center">
           <InteractiveCardCreator
-            setId={setId!}
+            setId={setId}
             onCardCreated={handleCardCreated}
             onClose={handleClose}
           />

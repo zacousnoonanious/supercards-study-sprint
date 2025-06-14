@@ -27,7 +27,8 @@ export const CardGrid: React.FC<CardGridProps> = ({
   const navigate = useNavigate();
 
   const handleAddCard = () => {
-    navigate(`/set/${setId}/add-card`);
+    console.log('CardGrid: Navigating to add card for setId:', setId);
+    navigate(`/add-card/${setId}`);
   };
 
   return (
