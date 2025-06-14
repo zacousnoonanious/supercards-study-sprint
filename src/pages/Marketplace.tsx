@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -48,24 +47,44 @@ const Marketplace = () => {
 
   const fetchMarketplaceDecks = async () => {
     try {
-      const { data, error } = await supabase
+      // First, get the marketplace decks
+      const { data: marketplaceDecks, error: decksError } = await supabase
         .from('marketplace_decks')
-        .select(`
-          *,
-          profiles!seller_id (first_name, last_name)
-        `)
+        .select('*')
         .eq('is_active', true)
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (decksError) throw decksError;
 
-      const decksWithSellerNames = data?.map(deck => ({
-        ...deck,
-        seller_name: deck.profiles 
-          ? `${deck.profiles.first_name || ''} ${deck.profiles.last_name || ''}`.trim()
-          : 'Unknown Seller'
-      })) || [];
+      if (!marketplaceDecks || marketplaceDecks.length === 0) {
+        setDecks([]);
+        return;
+      }
+
+      // Get unique seller IDs
+      const sellerIds = [...new Set(marketplaceDecks.map(deck => deck.seller_id))];
+
+      // Fetch seller profiles separately
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .in('id', sellerIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
+      // Combine the data
+      const decksWithSellerNames = marketplaceDecks.map(deck => {
+        const profile = profiles?.find(p => p.id === deck.seller_id);
+        return {
+          ...deck,
+          seller_name: profile 
+            ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown Seller'
+            : 'Unknown Seller'
+        };
+      });
 
       setDecks(decksWithSellerNames);
     } catch (error) {
@@ -92,15 +111,23 @@ const Marketplace = () => {
 
       if (error) throw error;
 
-      // Update download count
-      await supabase.rpc('increment', {
-        table_name: 'marketplace_decks',
-        row_id: deckId,
-        column_name: 'total_downloads'
-      });
+      // Update download count manually
+      const { data: currentDeck } = await supabase
+        .from('marketplace_decks')
+        .select('total_downloads')
+        .eq('id', deckId)
+        .single();
+
+      if (currentDeck) {
+        await supabase
+          .from('marketplace_decks')
+          .update({ total_downloads: currentDeck.total_downloads + 1 })
+          .eq('id', deckId);
+      }
 
       toast.success('Deck purchased successfully!');
-      // Navigate to the purchased deck or refresh the page
+      // Refresh the data to show updated download count
+      fetchMarketplaceDecks();
     } catch (error: any) {
       if (error.code === '23505') {
         toast.error('You have already purchased this deck');
