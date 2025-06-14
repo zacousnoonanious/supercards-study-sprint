@@ -348,6 +348,144 @@ export type Database = {
           },
         ]
       }
+      marketplace_decks: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          featured: boolean | null
+          id: string
+          is_active: boolean | null
+          preview_card_count: number | null
+          price: number
+          rating: number | null
+          rating_count: number | null
+          seller_id: string
+          set_id: string
+          tags: string[] | null
+          title: string
+          total_downloads: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          preview_card_count?: number | null
+          price?: number
+          rating?: number | null
+          rating_count?: number | null
+          seller_id: string
+          set_id: string
+          tags?: string[] | null
+          title: string
+          total_downloads?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          preview_card_count?: number | null
+          price?: number
+          rating?: number | null
+          rating_count?: number | null
+          seller_id?: string
+          set_id?: string
+          tags?: string[] | null
+          title?: string
+          total_downloads?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_decks_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "flashcard_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_purchases: {
+        Row: {
+          buyer_id: string
+          id: string
+          marketplace_deck_id: string
+          purchase_price: number
+          purchased_at: string
+          status: string
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          buyer_id: string
+          id?: string
+          marketplace_deck_id: string
+          purchase_price: number
+          purchased_at?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          buyer_id?: string
+          id?: string
+          marketplace_deck_id?: string
+          purchase_price?: number
+          purchased_at?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_purchases_marketplace_deck_id_fkey"
+            columns: ["marketplace_deck_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          marketplace_deck_id: string
+          rating: number
+          review_text: string | null
+          reviewer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          marketplace_deck_id: string
+          rating: number
+          review_text?: string | null
+          reviewer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          marketplace_deck_id?: string
+          rating?: number
+          review_text?: string | null
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_reviews_marketplace_deck_id_fkey"
+            columns: ["marketplace_deck_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_invites: {
         Row: {
           accepted_at: string | null

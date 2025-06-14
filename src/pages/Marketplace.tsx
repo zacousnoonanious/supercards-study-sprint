@@ -6,20 +6,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Star, Download, Eye } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Star, Download, Eye, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-interface MarketplaceSet {
+interface MarketplaceDeck {
   id: string;
   title: string;
   description: string;
-  author: string;
-  rating: number;
-  downloads: number;
-  category: string;
   price: number;
-  preview_url?: string;
+  category: string;
+  tags: string[];
+  rating: number;
+  rating_count: number;
+  total_downloads: number;
+  seller_id: string;
+  preview_card_count: number;
+  seller_name?: string;
 }
 
 const Marketplace = () => {
@@ -27,50 +33,110 @@ const Marketplace = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [featuredSets] = useState<MarketplaceSet[]>([
-    {
-      id: '1',
-      title: 'Spanish Vocabulary - Beginner',
-      description: 'Essential Spanish words and phrases for beginners',
-      author: 'Maria Garcia',
-      rating: 4.8,
-      downloads: 1250,
-      category: 'Language',
-      price: 0
-    },
-    {
-      id: '2',
-      title: 'Biology - Cell Structure',
-      description: 'Comprehensive study of cellular biology',
-      author: 'Dr. Johnson',
-      rating: 4.6,
-      downloads: 890,
-      category: 'Science',
-      price: 4.99
-    },
-    {
-      id: '3',
-      title: 'Programming Concepts',
-      description: 'Fundamental programming concepts and terminology',
-      author: 'CodeMaster',
-      rating: 4.9,
-      downloads: 2100,
-      category: 'Technology',
-      price: 0
-    }
-  ]);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [priceFilter, setPriceFilter] = useState('all');
+  const [decks, setDecks] = useState<MarketplaceDeck[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
       navigate('/auth');
+      return;
     }
+    fetchMarketplaceDecks();
   }, [user, navigate]);
 
-  const filteredSets = featuredSets.filter(set =>
-    set.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    set.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    set.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchMarketplaceDecks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('marketplace_decks')
+        .select(`
+          *,
+          profiles!seller_id (first_name, last_name)
+        `)
+        .eq('is_active', true)
+        .order('featured', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const decksWithSellerNames = data?.map(deck => ({
+        ...deck,
+        seller_name: deck.profiles 
+          ? `${deck.profiles.first_name || ''} ${deck.profiles.last_name || ''}`.trim()
+          : 'Unknown Seller'
+      })) || [];
+
+      setDecks(decksWithSellerNames);
+    } catch (error) {
+      console.error('Error fetching marketplace decks:', error);
+      toast.error('Failed to load marketplace decks');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePurchase = async (deckId: string, price: number) => {
+    if (!user) return;
+
+    try {
+      // For now, simulate a purchase - in production you'd integrate with Stripe
+      const { error } = await supabase
+        .from('marketplace_purchases')
+        .insert({
+          buyer_id: user.id,
+          marketplace_deck_id: deckId,
+          purchase_price: price,
+          status: 'completed'
+        });
+
+      if (error) throw error;
+
+      // Update download count
+      await supabase.rpc('increment', {
+        table_name: 'marketplace_decks',
+        row_id: deckId,
+        column_name: 'total_downloads'
+      });
+
+      toast.success('Deck purchased successfully!');
+      // Navigate to the purchased deck or refresh the page
+    } catch (error: any) {
+      if (error.code === '23505') {
+        toast.error('You have already purchased this deck');
+      } else {
+        console.error('Error purchasing deck:', error);
+        toast.error('Failed to purchase deck');
+      }
+    }
+  };
+
+  const filteredDecks = decks.filter(deck => {
+    const matchesSearch = deck.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         deck.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         deck.category?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = categoryFilter === 'all' || deck.category === categoryFilter;
+    
+    const matchesPrice = priceFilter === 'all' || 
+                        (priceFilter === 'free' && deck.price === 0) ||
+                        (priceFilter === 'paid' && deck.price > 0);
+
+    return matchesSearch && matchesCategory && matchesPrice;
+  });
+
+  const categories = [...new Set(decks.map(deck => deck.category).filter(Boolean))];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="text-center">Loading marketplace...</div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,8 +148,9 @@ const Marketplace = () => {
           <p className="text-muted-foreground">{t('marketplace.subtitle')}</p>
         </div>
 
-        <div className="max-w-md mx-auto mb-8">
-          <div className="relative">
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               type="text"
@@ -93,60 +160,85 @@ const Marketplace = () => {
               className="pl-10"
             />
           </div>
+          
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map(category => (
+                <SelectItem key={category} value={category}>{category}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={priceFilter} onValueChange={setPriceFilter}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="All Prices" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Prices</SelectItem>
+              <SelectItem value="free">Free</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold text-foreground mb-4">{t('marketplace.featured')}</h3>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredSets.map(set => (
-              <Card key={set.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{set.title}</CardTitle>
-                      <CardDescription className="mt-1">{set.description}</CardDescription>
-                    </div>
-                    <Badge variant={set.price === 0 ? "secondary" : "default"}>
-                      {set.price === 0 ? t('marketplace.free') : `$${set.price}`}
-                    </Badge>
+        {/* Deck Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredDecks.map(deck => (
+            <Card key={deck.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{deck.title}</CardTitle>
+                    <CardDescription className="mt-1">{deck.description}</CardDescription>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{t('marketplace.by')} {set.author}</span>
-                      <Badge variant="outline">{set.category}</Badge>
+                  <Badge variant={deck.price === 0 ? "secondary" : "default"}>
+                    {deck.price === 0 ? t('marketplace.free') : `$${deck.price}`}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>{t('marketplace.by')} {deck.seller_name}</span>
+                    {deck.category && <Badge variant="outline">{deck.category}</Badge>}
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span>{deck.rating || 0} ({deck.rating_count || 0})</span>
                     </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span>{set.rating}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Download className="w-4 h-4 text-muted-foreground" />
-                        <span>{set.downloads.toLocaleString()}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Eye className="w-4 h-4 mr-1" />
-                        {t('marketplace.preview')}
-                      </Button>
-                      <Button size="sm" className="flex-1">
-                        <Download className="w-4 h-4 mr-1" />
-                        {t('marketplace.download')}
-                      </Button>
+                    <div className="flex items-center gap-1">
+                      <Download className="w-4 h-4 text-muted-foreground" />
+                      <span>{deck.total_downloads.toLocaleString()}</span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Eye className="w-4 h-4 mr-1" />
+                      {t('marketplace.preview')}
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handlePurchase(deck.id, deck.price)}
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-1" />
+                      {deck.price === 0 ? t('marketplace.download') : 'Buy'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {filteredSets.length === 0 && searchTerm && (
+        {filteredDecks.length === 0 && searchTerm && (
           <div className="text-center py-8">
             <h3 className="text-lg font-medium text-foreground mb-2">{t('marketplace.noResults')}</h3>
             <p className="text-muted-foreground">{t('marketplace.noResultsMessage')}</p>
