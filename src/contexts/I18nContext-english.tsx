@@ -442,6 +442,20 @@ export const englishTranslations = {
     error: "Error",
     aiCardsAdded: "AI-generated cards added successfully",
   },
+  decks: {
+    title: "My Decks",
+    createNew: "Create New Deck",
+    noDecks: "No flashcard decks yet",
+    noDecksDesc: "Create your first deck to get started with studying!",
+    createFirst: "Create First Deck",
+    viewCards: "View Cards",
+    study: "Study",
+    deleteConfirm: "Delete Deck",
+    deleteMessage: "Are you sure you want to delete '{title}'? This action cannot be undone.",
+    deleteSuccess: "Deck '{title}' has been deleted successfully",
+    deleteError: "Failed to delete deck",
+    loadError: "Failed to load decks"
+  },
   ai: {
     generateDeck: "Generate AI Deck",
     topic: "Topic",
