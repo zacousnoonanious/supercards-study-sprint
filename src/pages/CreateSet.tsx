@@ -43,6 +43,8 @@ const CreateSet = () => {
 
     setLoading(true);
     try {
+      console.log('Creating flashcard set with:', { title: title.trim(), description: description.trim(), user_id: user?.id });
+      
       const { data, error } = await supabase
         .from('flashcard_sets')
         .insert([
@@ -55,19 +57,25 @@ const CreateSet = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating set:', error);
+        throw error;
+      }
+
+      console.log('Set created successfully:', data);
 
       toast({
         title: t('messages.success.created'),
-        description: t('messages.success.created')
+        description: 'Flashcard set created successfully!'
       });
 
-      navigate(`/edit-cards/${data.id}`);
+      // Navigate to the set view page instead of edit-cards (which doesn't exist)
+      navigate(`/set/${data.id}`);
     } catch (error) {
       console.error('Error creating set:', error);
       toast({
         title: t('messages.error.general'),
-        description: t('messages.error.general'),
+        description: 'Failed to create flashcard set. Please try again.',
         variant: "destructive"
       });
     } finally {
@@ -76,7 +84,7 @@ const CreateSet = () => {
   };
 
   const handleAIDeckCreated = (deckId: string) => {
-    navigate(`/sets/${deckId}`);
+    navigate(`/set/${deckId}`);
   };
 
   return (
@@ -104,7 +112,7 @@ const CreateSet = () => {
             </TabsTrigger>
             <TabsTrigger value="manual" className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
-              {t('sets.create')}
+              Create Manually
             </TabsTrigger>
           </TabsList>
 
@@ -131,7 +139,7 @@ const CreateSet = () => {
           <TabsContent value="manual" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>{t('sets.create')}</CardTitle>
+                <CardTitle>Create New Set</CardTitle>
                 <CardDescription>
                   Create a new flashcard set manually and add cards one by one.
                 </CardDescription>
@@ -139,24 +147,24 @@ const CreateSet = () => {
               <CardContent>
                 <form onSubmit={handleManualSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">{t('sets.title')}</Label>
+                    <Label htmlFor="title">Title</Label>
                     <Input
                       id="title"
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder={t('placeholders.enterTitle')}
+                      placeholder="Enter a title for your flashcard set"
                       required
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="description">{t('sets.description')}</Label>
+                    <Label htmlFor="description">Description (Optional)</Label>
                     <Textarea
                       id="description"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder={t('placeholders.enterDescription')}
+                      placeholder="Describe what this flashcard set is about"
                       rows={3}
                     />
                   </div>
@@ -167,11 +175,11 @@ const CreateSet = () => {
                       variant="outline"
                       onClick={() => navigate('/decks')}
                     >
-                      {t('common.cancel')}
+                      Cancel
                     </Button>
                     <Button type="submit" disabled={loading}>
                       <Save className="w-4 h-4 mr-2" />
-                      {loading ? t('common.loading') : t('common.create')}
+                      {loading ? 'Creating...' : 'Create Set'}
                     </Button>
                   </div>
                 </form>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -127,41 +126,8 @@ export const useSetViewLogic = () => {
   const handleCreateCard = async () => {
     if (!setId) return;
 
-    const newCard = {
-      question: t('setView.createNewCard'),
-      answer: 'Answer',
-      hint: '',
-      front_elements: [] as any,
-      back_elements: [] as any,
-      set_id: setId,
-      card_type: 'normal' as const,
-      countdown_timer: 0,
-      canvas_width: 600,
-      canvas_height: 450,
-    };
-
-    try {
-      const { data, error } = await supabase
-        .from('flashcards')
-        .insert(newCard)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      refetchCards();
-      toast({
-        title: t('setView.success'),
-        description: t('setView.cardCreated'),
-      });
-    } catch (error) {
-      console.error('Error creating card:', error);
-      toast({
-        title: t('setView.error'),
-        description: t('setView.failedCreateCard'),
-        variant: "destructive"
-      });
-    }
+    // Navigate to the add card page instead of creating inline
+    navigate(`/set/${setId}/add-card`);
   };
 
   const handleCreateFromTemplate = async (template: CardTemplate) => {
