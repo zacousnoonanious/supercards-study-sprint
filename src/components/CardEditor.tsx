@@ -49,12 +49,15 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
 
   // Initialize the editor when setId is provided
   useEffect(() => {
+    console.log('CardEditor: setId changed:', setId);
     if (setId) {
+      console.log('CardEditor: Initializing editor with setId:', setId);
       initializeEditor(setId);
     }
   }, [setId, initializeEditor]);
 
   const currentCard = cards[currentCardIndex];
+  console.log('CardEditor: Current card:', currentCard?.id, 'Index:', currentCardIndex, 'Total cards:', cards.length);
 
   // Initialize collaborative editing
   const {
@@ -220,6 +223,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   }, [currentCard?.id]);
 
   if (loading) {
+    console.log('CardEditor: Still loading...');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">{t('loading')}</div>
@@ -228,12 +232,15 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   }
 
   if (!set || !currentCard) {
+    console.log('CardEditor: Missing data - Set:', !!set, 'Current card:', !!currentCard);
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">{t('cardNotFound')}</div>
       </div>
     );
   }
+
+  console.log('CardEditor: Rendering with set:', set.title, 'and card:', currentCard.question);
 
   return (
     <div className="flex flex-col h-screen">

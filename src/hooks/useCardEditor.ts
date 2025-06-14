@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,21 +21,30 @@ export const useCardEditor = () => {
   // Accept setId as a parameter to this hook
   const initializeEditor = useCallback(async (providedSetId: string) => {
     if (!user || !providedSetId) {
+      console.log('Missing user or setId:', { user: !!user, setId: providedSetId });
       setLoading(false);
       return;
     }
 
+    console.log('Initializing editor with setId:', providedSetId);
     setSetId(providedSetId);
+    setLoading(true);
 
     try {
       // Fetch set details
+      console.log('Fetching set data...');
       const { data: setData, error: setError } = await supabase
         .from('flashcard_sets')
         .select('*')
         .eq('id', providedSetId)
         .single();
 
-      if (setError) throw setError;
+      if (setError) {
+        console.error('Error fetching set:', setError);
+        throw setError;
+      }
+      
+      console.log('Set data fetched:', setData);
       
       // Transform set data to match FlashcardSet interface
       const transformedSet: FlashcardSet = {
@@ -46,13 +56,19 @@ export const useCardEditor = () => {
       setSet(transformedSet);
 
       // Fetch cards
+      console.log('Fetching cards...');
       const { data: cardsData, error: cardsError } = await supabase
         .from('flashcards')
         .select('*')
         .eq('set_id', providedSetId)
         .order('created_at', { ascending: true });
 
-      if (cardsError) throw cardsError;
+      if (cardsError) {
+        console.error('Error fetching cards:', cardsError);
+        throw cardsError;
+      }
+      
+      console.log('Cards data fetched:', cardsData?.length || 0, 'cards');
       
       // Type cast the data to match our Flashcard interface
       const typedCards: Flashcard[] = (cardsData || []).map((card, index) => ({
@@ -75,6 +91,7 @@ export const useCardEditor = () => {
       }));
       
       setCards(typedCards);
+      console.log('Cards processed:', typedCards.length);
 
       // If a specific cardId is provided, find and navigate to that card
       if (cardId && typedCards.length > 0) {
@@ -91,10 +108,11 @@ export const useCardEditor = () => {
         }
       } else if (typedCards.length > 0) {
         // No specific card requested, go to first card
+        console.log('No specific card requested, using first card');
         setCurrentCardIndex(0);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error initializing editor:', error);
     } finally {
       setLoading(false);
     }
