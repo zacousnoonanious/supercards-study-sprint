@@ -1,19 +1,15 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Play, Settings, Shuffle, Sparkles, Eye, DollarSign } from 'lucide-react';
+import { ArrowLeft, Play, Edit, Settings, Shuffle, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/contexts/I18nContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { ListDeckForSaleDialog } from '../ListDeckForSaleDialog';
 
 interface SetViewHeaderProps {
   set: {
     id: string;
     title: string;
-    description: string | null;
-    user_id: string;
+    description?: string;
     permanent_shuffle?: boolean;
   };
   setId: string;
@@ -33,12 +29,18 @@ export const SetViewHeader: React.FC<SetViewHeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const { t } = useI18n();
-  const { user } = useAuth();
 
-  const isOwner = user?.id === set.user_id;
+  const handleStartStudy = () => {
+    navigate(`/study/${setId}`);
+  };
+
+  const handleOpenEditor = () => {
+    // Navigate to the first card in editor mode
+    navigate(`/sets/${setId}/cards`);
+  };
 
   return (
-    <div className="mb-6">
+    <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
         <Button
           variant="ghost"
@@ -50,69 +52,59 @@ export const SetViewHeader: React.FC<SetViewHeaderProps> = ({
         </Button>
 
         <div className="flex items-center gap-2">
-          {isOwner && (
-            <ListDeckForSaleDialog
-              setId={setId}
-              setTitle={set.title}
-              trigger={
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
-                  List for Sale
-                </Button>
-              }
-            />
-          )}
-          
           <Button
-            variant="outline"
-            size="sm"
-            onClick={onShowPermanentShuffleSettings}
-            className="flex items-center gap-2"
-          >
-            <Shuffle className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {set.permanent_shuffle ? 'Shuffled' : 'Ordered'}
-            </span>
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onShowEnhancedOverview}
-            className="flex items-center gap-2"
-          >
-            <Eye className="w-4 h-4" />
-            <span className="hidden sm:inline">Enhanced View</span>
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onShowAIGenerator}
-            className="flex items-center gap-2"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span className="hidden sm:inline">AI Generate</span>
-          </Button>
-          
-          <Button
-            onClick={onShowStudySettings}
+            onClick={handleStartStudy}
             className="flex items-center gap-2"
           >
             <Play className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('setView.study')}</span>
+            {t('setView.studyMode')}
+          </Button>
+          
+          <Button
+            onClick={handleOpenEditor}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Edit className="w-4 h-4" />
+            {t('setView.visualEditor')}
+          </Button>
+
+          <Button
+            onClick={onShowStudySettings}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            {t('setView.studySettings')}
           </Button>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">{set.title}</CardTitle>
-          {set.description && (
-            <CardDescription className="text-base">{set.description}</CardDescription>
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-foreground mb-2">{set.title}</h1>
+        {set.description && (
+          <p className="text-muted-foreground mb-4">{set.description}</p>
+        )}
+        
+        <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+          {set.permanent_shuffle && (
+            <div className="flex items-center gap-1">
+              <Shuffle className="w-4 h-4" />
+              {t('setView.permanentShuffle')}
+            </div>
           )}
-        </CardHeader>
-      </Card>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onShowEnhancedOverview}
+            className="flex items-center gap-1"
+          >
+            <Eye className="w-4 h-4" />
+            {t('setView.enhancedOverview')}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
