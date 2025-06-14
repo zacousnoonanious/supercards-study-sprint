@@ -104,6 +104,7 @@ export type Database = {
           invite_token: string
           is_active: boolean | null
           max_uses: number | null
+          password_hash: string | null
           role: string
           set_id: string
           updated_at: string | null
@@ -117,6 +118,7 @@ export type Database = {
           invite_token: string
           is_active?: boolean | null
           max_uses?: number | null
+          password_hash?: string | null
           role?: string
           set_id: string
           updated_at?: string | null
@@ -130,6 +132,7 @@ export type Database = {
           invite_token?: string
           is_active?: boolean | null
           max_uses?: number | null
+          password_hash?: string | null
           role?: string
           set_id?: string
           updated_at?: string | null
@@ -356,6 +359,14 @@ export type Database = {
       generate_invite_token: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      hash_password: {
+        Args: { password: string }
+        Returns: string
+      }
+      verify_invite_password: {
+        Args: { invite_token: string; password?: string }
+        Returns: boolean
       }
     }
     Enums: {

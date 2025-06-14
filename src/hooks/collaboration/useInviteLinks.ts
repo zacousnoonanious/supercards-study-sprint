@@ -12,6 +12,7 @@ interface InviteLink {
   current_uses: number;
   is_active: boolean;
   created_at: string;
+  password_hash: string | null;
 }
 
 interface UseInviteLinksProps {
@@ -50,7 +51,8 @@ export const useInviteLinks = ({ setId }: UseInviteLinksProps) => {
   const createInviteLink = async (
     role: 'editor' | 'viewer' = 'editor',
     expiresInHours?: number,
-    maxUses?: number
+    maxUses?: number,
+    password?: string
   ): Promise<string | null> => {
     if (!user || !setId) return null;
     
@@ -66,6 +68,16 @@ export const useInviteLinks = ({ setId }: UseInviteLinksProps) => {
         ? new Date(Date.now() + expiresInHours * 60 * 60 * 1000).toISOString()
         : null;
 
+      // Hash password if provided
+      let passwordHash = null;
+      if (password) {
+        const { data: hashData, error: hashError } = await supabase
+          .rpc('hash_password', { password });
+        
+        if (hashError) throw hashError;
+        passwordHash = hashData;
+      }
+
       const { data, error } = await supabase
         .from('deck_invite_links')
         .insert({
@@ -75,6 +87,7 @@ export const useInviteLinks = ({ setId }: UseInviteLinksProps) => {
           role,
           expires_at: expiresAt,
           max_uses: maxUses,
+          password_hash: passwordHash,
         })
         .select()
         .single();
@@ -108,7 +121,7 @@ export const useInviteLinks = ({ setId }: UseInviteLinksProps) => {
     }
   };
 
-  const joinDeckViaInvite = async (inviteToken: string): Promise<{ success: boolean; message: string }> => {
+  const joinDeckViaInvite = async (inviteToken: string, password?: string): Promise<{ success: boolean; message: string; requiresPassword?: boolean }> => {
     if (!user) {
       return { success: false, message: 'You must be logged in to join a deck.' };
     }
@@ -134,6 +147,20 @@ export const useInviteLinks = ({ setId }: UseInviteLinksProps) => {
       // Check if max uses reached
       if (inviteData.max_uses && inviteData.current_uses >= inviteData.max_uses) {
         return { success: false, message: 'This invite link has reached its maximum number of uses.' };
+      }
+
+      // Check password if required
+      if (inviteData.password_hash) {
+        if (!password) {
+          return { success: false, message: 'This invite requires a password.', requiresPassword: true };
+        }
+
+        const { data: passwordValid, error: passwordError } = await supabase
+          .rpc('verify_invite_password', { invite_token: inviteToken, password });
+
+        if (passwordError || !passwordValid) {
+          return { success: false, message: 'Incorrect password.' };
+        }
       }
 
       // Check if user is already a collaborator

@@ -3,8 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, ArrowLeft, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Users, ArrowLeft, CheckCircle, XCircle, Loader2, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInviteLinks } from '@/hooks/collaboration/useInviteLinks';
@@ -14,11 +16,12 @@ const JoinDeck = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [joinStatus, setJoinStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [joinStatus, setJoinStatus] = useState<'loading' | 'success' | 'error' | 'password-required'>('loading');
   const [message, setMessage] = useState('');
-  const [setId, setSetId] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [isJoining, setIsJoining] = useState(false);
 
-  const { joinDeckViaInvite } = useInviteLinks({ setId: setId || '' });
+  const { joinDeckViaInvite } = useInviteLinks({ setId: '' });
 
   useEffect(() => {
     if (!inviteToken) {
@@ -36,12 +39,12 @@ const JoinDeck = () => {
     handleJoinDeck();
   }, [inviteToken, user]);
 
-  const handleJoinDeck = async () => {
+  const handleJoinDeck = async (providedPassword?: string) => {
     if (!inviteToken) return;
 
     try {
-      setJoinStatus('loading');
-      const result = await joinDeckViaInvite(inviteToken);
+      setIsJoining(true);
+      const result = await joinDeckViaInvite(inviteToken, providedPassword);
       
       if (result.success) {
         setJoinStatus('success');
@@ -56,6 +59,9 @@ const JoinDeck = () => {
         setTimeout(() => {
           navigate('/decks');
         }, 2000);
+      } else if (result.requiresPassword) {
+        setJoinStatus('password-required');
+        setMessage('This invite requires a password to join.');
       } else {
         setJoinStatus('error');
         setMessage(result.message);
@@ -75,7 +81,23 @@ const JoinDeck = () => {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsJoining(false);
     }
+  };
+
+  const handlePasswordSubmit = () => {
+    if (!password.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter the password.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setJoinStatus('loading');
+    handleJoinDeck(password);
   };
 
   const getStatusIcon = () => {
@@ -86,6 +108,8 @@ const JoinDeck = () => {
         return <CheckCircle className="w-12 h-12 text-green-500" />;
       case 'error':
         return <XCircle className="w-12 h-12 text-red-500" />;
+      case 'password-required':
+        return <Lock className="w-12 h-12 text-blue-500" />;
       default:
         return <Users className="w-12 h-12 text-muted-foreground" />;
     }
@@ -99,6 +123,8 @@ const JoinDeck = () => {
         return 'Welcome to the Team!';
       case 'error':
         return 'Unable to Join';
+      case 'password-required':
+        return 'Password Required';
       default:
         return 'Join Deck';
     }
@@ -123,6 +149,28 @@ const JoinDeck = () => {
           </CardHeader>
           
           <CardContent className="space-y-4">
+            {joinStatus === 'password-required' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password">Enter Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter the deck password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                  />
+                </div>
+                <Button onClick={handlePasswordSubmit} disabled={isJoining} className="w-full">
+                  {isJoining ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : null}
+                  Join Deck
+                </Button>
+              </div>
+            )}
+
             {joinStatus === 'success' && (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">

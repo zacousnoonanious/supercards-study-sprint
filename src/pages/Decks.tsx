@@ -1,14 +1,14 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, BookOpen, Edit, Trash2, Play } from 'lucide-react';
+import { Plus, BookOpen, Edit, Trash2, Play, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
+import { JoinDeckDialog } from '@/components/JoinDeckDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -126,10 +126,20 @@ const Decks = () => {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h2 className="text-xl font-semibold text-foreground">{t('decks.title')}</h2>
-          <Button onClick={() => navigate('/create-set')} className="flex items-center gap-2 w-full sm:w-auto">
-            <Plus className="w-4 h-4" />
-            {t('decks.createNew')}
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <JoinDeckDialog 
+              trigger={
+                <Button variant="outline" className="flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  Join Deck
+                </Button>
+              }
+            />
+            <Button onClick={() => navigate('/create-set')} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              {t('decks.createNew')}
+            </Button>
+          </div>
         </div>
 
         {sets.length === 0 ? (
@@ -138,10 +148,20 @@ const Decks = () => {
               <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">{t('decks.noDecks')}</h3>
               <p className="text-muted-foreground mb-4">{t('decks.noDecksDesc')}</p>
-              <Button onClick={() => navigate('/create-set')}>
-                <Plus className="w-4 h-4 mr-2" />
-                {t('decks.createFirst')}
-              </Button>
+              <div className="flex justify-center gap-2">
+                <Button onClick={() => navigate('/create-set')}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  {t('decks.createFirst')}
+                </Button>
+                <JoinDeckDialog 
+                  trigger={
+                    <Button variant="outline">
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Join Existing Deck
+                    </Button>
+                  }
+                />
+              </div>
             </CardContent>
           </Card>
         ) : (

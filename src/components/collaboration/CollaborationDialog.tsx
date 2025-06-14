@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Users, UserPlus, Share2, Settings, Copy, Link, Trash2, Plus, Clock, Hash } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Users, UserPlus, Share2, Settings, Copy, Link, Trash2, Plus, Clock, Hash, Lock, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CollaboratorInfo } from '@/hooks/useCollaborativeEditing';
 import { useInviteLinks } from '@/hooks/collaboration/useInviteLinks';
@@ -34,6 +35,9 @@ export const CollaborationDialog: React.FC<CollaborationDialogProps> = ({
   const [inviteRole, setInviteRole] = useState<'editor' | 'viewer'>('editor');
   const [expiresIn, setExpiresIn] = useState<string>('24');
   const [maxUses, setMaxUses] = useState<string>('');
+  const [usePassword, setUsePassword] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isEnabling, setIsEnabling] = useState(false);
   const { toast } = useToast();
 
@@ -51,19 +55,45 @@ export const CollaborationDialog: React.FC<CollaborationDialogProps> = ({
     }
   }, [isOpen, isCollaborative]);
 
+  const generateRandomPassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 12; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setPassword(result);
+  };
+
   const handleCreateInviteLink = async () => {
     const expiresInHours = expiresIn === 'never' ? undefined : parseInt(expiresIn);
     const maxUsesNum = maxUses ? parseInt(maxUses) : undefined;
+    const linkPassword = usePassword ? password : undefined;
 
-    const inviteUrl = await createInviteLink(inviteRole, expiresInHours, maxUsesNum);
+    if (usePassword && !password) {
+      toast({
+        title: "Error",
+        description: "Please enter a password or generate one.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const inviteUrl = await createInviteLink(inviteRole, expiresInHours, maxUsesNum, linkPassword);
     
     if (inviteUrl) {
       // Copy to clipboard
       await navigator.clipboard.writeText(inviteUrl);
       toast({
         title: "Invite Link Created",
-        description: "The invite link has been copied to your clipboard!",
+        description: usePassword 
+          ? `The invite link has been copied to your clipboard! Password: ${password}`
+          : "The invite link has been copied to your clipboard!",
       });
+      
+      // Reset form
+      setUsePassword(false);
+      setPassword('');
+      setMaxUses('');
     } else {
       toast({
         title: "Error",
@@ -229,6 +259,52 @@ export const CollaborationDialog: React.FC<CollaborationDialogProps> = ({
                 />
               </div>
 
+              {/* Password Protection */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="use-password" 
+                    checked={usePassword} 
+                    onCheckedChange={(checked) => setUsePassword(checked as boolean)}
+                  />
+                  <Label htmlFor="use-password" className="text-sm">Password protect this link</Label>
+                </div>
+
+                {usePassword && (
+                  <div className="space-y-2">
+                    <Label className="text-xs">Password</Label>
+                    <div className="flex space-x-2">
+                      <div className="relative flex-1">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={generateRandomPassword}
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <Button 
                 onClick={handleCreateInviteLink} 
                 disabled={isCreating}
@@ -252,9 +328,17 @@ export const CollaborationDialog: React.FC<CollaborationDialogProps> = ({
                 {inviteLinks.filter(link => link.is_active).map((link) => (
                   <div key={link.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center gap-3 flex-1">
-                      <Badge variant={getRoleBadgeVariant(link.role)}>
-                        {link.role}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={getRoleBadgeVariant(link.role)}>
+                          {link.role}
+                        </Badge>
+                        {link.password_hash && (
+                          <Badge variant="outline" className="text-xs">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Protected
+                          </Badge>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-mono truncate">
                           {link.invite_token}
