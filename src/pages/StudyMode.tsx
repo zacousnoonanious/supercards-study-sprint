@@ -57,12 +57,10 @@ const StudyMode = () => {
     }
   }, [user, setId, navigate]);
 
+  // Remove the redundant applyStudySettings call since it's now handled in fetchSetAndCards
   useEffect(() => {
     console.log('StudyMode: Cards changed, shuffledCards length:', shuffledCards.length);
-    if (shuffledCards.length > 0) {
-      console.log('StudyMode: Applying study settings');
-      applyStudySettings();
-    }
+    // Study settings are now applied automatically in fetchSetAndCards
   }, [shuffledCards, shuffle, mode]);
 
   // Timer effect for advanced countdown functionality
