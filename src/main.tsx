@@ -3,9 +3,6 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import { AuthProvider } from '@/contexts/AuthContext'
-import { I18nProvider } from '@/contexts/I18nContext'
-import { ThemeProvider } from '@/contexts/ThemeContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient({
@@ -20,13 +17,7 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <I18nProvider>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </I18nProvider>
-      </ThemeProvider>
+      <App />
     </QueryClientProvider>
   </React.StrictMode>
 );
