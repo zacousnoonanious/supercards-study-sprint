@@ -256,16 +256,17 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
 
   const inviteCollaborator = async (email: string, role: 'editor' | 'viewer' = 'editor') => {
     try {
-      // This would typically send an email invitation
-      // For now, we'll just add them directly if they have an account
-      const { data: invitedUser } = await supabase
+      // Simplify query to avoid type recursion
+      const profileQuery = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
-        .single();
+        .maybeSingle();
+
+      const invitedUser = profileQuery.data;
 
       if (invitedUser) {
-        const { error } = await supabase
+        const insertResult = await supabase
           .from('deck_collaborators')
           .insert({
             set_id: setId,
@@ -275,7 +276,7 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
             accepted_at: new Date().toISOString(), // Auto-accept for now
           });
 
-        if (error) throw error;
+        if (insertResult.error) throw insertResult.error;
         await fetchCollaborators();
         return true;
       }
@@ -288,12 +289,12 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
 
   const enableCollaboration = async () => {
     try {
-      const { error } = await supabase
+      const updateResult = await supabase
         .from('flashcard_sets')
         .update({ is_collaborative: true })
         .eq('id', setId);
 
-      if (error) throw error;
+      if (updateResult.error) throw updateResult.error;
       setIsCollaborative(true);
       return true;
     } catch (error) {
