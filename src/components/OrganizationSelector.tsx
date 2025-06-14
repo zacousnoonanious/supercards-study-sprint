@@ -10,12 +10,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, Building, Plus, User } from 'lucide-react';
+import { ChevronDown, Building, Plus, User, Settings, UserCheck } from 'lucide-react';
 import { CreateOrganizationDialog } from './CreateOrganizationDialog';
+import { DomainManagementDialog } from './DomainManagementDialog';
+import { PendingApprovalsDialog } from './PendingApprovalsDialog';
 
 export const OrganizationSelector: React.FC = () => {
-  const { currentOrganization, userOrganizations, switchOrganization, userRole } = useOrganization();
+  const { currentOrganization, userOrganizations, switchOrganization, userRole, pendingApprovals } = useOrganization();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  const isAdmin = userRole === 'org_admin' || userRole === 'super_admin';
 
   // If user has no organizations, show individual mode indicator
   if (userOrganizations.length === 0) {
@@ -69,6 +73,39 @@ export const OrganizationSelector: React.FC = () => {
               {org.name}
             </DropdownMenuItem>
           ))}
+          
+          {isAdmin && currentOrganization && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Admin Tools</DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <DomainManagementDialog
+                  trigger={
+                    <div className="flex items-center w-full cursor-pointer">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Manage Domains
+                    </div>
+                  }
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <PendingApprovalsDialog
+                  trigger={
+                    <div className="flex items-center w-full cursor-pointer relative">
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Pending Approvals
+                      {pendingApprovals.length > 0 && (
+                        <span className="ml-auto bg-primary text-primary-foreground text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] text-center">
+                          {pendingApprovals.length}
+                        </span>
+                      )}
+                    </div>
+                  }
+                />
+              </DropdownMenuItem>
+            </>
+          )}
+          
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setShowCreateDialog(true)}>
             <Plus className="w-4 h-4 mr-2" />

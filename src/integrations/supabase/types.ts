@@ -400,6 +400,7 @@ export type Database = {
           invited_by: string | null
           joined_at: string | null
           organization_id: string
+          pending_reason: string | null
           role: string
           status: string
           updated_at: string
@@ -412,6 +413,7 @@ export type Database = {
           invited_by?: string | null
           joined_at?: string | null
           organization_id: string
+          pending_reason?: string | null
           role?: string
           status?: string
           updated_at?: string
@@ -424,6 +426,7 @@ export type Database = {
           invited_by?: string | null
           joined_at?: string | null
           organization_id?: string
+          pending_reason?: string | null
           role?: string
           status?: string
           updated_at?: string
@@ -441,6 +444,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          approved_domains: string[] | null
           created_at: string
           created_by: string
           id: string
@@ -449,6 +453,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approved_domains?: string[] | null
           created_at?: string
           created_by: string
           id?: string
@@ -457,6 +462,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approved_domains?: string[] | null
           created_at?: string
           created_by?: string
           id?: string
@@ -519,6 +525,19 @@ export type Database = {
       }
       hash_password: {
         Args: { password: string }
+        Returns: string
+      }
+      is_domain_approved: {
+        Args: { org_id: string; email: string }
+        Returns: boolean
+      }
+      process_organization_join: {
+        Args: {
+          org_id: string
+          user_id: string
+          user_email: string
+          invite_role?: string
+        }
         Returns: string
       }
       verify_invite_password: {
