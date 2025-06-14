@@ -41,8 +41,7 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from('flashcard_sets')
         .select('*')
-        .order('updated_at', { ascending: false })
-        .limit(3);
+        .order('updated_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching dashboard data:', error);
@@ -50,8 +49,9 @@ const Dashboard = () => {
       }
       
       console.log('Dashboard data fetched:', data);
-      setRecentSets(data || []);
-      setTotalDecks(data?.length || 0);
+      const sets = data || [];
+      setRecentSets(sets.slice(0, 3)); // Show only 3 most recent
+      setTotalDecks(sets.length); // Set total count
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     }
