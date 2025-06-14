@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -190,24 +189,26 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
 
   const fetchCollaborators = async () => {
     try {
+      // Use a different query approach to avoid the join issue
       const { data: collaboratorsData } = await supabase
         .from('deck_collaborators')
-        .select(`
-          id,
-          user_id,
-          role,
-          profiles!inner(first_name, last_name, avatar_url)
-        `)
+        .select('id, user_id, role')
         .eq('set_id', setId)
         .not('accepted_at', 'is', null);
 
       if (collaboratorsData) {
-        // Explicitly type the mapping operation to avoid infinite recursion
         const formattedCollaborators: CollaboratorInfo[] = [];
         
-        for (const collab of collaboratorsData as CollaboratorQueryResult[]) {
-          const firstName = collab.profiles.first_name || '';
-          const lastName = collab.profiles.last_name || '';
+        // Fetch profile data separately for each collaborator
+        for (const collab of collaboratorsData) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, avatar_url')
+            .eq('id', collab.user_id)
+            .single();
+
+          const firstName = profile?.first_name || '';
+          const lastName = profile?.last_name || '';
           const fullName = `${firstName} ${lastName}`.trim() || 'Anonymous User';
           
           formattedCollaborators.push({
@@ -215,7 +216,7 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
             user_id: collab.user_id,
             role: collab.role as 'owner' | 'editor' | 'viewer',
             user_name: fullName,
-            user_avatar: collab.profiles.avatar_url || undefined,
+            user_avatar: profile?.avatar_url || undefined,
           });
         }
         
@@ -229,12 +230,14 @@ export const useCollaborativeEditing = ({ setId, cardId }: UseCollaborativeEditi
   const updateUserPosition = async (cardId: string | null, cursorPosition?: any) => {
     if (channelRef.current && user) {
       try {
-        const { data: profile } = await supabase
+        // Simplify the profile fetch to avoid type recursion
+        const profileQuery = await supabase
           .from('profiles')
           .select('first_name, last_name, avatar_url')
           .eq('id', user.id)
           .single();
 
+        const profile = profileQuery.data;
         const userName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Anonymous User' : 'Anonymous User';
 
         await channelRef.current.track({
