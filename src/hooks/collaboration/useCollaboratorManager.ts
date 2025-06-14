@@ -76,41 +76,42 @@ export const useCollaboratorManager = ({ setId }: UseCollaboratorManagerProps) =
     if (!user || !setId) return false;
     
     try {
-      // Use explicit type annotation to avoid type inference issues
-      const profileQuery = await supabase
+      // Simplified approach - query profiles table directly without complex type inference
+      const profileResult = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email)
-        .maybeSingle();
+        .eq('email', email);
 
-      const profileData = profileQuery.data;
-      const profileError = profileQuery.error;
-
-      if (profileError) {
-        console.error('Profile query error:', profileError);
+      // Check if query was successful and has data
+      if (profileResult.error) {
+        console.error('Profile query error:', profileResult.error);
         return false;
       }
 
-      if (profileData?.id) {
-        const { error: insertError } = await supabase
-          .from('deck_collaborators')
-          .insert({
-            set_id: setId,
-            user_id: profileData.id,
-            role,
-            invited_by: user.id,
-            accepted_at: new Date().toISOString(),
-          });
-
-        if (insertError) {
-          console.error('Insert error:', insertError);
-          return false;
-        }
-        
-        await fetchCollaborators();
-        return true;
+      const profiles = profileResult.data;
+      if (!profiles || profiles.length === 0) {
+        return false;
       }
-      return false;
+
+      const userId = profiles[0].id;
+      
+      const { error: insertError } = await supabase
+        .from('deck_collaborators')
+        .insert({
+          set_id: setId,
+          user_id: userId,
+          role,
+          invited_by: user.id,
+          accepted_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        return false;
+      }
+      
+      await fetchCollaborators();
+      return true;
     } catch (error) {
       console.error('Error inviting collaborator:', error);
       return false;
