@@ -44,7 +44,15 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     createNewCardWithLayout,
     deleteCard,
     reorderCards,
+    initializeEditor,
   } = useCardEditor();
+
+  // Initialize the editor when setId is provided
+  useEffect(() => {
+    if (setId) {
+      initializeEditor(setId);
+    }
+  }, [setId, initializeEditor]);
 
   const currentCard = cards[currentCardIndex];
 
@@ -183,13 +191,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const handleOpenFullscreen = () => {
     setShowFullscreen(true);
   };
-
-  useEffect(() => {
-    if (setId) {
-      // You might want to trigger a loadSet action here
-      // loadSet(setId); // Assuming you have a loadSet action
-    }
-  }, [setId]);
 
   useEffect(() => {
     if (set) {

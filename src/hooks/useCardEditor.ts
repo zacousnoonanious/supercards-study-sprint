@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { FlashcardSet, Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
 
 export const useCardEditor = () => {
-  const { setId, cardId } = useParams();
+  const { cardId } = useParams(); // Only get cardId from params, setId comes from props
   const navigate = useNavigate();
   const { user } = useAuth();
   const [set, setSet] = useState<FlashcardSet | null>(null);
@@ -16,91 +15,94 @@ export const useCardEditor = () => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isUrlUpdating, setIsUrlUpdating] = useState(false);
+  const [setId, setSetId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user || !setId) {
+  // Accept setId as a parameter to this hook
+  const initializeEditor = useCallback(async (providedSetId: string) => {
+    if (!user || !providedSetId) {
       setLoading(false);
       return;
     }
 
-    const fetchSetAndCards = async () => {
-      try {
-        // Fetch set details
-        const { data: setData, error: setError } = await supabase
-          .from('flashcard_sets')
-          .select('*')
-          .eq('id', setId)
-          .single();
+    setSetId(providedSetId);
 
-        if (setError) throw setError;
-        
-        // Transform set data to match FlashcardSet interface
-        const transformedSet: FlashcardSet = {
-          ...setData,
-          is_public: (setData as any).is_public ?? false,
-          permanent_shuffle: setData.permanent_shuffle ?? false,
-          description: setData.description ?? ''
-        };
-        setSet(transformedSet);
+    try {
+      // Fetch set details
+      const { data: setData, error: setError } = await supabase
+        .from('flashcard_sets')
+        .select('*')
+        .eq('id', providedSetId)
+        .single();
 
-        // Fetch cards
-        const { data: cardsData, error: cardsError } = await supabase
-          .from('flashcards')
-          .select('*')
-          .eq('set_id', setId)
-          .order('created_at', { ascending: true });
+      if (setError) throw setError;
+      
+      // Transform set data to match FlashcardSet interface
+      const transformedSet: FlashcardSet = {
+        ...setData,
+        is_public: (setData as any).is_public ?? false,
+        permanent_shuffle: setData.permanent_shuffle ?? false,
+        description: setData.description ?? ''
+      };
+      setSet(transformedSet);
 
-        if (cardsError) throw cardsError;
-        
-        // Type cast the data to match our Flashcard interface
-        const typedCards: Flashcard[] = (cardsData || []).map((card, index) => ({
-          ...card,
-          front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
-          back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
-          hint: card.hint || '',
-          last_reviewed_at: card.last_reviewed_at || null,
-          card_type: (card.card_type as Flashcard['card_type']) || 'normal',
-          interactive_type: card.interactive_type || null,
-          countdown_timer: card.countdown_timer || 0,
-          countdown_timer_front: card.countdown_timer_front || 0,
-          countdown_timer_back: card.countdown_timer_back || 0,
-          countdown_behavior_front: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
-          countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
-          flips_before_next: card.flips_before_next || 2,
-          password: card.password || null,
-          position: index,
-          countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
-        }));
-        
-        setCards(typedCards);
+      // Fetch cards
+      const { data: cardsData, error: cardsError } = await supabase
+        .from('flashcards')
+        .select('*')
+        .eq('set_id', providedSetId)
+        .order('created_at', { ascending: true });
 
-        // If a specific cardId is provided, find and navigate to that card
-        if (cardId && typedCards.length > 0) {
-          const cardIndex = typedCards.findIndex(card => card.id === cardId);
-          if (cardIndex >= 0) {
-            console.log('Setting card index from URL:', cardIndex);
-            setCurrentCardIndex(cardIndex);
-          } else {
-            // Card not found, redirect to first card
-            if (typedCards[0]) {
-              console.log('Card not found, redirecting to first card');
-              navigate(`/sets/${setId}/cards/${typedCards[0].id}`, { replace: true });
-            }
+      if (cardsError) throw cardsError;
+      
+      // Type cast the data to match our Flashcard interface
+      const typedCards: Flashcard[] = (cardsData || []).map((card, index) => ({
+        ...card,
+        front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
+        back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
+        hint: card.hint || '',
+        last_reviewed_at: card.last_reviewed_at || null,
+        card_type: (card.card_type as Flashcard['card_type']) || 'normal',
+        interactive_type: card.interactive_type || null,
+        countdown_timer: card.countdown_timer || 0,
+        countdown_timer_front: card.countdown_timer_front || 0,
+        countdown_timer_back: card.countdown_timer_back || 0,
+        countdown_behavior_front: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
+        countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
+        flips_before_next: card.flips_before_next || 2,
+        password: card.password || null,
+        position: index,
+        countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
+      }));
+      
+      setCards(typedCards);
+
+      // If a specific cardId is provided, find and navigate to that card
+      if (cardId && typedCards.length > 0) {
+        const cardIndex = typedCards.findIndex(card => card.id === cardId);
+        if (cardIndex >= 0) {
+          console.log('Setting card index from URL:', cardIndex);
+          setCurrentCardIndex(cardIndex);
+        } else {
+          // Card not found, redirect to first card
+          if (typedCards[0]) {
+            console.log('Card not found, redirecting to first card');
+            navigate(`/sets/${providedSetId}/cards/${typedCards[0].id}`, { replace: true });
           }
         }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
+      } else if (typedCards.length > 0) {
+        // No specific card requested, go to first card
+        setCurrentCardIndex(0);
       }
-    };
-
-    fetchSetAndCards();
-  }, [user, setId, cardId, navigate]);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, cardId, navigate]);
 
   // Update URL when card index changes - only when not already updating
   useEffect(() => {
-    if (cards.length > 0 && cards[currentCardIndex] && !isUrlUpdating) {
+    if (cards.length > 0 && cards[currentCardIndex] && !isUrlUpdating && setId) {
       const currentCard = cards[currentCardIndex];
       if (currentCard && currentCard.id !== cardId) {
         console.log('Updating URL for card:', currentCard.id, 'at index:', currentCardIndex);
@@ -596,5 +598,6 @@ export const useCardEditor = () => {
     createNewCardWithLayout,
     deleteCard,
     reorderCards,
+    initializeEditor,
   };
 };
