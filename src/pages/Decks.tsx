@@ -20,6 +20,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { OrganizationSetup } from '@/components/OrganizationSetup';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 interface FlashcardSet {
   id: string;
@@ -32,6 +34,7 @@ interface FlashcardSet {
 const Decks = () => {
   const { user } = useAuth();
   const { t } = useI18n();
+  const { currentOrganization, userOrganizations, isLoading: orgLoading } = useOrganization();
   const [sets, setSets] = useState<FlashcardSet[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingSetId, setDeletingSetId] = useState<string | null>(null);
@@ -44,14 +47,25 @@ const Decks = () => {
       return;
     }
     fetchSets();
-  }, [user, navigate]);
+  }, [user, navigate, currentOrganization]);
 
   const fetchSets = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('flashcard_sets')
         .select('*')
         .order('updated_at', { ascending: false });
+
+      // If user has organization, show both personal and org decks
+      if (currentOrganization) {
+        // Show personal decks (no org) and current org decks
+        query = query.or(`organization_id.is.null,organization_id.eq.${currentOrganization.id}`);
+      } else {
+        // Show only personal decks
+        query = query.is('organization_id', null);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setSets(data || []);
@@ -111,6 +125,19 @@ const Decks = () => {
     }
   };
 
+  if (orgLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-lg text-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show organization setup if user has no organizations
+  if (userOrganizations.length === 0) {
+    return <OrganizationSetup />;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -125,7 +152,14 @@ const Decks = () => {
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h2 className="text-xl font-semibold text-foreground">{t('decks.title')}</h2>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">{t('decks.title')}</h2>
+            {currentOrganization && (
+              <p className="text-sm text-muted-foreground">
+                {currentOrganization.name}
+              </p>
+            )}
+          </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <JoinDeckDialog 
               trigger={

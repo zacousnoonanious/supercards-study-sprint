@@ -57,6 +57,7 @@ export type Database = {
           id: string
           invited_at: string | null
           invited_by: string | null
+          organization_id: string | null
           role: string
           set_id: string
           updated_at: string | null
@@ -68,6 +69,7 @@ export type Database = {
           id?: string
           invited_at?: string | null
           invited_by?: string | null
+          organization_id?: string | null
           role?: string
           set_id: string
           updated_at?: string | null
@@ -79,12 +81,20 @@ export type Database = {
           id?: string
           invited_at?: string | null
           invited_by?: string | null
+          organization_id?: string | null
           role?: string
           set_id?: string
           updated_at?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "deck_collaborators_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "deck_collaborators_set_id_fkey"
             columns: ["set_id"]
@@ -104,6 +114,7 @@ export type Database = {
           invite_token: string
           is_active: boolean | null
           max_uses: number | null
+          organization_id: string | null
           password_hash: string | null
           role: string
           set_id: string
@@ -118,6 +129,7 @@ export type Database = {
           invite_token: string
           is_active?: boolean | null
           max_uses?: number | null
+          organization_id?: string | null
           password_hash?: string | null
           role?: string
           set_id: string
@@ -132,12 +144,20 @@ export type Database = {
           invite_token?: string
           is_active?: boolean | null
           max_uses?: number | null
+          organization_id?: string | null
           password_hash?: string | null
           role?: string
           set_id?: string
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "deck_invite_links_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "deck_invite_links_set_id_fkey"
             columns: ["set_id"]
@@ -205,6 +225,7 @@ export type Database = {
           description: string | null
           id: string
           is_collaborative: boolean | null
+          organization_id: string | null
           permanent_shuffle: boolean | null
           title: string
           updated_at: string
@@ -216,6 +237,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_collaborative?: boolean | null
+          organization_id?: string | null
           permanent_shuffle?: boolean | null
           title: string
           updated_at?: string
@@ -227,12 +249,21 @@ export type Database = {
           description?: string | null
           id?: string
           is_collaborative?: boolean | null
+          organization_id?: string | null
           permanent_shuffle?: boolean | null
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "flashcard_sets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       flashcards: {
         Row: {
@@ -317,6 +348,124 @@ export type Database = {
           },
         ]
       }
+      organization_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invite_token: string
+          invited_by: string
+          organization_id: string
+          role: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invite_token: string
+          invited_by: string
+          organization_id: string
+          role?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invite_token?: string
+          invited_by?: string
+          organization_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_invites_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          joined_at: string | null
+          organization_id: string
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          joined_at?: string | null
+          organization_id: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          joined_at?: string | null
+          organization_id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -358,6 +507,14 @@ export type Database = {
       }
       generate_invite_token: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_org_invite_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_org_slug: {
+        Args: { org_name: string }
         Returns: string
       }
       hash_password: {

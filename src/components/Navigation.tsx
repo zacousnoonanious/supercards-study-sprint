@@ -1,97 +1,129 @@
-
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useI18n } from '@/contexts/I18nContext';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, BookOpen, ShoppingBag, Menu, X } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 import { UserDropdown } from './UserDropdown';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { MobileMenu } from './MobileMenu';
+import { OrganizationSelector } from './OrganizationSelector';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
-export const Navigation: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { t } = useI18n();
+export const Navigation = () => {
   const { user } = useAuth();
+  const { t } = useI18n();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const navigationItems = [
-    { path: '/dashboard', label: t('nav.dashboard'), icon: Home },
-    { path: '/decks', label: t('nav.decks'), icon: BookOpen },
-    { path: '/marketplace', label: t('nav.marketplace'), icon: ShoppingBag },
-  ];
-
-  const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
-
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    setMobileMenuOpen(false);
-  };
-
-  const NavItems = () => (
-    <>
-      {navigationItems.map(({ path, label, icon: Icon }) => (
-        <Button
-          key={path}
-          variant={isActive(path) ? "default" : "ghost"}
-          size="sm"
-          onClick={() => handleNavigation(path)}
-          className="flex items-center space-x-2 h-8"
-        >
-          <Icon className="h-4 w-4" />
-          <span className="text-sm">{label}</span>
-        </Button>
-      ))}
-    </>
-  );
+  const { currentOrganization } = useOrganization();
 
   return (
-    <nav className="bg-background border-b border-border h-12 px-4 flex items-center justify-between w-full">
-      {/* Left side - Logo and Navigation */}
-      <div className="flex items-center space-x-4 flex-shrink-0">
-        <h1 
-          className="text-xl font-bold text-indigo-600 cursor-pointer" 
-          onClick={() => navigate('/dashboard')}
-        >
-          SuperCards
-        </h1>
-        
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-2">
-          <NavItems />
-        </div>
-      </div>
-
-      {/* Spacer to push right content all the way to the right */}
-      <div className="flex-1"></div>
-
-      {/* Right side - User Dropdown and Mobile Menu - pushed all the way right */}
-      <div className="flex items-center space-x-2 flex-shrink-0 ml-auto">
-        {user && <UserDropdown />}
-        
-        {/* Mobile Menu Button */}
-        <div className="md:hidden">
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Menu className="h-4 w-4" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-64">
-              <div className="flex flex-col space-y-4 mt-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">{t('nav.navigation')}</h2>
-                </div>
-                <div className="flex flex-col space-y-2">
-                  <NavItems />
-                </div>
+    <nav className="bg-background border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center space-x-4">
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">FC</span>
               </div>
-            </SheetContent>
-          </Sheet>
+              <span className="font-semibold text-foreground">FlashCards</span>
+            </Link>
+            
+            {user && <OrganizationSelector />}
+          </div>
+
+          <div className="-mr-2 flex md:hidden">
+            <button
+              type="button"
+              className="bg-background rounded-md p-2 inline-flex items-center justify-center text-foreground hover:text-accent-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+              aria-controls="mobile-menu"
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <span className="sr-only">Open main menu</span>
+              <svg
+                className={`${mobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <svg
+                className={`${mobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="hidden md:block">
+            <div className="ml-10 flex items-baseline space-x-4">
+              {user ? (
+                <>
+                  <Link
+                    to="/dashboard"
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      location.pathname === '/dashboard'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                    }`}
+                  >
+                    {t('nav.dashboard')}
+                  </Link>
+                  <Link
+                    to="/decks"
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      location.pathname === '/decks'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                    }`}
+                  >
+                    {t('nav.decks')}
+                  </Link>
+                  
+                  {/* Show organization-specific nav items */}
+                  {currentOrganization && (
+                    <Link
+                      to="/assignments"
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        location.pathname === '/assignments'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                      }`}
+                    >
+                      Assignments
+                    </Link>
+                  )}
+
+                  <UserDropdown />
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/auth"
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      location.pathname === '/auth'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                    }`}
+                  >
+                    {t('nav.login')}
+                  </Link>
+                  <Button onClick={() => navigate('/auth')} variant="outline">{t('nav.signup')}</Button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
+
+      <MobileMenu mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
     </nav>
   );
 };
