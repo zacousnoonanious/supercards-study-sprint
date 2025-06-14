@@ -9,7 +9,7 @@ import { EnhancedSetOverview } from './EnhancedSetOverview';
 import { Navigation } from './Navigation';
 import { CollaborationDialog } from './collaboration/CollaborationDialog';
 import { Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
-import { CollaboratorInfo } from '@/hooks/useCollaborativeEditing';
+import { CollaboratorInfo, CollaborativeUser } from '@/hooks/useCollaborativeEditing';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CardEditorLayoutProps {
@@ -58,6 +58,8 @@ interface CardEditorLayoutProps {
   // Collaboration props
   isCollaborative?: boolean;
   collaborators?: CollaboratorInfo[];
+  activeUsers?: CollaborativeUser[];
+  currentCardId?: string;
   onEnableCollaboration?: () => Promise<boolean>;
   onRemoveCollaborator?: (collaboratorId: string) => Promise<boolean>;
 }
@@ -108,6 +110,8 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   // Collaboration props
   isCollaborative = false,
   collaborators = [],
+  activeUsers = [],
+  currentCardId,
   onEnableCollaboration,
   onRemoveCollaborator,
 }) => {
@@ -249,6 +253,10 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
               />
             ) : undefined
           }
+          activeUsers={activeUsers}
+          collaborators={collaborators}
+          currentCardId={currentCardId}
+          isCollaborative={isCollaborative}
         />
         
         <TopSettingsBar
