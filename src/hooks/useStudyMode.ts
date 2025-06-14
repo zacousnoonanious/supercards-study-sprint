@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -68,9 +67,17 @@ export const useStudyMode = () => {
   };
 
   const fetchSetAndCards = async () => {
+    if (!setId || !user) {
+      console.log('Missing setId or user:', { setId, user: !!user });
+      setLoading(false);
+      return;
+    }
+
     try {
       console.log('Fetching set and cards for setId:', setId);
+      setLoading(true);
       
+      // Fetch set data
       const { data: setData, error: setError } = await supabase
         .from('flashcard_sets')
         .select('*')
@@ -85,6 +92,7 @@ export const useStudyMode = () => {
       console.log('Set data fetched:', setData);
       setSet(setData);
 
+      // Fetch cards data
       const { data: cardsData, error: cardsError } = await supabase
         .from('flashcards')
         .select('*')
@@ -96,28 +104,43 @@ export const useStudyMode = () => {
         throw cardsError;
       }
       
-      console.log('Cards data fetched:', cardsData);
+      console.log('Raw cards data fetched:', cardsData);
+      console.log('Number of cards found:', cardsData?.length || 0);
       
-      const transformedCards: Flashcard[] = (cardsData || []).map((card, index) => ({
-        ...card,
-        front_elements: (card.front_elements as unknown as any[]) || [],
-        back_elements: (card.back_elements as unknown as any[]) || [],
-        card_type: (card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') || 'normal',
-        interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null,
-        hint: card.hint || '',
-        last_reviewed_at: card.last_reviewed_at || null,
-        countdown_timer: card.countdown_timer || 0,
-        countdown_timer_front: card.countdown_timer_front || 0,
-        countdown_timer_back: card.countdown_timer_back || 0,
-        countdown_behavior_front: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
-        countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
-        flips_before_next: card.flips_before_next || 2,
-        password: card.password || null,
-        position: index,
-        countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
-      }));
+      if (!cardsData || cardsData.length === 0) {
+        console.log('No cards found for set:', setId);
+        setCards([]);
+        setShuffledCards([]);
+        setLoading(false);
+        return;
+      }
+
+      const transformedCards: Flashcard[] = cardsData.map((card, index) => {
+        console.log('Transforming card:', card.id, 'front_elements:', card.front_elements, 'back_elements:', card.back_elements);
+        
+        return {
+          ...card,
+          front_elements: Array.isArray(card.front_elements) ? card.front_elements as any[] : [],
+          back_elements: Array.isArray(card.back_elements) ? card.back_elements as any[] : [],
+          card_type: (card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') || 'normal',
+          interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null,
+          hint: card.hint || '',
+          last_reviewed_at: card.last_reviewed_at || null,
+          countdown_timer: card.countdown_timer || 0,
+          countdown_timer_front: card.countdown_timer_front || 0,
+          countdown_timer_back: card.countdown_timer_back || 0,
+          countdown_behavior_front: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
+          countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
+          flips_before_next: card.flips_before_next || 2,
+          password: card.password || null,
+          position: index,
+          countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
+        };
+      });
       
+      console.log('Transformed cards:', transformedCards);
       setCards(transformedCards);
+      
     } catch (error) {
       console.error('Error fetching set and cards:', error);
       toast({
@@ -131,9 +154,11 @@ export const useStudyMode = () => {
   };
 
   const applyStudySettings = () => {
+    console.log('Applying study settings. Cards count:', cards.length);
     let cardPool = [...cards];
 
     if (shuffle || set?.permanent_shuffle) {
+      console.log('Shuffling cards');
       cardPool = shuffleArray([...cardPool]);
     }
 
@@ -142,6 +167,7 @@ export const useStudyMode = () => {
       setCurrentCardIndex(startIndex);
     }
 
+    console.log('Setting shuffled cards:', cardPool.length);
     setShuffledCards(cardPool);
   };
 

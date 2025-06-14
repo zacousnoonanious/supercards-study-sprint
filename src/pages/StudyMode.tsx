@@ -46,17 +46,22 @@ const StudyMode = () => {
 
   // Move all useEffect hooks to the top, before any conditional logic
   useEffect(() => {
+    console.log('StudyMode: useEffect - user:', !!user, 'setId:', setId);
     if (!user) {
+      console.log('StudyMode: No user, redirecting to auth');
       navigate('/auth');
       return;
     }
     if (setId) {
+      console.log('StudyMode: Fetching set and cards for setId:', setId);
       fetchSetAndCards();
     }
   }, [user, setId, navigate]);
 
   useEffect(() => {
+    console.log('StudyMode: Cards changed, shuffledCards length:', shuffledCards.length);
     if (shuffledCards.length > 0) {
+      console.log('StudyMode: Applying study settings');
       applyStudySettings();
     }
   }, [shuffledCards, shuffle, mode]);
@@ -138,6 +143,8 @@ const StudyMode = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentCardIndex, shuffledCards.length, showAnswer, shuffledCards]);
 
+  console.log('StudyMode: Rendering. Loading:', loading, 'Set:', !!set, 'Cards:', shuffledCards.length, 'Current card:', !!currentCard);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -173,6 +180,28 @@ const StudyMode = () => {
     );
   }
 
+  if (shuffledCards.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <StudyHeader
+          set={set}
+          onBackClick={() => navigate('/decks')}
+          onSettingsClick={() => setShowSettings(true)}
+        />
+        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-foreground">{t('common.noCardsInSet')}</h2>
+            <p className="text-muted-foreground mt-2">This deck doesn't have any cards yet.</p>
+            <Button onClick={() => navigate('/decks')} className="mt-4">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {t('common.goBack')}
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <StudyHeader
@@ -198,8 +227,11 @@ const StudyMode = () => {
           onFillInBlankAnswer={(elementId, correct) => handleAnswerSubmit(correct)}
         />
       ) : (
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-foreground">{t('common.noCardsInSet')}</h2>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-foreground">{t('common.noCardsInSet')}</h2>
+            <p className="text-muted-foreground mt-2">No cards available to study.</p>
+          </div>
         </div>
       )}
 
