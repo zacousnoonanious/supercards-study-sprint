@@ -22,8 +22,6 @@ export const RecentDecks: React.FC<RecentDecksProps> = ({ recentSets }) => {
   const { t } = useI18n();
   const navigate = useNavigate();
 
-  console.log('RecentDecks component received sets:', recentSets);
-
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-4">
@@ -46,29 +44,26 @@ export const RecentDecks: React.FC<RecentDecksProps> = ({ recentSets }) => {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {recentSets.map((set) => {
-            console.log('Rendering deck:', set);
-            return (
-              <Card key={set.id} className="hover:shadow-lg transition-all duration-300">
-                <CardHeader>
-                  <CardTitle className="text-sm truncate">{set.title}</CardTitle>
-                  <CardDescription className="text-xs">{set.description || 'No description'}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/set/${set.id}`)} className="flex-1">
-                      <Eye className="w-3 h-3 mr-1" />
-                      View
-                    </Button>
-                    <Button size="sm" onClick={() => navigate(`/set/${set.id}/study`)} className="flex-1">
-                      <Play className="w-3 h-3 mr-1" />
-                      Study
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {recentSets.map((set) => (
+            <Card key={set.id} className="hover:shadow-lg transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="text-sm truncate">{set.title}</CardTitle>
+                <CardDescription className="text-xs">{set.description || 'No description'}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/set/${set.id}`)} className="flex-1">
+                    <Eye className="w-3 h-3 mr-1" />
+                    View
+                  </Button>
+                  <Button size="sm" onClick={() => navigate(`/set/${set.id}/study`)} className="flex-1">
+                    <Play className="w-3 h-3 mr-1" />
+                    Study
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
     </div>

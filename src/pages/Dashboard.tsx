@@ -27,7 +27,6 @@ const Dashboard = () => {
   const [showOrgSetup, setShowOrgSetup] = useState(false);
   const [recentSets, setRecentSets] = useState<FlashcardSet[]>([]);
   const [totalDecks, setTotalDecks] = useState(0);
-  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -37,34 +36,25 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      console.log('Starting fetchDashboardData for user:', user?.id);
-      setFetchError(null);
+      console.log('Fetching flashcard sets for user:', user?.id);
       
-      // Try a very simple query first
-      console.log('Attempting simple query...');
-      const { data, error, count } = await supabase
+      const { data, error } = await supabase
         .from('flashcard_sets')
-        .select('id, title, description, created_at, updated_at', { count: 'exact' })
+        .select('id, title, description, created_at, updated_at')
         .order('updated_at', { ascending: false });
 
-      console.log('Query completed. Data:', data, 'Error:', error, 'Count:', count);
-
       if (error) {
-        console.error('Supabase error:', error);
-        setFetchError(`Database error: ${error.message}`);
+        console.error('Error fetching flashcard sets:', error);
         return;
       }
       
+      console.log('Successfully fetched flashcard sets:', data);
       const sets = data || [];
-      console.log('Setting recentSets to:', sets.slice(0, 3));
-      console.log('Setting totalDecks to:', sets.length);
-      
       setRecentSets(sets.slice(0, 3));
       setTotalDecks(sets.length);
       
     } catch (error) {
-      console.error('JavaScript error in fetchDashboardData:', error);
-      setFetchError(`JavaScript error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Unexpected error in fetchDashboardData:', error);
     }
   };
 
@@ -125,19 +115,6 @@ const Dashboard = () => {
             }
           </p>
         </div>
-
-        {/* Debug info */}
-        {fetchError && (
-          <Card className="mb-8 border-red-200 bg-red-50">
-            <CardContent className="pt-6">
-              <p className="text-red-800">Debug Info: {fetchError}</p>
-              <p className="text-sm text-red-600 mt-2">User ID: {user?.id}</p>
-              <Button onClick={fetchDashboardData} className="mt-2">
-                Retry Fetch
-              </Button>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Show organization invitation banner for individual users */}
         {userOrganizations.length === 0 && (
@@ -220,7 +197,7 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Add recent decks section */}
+        {/* Recent decks section */}
         <RecentDecks recentSets={recentSets} />
 
         <div className="grid gap-6 md:grid-cols-2">
