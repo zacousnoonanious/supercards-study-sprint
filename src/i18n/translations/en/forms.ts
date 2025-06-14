@@ -27,4 +27,6 @@ export const forms = {
   endDate: "End Date",
   createdAt: "Created At",
   updatedAt: "Updated At",
+  previous: "Previous",
+  next: "Next",
 };

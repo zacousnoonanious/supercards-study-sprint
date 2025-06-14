@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { CardSideToggle } from './CardSideToggle';
 import { CardBorderToggle } from './settings/CardBorderToggle';
 import { GridControls } from './settings/GridControls';
-import { ZoomIn, ZoomOut, Maximize2, Maximize } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Maximize, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface BottomToolbarProps {
@@ -28,6 +28,10 @@ interface BottomToolbarProps {
   onFitToView?: () => void;
   onOpenFullscreen?: () => void;
   isBackSideDisabled?: boolean;
+  // New navigation props
+  currentCardIndex?: number;
+  totalCards?: number;
+  onNavigateCard?: (direction: 'prev' | 'next') => void;
 }
 
 export const BottomToolbar: React.FC<BottomToolbarProps> = ({
@@ -44,6 +48,9 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
   onFitToView,
   onOpenFullscreen,
   isBackSideDisabled = false,
+  currentCardIndex,
+  totalCards,
+  onNavigateCard,
 }) => {
   const { t } = useI18n();
 
@@ -51,6 +58,39 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
     <div className="border-t bg-background p-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
+          {/* Card Navigation */}
+          {onNavigateCard && typeof currentCardIndex === 'number' && typeof totalCards === 'number' && (
+            <>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onNavigateCard('prev')}
+                  disabled={currentCardIndex <= 0}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  {t('common.previous')}
+                </Button>
+                
+                <span className="text-sm font-medium px-2">
+                  {currentCardIndex + 1} / {totalCards}
+                </span>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onNavigateCard('next')}
+                  disabled={currentCardIndex >= totalCards - 1}
+                >
+                  {t('common.next')}
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+
+              <Separator orientation="vertical" className="h-6" />
+            </>
+          )}
+
           {/* Card Side Toggle */}
           <CardSideToggle
             currentSide={currentSide}
