@@ -37,7 +37,7 @@ export const SetViewHeader: React.FC<SetViewHeaderProps> = ({
 
   const handleOpenEditor = () => {
     console.log('Navigating to visual editor for set:', setId);
-    navigate(`/sets/${setId}/cards`);
+    navigate(`/editor/${setId}`);
   };
 
   return (

@@ -34,7 +34,7 @@ const CardEditorPage = () => {
 
           if (cards && cards.length > 0) {
             console.log('CardEditorPage: Redirecting to first card:', cards[0].id);
-            navigate(`/sets/${setId}/cards/${cards[0].id}`, { replace: true });
+            navigate(`/editor/${setId}/${cards[0].id}`, { replace: true });
           } else {
             console.log('CardEditorPage: No cards found in set');
           }

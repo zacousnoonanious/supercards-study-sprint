@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -99,7 +98,7 @@ export const useCardEditor = () => {
           // Card not found, redirect to first card
           if (typedCards[0]) {
             console.log('useCardEditor: Card not found, redirecting to first card');
-            navigate(`/sets/${providedSetId}/cards/${typedCards[0].id}`, { replace: true });
+            navigate(`/editor/${providedSetId}/${typedCards[0].id}`, { replace: true });
           }
         }
       } else if (typedCards.length > 0) {
@@ -120,7 +119,7 @@ export const useCardEditor = () => {
       const currentCard = cards[currentCardIndex];
       if (currentCard && currentCard.id !== cardId) {
         setIsUrlUpdating(true);
-        navigate(`/sets/${setId}/cards/${currentCard.id}`, { replace: true });
+        navigate(`/editor/${setId}/${currentCard.id}`, { replace: true });
         
         // Reset the flag after navigation
         setTimeout(() => {
