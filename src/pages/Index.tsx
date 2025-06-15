@@ -7,10 +7,12 @@ import { CoreFeatures } from '@/components/home/CoreFeatures';
 import { CardEditorShowcase } from '@/components/home/CardEditorShowcase';
 import { PricingPlans } from '@/components/home/PricingPlans';
 import { FinalCTA } from '@/components/home/FinalCTA';
+import { useI18n } from '@/contexts/I18nContext';
 
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!loading && user) {
@@ -22,7 +24,7 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg text-foreground">Loading...</div>
+        <div className="text-lg text-foreground">{t('common.loading')}</div>
       </div>
     );
   }

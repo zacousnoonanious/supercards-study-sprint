@@ -31,13 +31,13 @@ export const DecksHeader: React.FC<DecksHeaderProps> = ({ currentOrganization })
           className="flex items-center gap-2"
         >
           <ShoppingBag className="w-4 h-4" />
-          Marketplace
+          {t('nav.marketplace')}
         </Button>
         <JoinDeckDialog 
           trigger={
             <Button variant="outline" className="flex items-center gap-2">
               <UserPlus className="w-4 h-4" />
-              Join Deck
+              {t('decks.joinDeck')}
             </Button>
           }
         />

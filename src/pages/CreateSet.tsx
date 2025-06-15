@@ -112,7 +112,7 @@ const CreateSet = () => {
             </TabsTrigger>
             <TabsTrigger value="manual" className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
-              Create Manually
+              {t('createSet.createManually')}
             </TabsTrigger>
           </TabsList>
 
@@ -139,32 +139,32 @@ const CreateSet = () => {
           <TabsContent value="manual" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Create New Set</CardTitle>
+                <CardTitle>{t('createSet.manualTitle')}</CardTitle>
                 <CardDescription>
-                  Create a new flashcard set manually and add cards one by one.
+                  {t('createSet.manualDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleManualSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
+                    <Label htmlFor="title">{t('common.title')}</Label>
                     <Input
                       id="title"
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Enter a title for your flashcard set"
+                      placeholder={t('createSet.titlePlaceholder')}
                       required
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description (Optional)</Label>
+                    <Label htmlFor="description">{t('createSet.descriptionLabel')}</Label>
                     <Textarea
                       id="description"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Describe what this flashcard set is about"
+                      placeholder={t('createSet.descriptionPlaceholder')}
                       rows={3}
                     />
                   </div>
@@ -175,11 +175,11 @@ const CreateSet = () => {
                       variant="outline"
                       onClick={() => navigate('/decks')}
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                     <Button type="submit" disabled={loading}>
                       <Save className="w-4 h-4 mr-2" />
-                      {loading ? 'Creating...' : 'Create Set'}
+                      {loading ? t('createSet.creating') : t('createSet.createSet')}
                     </Button>
                   </div>
                 </form>
