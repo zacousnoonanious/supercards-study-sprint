@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
@@ -10,16 +11,35 @@ interface Organization {
   approved_domains: string[];
 }
 
+interface PendingApproval {
+  id: string;
+  email: string;
+  role: string;
+  pending_reason: string;
+  created_at: string;
+  profiles?: {
+    first_name?: string;
+    last_name?: string;
+  };
+  first_name?: string;
+  last_name?: string;
+}
+
 interface OrganizationContextType {
   currentOrganization: Organization | null;
   organizations: Organization[];
+  userOrganizations: Organization[];
   userRole: string | null;
   isLoading: boolean;
+  pendingApprovals: PendingApproval[];
   fetchOrganizations: () => Promise<void>;
   createOrganization: (name: string, approvedDomains: string[]) => Promise<Organization | null>;
   updateOrganization: (id: string, name: string) => Promise<boolean>;
   updateApprovedDomains: (id: string, approvedDomains: string[]) => Promise<boolean>;
-  joinOrganization: (orgId: string, userEmail: string) => Promise<{ success: boolean; message: string }>;
+  joinOrganization: (orgId: string, userEmail: string) => Promise<{ success: boolean; message: string; status?: string }>;
+  switchOrganization: (orgId: string) => void;
+  approveMember: (memberId: string) => Promise<boolean>;
+  rejectMember: (memberId: string) => Promise<boolean>;
 }
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
@@ -35,6 +55,7 @@ export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({ chil
   const [isLoading, setIsLoading] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<any | null>(null);
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -54,6 +75,7 @@ export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({ chil
       setOrganizations([]);
       setCurrentOrganization(null);
       setUserRole(null);
+      setPendingApprovals([]);
     }
   }, [session]);
 
@@ -103,10 +125,55 @@ export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({ chil
       const firstOrg = orgData[0];
       setCurrentOrganization(firstOrg);
       setUserRole(orgMemberships.find(m => m.organization_id === firstOrg.id)?.role || null);
+
+      // Fetch pending approvals if user is admin
+      const currentUserRole = orgMemberships.find(m => m.organization_id === firstOrg.id)?.role;
+      if (currentUserRole === 'org_admin' || currentUserRole === 'super_admin') {
+        await fetchPendingApprovals(firstOrg.id);
+      }
     } catch (error: any) {
       console.error('Error fetching organizations:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchPendingApprovals = async (orgId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('organization_members')
+        .select(`
+          id,
+          user_id,
+          role,
+          pending_reason,
+          created_at,
+          profiles!inner(
+            email,
+            first_name,
+            last_name
+          )
+        `)
+        .eq('organization_id', orgId)
+        .eq('status', 'pending_approval');
+
+      if (error) throw error;
+
+      const approvals = data?.map(item => ({
+        id: item.id,
+        email: item.profiles.email || '',
+        role: item.role,
+        pending_reason: item.pending_reason || '',
+        created_at: item.created_at,
+        profiles: {
+          first_name: item.profiles.first_name,
+          last_name: item.profiles.last_name
+        }
+      })) || [];
+
+      setPendingApprovals(approvals);
+    } catch (error) {
+      console.error('Error fetching pending approvals:', error);
     }
   };
 
@@ -116,7 +183,7 @@ export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({ chil
 
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
-        .insert([{ name, created_by: user.id, approved_domains }])
+        .insert([{ name, created_by: user.id, approved_domains: approvedDomains }])
         .select('*')
         .single();
 
@@ -176,7 +243,7 @@ export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({ chil
     }
   };
 
-  const joinOrganization = async (orgId: string, userEmail: string): Promise<{ success: boolean; message: string }> => {
+  const joinOrganization = async (orgId: string, userEmail: string): Promise<{ success: boolean; message: string; status?: string }> => {
     try {
       // Get organization details to check approved domains
       const { data: orgData, error: orgError } = await supabase
@@ -242,12 +309,14 @@ export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({ chil
         await fetchOrganizations();
         return { 
           success: true, 
-          message: `Successfully joined ${orgData.name}!` 
+          message: `Successfully joined ${orgData.name}!`,
+          status: status
         };
       } else {
         return { 
           success: true, 
-          message: `Request to join ${orgData.name} submitted. ${isPublicDomain ? 'Public domain requests require admin approval for security.' : 'Waiting for admin approval.'}` 
+          message: `Request to join ${orgData.name} submitted. ${isPublicDomain ? 'Public domain requests require admin approval for security.' : 'Waiting for admin approval.'}`,
+          status: status
         };
       }
     } catch (error: any) {
@@ -259,16 +328,76 @@ export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({ chil
     }
   };
 
+  const switchOrganization = (orgId: string) => {
+    const org = organizations.find(o => o.id === orgId);
+    if (org) {
+      setCurrentOrganization(org);
+      // Update user role for this organization
+      // This would need to be fetched from organization_members table
+    }
+  };
+
+  const approveMember = async (memberId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('organization_members')
+        .update({ 
+          status: 'active',
+          joined_at: new Date().toISOString(),
+          pending_reason: null
+        })
+        .eq('id', memberId);
+
+      if (error) throw error;
+
+      // Refresh pending approvals
+      if (currentOrganization) {
+        await fetchPendingApprovals(currentOrganization.id);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error approving member:', error);
+      return false;
+    }
+  };
+
+  const rejectMember = async (memberId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('organization_members')
+        .delete()
+        .eq('id', memberId);
+
+      if (error) throw error;
+
+      // Refresh pending approvals
+      if (currentOrganization) {
+        await fetchPendingApprovals(currentOrganization.id);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error rejecting member:', error);
+      return false;
+    }
+  };
+
   const value: OrganizationContextType = {
     currentOrganization,
     organizations,
+    userOrganizations: organizations, // Alias for compatibility
     userRole,
     isLoading,
+    pendingApprovals,
     fetchOrganizations,
     createOrganization,
     updateOrganization,
     updateApprovedDomains,
     joinOrganization,
+    switchOrganization,
+    approveMember,
+    rejectMember,
   };
 
   return (
