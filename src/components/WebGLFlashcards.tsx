@@ -1,88 +1,181 @@
 
-import React, { useMemo } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import * as THREE from 'three';
 
-interface FlashcardData {
+interface Flashcard {
   front: string;
   back: string;
   color: string;
 }
 
 interface WebGLFlashcardsProps {
-  flashcards: FlashcardData[];
+  flashcards: Flashcard[];
 }
 
 export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) => {
-  // Generate random positions and animation delays for each card
-  const animatedCards = useMemo(() => {
-    return flashcards.map((card, index) => ({
-      ...card,
-      left: Math.random() * 85 + 5, // 5% to 90%
-      animationDelay: Math.random() * 8, // 0 to 8 seconds
-      duration: 15 + Math.random() * 10, // 15 to 25 seconds for slower movement
-      lane: Math.floor(Math.random() * 4), // 4 different vertical lanes
-    }));
+  const mountRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene>();
+  const rendererRef = useRef<THREE.WebGLRenderer>();
+  const cameraRef = useRef<THREE.PerspectiveCamera>();
+  const cardsRef = useRef<THREE.Mesh[]>([]);
+  const animationIdRef = useRef<number>();
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!mountRef.current) return;
+
+    // Scene setup
+    const scene = new THREE.Scene();
+    sceneRef.current = scene;
+
+    // Camera setup
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.z = 5;
+    cameraRef.current = camera;
+
+    // Renderer setup
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    mountRef.current.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
+    // Create flashcards
+    const cards: THREE.Mesh[] = [];
+    flashcards.forEach((flashcard, index) => {
+      // Card geometry
+      const geometry = new THREE.PlaneGeometry(0.8, 0.5);
+      const material = new THREE.MeshBasicMaterial({
+        color: flashcard.color,
+        transparent: true,
+        opacity: 0, // Start invisible
+      });
+
+      const card = new THREE.Mesh(geometry, material);
+      
+      // Position cards randomly across the screen
+      card.position.x = (Math.random() - 0.5) * 8;
+      card.position.y = Math.random() * 3 + 5; // Start above screen
+      card.position.z = Math.random() * 2 - 1;
+      
+      // Random rotation
+      card.rotation.x = Math.random() * 0.3;
+      card.rotation.y = Math.random() * 0.3;
+      card.rotation.z = (Math.random() - 0.5) * 0.5;
+
+      // Store initial and target positions
+      (card as any).targetY = (Math.random() - 0.5) * 4;
+      (card as any).fallSpeed = 0.01 + Math.random() * 0.02;
+      (card as any).rotationSpeed = {
+        x: (Math.random() - 0.5) * 0.005,
+        y: (Math.random() - 0.5) * 0.005,
+        z: (Math.random() - 0.5) * 0.005,
+      };
+      (card as any).animationDelay = index * 200; // Stagger the animations
+      (card as any).hasStartedAnimation = false;
+
+      scene.add(card);
+      cards.push(card);
+    });
+
+    cardsRef.current = cards;
+
+    // Animation loop
+    const animate = () => {
+      animationIdRef.current = requestAnimationFrame(animate);
+
+      const currentTime = Date.now();
+      
+      cards.forEach((card) => {
+        const material = card.material as THREE.MeshBasicMaterial;
+        const cardData = card as any;
+        
+        // Check if animation should start
+        if (!cardData.hasStartedAnimation && currentTime > cardData.animationDelay + 1000) {
+          cardData.hasStartedAnimation = true;
+        }
+        
+        if (cardData.hasStartedAnimation) {
+          // Fade in the card
+          if (material.opacity < 0.8) {
+            material.opacity += 0.02;
+          }
+          
+          // Animate down to target position
+          if (card.position.y > cardData.targetY) {
+            card.position.y -= cardData.fallSpeed;
+          }
+          
+          // Apply gentle rotation
+          card.rotation.x += cardData.rotationSpeed.x;
+          card.rotation.y += cardData.rotationSpeed.y;
+          card.rotation.z += cardData.rotationSpeed.z;
+          
+          // Gentle floating motion
+          card.position.x += Math.sin(currentTime * 0.001 + card.position.z) * 0.001;
+        }
+      });
+
+      renderer.render(scene, camera);
+    };
+
+    // Start animation after a short delay
+    setTimeout(() => {
+      setIsLoaded(true);
+      animate();
+    }, 500);
+
+    // Handle resize
+    const handleResize = () => {
+      if (camera && renderer) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+      }
+      
+      if (mountRef.current && renderer.domElement) {
+        mountRef.current.removeChild(renderer.domElement);
+      }
+      
+      // Dispose of Three.js objects
+      cards.forEach(card => {
+        if (card.geometry) card.geometry.dispose();
+        if (card.material) {
+          if (Array.isArray(card.material)) {
+            card.material.forEach(mat => mat.dispose());
+          } else {
+            card.material.dispose();
+          }
+        }
+      });
+      
+      if (renderer) {
+        renderer.dispose();
+      }
+    };
   }, [flashcards]);
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @keyframes scroll-down {
-            0% { 
-              transform: translateY(-120px) rotate(-2deg);
-              opacity: 0;
-            }
-            10% { 
-              opacity: 0.7;
-            }
-            90% { 
-              opacity: 0.7;
-            }
-            100% { 
-              transform: translateY(calc(100vh + 120px)) rotate(2deg);
-              opacity: 0;
-            }
-          }
-          
-          .scrolling-card {
-            animation: scroll-down var(--duration) linear infinite;
-            animation-delay: var(--delay);
-            will-change: transform;
-          }
-          
-          @media (prefers-reduced-motion: reduce) {
-            .scrolling-card {
-              animation-duration: calc(var(--duration) * 2);
-            }
-          }
-        `
-      }} />
-      
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {animatedCards.map((card, index) => (
-          <div
-            key={index}
-            className="scrolling-card absolute w-32 h-20 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg flex items-center justify-center text-white text-sm font-medium text-center p-3"
-            style={{
-              left: `${card.left}%`,
-              '--delay': `${card.animationDelay}s`,
-              '--duration': `${card.duration}s`,
-              backgroundColor: card.color + '15',
-              borderColor: card.color + '30',
-              top: `${card.lane * 25}%`,
-            } as React.CSSProperties}
-          >
-            <div className="w-full overflow-hidden">
-              <div className="text-xs font-semibold mb-1 leading-tight">
-                {card.front}
-              </div>
-              <div className="text-xs opacity-80 leading-tight">
-                {card.back}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
+    <div 
+      ref={mountRef} 
+      className="absolute inset-0 pointer-events-none z-0"
+      style={{ opacity: isLoaded ? 1 : 0, transition: 'opacity 0.5s ease-in-out' }}
+    />
   );
 };
