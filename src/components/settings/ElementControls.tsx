@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -120,15 +119,6 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                   title={t('editor.alignRight') || 'Align Right'}
                 >
                   <AlignRight className="w-3 h-3" />
-                </Button>
-                <Button
-                  variant={selectedElement.textAlign === 'justify' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleElementUpdate({ textAlign: 'justify' })}
-                  className="h-7 px-2"
-                  title={t('editor.alignJustify') || 'Justify'}
-                >
-                  <AlignJustify className="w-3 h-3" />
                 </Button>
               </div>
 

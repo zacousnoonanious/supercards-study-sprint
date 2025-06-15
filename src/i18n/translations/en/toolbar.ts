@@ -1,4 +1,3 @@
-
 export const toolbar = {
   previousCard: "Previous card",
   nextCard: "Next card",
@@ -15,7 +14,6 @@ export const toolbar = {
   arrange: "Arrange",
   arrangeGrid: "Grid",
   arrangeCenter: "Center",
-  arrangeJustify: "Justify",
   arrangeStack: "Stack",
   arrangeAlignLeft: "Align Left (Text)",
   arrangeAlignCenter: "Align Center (Text)",

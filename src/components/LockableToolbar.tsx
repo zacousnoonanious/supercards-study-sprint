@@ -35,7 +35,7 @@ interface LockableToolbarProps {
   onCreateNewCardWithLayout: () => void;
   onDeleteCard: () => void;
   onSave: () => void;
-  onAutoArrange: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'scale-to-fit' | 'align-elements-left' | 'align-elements-center' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical') => void;
+  onAutoArrange: (type: 'grid' | 'center' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'scale-to-fit' | 'align-elements-left' | 'align-elements-center' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical') => void;
   isBackSideDisabled?: boolean;
   showGrid?: boolean;
   onToggleGrid?: () => void;
@@ -221,7 +221,6 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onAutoArrange('grid')}>{t('toolbar.arrangeGrid')}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => onAutoArrange('center')}>{t('toolbar.arrangeCenter')}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onAutoArrange('justify')}>{t('toolbar.arrangeJustify')}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => onAutoArrange('stack')}>{t('toolbar.arrangeStack')}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => onAutoArrange('scale-to-fit')}>{t('toolbar.arrangeScaleToFit')}</DropdownMenuItem>
             <DropdownMenuSeparator />
