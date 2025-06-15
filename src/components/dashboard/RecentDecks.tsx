@@ -56,11 +56,11 @@ export const RecentDecks: React.FC<RecentDecksProps> = ({ recentSets }) => {
                     <View className="w-3 h-3 mr-1" />
                     {t('common.view')}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/editor/${set.id}`)} className="flex-1">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/edit/${set.id}`)} className="flex-1">
                     <Edit className="w-3 h-3 mr-1" />
                     Edit
                   </Button>
-                  <Button size="sm" onClick={() => navigate(`/set/${set.id}/study`)} className="flex-1">
+                  <Button size="sm" onClick={() => navigate(`/study/${set.id}`)} className="flex-1">
                     <Play className="w-3 h-3 mr-1" />
                     {t('common.study')}
                   </Button>
