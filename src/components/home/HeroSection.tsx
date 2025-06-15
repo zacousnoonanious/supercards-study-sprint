@@ -127,29 +127,19 @@ export const HeroSection = () => {
             position: relative;
             background: linear-gradient(
               90deg,
-              #ff0000, /* red */
-              #ff8800, /* orange */
-              #ffff00, /* yellow */
-              #88ff00, /* yellow-green */
-              #00ff00, /* green */
-              #00ff88, /* green-cyan */
-              #00ffff, /* cyan */
-              #0088ff, /* cyan-blue */
-              #0000ff, /* blue */
-              #8800ff, /* blue-violet */
-              #ff00ff, /* magenta */
-              #ff0088, /* magenta-red */
-              #ff0000  /* red again for seamless loop */
+              #FF0000, /* Red */
+              #FF7F00, /* Orange */
+              #FFFF00, /* Yellow */
+              #00FF00, /* Green */
+              #0000FF, /* Blue */
+              #4B0082, /* Indigo */
+              #9400D3, /* Violet */
+              #FF0000  /* Red again for seamless loop */
             );
             background-size: 800% 100%;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3), 
-                         0 0 60px rgba(255, 255, 255, 0.2),
-                         0 0 90px rgba(255, 255, 255, 0.1);
-            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.4)) 
-                    drop-shadow(0 0 40px rgba(255, 255, 255, 0.2));
             animation: rainbow-shift 8s ease-in-out infinite;
           }
           
@@ -162,7 +152,7 @@ export const HeroSection = () => {
             height: 100%;
             background: linear-gradient(
               45deg,
-              #ff0066, #ff6600, #ffff00, #66ff00, #00ff66, #0066ff, #6600ff, #ff0066
+              #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3, #FF0000
             );
             background-size: 600% 100%;
             background-clip: text;
@@ -182,7 +172,7 @@ export const HeroSection = () => {
             height: 100%;
             background: linear-gradient(
               135deg,
-              #8800ff, #0088ff, #00ff88, #88ff00, #ff8800, #ff0088, #8800ff
+              #9400D3, #4B0082, #0000FF, #00FF00, #FFFF00, #FF7F00, #FF0000
             );
             background-size: 700% 100%;
             background-clip: text;
