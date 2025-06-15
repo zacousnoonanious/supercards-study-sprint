@@ -77,7 +77,7 @@ export const EditableDeckTitle: React.FC<EditableDeckTitleProps> = ({
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="text-2xl font-bold h-auto border-none px-0 focus-visible:ring-0"
+          className="font-semibold text-sm h-auto border-none px-2 py-1 focus-visible:ring-1 focus-visible:ring-primary bg-background"
           disabled={isLoading}
           autoFocus
         />
@@ -86,16 +86,18 @@ export const EditableDeckTitle: React.FC<EditableDeckTitleProps> = ({
           variant="ghost"
           onClick={handleSave}
           disabled={isLoading}
+          className="h-6 w-6 p-0"
         >
-          <Check className="w-4 h-4" />
+          <Check className="w-3 h-3" />
         </Button>
         <Button
           size="sm"
           variant="ghost"
           onClick={handleCancel}
           disabled={isLoading}
+          className="h-6 w-6 p-0"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3 h-3" />
         </Button>
       </div>
     );
@@ -103,14 +105,14 @@ export const EditableDeckTitle: React.FC<EditableDeckTitleProps> = ({
 
   return (
     <div className={`flex items-center gap-2 group ${className}`}>
-      <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+      <h1 className="font-semibold text-sm text-foreground truncate max-w-[200px]">{title}</h1>
       <Button
         size="sm"
         variant="ghost"
         onClick={() => setIsEditing(true)}
-        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 flex-shrink-0"
       >
-        <Edit2 className="w-4 h-4" />
+        <Edit2 className="w-3 h-3" />
       </Button>
     </div>
   );

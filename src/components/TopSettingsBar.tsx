@@ -47,10 +47,6 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
-  const bothSidesHaveTimers = (currentCard?.countdown_timer_front || 0) > 0 && (currentCard?.countdown_timer_back || 0) > 0;
-  const bothSidesFlip = currentCard?.countdown_behavior_front === 'flip' && currentCard?.countdown_behavior_back === 'flip';
-  const showFlipCount = bothSidesHaveTimers && bothSidesFlip;
-
   const handleCanvasSizeChange = (width: number, height: number) => {
     console.log('Canvas size change requested:', width, height);
     onCanvasSizeChange(width, height);
@@ -60,6 +56,21 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
     <div className={`border-b p-2 ${isDarkTheme ? 'bg-gray-800 border-gray-600' : 'bg-background border-border'}`}>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-4 flex-wrap">
+          {/* Deck Title - moved to prominent left position */}
+          {deckName && onUpdateDeckTitle && (
+            <>
+              <div className="flex items-center">
+                <EditableDeckTitle
+                  title={deckName}
+                  onTitleUpdate={onUpdateDeckTitle}
+                  className="px-2 py-1 rounded border border-border/50 bg-muted/30"
+                />
+              </div>
+              
+              <Separator orientation="vertical" className="h-8" />
+            </>
+          )}
+
           {/* Canvas Size Controls */}
           <CanvasSizeControls
             canvasWidth={canvasWidth}
@@ -100,17 +111,6 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
             </>
           )}
         </div>
-
-        {/* Deck Title positioned to the right */}
-        {deckName && onUpdateDeckTitle && (
-          <div className="ml-auto">
-            <EditableDeckTitle
-              title={deckName}
-              onTitleUpdate={onUpdateDeckTitle}
-              className="text-sm font-medium"
-            />
-          </div>
-        )}
       </div>
     </div>
   );
