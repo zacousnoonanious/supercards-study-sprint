@@ -95,6 +95,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     console.log('Sign out initiated');
     try {
+      // For testing purposes: allow resetting onboarding data upon logout.
+      if (window.confirm('For testing: Do you want to reset your onboarding status?')) {
+        await updateUserMetadata({ onboarding_complete: false });
+        toast({
+          title: "Onboarding Reset",
+          description: "You will see the onboarding screen on your next login.",
+        });
+      }
+      
       // Clear local state immediately to prevent UI issues
       setUser(null);
       setSession(null);
