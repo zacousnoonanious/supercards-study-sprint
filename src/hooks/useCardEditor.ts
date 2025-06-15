@@ -46,9 +46,11 @@ export const useCardEditor = () => {
       // Transform set data to match FlashcardSet interface
       const transformedSet: FlashcardSet = {
         ...setData,
-        is_public: (setData as any).is_public ?? false,
         permanent_shuffle: setData.permanent_shuffle ?? false,
-        description: setData.description ?? ''
+        description: setData.description ?? '',
+        collaboration_settings: typeof setData.collaboration_settings === 'object' && setData.collaboration_settings !== null 
+          ? setData.collaboration_settings as { allowEditors: boolean; allowViewers: boolean; requireApproval: boolean; }
+          : { allowEditors: true, allowViewers: true, requireApproval: false }
       };
       setSet(transformedSet);
 
@@ -74,7 +76,7 @@ export const useCardEditor = () => {
         hint: card.hint || '',
         last_reviewed_at: card.last_reviewed_at || null,
         card_type: (card.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: card.interactive_type || null,
+        interactive_type: (card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') || null,
         countdown_timer: card.countdown_timer || 0,
         countdown_timer_front: card.countdown_timer_front || 0,
         countdown_timer_back: card.countdown_timer_back || 0,
@@ -349,7 +351,7 @@ export const useCardEditor = () => {
         hint: data.hint || '',
         last_reviewed_at: data.last_reviewed_at || null,
         card_type: (data.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: data.interactive_type || null,
+        interactive_type: (data.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') || null,
         countdown_timer: data.countdown_timer || 0,
         countdown_timer_front: data.countdown_timer_front || 0,
         countdown_timer_back: data.countdown_timer_back || 0,
@@ -426,7 +428,7 @@ export const useCardEditor = () => {
         hint: data.hint || '',
         last_reviewed_at: data.last_reviewed_at || null,
         card_type: (data.card_type === 'standard' ? 'normal' : data.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: data.interactive_type || null,
+        interactive_type: (data.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') || null,
         countdown_timer: data.countdown_timer || 0,
         countdown_timer_front: data.countdown_timer_front || 0,
         countdown_timer_back: data.countdown_timer_back || 0,
@@ -497,7 +499,7 @@ export const useCardEditor = () => {
         hint: data.hint || '',
         last_reviewed_at: data.last_reviewed_at || null,
         card_type: (data.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: data.interactive_type || null,
+        interactive_type: (data.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') || null,
         countdown_timer: data.countdown_timer || 0,
         countdown_timer_front: data.countdown_timer_front || 0,
         countdown_timer_back: data.countdown_timer_back || 0,
