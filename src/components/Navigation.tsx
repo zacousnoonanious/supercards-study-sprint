@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -59,17 +58,20 @@ export const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-8">
             <div className="flex items-center space-x-4">
-              {showBackButton && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleGoBack}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span className="hidden sm:inline">{t('toolbar.back')}</span>
-                </Button>
-              )}
+              {/* Always reserve space for back button to keep layout consistent */}
+              <div className="w-[80px] flex justify-start">
+                {showBackButton && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleGoBack}
+                    className="flex items-center gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">{t('toolbar.back')}</span>
+                  </Button>
+                )}
+              </div>
               
               <Link to={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
                 <GraduationCap className="h-8 w-8 text-primary" />
