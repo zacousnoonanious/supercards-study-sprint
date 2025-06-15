@@ -140,36 +140,44 @@ export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({ chil
 
   const fetchPendingApprovals = async (orgId: string) => {
     try {
-      const { data, error } = await supabase
+      // First get pending organization members
+      const { data: pendingMembers, error: membersError } = await supabase
         .from('organization_members')
-        .select(`
-          id,
-          user_id,
-          role,
-          pending_reason,
-          created_at,
-          profiles!inner(
-            email,
-            first_name,
-            last_name
-          )
-        `)
+        .select('id, user_id, role, pending_reason, created_at')
         .eq('organization_id', orgId)
         .eq('status', 'pending_approval');
 
-      if (error) throw error;
+      if (membersError) throw membersError;
 
-      const approvals = data?.map(item => ({
-        id: item.id,
-        email: item.profiles.email || '',
-        role: item.role,
-        pending_reason: item.pending_reason || '',
-        created_at: item.created_at,
-        profiles: {
-          first_name: item.profiles.first_name,
-          last_name: item.profiles.last_name
-        }
-      })) || [];
+      if (!pendingMembers || pendingMembers.length === 0) {
+        setPendingApprovals([]);
+        return;
+      }
+
+      // Get user IDs from pending members
+      const userIds = pendingMembers.map(member => member.user_id);
+
+      // Fetch profiles for these users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, first_name, last_name')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const approvals = pendingMembers.map(member => {
+        const profile = profiles?.find(p => p.id === member.user_id);
+        return {
+          id: member.id,
+          email: profile?.email || '',
+          role: member.role,
+          pending_reason: member.pending_reason || '',
+          created_at: member.created_at,
+          first_name: profile?.first_name,
+          last_name: profile?.last_name
+        };
+      });
 
       setPendingApprovals(approvals);
     } catch (error) {
