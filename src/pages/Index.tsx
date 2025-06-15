@@ -2,11 +2,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { HeroSection } from '@/components/home/HeroSection';
-import { CoreFeatures } from '@/components/home/CoreFeatures';
-import { CardEditorShowcase } from '@/components/home/CardEditorShowcase';
-import { PricingPlans } from '@/components/home/PricingPlans';
-import { FinalCTA } from '@/components/home/FinalCTA';
+import { ModernHomepage } from '@/components/home/ModernHomepage';
 import { useI18n } from '@/contexts/I18nContext';
 
 const Index = () => {
@@ -33,17 +29,7 @@ const Index = () => {
     return null; // Don't render anything while redirecting
   }
 
-  return (
-    <div className="min-h-screen">
-      <HeroSection />
-      <div className="max-w-7xl mx-auto px-4 py-20 space-y-32">
-        <CoreFeatures />
-        <CardEditorShowcase />
-        <PricingPlans />
-        <FinalCTA />
-      </div>
-    </div>
-  );
+  return <ModernHomepage />;
 };
 
 export default Index;

@@ -72,6 +72,11 @@ export const GlobalStyles = () => {
           will-change: transform;
           transform: translateZ(0);
         }
+
+        /* Section transition styles */
+        .section-transition {
+          transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
       `
     }} />
   );
