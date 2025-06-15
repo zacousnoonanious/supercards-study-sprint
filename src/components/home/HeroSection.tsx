@@ -30,19 +30,22 @@ export const HeroSection = () => {
       <GlobalStyles />
       <style dangerouslySetInnerHTML={{
         __html: `
-          @keyframes rainbow-flow-1 {
+          @keyframes rainbow-shift {
             0% { background-position: 0% 50%; }
-            100% { background-position: 200% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
           }
           
-          @keyframes rainbow-flow-2 {
-            0% { background-position: 100% 30%; }
-            100% { background-position: -100% 70%; }
+          @keyframes rainbow-shift-2 {
+            0% { background-position: 50% 0%; }
+            50% { background-position: 50% 100%; }
+            100% { background-position: 50% 0%; }
           }
           
-          @keyframes rainbow-flow-3 {
-            0% { background-position: 50% 80%; }
-            100% { background-position: 250% 20%; }
+          @keyframes rainbow-shift-3 {
+            0% { background-position: 100% 100%; }
+            50% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
           }
           
           @keyframes random-particle-1 {
@@ -124,24 +127,30 @@ export const HeroSection = () => {
             position: relative;
             background: linear-gradient(
               90deg,
-              #ff6b6b, /* red */
-              #ffac6b, /* orange */
-              #ffea6b, /* yellow */
-              #6bff81, /* green */
-              #6bffff, /* cyan */
-              #6b6bff, /* blue */
-              #ac6bff, /* violet */
-              #ff6b6b  /* red again for looping */
+              #ff0000, /* red */
+              #ff8800, /* orange */
+              #ffff00, /* yellow */
+              #88ff00, /* yellow-green */
+              #00ff00, /* green */
+              #00ff88, /* green-cyan */
+              #00ffff, /* cyan */
+              #0088ff, /* cyan-blue */
+              #0000ff, /* blue */
+              #8800ff, /* blue-violet */
+              #ff00ff, /* magenta */
+              #ff0088, /* magenta-red */
+              #ff0000  /* red again for seamless loop */
             );
-            background-size: 200% 100%;
+            background-size: 800% 100%;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(180, 148, 255, 0.5), 
-                         0 0 40px rgba(180, 148, 255, 0.3),
-                         0 0 60px rgba(180, 148, 255, 0.2);
-            filter: drop-shadow(0 0 15px rgba(180, 148, 255, 0.6)) 
-                    drop-shadow(0 0 30px rgba(180, 148, 255, 0.4));
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3), 
+                         0 0 60px rgba(255, 255, 255, 0.2),
+                         0 0 90px rgba(255, 255, 255, 0.1);
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.4)) 
+                    drop-shadow(0 0 40px rgba(255, 255, 255, 0.2));
+            animation: rainbow-shift 8s ease-in-out infinite;
           }
           
           .rainbow-text::before {
@@ -153,14 +162,14 @@ export const HeroSection = () => {
             height: 100%;
             background: linear-gradient(
               45deg,
-              #ff6b6b, #ffac6b, #ffea6b, #6bff81, #6bffff, #6b6bff, #ac6bff, #ff6b6b
+              #ff0066, #ff6600, #ffff00, #66ff00, #00ff66, #0066ff, #6600ff, #ff0066
             );
-            background-size: 300% 100%;
+            background-size: 600% 100%;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: rainbow-flow-2 23s linear infinite;
-            opacity: 0.7;
+            animation: rainbow-shift-2 12s ease-in-out infinite;
+            opacity: 0.8;
             z-index: -1;
           }
           
@@ -173,19 +182,19 @@ export const HeroSection = () => {
             height: 100%;
             background: linear-gradient(
               135deg,
-              #ac6bff, #6b6bff, #6bffff, #6bff81, #ffea6b, #ffac6b, #ff6b6b, #ac6bff
+              #8800ff, #0088ff, #00ff88, #88ff00, #ff8800, #ff0088, #8800ff
             );
-            background-size: 400% 100%;
+            background-size: 700% 100%;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: rainbow-flow-3 31s linear infinite;
-            opacity: 0.5;
+            animation: rainbow-shift-3 16s ease-in-out infinite;
+            opacity: 0.6;
             z-index: -2;
           }
           
           .rainbow-text {
-            animation: rainbow-flow-1 17s linear infinite;
+            animation: rainbow-shift 8s ease-in-out infinite;
           }
           
           .non-rainbow {
