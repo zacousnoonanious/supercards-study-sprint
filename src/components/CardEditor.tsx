@@ -137,6 +137,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     set,
     setDeckName,
     currentSide,
+    selectedElementId,
   });
 
   const {

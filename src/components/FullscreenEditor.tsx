@@ -22,7 +22,7 @@ interface FullscreenEditorProps {
   onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => void;
   onDeleteElement: (elementId: string) => void;
   onAddElement: (type: string) => void;
-  onAutoArrange: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => void;
+  onAutoArrange: (type: 'grid' | 'center' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-center' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit') => void;
   onNavigateCard: (direction: 'prev' | 'next') => void;
   onSideChange: (side: 'front' | 'back') => void;
   onCreateNewCard: () => void;
