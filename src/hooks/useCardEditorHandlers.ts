@@ -78,7 +78,7 @@ export const useCardEditorHandlers = ({
     }
   };
 
-  const handleAutoArrange = (type: 'grid' | 'center' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'align-elements-center' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit') => {
+  const handleAutoArrange = (type: 'grid' | 'center' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'align-elements-center' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit' | 'justify') => {
     const elements = currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements;
     if (!elements || elements.length === 0) return;
 
@@ -155,18 +155,16 @@ export const useCardEditorHandlers = ({
         });
         break;
 
+      case 'justify':
+        // Deprecated, do nothing. This is here for type compatibility.
+        break;
+
       case 'align-elements-left':
         updatedElements.forEach((element, index) => {
           updatedElements[index] = { ...element, x: 10 };
         });
         break;
       
-      case 'align-elements-center':
-        updatedElements.forEach((element, index) => {
-          updatedElements[index] = { ...element, x: (cardWidth - element.width) / 2 };
-        });
-        break;
-        
       case 'align-elements-right':
         updatedElements.forEach((element, index) => {
           updatedElements[index] = { ...element, x: cardWidth - element.width - 10 };
