@@ -6,9 +6,8 @@ import { AuthLayout } from '@/components/auth/AuthLayout';
 import { useOrganizationInvites } from '@/hooks/useOrganizationInvites';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Mail } from 'lucide-react';
-import { AuthForm } from '@/components/auth/AuthForm';
+import { SelfContainedAuthForm } from '@/components/auth/SelfContainedAuthForm';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -115,7 +114,7 @@ const Auth = () => {
               </div>
             </CardContent>
           </Card>
-          <AuthForm />
+          <SelfContainedAuthForm />
         </div>
       </AuthLayout>
     );
@@ -124,7 +123,7 @@ const Auth = () => {
   // Default auth layout
   return (
     <AuthLayout>
-      <AuthForm />
+      <SelfContainedAuthForm />
     </AuthLayout>
   );
 };
