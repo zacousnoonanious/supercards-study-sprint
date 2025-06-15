@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,10 +39,20 @@ export const DeckSelector: React.FC<DeckSelectorProps> = ({
         
         // Transform the data to match FlashcardSet interface
         const transformedSets: FlashcardSet[] = (data || []).map(set => ({
-          ...set,
-          is_public: (set as any).is_public ?? false, // Provide default value if missing
+          id: set.id,
+          user_id: set.user_id,
+          title: set.title,
+          description: set.description || '',
+          created_at: set.created_at,
+          updated_at: set.updated_at,
           permanent_shuffle: set.permanent_shuffle ?? false,
-          description: set.description ?? ''
+          is_collaborative: set.is_collaborative ?? false,
+          collaboration_settings: set.collaboration_settings ? {
+            allowEditors: (set.collaboration_settings as any)?.allowEditors ?? false,
+            allowViewers: (set.collaboration_settings as any)?.allowViewers ?? false,
+            requireApproval: (set.collaboration_settings as any)?.requireApproval ?? false,
+          } : undefined,
+          organization_id: set.organization_id || undefined,
         }));
         
         setUserSets(transformedSets);

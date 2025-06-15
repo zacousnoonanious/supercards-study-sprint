@@ -15,6 +15,7 @@ export interface Flashcard {
   countdown_timer?: number;
   countdown_timer_front?: number;
   countdown_timer_back?: number;
+  countdown_behavior?: 'flip' | 'next';
   countdown_behavior_front?: string;
   countdown_behavior_back?: string;
   flips_before_next?: number;
@@ -82,6 +83,19 @@ export interface CanvasElement {
   correctAnswers?: number[];
   explanation?: string;
   
+  // Multiple choice properties
+  multipleChoiceOptions?: string[];
+  
+  // Fill in blank properties
+  fillInBlankText?: string;
+  fillInBlankBlanks?: Array<{
+    word: string;
+    position: number;
+    id: string;
+  }>;
+  showLetterCount?: boolean;
+  ignoreCase?: boolean;
+  
   // TTS properties
   text?: string;
   voice?: string;
@@ -90,11 +104,13 @@ export interface CanvasElement {
   
   // YouTube properties
   videoId?: string;
+  youtubeUrl?: string;
   startTime?: number;
   endTime?: number;
   
   // Deck embed properties
   deckId?: string;
+  deckTitle?: string;
   title?: string;
   cardCount?: number;
   
@@ -103,6 +119,23 @@ export interface CanvasElement {
   
   // Layout constraints (from previous feature)
   layoutConstraints?: any[];
+}
+
+export interface CardTemplate {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  category: 'study' | 'quiz' | 'information' | 'interactive';
+  card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
+  canvas_width: number;
+  canvas_height: number;
+  allowedElementTypes: string[];
+  autoAdvanceOnAnswer: boolean;
+  showBackSide: boolean;
+  restrictedToolbar: boolean;
+  front_elements: CanvasElement[];
+  back_elements: CanvasElement[];
 }
 
 export interface StudySession {
