@@ -39,15 +39,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Handle sign out
-        if (event === 'SIGNED_OUT') {
-          console.log('User signed out, redirecting to auth page');
-          // Force navigation to auth page, using setTimeout to avoid race conditions.
-          setTimeout(() => {
-            navigate('/auth', { replace: true });
-          }, 0);
-        }
-        
         // Handle sign in
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in, redirecting to dashboard');
@@ -102,38 +93,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: "You will see the onboarding screen on your next login.",
         });
       }
+    } catch (e) {
+        console.error('Error during pre-signout operations', e);
+        // Continue to sign out even if this fails.
+    }
       
-      // Clear local state immediately to prevent UI issues
-      setUser(null);
-      setSession(null);
-      
+    try {
       const { error } = await supabase.auth.signOut();
-      
-      // Don't show an error toast if the session is already missing.
+
       if (error && !error.message?.toLowerCase().includes('session')) {
         console.error('Sign out error:', error);
-        toast({
-          title: "Error signing out",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast({ title: "Error signing out", description: error.message, variant: "destructive" });
       } else {
         console.log('Sign out successful');
-        toast({
-          title: "See you next time! :)",
-          description: "Thanks for using our app!",
-        });
+        toast({ title: "See you next time! :)", description: "Thanks for using our app!" });
       }
-      
-      // Always navigate to auth page regardless of API response
-      navigate('/auth', { replace: true });
-      
-    } catch (error) {
-      console.error('Unexpected sign out error:', error);
-      // Even if there's an error, clear the state and redirect
-      setUser(null);
-      setSession(null);
-      navigate('/auth', { replace: true });
+    } catch(e) {
+        console.error('Unexpected sign out error:', e);
+        toast({ title: "Error signing out", description: (e as Error).message, variant: "destructive" });
+    } finally {
+        // This block will run whether sign out succeeds or fails, ensuring the user is logged out on the client.
+        setUser(null);
+        setSession(null);
+        setTimeout(() => navigate('/auth', { replace: true }), 0);
     }
   };
 
