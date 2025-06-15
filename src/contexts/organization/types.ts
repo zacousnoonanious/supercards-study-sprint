@@ -5,6 +5,7 @@ export interface Organization {
   created_at: string;
   created_by: string;
   approved_domains: string[];
+  deleted_at?: string | null;
 }
 
 export interface PendingApproval {
@@ -32,6 +33,7 @@ export interface OrganizationContextType {
   createOrganization: (name: string, approvedDomains: string[]) => Promise<Organization | null>;
   updateOrganization: (id: string, name: string) => Promise<boolean>;
   updateApprovedDomains: (id: string, approvedDomains: string[]) => Promise<boolean>;
+  deleteOrganization: (id: string) => Promise<boolean>;
   joinOrganization: (orgId: string, userEmail: string) => Promise<{ success: boolean; message: string; status?: string }>;
   switchOrganization: (orgId: string) => void;
   approveMember: (memberId: string) => Promise<boolean>;

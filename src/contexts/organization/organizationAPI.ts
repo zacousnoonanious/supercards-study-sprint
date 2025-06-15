@@ -40,7 +40,8 @@ export const updateOrganizationAPI = async (id: string, name: string): Promise<b
     const { error } = await supabase
       .from('organizations')
       .update({ name })
-      .eq('id', id);
+      .eq('id', id)
+      .is('deleted_at', null);
 
     if (error) throw error;
     return true;
@@ -55,12 +56,28 @@ export const updateApprovedDomainsAPI = async (id: string, approvedDomains: stri
     const { error } = await supabase
       .from('organizations')
       .update({ approved_domains: approvedDomains })
-      .eq('id', id);
+      .eq('id', id)
+      .is('deleted_at', null);
 
     if (error) throw error;
     return true;
   } catch (error: any) {
     console.error('Error updating approved domains:', error);
+    return false;
+  }
+};
+
+export const deleteOrganizationAPI = async (orgId: string, userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.rpc('delete_organization', {
+      org_id: orgId,
+      user_id: userId
+    });
+
+    if (error) throw error;
+    return data === true;
+  } catch (error: any) {
+    console.error('Error deleting organization:', error);
     return false;
   }
 };
@@ -75,12 +92,13 @@ export const joinOrganizationAPI = async (
       .from('organizations')
       .select('id, name, approved_domains')
       .eq('id', orgId)
+      .is('deleted_at', null)
       .single();
 
     if (orgError || !orgData) {
       return { 
         success: false, 
-        message: 'Organization not found. Please check the organization ID.' 
+        message: 'Organization not found or no longer available.' 
       };
     }
 

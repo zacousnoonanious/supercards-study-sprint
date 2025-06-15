@@ -9,7 +9,8 @@ import {
   joinOrganizationAPI,
   fetchPendingApprovalsAPI,
   approveMemberAPI,
-  rejectMemberAPI
+  rejectMemberAPI,
+  deleteOrganizationAPI
 } from './organization/organizationAPI';
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
@@ -56,6 +57,15 @@ export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({ chil
     return success;
   };
 
+  const deleteOrganization = async (id: string): Promise<boolean> => {
+    if (!user?.id) return false;
+    const success = await deleteOrganizationAPI(id, user.id);
+    if (success) {
+      await fetchOrganizations();
+    }
+    return success;
+  };
+
   const joinOrganization = async (orgId: string, userEmail: string) => {
     if (!user?.id) {
       return { success: false, message: 'User not authenticated' };
@@ -96,6 +106,7 @@ export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({ chil
     createOrganization,
     updateOrganization,
     updateApprovedDomains,
+    deleteOrganization,
     joinOrganization,
     switchOrganization,
     approveMember,

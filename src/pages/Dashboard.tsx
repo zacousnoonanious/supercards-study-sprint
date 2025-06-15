@@ -13,6 +13,8 @@ import { RecentDecks } from '@/components/dashboard/RecentDecks';
 import { Onboarding } from '@/components/Onboarding';
 import { useToast } from '@/hooks/use-toast';
 import { ImportFlashcardsDialog } from '@/components/ImportFlashcardsDialog';
+import { CreateOrganizationDialog } from '@/components/CreateOrganizationDialog';
+import { JoinDeckDialog } from '@/components/JoinDeckDialog';
 
 interface FlashcardSet {
   id: string;
@@ -30,6 +32,7 @@ const Dashboard = () => {
   const [totalDecks, setTotalDecks] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(true);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -114,32 +117,52 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Show organization invitation banner for individual users */}
-        {userOrganizations.length === 0 && (
-          <Card className="mb-8 border-primary/20 bg-primary/5">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Building className="h-8 w-8 text-primary" />
-                  <div>
-                    <h3 className="font-semibold">{t('dashboard.collaborateTitle')}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {t('dashboard.collaborateDescription')}
-                    </p>
-                  </div>
+        {/* Organization section - always show */}
+        <Card className="mb-8 border-primary/20 bg-primary/5">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Building className="h-8 w-8 text-primary" />
+                <div>
+                  {userOrganizations.length > 0 ? (
+                    <>
+                      <h3 className="font-semibold">Organizations ({userOrganizations.length})</h3>
+                      <p className="text-sm text-muted-foreground">
+                        You're a member of {userOrganizations.length} organization{userOrganizations.length > 1 ? 's' : ''}. Current: {currentOrganization?.name || 'None selected'}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="font-semibold">{t('dashboard.collaborateTitle')}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {t('dashboard.collaborateDescription')}
+                      </p>
+                    </>
+                  )}
                 </div>
-                <Button onClick={() => {
-                  // This could be changed to open a dialog to create/join an org
-                  alert("You can create or join an organization from your profile settings.");
-                }}>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  {t('dashboard.getStarted')}
-                </Button>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCreateDialog(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Organization
+                </Button>
+                <JoinDeckDialog 
+                  trigger={
+                    <Button variant="outline">
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Join Organization
+                    </Button>
+                  }
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
+        {/* dashboard stats cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -201,6 +224,7 @@ const Dashboard = () => {
         {/* Recent decks section */}
         <RecentDecks recentSets={recentSets} />
 
+        {/* quick actions and recent activity */}
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
@@ -228,18 +252,6 @@ const Dashboard = () => {
                   {t('dashboard.viewAllDecks')}
                 </Button>
               </Link>
-              {userOrganizations.length === 0 && (
-                <Button 
-                  variant="secondary" 
-                  className="w-full justify-start"
-                  onClick={() => {
-                    alert("You can create or join an organization from your profile settings.");
-                  }}
-                >
-                  <Building className="mr-2 h-4 w-4" />
-                  {t('dashboard.joinOrCreateOrg')}
-                </Button>
-              )}
             </CardContent>
           </Card>
 
@@ -256,6 +268,11 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
+
+      <CreateOrganizationDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog} 
+      />
     </div>
   );
 };

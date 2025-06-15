@@ -10,9 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, Building, User, Settings, UserCheck } from 'lucide-react';
+import { ChevronDown, Building, User, Settings, UserCheck, Trash2 } from 'lucide-react';
 import { DomainManagementDialog } from './DomainManagementDialog';
 import { PendingApprovalsDialog } from './PendingApprovalsDialog';
+import { DeleteOrganizationDialog } from './DeleteOrganizationDialog';
 
 export const OrganizationSelector: React.FC = () => {
   const { currentOrganization, userOrganizations, switchOrganization, userRole, pendingApprovals } = useOrganization();
@@ -89,6 +90,16 @@ export const OrganizationSelector: React.FC = () => {
                           {pendingApprovals.length}
                         </span>
                       )}
+                    </div>
+                  }
+                />
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <DeleteOrganizationDialog
+                  trigger={
+                    <div className="flex items-center w-full cursor-pointer text-destructive">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Organization
                     </div>
                   }
                 />

@@ -694,6 +694,7 @@ export type Database = {
           approved_domains: string[] | null
           created_at: string
           created_by: string
+          deleted_at: string | null
           id: string
           name: string
           slug: string | null
@@ -703,6 +704,7 @@ export type Database = {
           approved_domains?: string[] | null
           created_at?: string
           created_by: string
+          deleted_at?: string | null
           id?: string
           name: string
           slug?: string | null
@@ -712,6 +714,7 @@ export type Database = {
           approved_domains?: string[] | null
           created_at?: string
           created_by?: string
+          deleted_at?: string | null
           id?: string
           name?: string
           slug?: string | null
@@ -1060,6 +1063,10 @@ export type Database = {
       cleanup_old_editing_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      delete_organization: {
+        Args: { org_id: string; user_id: string }
+        Returns: boolean
       }
       generate_invite_token: {
         Args: Record<PropertyKey, never>

@@ -65,7 +65,8 @@ export const useOrganizationData = () => {
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .select('*')
-        .in('id', organizationIds);
+        .in('id', organizationIds)
+        .is('deleted_at', null);
 
       if (orgError) throw orgError;
 
@@ -78,14 +79,17 @@ export const useOrganizationData = () => {
 
       setOrganizations(orgData);
 
-      const firstOrg = orgData[0];
-      setCurrentOrganization(firstOrg);
-      setUserRole(orgMemberships.find(m => m.organization_id === firstOrg.id)?.role || null);
+      // Set current organization only if we don't have one or current one is not in the list
+      if (!currentOrganization || !orgData.find(org => org.id === currentOrganization.id)) {
+        const firstOrg = orgData[0];
+        setCurrentOrganization(firstOrg);
+        setUserRole(orgMemberships.find(m => m.organization_id === firstOrg.id)?.role || null);
 
-      const currentUserRole = orgMemberships.find(m => m.organization_id === firstOrg.id)?.role;
-      if (currentUserRole === 'org_admin' || currentUserRole === 'super_admin') {
-        const approvals = await fetchPendingApprovalsAPI(firstOrg.id);
-        setPendingApprovals(approvals);
+        const currentUserRole = orgMemberships.find(m => m.organization_id === firstOrg.id)?.role;
+        if (currentUserRole === 'org_admin' || currentUserRole === 'super_admin') {
+          const approvals = await fetchPendingApprovalsAPI(firstOrg.id);
+          setPendingApprovals(approvals);
+        }
       }
     } catch (error: any) {
       console.error('Error fetching organizations:', error);
