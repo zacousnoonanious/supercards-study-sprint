@@ -8,7 +8,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { StudyCardRenderer } from '../StudyCardRenderer';
 import { StudyNavigationBar } from '../StudyNavigationBar';
-import { Flashcard } from '@/types/flashcard';
+import { Flashcard, CanvasElement } from '@/types/flashcard';
 
 interface EmbeddedDeckPopupProps {
   isOpen: boolean;
@@ -54,7 +54,35 @@ export const EmbeddedDeckPopup: React.FC<EmbeddedDeckPopupProps> = ({
         if (cardsError) throw cardsError;
 
         setSet(setData);
-        setCards(cardsData || []);
+        
+        // Transform the cards data to match Flashcard interface
+        const transformedCards: Flashcard[] = (cardsData || []).map(card => ({
+          id: card.id,
+          set_id: card.set_id,
+          question: card.question,
+          answer: card.answer,
+          hint: card.hint,
+          front_elements: (card.front_elements as CanvasElement[]) || [],
+          back_elements: (card.back_elements as CanvasElement[]) || [],
+          card_type: card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected',
+          interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null,
+          password: card.password,
+          countdown_timer: card.countdown_timer,
+          countdown_timer_front: card.countdown_timer_front,
+          countdown_timer_back: card.countdown_timer_back,
+          countdown_behavior: card.countdown_behavior as 'flip' | 'next',
+          countdown_behavior_front: card.countdown_behavior_front,
+          countdown_behavior_back: card.countdown_behavior_back,
+          flips_before_next: card.flips_before_next,
+          canvas_width: card.canvas_width,
+          canvas_height: card.canvas_height,
+          metadata: card.metadata,
+          created_at: card.created_at,
+          updated_at: card.updated_at,
+          last_reviewed_at: card.last_reviewed_at,
+        }));
+        
+        setCards(transformedCards);
         setCurrentCardIndex(0);
         setShowAnswer(false);
       } catch (error) {

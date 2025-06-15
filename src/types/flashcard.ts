@@ -1,4 +1,5 @@
 
+
 export interface Flashcard {
   id: string;
   set_id: string;
@@ -75,6 +76,9 @@ export interface CanvasElement {
   opacity?: number;
   border?: string;
   borderRadius?: number;
+  borderWidth?: number;
+  borderColor?: string;
+  borderStyle?: string;
   shadow?: string;
   
   // Interactive element properties
@@ -82,6 +86,8 @@ export interface CanvasElement {
   correctAnswer?: number;
   correctAnswers?: number[];
   explanation?: string;
+  showImmediateFeedback?: boolean;
+  autoAdvanceOnAnswer?: boolean;
   
   // Multiple choice properties
   multipleChoiceOptions?: string[];
@@ -101,10 +107,20 @@ export interface CanvasElement {
   voice?: string;
   rate?: number;
   pitch?: number;
+  hasTTS?: boolean;
+  ttsEnabled?: boolean;
+  ttsVoice?: string;
+  ttsRate?: number;
+  ttsPitch?: number;
+  ttsAutoplay?: boolean;
   
   // YouTube properties
   videoId?: string;
   youtubeUrl?: string;
+  youtubeVideoId?: string;
+  youtubeAutoplay?: boolean;
+  youtubeMuted?: boolean;
+  youtubeStartTime?: number;
   startTime?: number;
   endTime?: number;
   
@@ -116,6 +132,15 @@ export interface CanvasElement {
   
   // Link functionality
   linkData?: ElementLinkData;
+  
+  // Drawing properties
+  drawingData?: any;
+  strokeColor?: string;
+  strokeWidth?: number;
+  highlightMode?: boolean;
+  
+  // Audio properties
+  autoplay?: boolean;
   
   // Layout constraints (from previous feature)
   layoutConstraints?: any[];
@@ -166,3 +191,4 @@ export interface UserCardStats {
   created_at: string;
   updated_at: string;
 }
+
