@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { TopToolbar } from './TopToolbar';
 import { BottomToolbar } from './BottomToolbar';
@@ -46,7 +47,7 @@ interface CardEditorLayoutProps {
   onCanvasSizeChange: (width: number, height: number) => void;
   onUpdateCard: (updates: Partial<Flashcard>) => void;
   onAddElement: (type: string) => void;
-  onAutoArrange: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => void;
+  onAutoArrange: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'align-elements-center' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit') => void;
   onNavigateCard: (direction: 'prev' | 'next') => void;
   onCreateNewCard: () => void;
   onCreateNewCardWithLayout: () => void;

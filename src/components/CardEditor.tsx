@@ -136,6 +136,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     isTextSelecting,
     set,
     setDeckName,
+    currentSide,
   });
 
   const {

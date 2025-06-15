@@ -12,6 +12,7 @@ interface UseCardEditorHandlersProps {
   currentCard: Flashcard;
   navigateCard: (direction: 'prev' | 'next') => void;
   setCurrentSide: (side: 'front' | 'back') => void;
+  currentSide: 'front' | 'back';
   updateCard: (cardId: string, updates: Partial<Flashcard>) => Promise<void>;
   updateCanvasSize: (width: number, height: number) => Promise<void>;
   isTextSelecting: boolean;
@@ -28,6 +29,7 @@ export const useCardEditorHandlers = ({
   currentCard,
   navigateCard,
   setCurrentSide,
+  currentSide,
   updateCard,
   updateCanvasSize,
   isTextSelecting,
@@ -76,12 +78,9 @@ export const useCardEditorHandlers = ({
     }
   };
 
-  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'align-elements-center' | 'distribute-horizontal' | 'distribute-vertical') => {
-    // NOTE: This currently only works for the front side of the card.
-    // A future update could pass the current side to this handler.
-    const currentSide = 'front';
+  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'align-elements-center' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit') => {
     const elements = currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements;
-    if (elements.length === 0) return;
+    if (!elements || elements.length === 0) return;
 
     const updatedElements = [...elements];
     const cardWidth = currentCard.canvas_width || 600;
@@ -90,14 +89,14 @@ export const useCardEditorHandlers = ({
     switch (type) {
       case 'grid':
         const cols = Math.ceil(Math.sqrt(elements.length));
-        const spacing = 120;
+        const spacingGrid = 120;
         elements.forEach((element, index) => {
           const row = Math.floor(index / cols);
           const col = index % cols;
           updatedElements[index] = {
             ...element,
-            x: 50 + col * spacing,
-            y: 50 + row * spacing
+            x: 50 + col * spacingGrid,
+            y: 50 + row * spacingGrid
           };
         });
         break;
@@ -107,7 +106,7 @@ export const useCardEditorHandlers = ({
           updatedElements[index] = {
             ...element,
             x: (cardWidth - element.width) / 2,
-            y: element.y
+            y: (cardHeight - element.height) / 2
           };
         });
         break;
@@ -131,14 +130,14 @@ export const useCardEditorHandlers = ({
         break;
         
       case 'stack':
-        let currentY = 50;
-        elements.forEach((element, index) => {
-          updatedElements[index] = {
-            ...element,
-            x: 50,
-            y: currentY
-          };
-          currentY += element.height + 20;
+        let currentYStack = 50;
+        const sortedStack = [...elements].sort((a,b) => a.y - b.y);
+        sortedStack.forEach(element => {
+          const index = updatedElements.findIndex(el => el.id === element.id);
+          if (index !== -1) {
+            updatedElements[index] = { ...updatedElements[index], x: 50, y: currentYStack };
+            currentYStack += element.height + 20;
+          }
         });
         break;
         
@@ -174,20 +173,23 @@ export const useCardEditorHandlers = ({
         });
         break;
 
+      case 'justify': // Fall-through
       case 'distribute-horizontal':
         if (elements.length > 1) {
           const sortedElements = [...elements].sort((a, b) => a.x - b.x);
           const totalWidth = sortedElements.reduce((sum, el) => sum + el.width, 0);
-          const totalSpacing = cardWidth - totalWidth;
-          const spacing = totalSpacing / (elements.length + 1);
-          let currentX = spacing;
-          sortedElements.forEach(element => {
-            const index = updatedElements.findIndex(el => el.id === element.id);
-            if (index !== -1) {
-              updatedElements[index] = { ...updatedElements[index], x: currentX };
-              currentX += element.width + spacing;
-            }
-          });
+          if (cardWidth >= totalWidth) {
+            const totalSpacing = cardWidth - totalWidth;
+            const spacing = totalSpacing / (elements.length + 1);
+            let currentX = spacing;
+            sortedElements.forEach(element => {
+              const index = updatedElements.findIndex(el => el.id === element.id);
+              if (index !== -1) {
+                updatedElements[index] = { ...updatedElements[index], x: currentX };
+                currentX += element.width + spacing;
+              }
+            });
+          }
         }
         break;
 
@@ -195,17 +197,25 @@ export const useCardEditorHandlers = ({
         if (elements.length > 1) {
           const sortedElements = [...elements].sort((a, b) => a.y - b.y);
           const totalHeight = sortedElements.reduce((sum, el) => sum + el.height, 0);
-          const totalSpacing = cardHeight - totalHeight;
-          const spacing = totalSpacing / (elements.length + 1);
-          let currentY = spacing;
-          sortedElements.forEach(element => {
-            const index = updatedElements.findIndex(el => el.id === element.id);
-            if (index !== -1) {
-              updatedElements[index] = { ...updatedElements[index], y: currentY };
-              currentY += element.height + spacing;
-            }
-          });
+          if (cardHeight >= totalHeight) {
+            const totalSpacing = cardHeight - totalHeight;
+            const spacing = totalSpacing / (elements.length + 1);
+            let currentY = spacing;
+            sortedElements.forEach(element => {
+              const index = updatedElements.findIndex(el => el.id === element.id);
+              if (index !== -1) {
+                updatedElements[index] = { ...updatedElements[index], y: currentY };
+                currentY += element.height + spacing;
+              }
+            });
+          }
         }
+        break;
+        
+      case 'scale-to-fit':
+        updatedElements.forEach((element, index) => {
+          updatedElements[index] = { ...element, x: 10, width: cardWidth - 20 };
+        });
         break;
     }
 
