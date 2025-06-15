@@ -49,6 +49,11 @@ const Decks = () => {
     (set.description && set.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const handleDeleteDeck = async (deckId: string) => {
+    // TODO: Implement deck deletion logic
+    console.log('Delete deck:', deckId);
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
@@ -100,7 +105,7 @@ const Decks = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredSets.map((set) => (
-                <DeckCard key={set.id} set={set} />
+                <DeckCard key={set.id} set={set} onDelete={handleDeleteDeck} />
               ))}
             </div>
           )}

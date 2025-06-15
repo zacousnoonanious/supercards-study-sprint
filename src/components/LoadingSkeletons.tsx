@@ -88,3 +88,32 @@ export const LoadingSkeletons = {
     </Card>
   )
 };
+
+export const SetViewSkeleton = () => (
+  <div className="min-h-screen bg-background">
+    <div className="w-full h-16 bg-card border-b">
+      <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+        <Skeleton className="h-8 w-32" />
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-8 w-20" />
+        </div>
+      </div>
+    </div>
+    
+    <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-96" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+      </div>
+      
+      <LoadingSkeletons.DeckGrid />
+    </main>
+  </div>
+);

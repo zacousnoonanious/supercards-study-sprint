@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,7 +23,7 @@ export const useSRS = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [cardsDue, setCardsdue] = useState<SRSCardStats[]>([]);
+  const [cardsDue, setCardsDue] = useState<SRSCardStats[]>([]);
 
   const calculateSRSValues = async (score: number, previousEaseFactor = 2.5, previousInterval = 1) => {
     try {
@@ -86,7 +85,7 @@ export const useSRS = () => {
           current_interval_days: srsValues.new_interval,
           next_review_date: srsValues.next_review_date,
           total_reviews: (currentStats?.total_reviews || 0) + 1,
-          correct_reviews: score >= 3 ? (currentStats?.correct_reviews || 0) + 1 : (currentStats?.correct_reviews || 0),
+          correct_reviews: score >= 3 ? ((currentStats as any)?.correct_reviews || 0) + 1 : ((currentStats as any)?.correct_reviews || 0),
           last_reviewed_at: new Date().toISOString()
         });
 
@@ -126,11 +125,11 @@ export const useSRS = () => {
     }
   };
 
-  const fetchCardsdue = async () => {
+  const fetchCardsDue = async () => {
     setLoading(true);
     try {
       const cards = await getCardsDueForReview();
-      setCardsdue(cards);
+      setCardsDue(cards);
     } catch (error) {
       console.error('Error fetching due cards:', error);
     } finally {
@@ -220,16 +219,16 @@ export const useSRS = () => {
 
   useEffect(() => {
     if (user?.id) {
-      fetchCardsdue();
+      fetchCardsDue();
     }
   }, [user?.id]);
 
   return {
     loading,
-    cardsdue: cardsdue,
+    cardsdue: cardsDue,
     recordCardReview,
     getCardsDueForReview,
-    fetchCardsdue,
+    fetchCardsdue: fetchCardsDue,
     startStudySession,
     endStudySession,
     calculateSRSValues
