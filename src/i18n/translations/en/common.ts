@@ -143,6 +143,7 @@ export const common = {
   any: "Any",
   other: "Other",
   unknown: "Unknown",
+  organization: "Organization",
   cardNotFound: "Card not found",
   goBack: "Go Back",
   timeRemaining: "Time remaining",
@@ -201,4 +202,3 @@ export const common = {
   orgIdRequired: "Please enter an organization ID.",
   failedToJoin: "Failed to Join",
 };
-

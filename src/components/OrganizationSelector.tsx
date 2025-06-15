@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,14 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, Building, Plus, User, Settings, UserCheck } from 'lucide-react';
-import { CreateOrganizationDialog } from './CreateOrganizationDialog';
+import { ChevronDown, Building, User, Settings, UserCheck } from 'lucide-react';
 import { DomainManagementDialog } from './DomainManagementDialog';
 import { PendingApprovalsDialog } from './PendingApprovalsDialog';
 
 export const OrganizationSelector: React.FC = () => {
   const { currentOrganization, userOrganizations, switchOrganization, userRole, pendingApprovals } = useOrganization();
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const isAdmin = userRole === 'org_admin' || userRole === 'super_admin';
 
@@ -29,14 +27,6 @@ export const OrganizationSelector: React.FC = () => {
           <User className="w-4 h-4" />
           <span className="hidden sm:inline">Individual Mode</span>
         </Button>
-        <Button onClick={() => setShowCreateDialog(true)} size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">Create Org</span>
-        </Button>
-        <CreateOrganizationDialog 
-          open={showCreateDialog} 
-          onOpenChange={setShowCreateDialog} 
-        />
       </div>
     );
   }
@@ -105,19 +95,8 @@ export const OrganizationSelector: React.FC = () => {
               </DropdownMenuItem>
             </>
           )}
-          
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setShowCreateDialog(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Organization
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      
-      <CreateOrganizationDialog 
-        open={showCreateDialog} 
-        onOpenChange={setShowCreateDialog} 
-      />
     </div>
   );
 };
