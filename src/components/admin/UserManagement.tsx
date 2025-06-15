@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,11 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Search, UserCog, Shield, Eye, RotateCcw, Filter, Info } from 'lucide-react';
+import { Users, Search, UserCog, Shield, Eye, RotateCcw, Filter, Info, UserPlus, Trash2 } from 'lucide-react';
 import { UserDetailsDialog } from './UserDetailsDialog';
 import { UserRestrictionsDialog } from './UserRestrictionsDialog';
 import { PasswordResetDialog } from './PasswordResetDialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AddUserDialog } from './AddUserDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface OrganizationUser {
   id: string;
@@ -34,6 +38,7 @@ interface OrganizationUser {
 
 export const UserManagement: React.FC = () => {
   const { currentOrganization, userRole } = useOrganization();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<OrganizationUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +51,8 @@ export const UserManagement: React.FC = () => {
   const [showUserDetails, setShowUserDetails] = useState(false);
   const [showRestrictions, setShowRestrictions] = useState(false);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<OrganizationUser | null>(null);
 
   // Only allow org_admin and super_admin access
   if (!userRole || !['org_admin', 'super_admin'].includes(userRole)) {
@@ -143,7 +150,7 @@ export const UserManagement: React.FC = () => {
   const handleRoleUpdate = async (userId: string, newRole: string) => {
     if (!currentOrganization) return;
 
-    if (userId === currentOrganization.created_by) {
+    if (userId === currentOrganization?.created_by) {
       toast({
         title: "Action Forbidden",
         description: "The organization creator's role cannot be changed.",
@@ -200,6 +207,36 @@ export const UserManagement: React.FC = () => {
         description: "Failed to update user status.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete || !currentOrganization) return;
+
+    try {
+      // Remove user from organization
+      const { error } = await supabase
+        .from('organization_members')
+        .delete()
+        .eq('organization_id', currentOrganization.id)
+        .eq('user_id', userToDelete.id);
+
+      if (error) throw error;
+
+      await fetchUsers();
+      toast({
+        title: "Success",
+        description: "User removed from organization.",
+      });
+    } catch (error: any) {
+      console.error('Error removing user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove user from organization.",
+        variant: "destructive",
+      });
+    } finally {
+      setUserToDelete(null);
     }
   };
 
@@ -275,6 +312,14 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  const canDeleteUser = (targetUser: OrganizationUser) => {
+    // Cannot delete yourself
+    if (targetUser.id === user?.id) return false;
+    // Cannot delete the organization creator
+    if (targetUser.id === currentOrganization?.created_by) return false;
+    return true;
+  };
+
   if (!currentOrganization) {
     return (
       <Card>
@@ -293,14 +338,20 @@ export const UserManagement: React.FC = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <Users className="w-6 h-6 text-primary" />
-            <div>
-              <CardTitle>User Management</CardTitle>
-              <CardDescription>
-                Manage users and roles for {currentOrganization.name}
-              </CardDescription>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Users className="w-6 h-6 text-primary" />
+              <div>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>
+                  Manage users and roles for {currentOrganization.name}
+                </CardDescription>
+              </div>
             </div>
+            <Button onClick={() => setShowAddUser(true)} className="flex items-center gap-2">
+              <UserPlus className="w-4 h-4" />
+              Add User
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -435,50 +486,50 @@ export const UserManagement: React.FC = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
+                  filteredUsers.map((targetUser) => (
+                    <TableRow key={targetUser.id}>
                       <TableCell>
                         <div className="font-medium">
-                          {user.first_name || user.last_name 
-                            ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                          {targetUser.first_name || targetUser.last_name 
+                            ? `${targetUser.first_name || ''} ${targetUser.last_name || ''}`.trim()
                             : 'No name'
                           }
                         </div>
-                        {user.restrictions && (
+                        {targetUser.restrictions && (
                           <div className="flex gap-1 mt-1">
-                            {user.restrictions.view_only_mode && (
+                            {targetUser.restrictions.view_only_mode && (
                               <Badge variant="outline" className="text-xs">View Only</Badge>
                             )}
-                            {user.restrictions.block_deck_creation && (
+                            {targetUser.restrictions.block_deck_creation && (
                               <Badge variant="outline" className="text-xs">No Create</Badge>
                             )}
                           </div>
                         )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {user.email}
+                        {targetUser.email}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Select
-                            value={user.role}
-                            onValueChange={(newRole) => handleRoleUpdate(user.id, newRole)}
-                            disabled={user.id === currentOrganization?.created_by}
+                            value={targetUser.role}
+                            onValueChange={(newRole) => handleRoleUpdate(targetUser.id, newRole)}
+                            disabled={targetUser.id === currentOrganization?.created_by}
                           >
                             <SelectTrigger className="w-auto h-8">
-                              <Badge className={getRoleColor(user.role)}>
-                                {user.role.replace('_', ' ')}
+                              <Badge className={getRoleColor(targetUser.role)}>
+                                {targetUser.role.replace('_', ' ')}
                               </Badge>
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="learner">Learner</SelectItem>
                               <SelectItem value="manager">Manager</SelectItem>
-                              {(userRole === 'super_admin' || userRole === 'org_admin' || user.role === 'org_admin') && (
+                              {(userRole === 'super_admin' || userRole === 'org_admin' || targetUser.role === 'org_admin') && (
                                 <SelectItem value="org_admin">Org Admin</SelectItem>
                               )}
                             </SelectContent>
                           </Select>
-                          {user.id === currentOrganization?.created_by && (
+                          {targetUser.id === currentOrganization?.created_by && (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -494,12 +545,12 @@ export const UserManagement: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Select
-                          value={user.status}
-                          onValueChange={(newStatus) => handleStatusUpdate(user.id, newStatus)}
+                          value={targetUser.status}
+                          onValueChange={(newStatus) => handleStatusUpdate(targetUser.id, newStatus)}
                         >
                           <SelectTrigger className="w-auto h-8">
-                            <Badge className={getStatusColor(user.status)}>
-                              {user.status.replace('_', ' ')}
+                            <Badge className={getStatusColor(targetUser.status)}>
+                              {targetUser.status.replace('_', ' ')}
                             </Badge>
                           </SelectTrigger>
                           <SelectContent>
@@ -509,7 +560,7 @@ export const UserManagement: React.FC = () => {
                         </Select>
                       </TableCell>
                       <TableCell className="text-sm">
-                        {formatDate(user.last_login)}
+                        {formatDate(targetUser.last_login)}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
@@ -517,7 +568,7 @@ export const UserManagement: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              setSelectedUser(user);
+                              setSelectedUser(targetUser);
                               setShowUserDetails(true);
                             }}
                           >
@@ -527,7 +578,7 @@ export const UserManagement: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              setSelectedUser(user);
+                              setSelectedUser(targetUser);
                               setShowRestrictions(true);
                             }}
                           >
@@ -537,12 +588,22 @@ export const UserManagement: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              setSelectedUser(user);
+                              setSelectedUser(targetUser);
                               setShowPasswordReset(true);
                             }}
                           >
                             <RotateCcw className="w-4 h-4" />
                           </Button>
+                          {canDeleteUser(targetUser) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setUserToDelete(targetUser)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -575,6 +636,31 @@ export const UserManagement: React.FC = () => {
           />
         </>
       )}
+
+      <AddUserDialog
+        open={showAddUser}
+        onOpenChange={setShowAddUser}
+        onUserAdded={fetchUsers}
+      />
+
+      {/* Delete User Confirmation Dialog */}
+      <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove {userToDelete?.first_name} {userToDelete?.last_name} ({userToDelete?.email}) from this organization? 
+              This action cannot be undone and they will lose access to all organization resources.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remove User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
