@@ -88,7 +88,7 @@ export const DeckCard: React.FC<DeckCardProps> = ({ set, onDelete }) => {
         <CardTitle className="flex items-center justify-between">
           <span className="truncate">{set.title}</span>
           <div className="flex space-x-1">
-            <Button variant="ghost" size="sm" onClick={() => navigate(`/editor/${set.id}`)}>
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/edit/${set.id}`)}>
               <Edit className="w-4 h-4" />
             </Button>
             <AlertDialog>
