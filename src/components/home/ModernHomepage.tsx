@@ -14,6 +14,7 @@ export const ModernHomepage = () => {
   const [currentSection, setCurrentSection] = useState<Section>('hero');
   const [displaySection, setDisplaySection] = useState<Section>('hero');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showContent, setShowContent] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number>(0);
 
@@ -21,13 +22,14 @@ export const ModernHomepage = () => {
     if (isTransitioning || section === currentSection) return;
     
     setIsTransitioning(true);
+    setShowContent(false); // Start fade out
     
-    // Start fade out
     setTimeout(() => {
-      // Change the displayed content after fade out completes
+      // Change the displayed content while faded out
       setDisplaySection(section);
       setCurrentSection(section);
-    }, 350); // Half of the transition duration
+      setShowContent(true); // Start fade in
+    }, 350); // Wait for fade out to complete
     
     setTimeout(() => {
       setIsTransitioning(false);
@@ -116,7 +118,7 @@ export const ModernHomepage = () => {
       
       <div className={`
         h-full transition-all duration-700 ease-in-out
-        ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}
+        ${showContent ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
       `}>
         {renderCurrentSection()}
       </div>
