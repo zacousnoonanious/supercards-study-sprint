@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 export type NotificationType = 'study_reminder' | 'streak_reminder' | 'cards_due' | 'new_deck';
 
@@ -38,14 +37,10 @@ export const useNotifications = () => {
 
   const loadNotificationSettings = async () => {
     try {
-      const { data } = await supabase
-        .from('user_settings')
-        .select('notification_settings')
-        .eq('user_id', user!.id)
-        .maybeSingle();
-
-      if (data?.notification_settings) {
-        setSettings(data.notification_settings);
+      // For now, use localStorage until we create the user_settings table
+      const savedSettings = localStorage.getItem(`notification_settings_${user!.id}`);
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
       }
     } catch (error) {
       console.error('Failed to load notification settings:', error);
@@ -64,24 +59,6 @@ export const useNotifications = () => {
       
       if (result === 'granted') {
         await updateSettings({ ...settings, enabled: true });
-        
-        // Register for push notifications if service worker is available
-        if ('serviceWorker' in navigator) {
-          const registration = await navigator.serviceWorker.ready;
-          if ('pushManager' in registration) {
-            // Get VAPID key from environment or backend
-            const subscription = await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY' // Replace with actual key
-            });
-            
-            // Send subscription to backend
-            await supabase.functions.invoke('register-push-subscription', {
-              body: { subscription, userId: user!.id }
-            });
-          }
-        }
-        
         return true;
       }
       
@@ -98,12 +75,8 @@ export const useNotifications = () => {
       setSettings(updatedSettings);
       
       if (user) {
-        await supabase
-          .from('user_settings')
-          .upsert({
-            user_id: user.id,
-            notification_settings: updatedSettings
-          });
+        // Store in localStorage for now
+        localStorage.setItem(`notification_settings_${user.id}`, JSON.stringify(updatedSettings));
       }
     } catch (error) {
       console.error('Failed to update notification settings:', error);

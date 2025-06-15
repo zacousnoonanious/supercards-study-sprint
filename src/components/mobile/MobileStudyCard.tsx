@@ -67,7 +67,7 @@ export const MobileStudyCard: React.FC<MobileStudyCardProps> = ({
             />
           ) : (
             <div className="text-center text-lg leading-relaxed p-4">
-              {showAnswer ? (card.back_content || card.answer) : (card.front_content || card.question)}
+              {showAnswer ? card.answer : card.question}
             </div>
           )}
         </div>
