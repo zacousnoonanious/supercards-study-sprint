@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { updateFlashcardSet } from '@/lib/api/sets';
@@ -18,6 +19,7 @@ interface UseCardEditorHandlersProps {
   isTextSelecting: boolean;
   set: any;
   setDeckName: (name: string) => void;
+  selectedElementId: string | null;
 }
 
 export const useCardEditorHandlers = ({
@@ -35,6 +37,7 @@ export const useCardEditorHandlers = ({
   isTextSelecting,
   set,
   setDeckName,
+  selectedElementId,
 }: UseCardEditorHandlersProps) => {
   const { toast } = useToast();
 
@@ -81,6 +84,16 @@ export const useCardEditorHandlers = ({
   const handleAutoArrange = (type: 'grid' | 'center' | 'stack' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit' | 'align-elements-center' | 'justify' | 'align-left' | 'align-center' | 'align-right') => {
     const elements = currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements;
     if (!elements || elements.length === 0) return;
+
+    // Handle text alignment for selected element
+    if (selectedElementId && (type === 'align-left' || type === 'align-center' || type === 'align-right')) {
+      const selectedElement = elements.find(el => el.id === selectedElementId);
+      if (selectedElement && selectedElement.type === 'text') {
+        const textAlign = type === 'align-left' ? 'left' : type === 'align-center' ? 'center' : 'right';
+        updateElement(selectedElementId, { textAlign });
+        return;
+      }
+    }
 
     const updatedElements = [...elements];
     const cardWidth = currentCard.canvas_width || 600;
@@ -150,6 +163,12 @@ export const useCardEditorHandlers = ({
       case 'align-elements-right':
         updatedElements.forEach((element, index) => {
           updatedElements[index] = { ...element, x: cardWidth - element.width - 10 };
+        });
+        break;
+
+      case 'align-elements-center':
+        updatedElements.forEach((element, index) => {
+          updatedElements[index] = { ...element, x: (cardWidth - element.width) / 2 };
         });
         break;
 
