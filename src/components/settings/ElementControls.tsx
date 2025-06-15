@@ -13,7 +13,8 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignJustify
+  AlignJustify,
+  Ban
 } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
 import { useI18n } from '@/contexts/I18nContext';
@@ -174,11 +175,20 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                 <Label className="text-xs">{t('editor.bg') || 'BG'}:</Label>
                 <Input
                   type="color"
-                  value={selectedElement.backgroundColor || '#ffffff'}
+                  value={(selectedElement.backgroundColor && selectedElement.backgroundColor !== 'transparent') ? selectedElement.backgroundColor : '#ffffff'}
                   onChange={(e) => handleElementUpdate({ backgroundColor: e.target.value })}
                   className="w-8 h-7 p-0 border-0"
                   title={t('editor.backgroundColor') || 'Background Color'}
                 />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleElementUpdate({ backgroundColor: 'transparent' })}
+                  className="h-7 w-7 p-1"
+                  title={t('editor.clearBackgroundColor') || 'Clear Background Color'}
+                >
+                  <Ban className="w-4 h-4" />
+                </Button>
               </div>
             </>
           )}

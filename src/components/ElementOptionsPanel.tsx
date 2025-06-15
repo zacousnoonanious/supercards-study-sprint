@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -180,12 +179,22 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
 
             <div className="space-y-2">
               <Label className="text-sm font-medium">{t('editor.backgroundColor') || 'Background Color'}</Label>
-              <Input
-                type="color"
-                value={element.backgroundColor || '#ffffff'}
-                onChange={(e) => onUpdate({ backgroundColor: e.target.value })}
-                className="h-8 w-full"
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  type="color"
+                  value={(element.backgroundColor && element.backgroundColor !== 'transparent') ? element.backgroundColor : '#ffffff'}
+                  onChange={(e) => onUpdate({ backgroundColor: e.target.value })}
+                  className="h-8 flex-1"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => onUpdate({ backgroundColor: 'transparent' })}
+                >
+                  {t('common.clear') || 'Clear'}
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
