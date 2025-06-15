@@ -57,7 +57,7 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
     { front: "Capital of Australia", back: "Canberra", color: rainbowColors[21] },
     { front: "Shakespeare's Hamlet Quote", back: "To be or not to be", color: rainbowColors[22] },
     { front: "E=mc² Scientist", back: "Albert Einstein", color: rainbowColors[23] },
-    { front: "Human Genome Pairs", back: "23 Chromosome Pairs", color: rainbowColors[0] },
+    { front: "Human Genome Pairs", back: "~23 Chromosome Pairs", color: rainbowColors[0] },
     { front: "Photosynthesis Formula", back: "6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂", color: rainbowColors[1] },
     { front: "Gravity on Moon", back: "1.62 m/s²", color: rainbowColors[2] },
     { front: "Largest Continent", back: "Asia", color: rainbowColors[3] },
@@ -124,21 +124,28 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       // Enhanced card geometry with thickness for 3D effect
       const geometry = new THREE.BoxGeometry(1.2, 0.8, 0.05);
       
-      // Create cardboard-like material with enhanced properties
-      const material = new THREE.MeshLambertMaterial({
-        color: flashcard.color,
-        transparent: false, // Fully opaque
-        side: THREE.DoubleSide,
-      });
-
       // Add roughness texture simulation for cardboard effect
-      const roughnessMap = new THREE.DataTexture(
-        new Uint8Array([128, 140, 120, 135, 125, 145, 130, 138]).map(v => [v, v, v, 255]).flat(),
-        2, 2, THREE.RGBAFormat
-      );
+      const grayscaleValues = [128, 140, 120, 135]; // 4 values for a 2x2 texture
+      const data = new Uint8Array(4 * 4);
+      for (let i = 0; i < grayscaleValues.length; i++) {
+        const v = grayscaleValues[i];
+        data[i * 4 + 0] = v; // R
+        data[i * 4 + 1] = v; // G
+        data[i * 4 + 2] = v; // B
+        data[i * 4 + 3] = 255; // A
+      }
+      const roughnessMap = new THREE.DataTexture(data, 2, 2, THREE.RGBAFormat);
       roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
       roughnessMap.repeat.set(4, 4);
       roughnessMap.needsUpdate = true;
+      
+      // Create cardboard-like material with enhanced properties
+      const material = new THREE.MeshStandardMaterial({
+        color: flashcard.color,
+        side: THREE.DoubleSide,
+        roughness: 1,
+        roughnessMap: roughnessMap,
+      });
 
       const card = new THREE.Mesh(geometry, material);
       
@@ -264,7 +271,7 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       const mouseInfluence = 0.1;
       
       cards.forEach((card, index) => {
-        const material = card.material as THREE.MeshLambertMaterial;
+        const material = card.material as THREE.MeshStandardMaterial;
         const cardData = card as any;
         const particleSystem = particles[index];
         
