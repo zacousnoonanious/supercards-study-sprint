@@ -43,7 +43,8 @@ function App() {
                     <Route path="/create-set" element={<CreateSet />} />
                     <Route path="/decks" element={<Decks />} />
                     <Route path="/set/:id" element={<SetView />} />
-                    <Route path="/edit/:id" element={<CardEditorPage />} />
+                    <Route path="/edit/:setId" element={<CardEditorPage />} />
+                    <Route path="/edit/:setId/:cardId" element={<CardEditorPage />} />
                     <Route path="/study/:id" element={<StudyMode />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/join/:token" element={<JoinDeck />} />
