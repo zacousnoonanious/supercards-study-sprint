@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +27,7 @@ interface OrganizationUser {
     block_deck_creation: boolean;
     disable_chat: boolean;
     disable_comments: boolean;
+    can_change_own_password: boolean;
   };
 }
 
@@ -117,6 +117,7 @@ export const UserManagement: React.FC = () => {
             block_deck_creation: restrictions.block_deck_creation,
             disable_chat: restrictions.disable_chat,
             disable_comments: restrictions.disable_comments,
+            can_change_own_password: restrictions.can_change_own_password,
           } : undefined
         };
       });

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, Eye, Plus, MessageCircle, MessageSquare } from 'lucide-react';
+import { Settings, Eye, Plus, MessageCircle, MessageSquare, KeyRound } from 'lucide-react';
 
 interface UserRestrictionsDialogProps {
   user: {
@@ -21,6 +21,7 @@ interface UserRestrictionsDialogProps {
       block_deck_creation: boolean;
       disable_chat: boolean;
       disable_comments: boolean;
+      can_change_own_password?: boolean;
     };
   };
   open: boolean;
@@ -42,17 +43,25 @@ export const UserRestrictionsDialog: React.FC<UserRestrictionsDialogProps> = ({
     block_deck_creation: false,
     disable_chat: false,
     disable_comments: false,
+    can_change_own_password: false,
   });
 
   useEffect(() => {
     if (user.restrictions) {
-      setRestrictions(user.restrictions);
+      setRestrictions({
+        view_only_mode: user.restrictions.view_only_mode || false,
+        block_deck_creation: user.restrictions.block_deck_creation || false,
+        disable_chat: user.restrictions.disable_chat || false,
+        disable_comments: user.restrictions.disable_comments || false,
+        can_change_own_password: user.restrictions.can_change_own_password || false,
+      });
     } else {
       setRestrictions({
         view_only_mode: false,
         block_deck_creation: false,
         disable_chat: false,
         disable_comments: false,
+        can_change_own_password: false,
       });
     }
   }, [user.restrictions]);
@@ -71,6 +80,7 @@ export const UserRestrictionsDialog: React.FC<UserRestrictionsDialogProps> = ({
           block_deck_creation: restrictions.block_deck_creation,
           disable_chat: restrictions.disable_chat,
           disable_comments: restrictions.disable_comments,
+          can_change_own_password: restrictions.can_change_own_password,
           created_by: (await supabase.auth.getUser()).data.user?.id,
         }, {
           onConflict: 'user_id,organization_id'
@@ -201,6 +211,27 @@ export const UserRestrictionsDialog: React.FC<UserRestrictionsDialogProps> = ({
                 </div>
                 <p className="text-xs text-muted-foreground ml-6">
                   Prevent user from posting comments (for future use).
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between space-x-2">
+                  <div className="flex items-center space-x-2">
+                    <KeyRound className="w-4 h-4 text-muted-foreground" />
+                    <Label htmlFor="allow-password-change" className="text-sm font-medium">
+                      Allow Self-service Password Change
+                    </Label>
+                  </div>
+                  <Switch
+                    id="allow-password-change"
+                    checked={restrictions.can_change_own_password}
+                    onCheckedChange={(checked) =>
+                      setRestrictions(prev => ({ ...prev, can_change_own_password: checked }))
+                    }
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground ml-6">
+                  Allow user to change their own password from their profile settings.
                 </p>
               </div>
             </CardContent>

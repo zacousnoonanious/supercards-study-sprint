@@ -20,6 +20,7 @@ interface UserDetailsDialogProps {
       block_deck_creation: boolean;
       disable_chat: boolean;
       disable_comments: boolean;
+      can_change_own_password: boolean;
     };
   };
   open: boolean;
@@ -186,6 +187,12 @@ export const UserDetailsDialog: React.FC<UserDetailsDialogProps> = ({
                     <span className="text-sm">Disable Comments</span>
                     <Badge variant={user.restrictions.disable_comments ? "destructive" : "secondary"}>
                       {user.restrictions.disable_comments ? "Enabled" : "Disabled"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Can Change Password</span>
+                    <Badge variant={user.restrictions.can_change_own_password ? "default" : "destructive"}>
+                      {user.restrictions.can_change_own_password ? "Allowed" : "Blocked"}
                     </Badge>
                   </div>
                 </div>

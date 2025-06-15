@@ -685,6 +685,7 @@ export type Database = {
       user_restrictions: {
         Row: {
           block_deck_creation: boolean | null
+          can_change_own_password: boolean
           created_at: string
           created_by: string
           disable_chat: boolean | null
@@ -697,6 +698,7 @@ export type Database = {
         }
         Insert: {
           block_deck_creation?: boolean | null
+          can_change_own_password?: boolean
           created_at?: string
           created_by: string
           disable_chat?: boolean | null
@@ -709,6 +711,7 @@ export type Database = {
         }
         Update: {
           block_deck_creation?: boolean | null
+          can_change_own_password?: boolean
           created_at?: string
           created_by?: string
           disable_chat?: boolean | null
