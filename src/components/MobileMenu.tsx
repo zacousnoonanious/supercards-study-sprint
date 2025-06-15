@@ -1,88 +1,70 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
-import { useI18n } from '@/contexts/I18nContext';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { UserDropdown } from './UserDropdown';
+import { OrganizationSelector } from './OrganizationSelector';
+import { LanguageSelector } from './LanguageSelector';
+import { ThemeToggle } from './ThemeToggle';
 
-interface MobileMenuProps {
-  mobileMenuOpen: boolean;
-  setMobileMenuOpen: (open: boolean) => void;
+interface NavigationItem {
+  path: string;
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
-export const MobileMenu: React.FC<MobileMenuProps> = ({ mobileMenuOpen, setMobileMenuOpen }) => {
-  const { user, signOut } = useAuth();
-  const { t } = useI18n();
-  const location = useLocation();
-  const { currentOrganization } = useOrganization();
+interface MobileMenuProps {
+  navigationItems: NavigationItem[];
+  onItemClick: () => void;
+}
 
-  if (!mobileMenuOpen) return null;
+export const MobileMenu: React.FC<MobileMenuProps> = ({ navigationItems, onItemClick }) => {
+  const location = useLocation();
+  const { user } = useAuth();
+
+  const isActive = (path: string) => location.pathname === path;
+
+  if (!user) return null;
 
   return (
-    <div className="md:hidden" id="mobile-menu">
-      <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-background border-t border-border">
-        {user ? (
-          <>
+    <div className="flex flex-col h-full">
+      <div className="flex-1 space-y-4 py-4">
+        <div className="space-y-2">
+          {navigationItems.map(({ path, label, icon: Icon }) => (
             <Link
-              to="/dashboard"
-              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                location.pathname === '/dashboard'
+              key={path}
+              to={path}
+              onClick={onItemClick}
+              className={`flex items-center gap-3 w-full px-3 py-2 text-left rounded-lg transition-colors ${
+                isActive(path)
                   ? 'bg-primary text-primary-foreground'
-                  : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                  : 'hover:bg-accent hover:text-accent-foreground'
               }`}
-              onClick={() => setMobileMenuOpen(false)}
             >
-              {t('nav.dashboard')}
+              {Icon && <Icon className="w-4 h-4" />}
+              {label}
             </Link>
-            <Link
-              to="/decks"
-              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                location.pathname === '/decks'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-foreground hover:bg-accent hover:text-accent-foreground'
-              }`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {t('nav.decks')}
-            </Link>
-            
-            {currentOrganization && (
-              <Link
-                to="/assignments"
-                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                  location.pathname === '/assignments'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-foreground hover:bg-accent hover:text-accent-foreground'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Assignments
-              </Link>
-            )}
+          ))}
+        </div>
 
-            <button
-              onClick={() => {
-                signOut();
-                setMobileMenuOpen(false);
-              }}
-              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground"
-            >
-              {t('nav.logout')}
-            </button>
-          </>
-        ) : (
-          <Link
-            to="/auth"
-            className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-              location.pathname === '/auth'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-foreground hover:bg-accent hover:text-accent-foreground'
-            }`}
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            {t('nav.login')}
-          </Link>
-        )}
+        <Separator />
+
+        <div className="space-y-4">
+          <OrganizationSelector />
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Settings</span>
+            <div className="flex items-center space-x-2">
+              <LanguageSelector />
+              <ThemeToggle />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t pt-4">
+        <UserDropdown />
       </div>
     </div>
   );

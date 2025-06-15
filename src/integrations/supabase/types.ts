@@ -661,6 +661,13 @@ export type Database = {
         Args: { org_name: string }
         Returns: string
       }
+      get_organizations_by_email_domain: {
+        Args: { p_email: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
       hash_password: {
         Args: { password: string }
         Returns: string

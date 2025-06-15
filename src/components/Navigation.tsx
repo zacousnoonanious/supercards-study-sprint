@@ -1,131 +1,110 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useI18n } from '@/contexts/I18nContext';
 import { Button } from '@/components/ui/button';
-import { UserDropdown } from './UserDropdown';
-import { MobileMenu } from './MobileMenu';
-import { OrganizationSelector } from './OrganizationSelector';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Menu, GraduationCap, Shield } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import { UserDropdown } from './UserDropdown';
+import { OrganizationSelector } from './OrganizationSelector';
+import { LanguageSelector } from './LanguageSelector';
+import { ThemeToggle } from './ThemeToggle';
+import { useI18n } from '@/contexts/I18nContext';
+import { MobileMenu } from './MobileMenu';
 
 export const Navigation = () => {
-  const { user } = useAuth();
-  const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { currentOrganization } = useOrganization();
+  const { user } = useAuth();
+  const { userRole } = useOrganization();
+  const { t } = useI18n();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const isActive = (path: string) => location.pathname === path;
+  const isAdminUser = userRole && ['org_admin', 'super_admin'].includes(userRole);
+
+  const navigationItems = [
+    { path: '/dashboard', label: t('nav.dashboard'), icon: null },
+    { path: '/decks', label: t('nav.decks'), icon: null },
+    { path: '/marketplace', label: t('nav.marketplace'), icon: null },
+  ];
+
+  // Add admin link for org_admin and super_admin users
+  if (isAdminUser) {
+    navigationItems.push({ path: '/admin', label: 'Admin', icon: Shield });
+  }
 
   return (
-    <nav className="bg-background border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-4">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">FC</span>
-              </div>
-              <span className="font-semibold text-foreground">FlashCards</span>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-8">
+            <Link to={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
+              <GraduationCap className="h-8 w-8 text-primary" />
+              <span className="text-xl font-bold">SuperCards</span>
             </Link>
-            
-            {user && <OrganizationSelector />}
-          </div>
 
-          <div className="-mr-2 flex md:hidden">
-            <button
-              type="button"
-              className="bg-background rounded-md p-2 inline-flex items-center justify-center text-foreground hover:text-accent-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
-              aria-controls="mobile-menu"
-              aria-expanded={mobileMenuOpen}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <span className="sr-only">Open main menu</span>
-              <svg
-                className={`${mobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              <svg
-                className={`${mobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              {user ? (
-                <>
-                  <Link
-                    to="/dashboard"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      location.pathname === '/dashboard'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-foreground hover:bg-accent hover:text-accent-foreground'
-                    }`}
-                  >
-                    {t('nav.dashboard')}
-                  </Link>
-                  <Link
-                    to="/decks"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      location.pathname === '/decks'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-foreground hover:bg-accent hover:text-accent-foreground'
-                    }`}
-                  >
-                    {t('nav.decks')}
-                  </Link>
-                  
-                  {/* Show organization-specific nav items */}
-                  {currentOrganization && (
+            {user && (
+              <>
+                <div className="hidden md:flex items-center space-x-6">
+                  {navigationItems.map(({ path, label, icon: Icon }) => (
                     <Link
-                      to="/assignments"
-                      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                        location.pathname === '/assignments'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                      key={path}
+                      to={path}
+                      className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary ${
+                        isActive(path) ? 'text-primary' : 'text-muted-foreground'
                       }`}
                     >
-                      Assignments
+                      {Icon && <Icon className="w-4 h-4" />}
+                      {label}
                     </Link>
-                  )}
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
 
+          <div className="flex items-center space-x-4">
+            {user && (
+              <>
+                <div className="hidden md:flex items-center space-x-4">
+                  <OrganizationSelector />
+                  <LanguageSelector />
+                  <ThemeToggle />
                   <UserDropdown />
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/auth"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      location.pathname === '/auth'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-foreground hover:bg-accent hover:text-accent-foreground'
-                    }`}
-                  >
-                    {t('nav.login')}
-                  </Link>
-                  <Button onClick={() => navigate('/auth')} variant="outline">{t('nav.signup')}</Button>
-                </>
-              )}
-            </div>
+                </div>
+
+                <div className="md:hidden">
+                  <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <Menu className="h-5 w-5" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-[300px]">
+                      <MobileMenu 
+                        navigationItems={navigationItems}
+                        onItemClick={() => setIsMobileMenuOpen(false)}
+                      />
+                    </SheetContent>
+                  </Sheet>
+                </div>
+              </>
+            )}
+
+            {!user && (
+              <div className="flex items-center space-x-4">
+                <LanguageSelector />
+                <ThemeToggle />
+                <Button onClick={() => navigate('/auth')} size="sm">
+                  {t('nav.signIn')}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      <MobileMenu mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
     </nav>
   );
 };
