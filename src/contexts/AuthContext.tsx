@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, options?: { emailRedirectTo?: string }) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -52,15 +53,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/auth?verified=true&email=${encodeURIComponent(email)}`;
+  const signUp = async (email: string, password: string, options?: { emailRedirectTo?: string }) => {
+    const signUpOptions = options?.emailRedirectTo 
+      ? { emailRedirectTo: options.emailRedirectTo }
+      : { emailRedirectTo: `${window.location.origin}/auth?verified=true&email=${encodeURIComponent(email)}` };
     
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
+      options: signUpOptions
     });
     return { error };
   };
