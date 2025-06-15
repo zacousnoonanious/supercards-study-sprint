@@ -12,6 +12,7 @@ type Section = typeof sections[number];
 
 export const ModernHomepage = () => {
   const [currentSection, setCurrentSection] = useState<Section>('hero');
+  const [displaySection, setDisplaySection] = useState<Section>('hero');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number>(0);
@@ -20,11 +21,17 @@ export const ModernHomepage = () => {
     if (isTransitioning || section === currentSection) return;
     
     setIsTransitioning(true);
-    setCurrentSection(section);
+    
+    // Start fade out
+    setTimeout(() => {
+      // Change the displayed content after fade out completes
+      setDisplaySection(section);
+      setCurrentSection(section);
+    }, 350); // Half of the transition duration
     
     setTimeout(() => {
       setIsTransitioning(false);
-    }, 800);
+    }, 700);
   };
 
   const handleWheel = (e: WheelEvent) => {
@@ -82,7 +89,7 @@ export const ModernHomepage = () => {
   }, [currentSection, isTransitioning]);
 
   const renderCurrentSection = () => {
-    switch (currentSection) {
+    switch (displaySection) {
       case 'hero':
         return <HeroSection />;
       case 'features':
