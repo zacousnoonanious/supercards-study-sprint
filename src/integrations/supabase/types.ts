@@ -619,6 +619,36 @@ export type Database = {
         }
         Relationships: []
       }
+      password_reset_tokens: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          id?: string
+          token: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -626,6 +656,7 @@ export type Database = {
           first_name: string | null
           id: string
           language: string | null
+          last_login: string | null
           last_name: string | null
           updated_at: string
         }
@@ -635,6 +666,7 @@ export type Database = {
           first_name?: string | null
           id: string
           language?: string | null
+          last_login?: string | null
           last_name?: string | null
           updated_at?: string
         }
@@ -644,10 +676,58 @@ export type Database = {
           first_name?: string | null
           id?: string
           language?: string | null
+          last_login?: string | null
           last_name?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      user_restrictions: {
+        Row: {
+          block_deck_creation: boolean | null
+          created_at: string
+          created_by: string
+          disable_chat: boolean | null
+          disable_comments: boolean | null
+          id: string
+          organization_id: string
+          updated_at: string
+          user_id: string
+          view_only_mode: boolean | null
+        }
+        Insert: {
+          block_deck_creation?: boolean | null
+          created_at?: string
+          created_by: string
+          disable_chat?: boolean | null
+          disable_comments?: boolean | null
+          id?: string
+          organization_id: string
+          updated_at?: string
+          user_id: string
+          view_only_mode?: boolean | null
+        }
+        Update: {
+          block_deck_creation?: boolean | null
+          created_at?: string
+          created_by?: string
+          disable_chat?: boolean | null
+          disable_comments?: boolean | null
+          id?: string
+          organization_id?: string
+          updated_at?: string
+          user_id?: string
+          view_only_mode?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_restrictions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -672,6 +752,14 @@ export type Database = {
       }
       generate_org_slug: {
         Args: { org_name: string }
+        Returns: string
+      }
+      generate_reset_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_temp_password: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       get_organizations_by_email_domain: {

@@ -3,8 +3,9 @@ import React from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Users, Settings, BarChart3 } from 'lucide-react';
+import { Shield, Users, Settings, BarChart3, UserCog } from 'lucide-react';
 import { MassUserGeneration } from './MassUserGeneration';
+import { UserManagement } from './UserManagement';
 
 export const AdminLayout: React.FC = () => {
   const { userRole, currentOrganization } = useOrganization();
@@ -55,10 +56,14 @@ export const AdminLayout: React.FC = () => {
       </div>
 
       <Tabs defaultValue="user-management" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="user-management" className="flex items-center gap-2">
+            <UserCog className="w-4 h-4" />
+            Manage Users
+          </TabsTrigger>
+          <TabsTrigger value="mass-generation" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            User Management
+            Mass Generation
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2" disabled>
             <BarChart3 className="w-4 h-4" />
@@ -75,6 +80,10 @@ export const AdminLayout: React.FC = () => {
         </TabsList>
 
         <TabsContent value="user-management">
+          <UserManagement />
+        </TabsContent>
+
+        <TabsContent value="mass-generation">
           <MassUserGeneration />
         </TabsContent>
 
