@@ -10,6 +10,8 @@ import { Plus, BookOpen, Users, BarChart3, Building, UserPlus } from 'lucide-rea
 import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { RecentDecks } from '@/components/dashboard/RecentDecks';
+import { Onboarding } from '@/components/Onboarding';
+import { useToast } from '@/hooks/use-toast';
 
 interface FlashcardSet {
   id: string;
@@ -20,18 +22,41 @@ interface FlashcardSet {
 }
 
 const Dashboard = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, updateUserMetadata } = useAuth();
   const { currentOrganization, userOrganizations, isLoading } = useOrganization();
   const { t } = useI18n();
-  const [showOrgSetup, setShowOrgSetup] = useState(false);
   const [recentSets, setRecentSets] = useState<FlashcardSet[]>([]);
   const [totalDecks, setTotalDecks] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
+      if (!user.user_metadata?.onboarding_complete) {
+        setShowOnboarding(true);
+      }
+      setCheckingStatus(false);
       fetchDashboardData();
+    } else if (!loading) {
+      setCheckingStatus(false);
     }
-  }, [user]);
+  }, [user, loading]);
+
+  const handleOnboardingComplete = async () => {
+    if (!user) return;
+    try {
+      const { error } = await updateUserMetadata({ onboarding_complete: true });
+      if (error) {
+        toast({ title: "Error", description: "Failed to save onboarding status.", variant: "destructive" });
+      } else {
+        setShowOnboarding(false);
+        toast({ title: "Setup Complete!", description: "Welcome aboard! Let's get started." });
+      }
+    } catch (e) {
+      toast({ title: "Error", description: "An unexpected error occurred.", variant: "destructive" });
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -57,9 +82,9 @@ const Dashboard = () => {
     }
   };
 
-  if (loading || isLoading) {
+  if (loading || isLoading || checkingStatus) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background animate-fade-in">
         <Navigation />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-lg">Loading...</div>
@@ -68,18 +93,12 @@ const Dashboard = () => {
     );
   }
 
-  // Show organization setup if user wants to see it
-  if (showOrgSetup) {
-    return (
-      <>
-        <Navigation />
-        <OptionalOrganizationSetup onSkip={() => setShowOrgSetup(false)} />
-      </>
-    );
+  if (showOnboarding) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background animate-fade-in">
       <Navigation />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -108,7 +127,10 @@ const Dashboard = () => {
                     </p>
                   </div>
                 </div>
-                <Button onClick={() => setShowOrgSetup(true)}>
+                <Button onClick={() => {
+                  // This could be changed to open a dialog to create/join an org
+                  alert("You can create or join an organization from your profile settings.");
+                }}>
                   <UserPlus className="w-4 h-4 mr-2" />
                   {t('dashboard.getStarted')}
                 </Button>
@@ -201,7 +223,9 @@ const Dashboard = () => {
                 <Button 
                   variant="secondary" 
                   className="w-full justify-start"
-                  onClick={() => setShowOrgSetup(true)}
+                  onClick={() => {
+                    alert("You can create or join an organization from your profile settings.");
+                  }}
                 >
                   <Building className="mr-2 h-4 w-4" />
                   {t('dashboard.joinOrCreateOrg')}

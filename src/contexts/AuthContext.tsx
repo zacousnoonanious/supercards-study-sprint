@@ -12,6 +12,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
+  updateUserMetadata: (metadata: object) => Promise<{ user: User | null; error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -128,6 +129,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUserMetadata = async (metadata: object) => {
+    const { data, error } = await supabase.auth.updateUser({ data: metadata });
+
+    if (error) {
+      console.error('Error updating user metadata:', error);
+      toast({
+        title: "Error",
+        description: "Could not update your profile settings.",
+        variant: "destructive",
+      });
+    } else if (data.user) {
+      // Update local user state so UI can react immediately
+      setUser(data.user);
+    }
+    return { user: data.user, error };
+  };
+
   const value = {
     user,
     session,
@@ -135,6 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     loading,
+    updateUserMetadata,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
