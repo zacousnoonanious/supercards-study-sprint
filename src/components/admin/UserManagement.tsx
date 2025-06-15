@@ -2,20 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Search, UserCog, Shield, Eye, RotateCcw, Filter, Info, UserPlus, Trash2, Plus } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Shield } from 'lucide-react';
 import { UserDetailsDialog } from './UserDetailsDialog';
 import { UserRestrictionsDialog } from './UserRestrictionsDialog';
 import { PasswordResetDialog } from './PasswordResetDialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AddUserDialog } from './AddUserDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { UserManagementHeader } from './UserManagementHeader';
+import { AddUserInlineForm } from './AddUserInlineForm';
+import { UserFilters } from './UserFilters';
+import { UserManagementTable } from './UserManagementTable';
 
 interface OrganizationUser {
   id: string;
@@ -66,13 +63,13 @@ export const UserManagement: React.FC = () => {
   if (!userRole || !['org_admin', 'super_admin'].includes(userRole)) {
     return (
       <Card>
-        <CardHeader className="text-center">
+        <div className="text-center p-12">
           <Shield className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-          <CardTitle>Access Restricted</CardTitle>
-          <CardDescription>
+          <h3 className="text-2xl font-semibold leading-none tracking-tight mb-2">Access Restricted</h3>
+          <p className="text-sm text-muted-foreground">
             This area is only accessible to organization administrators.
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
       </Card>
     );
   }
@@ -334,6 +331,15 @@ export const UserManagement: React.FC = () => {
     return result;
   };
 
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
   // Filter and sort users
   const filteredUsers = users
     .filter(user => {
@@ -417,13 +423,13 @@ export const UserManagement: React.FC = () => {
   if (!currentOrganization) {
     return (
       <Card>
-        <CardHeader className="text-center">
-          <Users className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-          <CardTitle>No Organization Selected</CardTitle>
-          <CardDescription>
+        <div className="text-center p-12">
+          <Shield className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+          <h3 className="text-2xl font-semibold leading-none tracking-tight mb-2">No Organization Selected</h3>
+          <p className="text-sm text-muted-foreground">
             Please select an organization to manage users.
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
       </Card>
     );
   }
@@ -431,340 +437,59 @@ export const UserManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Users className="w-6 h-6 text-primary" />
-              <div>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>
-                  Manage users and roles for {currentOrganization.name}
-                </CardDescription>
-              </div>
-            </div>
-            <Button 
-              onClick={() => setShowAddUserForm(!showAddUserForm)} 
-              className="flex items-center gap-2"
-              variant={showAddUserForm ? "outline" : "default"}
-            >
-              <UserPlus className="w-4 h-4" />
-              {showAddUserForm ? 'Cancel' : 'Add User'}
-            </Button>
-          </div>
-        </CardHeader>
+        <UserManagementHeader
+          organizationName={currentOrganization.name}
+          showAddUserForm={showAddUserForm}
+          onToggleAddUser={() => setShowAddUserForm(!showAddUserForm)}
+        />
         <CardContent className="space-y-4">
-          {/* Add User Inline Form */}
           {showAddUserForm && (
-            <Card className="bg-muted/30">
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                  <div>
-                    <Input
-                      placeholder="Email *"
-                      type="email"
-                      value={addUserForm.email}
-                      onChange={(e) => setAddUserForm({ ...addUserForm, email: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="First Name"
-                      value={addUserForm.firstName}
-                      onChange={(e) => setAddUserForm({ ...addUserForm, firstName: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="Last Name"
-                      value={addUserForm.lastName}
-                      onChange={(e) => setAddUserForm({ ...addUserForm, lastName: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Select value={addUserForm.role} onValueChange={(value) => setAddUserForm({ ...addUserForm, role: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="learner">Learner</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="org_admin">Organization Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Button 
-                      onClick={handleAddUser} 
-                      disabled={isAddingUser || !addUserForm.email}
-                      className="w-full"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      {isAddingUser ? 'Sending...' : 'Send Invite'}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <AddUserInlineForm
+              formData={addUserForm}
+              isLoading={isAddingUser}
+              onFormChange={setAddUserForm}
+              onSubmit={handleAddUser}
+            />
           )}
 
-          {/* Search and Filters */}
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-32">
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="pending_approval">Pending</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="learner">Learner</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="org_admin">Org Admin</SelectItem>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <UserFilters
+            searchTerm={searchTerm}
+            statusFilter={statusFilter}
+            roleFilter={roleFilter}
+            onSearchChange={setSearchTerm}
+            onStatusFilterChange={setStatusFilter}
+            onRoleFilterChange={setRoleFilter}
+          />
 
-          {/* Results count */}
           <div className="text-sm text-muted-foreground">
             Showing {filteredUsers.length} of {users.length} users
           </div>
 
-          {/* Users Table */}
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => {
-                      if (sortBy === 'name') {
-                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                      } else {
-                        setSortBy('name');
-                        setSortOrder('asc');
-                      }
-                    }}
-                  >
-                    Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => {
-                      if (sortBy === 'email') {
-                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                      } else {
-                        setSortBy('email');
-                        setSortOrder('asc');
-                      }
-                    }}
-                  >
-                    Email {sortBy === 'email' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => {
-                      if (sortBy === 'role') {
-                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                      } else {
-                        setSortBy('role');
-                        setSortOrder('asc');
-                      }
-                    }}
-                  >
-                    Role {sortBy === 'role' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => {
-                      if (sortBy === 'status') {
-                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                      } else {
-                        setSortBy('status');
-                        setSortOrder('asc');
-                      }
-                    }}
-                  >
-                    Status {sortBy === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => {
-                      if (sortBy === 'last_login') {
-                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                      } else {
-                        setSortBy('last_login');
-                        setSortOrder('asc');
-                      }
-                    }}
-                  >
-                    Last Login {sortBy === 'last_login' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      Loading users...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredUsers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      No users found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredUsers.map((targetUser) => (
-                    <TableRow key={targetUser.id}>
-                      <TableCell>
-                        <div className="font-medium">
-                          {targetUser.first_name || targetUser.last_name 
-                            ? `${targetUser.first_name || ''} ${targetUser.last_name || ''}`.trim()
-                            : 'No name'
-                          }
-                        </div>
-                        {targetUser.restrictions && (
-                          <div className="flex gap-1 mt-1">
-                            {targetUser.restrictions.view_only_mode && (
-                              <Badge variant="outline" className="text-xs">View Only</Badge>
-                            )}
-                            {targetUser.restrictions.block_deck_creation && (
-                              <Badge variant="outline" className="text-xs">No Create</Badge>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {targetUser.email}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Select
-                            value={targetUser.role}
-                            onValueChange={(newRole) => handleRoleUpdate(targetUser.id, newRole)}
-                            disabled={targetUser.id === currentOrganization?.created_by}
-                          >
-                            <SelectTrigger className="w-auto h-8">
-                              <Badge className={getRoleColor(targetUser.role)}>
-                                {targetUser.role.replace('_', ' ')}
-                              </Badge>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="learner">Learner</SelectItem>
-                              <SelectItem value="manager">Manager</SelectItem>
-                              {(userRole === 'super_admin' || userRole === 'org_admin' || targetUser.role === 'org_admin') && (
-                                <SelectItem value="org_admin">Org Admin</SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
-                          {targetUser.id === currentOrganization?.created_by && (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Info className="w-4 h-4 text-muted-foreground cursor-help" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>The organization creator's role cannot be changed.</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={targetUser.status}
-                          onValueChange={(newStatus) => handleStatusUpdate(targetUser.id, newStatus)}
-                        >
-                          <SelectTrigger className="w-auto h-8">
-                            <Badge className={getStatusColor(targetUser.status)}>
-                              {targetUser.status.replace('_', ' ')}
-                            </Badge>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="inactive">Inactive</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {formatDate(targetUser.last_login)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUser(targetUser);
-                              setShowUserDetails(true);
-                            }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUser(targetUser);
-                              setShowRestrictions(true);
-                            }}
-                          >
-                            <UserCog className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUser(targetUser);
-                              setShowPasswordReset(true);
-                            }}
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </Button>
-                          {canDeleteUser(targetUser) && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setUserToDelete(targetUser)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <UserManagementTable
+            users={filteredUsers}
+            loading={loading}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            currentUserId={user?.id}
+            organizationCreatedBy={currentOrganization?.created_by}
+            userRole={userRole}
+            onSort={handleSort}
+            onRoleUpdate={handleRoleUpdate}
+            onStatusUpdate={handleStatusUpdate}
+            onViewDetails={(user) => {
+              setSelectedUser(user);
+              setShowUserDetails(true);
+            }}
+            onManageRestrictions={(user) => {
+              setSelectedUser(user);
+              setShowRestrictions(true);
+            }}
+            onPasswordReset={(user) => {
+              setSelectedUser(user);
+              setShowPasswordReset(true);
+            }}
+            onDeleteUser={setUserToDelete}
+          />
         </CardContent>
       </Card>
 
