@@ -30,9 +30,19 @@ export const HeroSection = () => {
       <GlobalStyles />
       <style dangerouslySetInnerHTML={{
         __html: `
-          @keyframes rainbow-flow {
+          @keyframes rainbow-flow-1 {
             0% { background-position: 0% 50%; }
-            100% { background-position: 400% 50%; }
+            100% { background-position: 200% 50%; }
+          }
+          
+          @keyframes rainbow-flow-2 {
+            0% { background-position: 100% 30%; }
+            100% { background-position: -100% 70%; }
+          }
+          
+          @keyframes rainbow-flow-3 {
+            0% { background-position: 50% 80%; }
+            100% { background-position: 250% 20%; }
           }
           
           @keyframes random-particle-1 {
@@ -111,6 +121,7 @@ export const HeroSection = () => {
           }
           
           .rainbow-text {
+            position: relative;
             background: linear-gradient(
               90deg,
               #ff6b6b, /* red */
@@ -122,16 +133,59 @@ export const HeroSection = () => {
               #ac6bff, /* violet */
               #ff6b6b  /* red again for looping */
             );
-            background-size: 400% 100%;
+            background-size: 200% 100%;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: rainbow-flow 15s linear infinite;
             text-shadow: 0 0 20px rgba(180, 148, 255, 0.5), 
                          0 0 40px rgba(180, 148, 255, 0.3),
                          0 0 60px rgba(180, 148, 255, 0.2);
             filter: drop-shadow(0 0 15px rgba(180, 148, 255, 0.6)) 
                     drop-shadow(0 0 30px rgba(180, 148, 255, 0.4));
+          }
+          
+          .rainbow-text::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+              45deg,
+              #ff6b6b, #ffac6b, #ffea6b, #6bff81, #6bffff, #6b6bff, #ac6bff, #ff6b6b
+            );
+            background-size: 300% 100%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow-flow-2 23s linear infinite;
+            opacity: 0.7;
+            z-index: -1;
+          }
+          
+          .rainbow-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+              135deg,
+              #ac6bff, #6b6bff, #6bffff, #6bff81, #ffea6b, #ffac6b, #ff6b6b, #ac6bff
+            );
+            background-size: 400% 100%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow-flow-3 31s linear infinite;
+            opacity: 0.5;
+            z-index: -2;
+          }
+          
+          .rainbow-text {
+            animation: rainbow-flow-1 17s linear infinite;
           }
           
           .non-rainbow {
@@ -387,7 +441,7 @@ export const HeroSection = () => {
         {/* Main Content */}
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
           <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight">
-            <span className="particle-container rainbow-text">
+            <span className="particle-container rainbow-text" data-text="Smarter">
               Smarter
               <div className="particle"></div>
               <div className="particle"></div>
@@ -410,7 +464,7 @@ export const HeroSection = () => {
             </span>
             <span> Cards.</span>
             <br />
-            <span className="particle-container rainbow-text">
+            <span className="particle-container rainbow-text" data-text="Better">
               Better
               <div className="particle"></div>
               <div className="particle"></div>
