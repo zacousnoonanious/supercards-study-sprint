@@ -209,7 +209,7 @@ const Marketplace = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 pt-24">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-foreground mb-2">{t('marketplace.title')}</h2>
           <p className="text-muted-foreground">{t('marketplace.subtitle')}</p>
