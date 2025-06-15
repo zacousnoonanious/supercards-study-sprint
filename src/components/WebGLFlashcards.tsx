@@ -19,6 +19,7 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
   const cameraRef = useRef<THREE.PerspectiveCamera>();
   const cardsRef = useRef<THREE.Mesh[]>([]);
   const animationIdRef = useRef<number>();
+  const mouseRef = useRef({ x: 0, y: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -63,10 +64,12 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       card.position.y = Math.random() * 3 + 5; // Start above screen
       card.position.z = Math.random() * 2 - 1;
       
-      // Random rotation
-      card.rotation.x = Math.random() * 0.3;
-      card.rotation.y = Math.random() * 0.3;
-      card.rotation.z = (Math.random() - 0.5) * 0.5;
+      // Store initial rotation values
+      (card as any).baseRotation = {
+        x: Math.random() * 0.3,
+        y: Math.random() * 0.3,
+        z: (Math.random() - 0.5) * 0.5,
+      };
 
       // Store initial and target positions
       (card as any).targetY = (Math.random() - 0.5) * 4;
@@ -85,11 +88,21 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
 
     cardsRef.current = cards;
 
+    // Mouse tracking
+    const handleMouseMove = (event: MouseEvent) => {
+      // Normalize mouse position to -1 to 1 range
+      mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
     // Animation loop
     const animate = () => {
       animationIdRef.current = requestAnimationFrame(animate);
 
       const currentTime = Date.now();
+      const mouseInfluence = 0.3; // How much the mouse affects rotation
       
       cards.forEach((card) => {
         const material = card.material as THREE.MeshBasicMaterial;
@@ -111,10 +124,13 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
             card.position.y -= cardData.fallSpeed;
           }
           
-          // Apply gentle rotation
-          card.rotation.x += cardData.rotationSpeed.x;
-          card.rotation.y += cardData.rotationSpeed.y;
-          card.rotation.z += cardData.rotationSpeed.z;
+          // Apply rotation based on mouse position and base rotation
+          const mouseRotationX = mouseRef.current.y * mouseInfluence;
+          const mouseRotationY = mouseRef.current.x * mouseInfluence;
+          
+          card.rotation.x = cardData.baseRotation.x + mouseRotationX + Math.sin(currentTime * cardData.rotationSpeed.x) * 0.1;
+          card.rotation.y = cardData.baseRotation.y + mouseRotationY + Math.sin(currentTime * cardData.rotationSpeed.y) * 0.1;
+          card.rotation.z = cardData.baseRotation.z + Math.sin(currentTime * cardData.rotationSpeed.z) * 0.1;
           
           // Gentle floating motion
           card.position.x += Math.sin(currentTime * 0.001 + card.position.z) * 0.001;
@@ -144,6 +160,7 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
       
       if (animationIdRef.current) {
         cancelAnimationFrame(animationIdRef.current);
