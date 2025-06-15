@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -119,373 +120,96 @@ export const HeroSection = () => {
             100% { background-position: 100% 100%; }
           }
           
-          @keyframes random-particle-1 {
-            0% { 
-              transform: translateY(0px) translateX(0px) scale(0);
-              opacity: 0;
-            }
-            10% {
-              opacity: 0.8;
-              transform: translateY(-3px) translateX(2px) scale(0.6);
-            }
-            100% { 
-              transform: translateY(-${Math.random() * 40 + 20}px) translateX(${Math.random() * 30 - 15}px) scale(${Math.random() * 0.5 + 0.3});
-              opacity: 0;
-            }
-          }
-          
-          @keyframes random-particle-2 {
-            0% { 
-              transform: translateY(0px) translateX(0px) scale(0);
-              opacity: 0;
-            }
-            15% {
-              opacity: 0.9;
-              transform: translateY(-5px) translateX(-3px) scale(0.8);
-            }
-            100% { 
-              transform: translateY(-${Math.random() * 50 + 25}px) translateX(${Math.random() * 35 - 17}px) scale(${Math.random() * 0.6 + 0.4});
-              opacity: 0;
-            }
-          }
-          
-          @keyframes random-particle-3 {
-            0% { 
-              transform: translateY(0px) translateX(0px) scale(0);
-              opacity: 0;
-            }
-            8% {
-              opacity: 0.7;
-              transform: translateY(-2px) translateX(4px) scale(0.5);
-            }
-            100% { 
-              transform: translateY(-${Math.random() * 45 + 22}px) translateX(${Math.random() * 32 - 16}px) scale(${Math.random() * 0.7 + 0.2});
-              opacity: 0;
-            }
-          }
-          
-          @keyframes random-particle-4 {
-            0% { 
-              transform: translateY(0px) translateX(0px) scale(0);
-              opacity: 0;
-            }
-            20% {
-              opacity: 0.85;
-              transform: translateY(-7px) translateX(-4px) scale(0.9);
-            }
-            100% { 
-              transform: translateY(-${Math.random() * 55 + 30}px) translateX(${Math.random() * 38 - 19}px) scale(${Math.random() * 0.8 + 0.3});
-              opacity: 0;
-            }
-          }
-          
-          @keyframes random-particle-5 {
-            0% { 
-              transform: translateY(0px) translateX(0px) scale(0);
-              opacity: 0;
-            }
-            12% {
-              opacity: 0.75;
-              transform: translateY(-4px) translateX(6px) scale(0.7);
-            }
-            100% { 
-              transform: translateY(-${Math.random() * 42 + 28}px) translateX(${Math.random() * 28 - 14}px) scale(${Math.random() * 0.9 + 0.1});
-              opacity: 0;
-            }
-          }
-          
           .rainbow-text {
             position: relative;
             background: linear-gradient(
               90deg,
               #FF0000, /* Red */
-              #FF7F00, /* Orange */
-              #FFFF00, /* Yellow */
-              #00FF00, /* Green */
+              #FF8C00, /* Orange */
+              #FFD700, /* Yellow */
+              #32CD32, /* Green */
               #0000FF, /* Blue */
               #4B0082, /* Indigo */
-              #9400D3, /* Violet */
-              #FF0000  /* Red again for seamless loop */
+              #8B00FF  /* Violet */
             );
-            background-size: 800% 100%;
+            background-size: 400% 100%;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: rainbow-shift 8s ease-in-out infinite;
-          }
-          
-          .rainbow-text::before {
-            content: attr(data-text);
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-              45deg,
-              #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3, #FF0000
-            );
-            background-size: 600% 100%;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: rainbow-shift-2 12s ease-in-out infinite;
-            opacity: 0.8;
-            z-index: -1;
-          }
-          
-          .rainbow-text::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-              135deg,
-              #9400D3, #4B0082, #0000FF, #00FF00, #FFFF00, #FF7F00, #FF0000
-            );
-            background-size: 700% 100%;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: rainbow-shift-3 16s ease-in-out infinite;
-            opacity: 0.6;
-            z-index: -2;
-          }
-          
-          .rainbow-text {
-            animation: rainbow-shift 8s ease-in-out infinite;
-          }
-          
-          .non-rainbow {
-            -webkit-text-fill-color: white;
-            text-shadow: none;
-            filter: none;
-          }
-          
-          .particle-container {
-            position: relative;
-            display: inline-block;
-          }
-          
-          .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            pointer-events: none;
-            box-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
+            animation: rainbow-shift 4s ease-in-out infinite;
           }
           
           .sparkle {
             position: absolute;
             pointer-events: none;
             color: #FFD700;
-            font-size: 16px;
+            font-size: 20px;
             z-index: 1;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
           
-          .sparkle:nth-child(19) { 
-            top: 10%; 
-            left: 5%; 
+          .sparkle::before {
+            content: '✨';
+            color: #FFD700;
+            text-shadow: 0 0 8px #FFD700, 0 0 16px #FFD700;
+          }
+          
+          .sparkle:nth-child(1) { 
+            top: -10%; 
+            left: -5%; 
             animation: sparkle-1 2.5s ease-in-out infinite;
             animation-delay: 0.2s;
           }
-          .sparkle:nth-child(20) { 
-            top: 80%; 
-            left: 95%; 
+          .sparkle:nth-child(2) { 
+            top: 110%; 
+            left: 105%; 
             animation: sparkle-2 3s ease-in-out infinite;
             animation-delay: 0.8s;
           }
-          .sparkle:nth-child(21) { 
-            top: 25%; 
-            left: 10%; 
+          .sparkle:nth-child(3) { 
+            top: 20%; 
+            left: -8%; 
             animation: sparkle-3 2.8s ease-in-out infinite;
             animation-delay: 1.2s;
           }
-          .sparkle:nth-child(22) { 
-            top: 70%; 
-            left: 85%; 
+          .sparkle:nth-child(4) { 
+            top: 80%; 
+            left: 102%; 
             animation: sparkle-4 2.3s ease-in-out infinite;
             animation-delay: 0.5s;
           }
-          .sparkle:nth-child(23) { 
-            top: 5%; 
-            left: 90%; 
+          .sparkle:nth-child(5) { 
+            top: -5%; 
+            left: 108%; 
             animation: sparkle-5 3.2s ease-in-out infinite;
             animation-delay: 1.5s;
           }
-          .sparkle:nth-child(24) { 
-            top: 90%; 
-            left: 15%; 
+          .sparkle:nth-child(6) { 
+            top: 115%; 
+            left: -3%; 
             animation: sparkle-1 2.7s ease-in-out infinite;
             animation-delay: 0.9s;
           }
-          .sparkle:nth-child(25) { 
-            top: 40%; 
-            left: 3%; 
+          .sparkle:nth-child(7) { 
+            top: 50%; 
+            left: -12%; 
             animation: sparkle-3 2.4s ease-in-out infinite;
             animation-delay: 1.8s;
           }
-          .sparkle:nth-child(26) { 
-            top: 60%; 
-            left: 97%; 
+          .sparkle:nth-child(8) { 
+            top: 50%; 
+            left: 112%; 
             animation: sparkle-2 2.9s ease-in-out infinite;
             animation-delay: 0.3s;
-          }
-          .sparkle:nth-child(27) { 
-            top: 15%; 
-            left: 80%; 
-            animation: sparkle-4 3.1s ease-in-out infinite;
-            animation-delay: 1.1s;
-          }
-          .sparkle:nth-child(28) { 
-            top: 85%; 
-            left: 20%; 
-            animation: sparkle-5 2.6s ease-in-out infinite;
-            animation-delay: 0.7s;
           }
           
           .particle-container {
             position: relative;
             display: inline-block;
-          }
-          
-          .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            pointer-events: none;
-            box-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
-          }
-          
-          .particle:nth-child(1) { 
-            top: 20%; 
-            left: 15%; 
-            background: radial-gradient(circle, #e4a5ff, #f0c3ff);
-            animation: random-particle-1 ${1.2 + Math.random() * 0.8}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(2) { 
-            top: 80%; 
-            left: 85%; 
-            background: radial-gradient(circle, #b794ff, #d4b8ff);
-            animation: random-particle-2 ${1.5 + Math.random() * 1}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(3) { 
-            top: 35%; 
-            left: 10%; 
-            background: radial-gradient(circle, #9d84ff, #c4a8ff);
-            animation: random-particle-3 ${1.1 + Math.random() * 0.9}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(4) { 
-            top: 65%; 
-            left: 90%; 
-            background: radial-gradient(circle, #84c7ff, #b8d9ff);
-            animation: random-particle-4 ${1.4 + Math.random() * 1.1}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(5) { 
-            top: 90%; 
-            left: 45%; 
-            background: radial-gradient(circle, #70dcff, #a8e8ff);
-            animation: random-particle-5 ${1.3 + Math.random() * 0.7}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(6) { 
-            top: 15%; 
-            left: 75%; 
-            background: radial-gradient(circle, #e4a5ff, #f0c3ff);
-            animation: random-particle-1 ${1.6 + Math.random() * 0.8}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(7) { 
-            top: 55%; 
-            left: 25%; 
-            background: radial-gradient(circle, #b794ff, #d4b8ff);
-            animation: random-particle-3 ${1.2 + Math.random() * 1}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(8) { 
-            top: 75%; 
-            left: 70%; 
-            background: radial-gradient(circle, #9d84ff, #c4a8ff);
-            animation: random-particle-2 ${1.4 + Math.random() * 0.9}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(9) { 
-            top: 25%; 
-            left: 55%; 
-            background: radial-gradient(circle, #84c7ff, #b8d9ff);
-            animation: random-particle-5 ${1.1 + Math.random() * 1.1}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(10) { 
-            top: 85%; 
-            left: 5%; 
-            background: radial-gradient(circle, #70dcff, #a8e8ff);
-            animation: random-particle-4 ${1.5 + Math.random() * 0.7}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(11) { 
-            top: 45%; 
-            left: 95%; 
-            background: radial-gradient(circle, #e4a5ff, #f0c3ff);
-            animation: random-particle-1 ${1.3 + Math.random() * 0.8}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(12) { 
-            top: 60%; 
-            left: 35%; 
-            background: radial-gradient(circle, #b794ff, #d4b8ff);
-            animation: random-particle-3 ${1.2 + Math.random() * 1}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(13) { 
-            top: 30%; 
-            left: 80%; 
-            background: radial-gradient(circle, #9d84ff, #c4a8ff);
-            animation: random-particle-2 ${1.4 + Math.random() * 0.9}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(14) { 
-            top: 70%; 
-            left: 20%; 
-            background: radial-gradient(circle, #84c7ff, #b8d9ff);
-            animation: random-particle-5 ${1.1 + Math.random() * 1.1}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(15) { 
-            top: 10%; 
-            left: 60%; 
-            background: radial-gradient(circle, #70dcff, #a8e8ff);
-            animation: random-particle-4 ${1.5 + Math.random() * 0.7}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(16) { 
-            top: 95%; 
-            left: 65%; 
-            background: radial-gradient(circle, #e4a5ff, #f0c3ff);
-            animation: random-particle-1 ${1.3 + Math.random() * 0.8}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(17) { 
-            top: 40%; 
-            left: 40%; 
-            background: radial-gradient(circle, #b794ff, #d4b8ff);
-            animation: random-particle-3 ${1.2 + Math.random() * 1}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
-          }
-          .particle:nth-child(18) { 
-            top: 50%; 
-            left: 50%; 
-            background: radial-gradient(circle, #9d84ff, #c4a8ff);
-            animation: random-particle-2 ${1.4 + Math.random() * 0.9}s ease-out infinite;
-            animation-delay: ${Math.random() * 2}s;
           }
         `
       }} />
@@ -594,41 +318,29 @@ export const HeroSection = () => {
         {/* Main Content */}
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
           <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight">
-            <span className="particle-container rainbow-text" data-text="Smarter">
+            <span className="particle-container rainbow-text">
               Smarter
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
             </span>
             <span> Cards.</span>
             <br />
-            <span className="particle-container rainbow-text" data-text="Better">
+            <span className="particle-container rainbow-text">
               Better
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
-              <div className="sparkle">✨</div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
+              <div className="sparkle"></div>
             </span>
             <span> Learning.</span>
           </h1>
