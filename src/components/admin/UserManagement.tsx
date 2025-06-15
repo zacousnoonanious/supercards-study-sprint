@@ -52,6 +52,7 @@ export const UserManagement: React.FC = () => {
   // Add user inline form state
   const [showAddUserForm, setShowAddUserForm] = useState(false);
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [sendInvite, setSendInvite] = useState(true);
   const [addUserForm, setAddUserForm] = useState({
     email: '',
     firstName: '',
@@ -250,54 +251,89 @@ export const UserManagement: React.FC = () => {
 
     setIsAddingUser(true);
     try {
-      // Create organization invite
-      const { data, error } = await supabase
-        .from('organization_invites')
-        .insert({
-          organization_id: currentOrganization.id,
-          email: addUserForm.email,
-          first_name: addUserForm.firstName,
-          last_name: addUserForm.lastName,
-          role: addUserForm.role,
-          invite_token: generateInviteToken(),
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
-          invited_by: (await supabase.auth.getUser()).data.user?.id || '',
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        // Send invite email using edge function
-        const { error: emailError } = await supabase.functions.invoke('send-invite-email', {
-          body: {
+      if (sendInvite) {
+        // Create organization invite
+        const { data, error } = await supabase
+          .from('organization_invites')
+          .insert({
+            organization_id: currentOrganization.id,
             email: addUserForm.email,
-            firstName: addUserForm.firstName,
-            lastName: addUserForm.lastName,
-            organizationName: currentOrganization.name,
-            inviteToken: data.invite_token,
-          },
-        });
+            first_name: addUserForm.firstName,
+            last_name: addUserForm.lastName,
+            role: addUserForm.role,
+            invite_token: generateInviteToken(),
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+            invited_by: (await supabase.auth.getUser()).data.user?.id || '',
+          })
+          .select()
+          .single();
 
-        if (emailError) {
-          console.error('Error sending invite email:', emailError);
-          toast({
-            title: "Invite Created",
-            description: `Invitation created for ${addUserForm.email}, but email could not be sent. You can share the invite link manually.`,
-            variant: "destructive",
+        if (error) throw error;
+
+        if (data) {
+          // Send invite email using edge function
+          const { error: emailError } = await supabase.functions.invoke('send-invite-email', {
+            body: {
+              email: addUserForm.email,
+              firstName: addUserForm.firstName,
+              lastName: addUserForm.lastName,
+              organizationName: currentOrganization.name,
+              inviteToken: data.invite_token,
+            },
           });
+
+          if (emailError) {
+            console.error('Error sending invite email:', emailError);
+            toast({
+              title: "Invite Created",
+              description: `Invitation created for ${addUserForm.email}, but email could not be sent. You can share the invite link manually.`,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Invite Sent",
+              description: `An invitation has been sent to ${addUserForm.email}. They will have 7 days to accept.`,
+            });
+          }
         } else {
           toast({
-            title: "Invite Sent",
-            description: `An invitation has been sent to ${addUserForm.email}. They will have 7 days to accept.`,
+            title: "Invite Created",
+            description: `Invitation created for ${addUserForm.email}. You can share the invite link manually.`,
           });
         }
       } else {
-        toast({
-          title: "Invite Created",
-          description: `Invitation created for ${addUserForm.email}. You can share the invite link manually.`,
+        // Direct user creation without invite
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          email: addUserForm.email,
+          password: generateTemporaryPassword(),
+          user_metadata: {
+            first_name: addUserForm.firstName,
+            last_name: addUserForm.lastName,
+          },
+          email_confirm: true,
         });
+
+        if (authError) throw authError;
+
+        if (authData.user) {
+          // Add user to organization
+          const { error: memberError } = await supabase
+            .from('organization_members')
+            .insert({
+              organization_id: currentOrganization.id,
+              user_id: authData.user.id,
+              role: addUserForm.role,
+              status: 'active',
+              joined_at: new Date().toISOString(),
+            });
+
+          if (memberError) throw memberError;
+
+          toast({
+            title: "User Added",
+            description: `${addUserForm.firstName} ${addUserForm.lastName} has been added to the organization directly. A temporary password has been generated and they will need to reset it on first login.`,
+          });
+        }
       }
 
       // Reset form
@@ -311,10 +347,10 @@ export const UserManagement: React.FC = () => {
       setShowAddUserForm(false);
       await fetchUsers();
     } catch (error: any) {
-      console.error('Error creating invite:', error);
+      console.error('Error adding user:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create user invitation.",
+        description: error.message || "Failed to add user.",
         variant: "destructive",
       });
     } finally {
@@ -326,6 +362,15 @@ export const UserManagement: React.FC = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
     for (let i = 0; i < 16; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const generateTemporaryPassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let result = '';
+    for (let i = 0; i < 12; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
@@ -447,7 +492,9 @@ export const UserManagement: React.FC = () => {
             <AddUserInlineForm
               formData={addUserForm}
               isLoading={isAddingUser}
+              sendInvite={sendInvite}
               onFormChange={setAddUserForm}
+              onSendInviteChange={setSendInvite}
               onSubmit={handleAddUser}
             />
           )}
