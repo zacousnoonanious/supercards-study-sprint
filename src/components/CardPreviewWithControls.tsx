@@ -36,11 +36,14 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
   const cardWidth = card.canvas_width || 600;
   const cardHeight = card.canvas_height || 450;
   
-  // Calculate scale to fit preview (max 300px width)
-  const maxPreviewWidth = 300;
-  const scale = Math.min(maxPreviewWidth / cardWidth, 1);
-  const previewWidth = cardWidth * scale;
-  const previewHeight = cardHeight * scale;
+  // Fixed preview dimensions for consistency
+  const fixedPreviewWidth = 280;
+  const fixedPreviewHeight = 210;
+  
+  // Calculate scale to fit the card content within fixed preview size
+  const scaleX = fixedPreviewWidth / cardWidth;
+  const scaleY = fixedPreviewHeight / cardHeight;
+  const scale = Math.min(scaleX, scaleY);
 
   return (
     <Card 
@@ -63,16 +66,19 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
       </CardHeader>
       
       <CardContent className="space-y-3">
-        {/* Card Preview */}
+        {/* Card Preview - Fixed size container */}
         <div 
-          className="border rounded overflow-hidden cursor-pointer bg-white"
-          style={{ width: previewWidth, height: previewHeight }}
+          className="border rounded overflow-hidden cursor-pointer bg-white flex items-center justify-center"
+          style={{ 
+            width: fixedPreviewWidth, 
+            height: fixedPreviewHeight 
+          }}
           onClick={() => setShowAnswer(!showAnswer)}
         >
           <div 
             style={{ 
               transform: `scale(${scale})`,
-              transformOrigin: 'top left',
+              transformOrigin: 'center center',
               width: cardWidth,
               height: cardHeight
             }}
@@ -89,6 +95,7 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
         
         {/* Card Info */}
         <div className="text-xs text-muted-foreground">
+          <p>Dimensions: {cardWidth} × {cardHeight}px</p>
           <p>Front: {card.front_elements?.length || 0} elements</p>
           <p>Back: {card.back_elements?.length || 0} elements</p>
           {card.card_type && card.card_type !== 'normal' && (
