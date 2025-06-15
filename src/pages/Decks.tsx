@@ -29,7 +29,8 @@ const Decks = () => {
         .order('updated_at', { ascending: false });
 
       if (currentOrganization?.id) {
-        query = query.eq('organization_id', currentOrganization.id);
+        // Show decks from the current org AND the user's personal decks (where org id is null).
+        query = query.or(`organization_id.eq.${currentOrganization.id},and(user_id.eq.${user.id},organization_id.is.null)`);
       } else {
         // Show all decks owned by the user if no organization is selected.
         query = query.eq('user_id', user.id);
