@@ -8,12 +8,21 @@ import { UserDropdown } from '@/components/UserDropdown';
 import { StudyContent } from '@/components/study/StudyContent';
 import { StudySettingsDialog } from '@/components/study/StudySettingsDialog';
 import { StudyHeader } from '@/components/study/StudyHeader';
-import { BottomToolbar } from '@/components/BottomToolbar';
+import { MobileStudyCard } from '@/components/mobile/MobileStudyCard';
+import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
+import { OfflineBanner } from '@/components/mobile/OfflineBanner';
+import { InstallPrompt } from '@/components/mobile/InstallPrompt';
 import { useStudyMode } from '@/hooks/useStudyMode';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { usePWA } from '@/hooks/usePWA';
+import { useOfflineStorage } from '@/hooks/useOfflineStorage';
 
 const StudyMode = () => {
   const { user } = useAuth();
   const { t } = useI18n();
+  const isMobile = useIsMobile();
+  const { isOnline } = usePWA();
+  const { saveOfflineStudySession } = useOfflineStorage();
   const [showSettings, setShowSettings] = useState(false);
 
   const {
@@ -28,6 +37,7 @@ const StudyMode = () => {
     mode,
     hideHints,
     singleAttempt,
+    srsEnabled,
     setShuffle,
     setMode,
     setCurrentTimer,
@@ -203,6 +213,84 @@ const StudyMode = () => {
             </Button>
           </div>
         </main>
+      </div>
+    );
+  }
+
+  // Enhanced mobile study card rating handler
+  const handleMobileRate = async (rating: number) => {
+    const correct = rating >= 3;
+    await handleAnswerSubmit(correct);
+    
+    // Save offline if not online
+    if (!isOnline && currentCard) {
+      await saveOfflineStudySession({
+        setId: currentCard.set_id,
+        cardId: currentCard.id,
+        score: rating,
+        timeSpent: 30, // Approximate time spent
+        timestamp: Date.now()
+      });
+    }
+    
+    handleNextCard();
+  };
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <OfflineBanner />
+        
+        <StudyHeader
+          set={set}
+          onBackClick={() => navigate('/decks')}
+          onSettingsClick={() => setShowSettings(true)}
+        />
+
+        {currentCard ? (
+          <div className="flex-1 flex flex-col justify-center px-4 py-8">
+            <div className="text-center mb-4">
+              <span className="text-sm text-muted-foreground">
+                {currentCardIndex + 1} of {shuffledCards.length}
+              </span>
+            </div>
+            
+            <MobileStudyCard
+              card={currentCard}
+              showAnswer={showAnswer}
+              onFlip={handleFlipCard}
+              onNext={() => handleNavigate('next')}
+              onPrevious={() => handleNavigate('prev')}
+              onRate={srsEnabled ? handleMobileRate : undefined}
+              className="mb-8"
+            />
+            
+            {currentCard.hint && !hideHints && !showAnswer && (
+              <div className="text-center text-sm text-muted-foreground mt-4 px-4">
+                💡 {currentCard.hint}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-foreground">{t('common.noCardsInSet')}</h2>
+              <p className="text-muted-foreground mt-2">No cards available to study.</p>
+            </div>
+          </div>
+        )}
+
+        <MobileBottomNav />
+        <InstallPrompt />
+
+        <StudySettingsDialog
+          open={showSettings}
+          onOpenChange={setShowSettings}
+          shuffle={shuffle}
+          mode={mode}
+          onShuffleChange={setShuffle}
+          onModeChange={setMode}
+        />
       </div>
     );
   }

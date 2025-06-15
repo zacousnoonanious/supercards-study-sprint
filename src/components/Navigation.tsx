@@ -12,6 +12,8 @@ import { LanguageSelector } from './LanguageSelector';
 import { ThemeToggle } from './ThemeToggle';
 import { useI18n } from '@/contexts/I18nContext';
 import { MobileMenu } from './MobileMenu';
+import { MobileBottomNav } from './mobile/MobileBottomNav';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const Navigation = () => {
   const location = useLocation();
@@ -19,6 +21,7 @@ export const Navigation = () => {
   const { user } = useAuth();
   const { userRole } = useOrganization();
   const { t } = useI18n();
+  const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
@@ -45,6 +48,11 @@ export const Navigation = () => {
     ...(isAdminUser ? [{ path: '/admin', label: t('nav.admin'), icon: Shield }] : []),
   ];
 
+  // On mobile, don't render the top navigation if we're showing the bottom nav
+  if (isMobile && user) {
+    return <MobileBottomNav />;
+  }
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
       <div className="container mx-auto px-4">
@@ -69,7 +77,7 @@ export const Navigation = () => {
               </Link>
             </div>
 
-            {user && (
+            {user && !isMobile && (
               <>
                 <div className="hidden md:flex items-center space-x-6">
                   {navigationItems.map(({ path, label, icon: Icon }) => (
