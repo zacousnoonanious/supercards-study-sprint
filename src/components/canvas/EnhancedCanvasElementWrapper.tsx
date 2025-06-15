@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasElementRenderer } from '../CanvasElementRenderer';
 import { CanvasResizeHandles } from './CanvasResizeHandles';
-import { ContextAwareToolbar } from './ContextAwareToolbar';
 import { LayoutConstraints } from './LayoutConstraints';
 
 interface EnhancedCanvasElementWrapperProps {
@@ -35,68 +34,19 @@ export const EnhancedCanvasElementWrapper: React.FC<EnhancedCanvasElementWrapper
   onDuplicate,
   onDelete,
 }) => {
-  const [showContextToolbar, setShowContextToolbar] = useState(false);
   const [showLayoutConstraints, setShowLayoutConstraints] = useState(false);
-  const [toolbarPosition, setToolbarPosition] = useState({ x: 0, y: 0 });
   const elementRef = useRef<HTMLDivElement>(null);
-  const hoverTimeout = useRef<NodeJS.Timeout>();
-
-  const handleMouseEnter = () => {
-    if (isSelected && !isDragging && editingElement !== element.id) {
-      clearTimeout(hoverTimeout.current);
-      hoverTimeout.current = setTimeout(() => {
-        if (elementRef.current) {
-          const rect = elementRef.current.getBoundingClientRect();
-          setToolbarPosition({
-            x: element.x,
-            y: element.y,
-          });
-          setShowContextToolbar(true);
-        }
-      }, 500); // Show toolbar after 500ms hover
-    }
-  };
-
-  const handleMouseLeave = () => {
-    clearTimeout(hoverTimeout.current);
-    // Don't hide immediately to allow interaction with toolbar
-    setTimeout(() => {
-      setShowContextToolbar(false);
-    }, 200);
-  };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (element.type === 'text') {
       onEditingChange(element.id);
-    } else {
-      setShowContextToolbar(true);
     }
-  };
-
-  const handleUpdate = (updates: Partial<CanvasElement>) => {
-    onUpdateElement(element.id, updates);
-  };
-
-  const handleDuplicate = () => {
-    onDuplicate(element);
-    setShowContextToolbar(false);
-  };
-
-  const handleDeleteElement = () => {
-    onDelete(element.id);
-    setShowContextToolbar(false);
   };
 
   const handleLayoutConstraintsUpdate = (constraints: any[]) => {
     onUpdateElement(element.id, { layoutConstraints: constraints } as any);
   };
-
-  useEffect(() => {
-    return () => {
-      clearTimeout(hoverTimeout.current);
-    };
-  }, []);
 
   return (
     <>
@@ -119,8 +69,6 @@ export const EnhancedCanvasElementWrapper: React.FC<EnhancedCanvasElementWrapper
         onMouseDown={(e) => onMouseDown(e, element.id)}
         onClick={(e) => onClick(e, element.id)}
         onDoubleClick={handleDoubleClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         data-element="true"
       >
         <CanvasElementRenderer
@@ -149,18 +97,6 @@ export const EnhancedCanvasElementWrapper: React.FC<EnhancedCanvasElementWrapper
           </div>
         )}
       </div>
-
-      {/* Context-aware toolbar */}
-      {showContextToolbar && isSelected && (
-        <ContextAwareToolbar
-          element={element}
-          onUpdate={handleUpdate}
-          onDelete={handleDeleteElement}
-          onDuplicate={handleDuplicate}
-          position={toolbarPosition}
-          onClose={() => setShowContextToolbar(false)}
-        />
-      )}
 
       {/* Layout constraints panel */}
       {isSelected && (
