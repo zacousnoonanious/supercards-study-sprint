@@ -392,6 +392,62 @@ export type Database = {
           },
         ]
       }
+      imported_content_logs: {
+        Row: {
+          cards_imported: number | null
+          created_at: string | null
+          deck_id: string | null
+          error_message: string | null
+          id: string
+          imported_at: string | null
+          metadata: Json | null
+          original_filename: string | null
+          source: string
+          source_url: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cards_imported?: number | null
+          created_at?: string | null
+          deck_id?: string | null
+          error_message?: string | null
+          id?: string
+          imported_at?: string | null
+          metadata?: Json | null
+          original_filename?: string | null
+          source: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cards_imported?: number | null
+          created_at?: string | null
+          deck_id?: string | null
+          error_message?: string | null
+          id?: string
+          imported_at?: string | null
+          metadata?: Json | null
+          original_filename?: string | null
+          source?: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "imported_content_logs_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "flashcard_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_decks: {
         Row: {
           category: string | null
