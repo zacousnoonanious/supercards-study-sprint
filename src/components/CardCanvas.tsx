@@ -2,10 +2,13 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasBackground } from './CanvasBackground';
-import { CanvasElementWrapper } from './canvas/CanvasElementWrapper';
+import { EnhancedCanvasElementWrapper } from './canvas/EnhancedCanvasElementWrapper';
 import { CanvasEmptyState } from './canvas/CanvasEmptyState';
 import { CanvasCardSideIndicator } from './canvas/CanvasCardSideIndicator';
+import { SmartSnapGuides } from './canvas/SmartSnapGuides';
 import { useCanvasDragResize } from '@/hooks/useCanvasDragResize';
+import { useSmartSnapping } from '@/hooks/useSmartSnapping';
+import { useLayoutConstraints } from '@/hooks/useLayoutConstraints';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CardCanvasProps {
@@ -21,6 +24,7 @@ interface CardCanvasProps {
   snapToGrid?: boolean;
   showBorder?: boolean;
   zoom?: number;
+  onDuplicateElement?: (element: CanvasElement) => void;
 }
 
 export const CardCanvas: React.FC<CardCanvasProps> = ({
@@ -36,6 +40,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   snapToGrid = false,
   showBorder = false,
   zoom = 1,
+  onDuplicateElement,
 }) => {
   const { theme } = useTheme();
   const [editingElement, setEditingElement] = useState<string | null>(null);
@@ -48,6 +53,30 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const canvasHeight = (style?.height as number) || 450;
 
   const {
+    calculateSnapPosition,
+    clearSnapGuides,
+    activeSnapGuides,
+  } = useSmartSnapping({
+    elements,
+    canvasWidth,
+    canvasHeight,
+    snapThreshold: 5,
+  });
+
+  const {
+    applyConstraintsToAll,
+    addConstraintToElement,
+    removeConstraintFromElement,
+  } = useLayoutConstraints({
+    elements,
+    canvasWidth,
+    canvasHeight,
+    originalCanvasWidth: canvasWidth,
+    originalCanvasHeight: canvasHeight,
+    onUpdateElement,
+  });
+
+  const {
     isDragging,
     isResizing,
     dragElementId,
@@ -57,7 +86,18 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     updateDragStart,
   } = useCanvasDragResize({
     elements,
-    onUpdateElement,
+    onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => {
+      // Apply smart snapping during drag
+      if (isDragging && updates.x !== undefined && updates.y !== undefined) {
+        const element = elements.find(el => el.id === elementId);
+        if (element) {
+          const snapped = calculateSnapPosition(element, updates.x, updates.y);
+          updates.x = snapped.x;
+          updates.y = snapped.y;
+        }
+      }
+      onUpdateElement(elementId, updates);
+    },
     canvasWidth,
     canvasHeight,
     snapToGrid,
@@ -94,6 +134,11 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     }
   }, [handleMouseMove]);
 
+  const handleMouseUpOrLeave = useCallback(() => {
+    endDragOrResize();
+    clearSnapGuides();
+  }, [endDragOrResize, clearSnapGuides]);
+
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     // Check if the click target is the canvas itself or the background
     const isCanvasBackground = e.target === canvasRef.current || 
@@ -115,6 +160,23 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     setEditingElement(elementId);
   }, []);
 
+  const handleDuplicateElement = useCallback((element: CanvasElement) => {
+    if (onDuplicateElement) {
+      onDuplicateElement(element);
+    } else {
+      // Default duplication logic
+      const newElement: CanvasElement = {
+        ...element,
+        id: `element_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        x: element.x + 20,
+        y: element.y + 20,
+        zIndex: (element.zIndex || 0) + 1,
+      };
+      onUpdateElement(newElement.id, newElement);
+      onSelectElement(newElement.id);
+    }
+  }, [onDuplicateElement, onUpdateElement, onSelectElement]);
+
   return (
     <div
       ref={canvasRef}
@@ -128,8 +190,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       }}
       onClick={handleCanvasClick}
       onMouseMove={handleCanvasMouseMove}
-      onMouseUp={endDragOrResize}
-      onMouseLeave={endDragOrResize}
+      onMouseUp={handleMouseUpOrLeave}
+      onMouseLeave={handleMouseUpOrLeave}
       data-canvas-background="true"
     >
       {/* Grid background - should be rendered first */}
@@ -139,25 +201,35 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         isDarkTheme={isDarkTheme}
       />
       
+      {/* Smart snap guides */}
+      <SmartSnapGuides
+        guides={activeSnapGuides}
+        canvasWidth={canvasWidth}
+        canvasHeight={canvasHeight}
+      />
+      
       {/* Card side indicator */}
       <CanvasCardSideIndicator
         cardSide={cardSide}
         isDarkTheme={isDarkTheme}
       />
       
-      {/* Canvas elements - should render above the grid */}
+      {/* Canvas elements - should render above everything else */}
       {elements.map((element) => (
-        <CanvasElementWrapper
+        <EnhancedCanvasElementWrapper
           key={element.id}
           element={element}
           isSelected={selectedElement === element.id}
           isDragging={isDragging && dragElementId === element.id}
           editingElement={editingElement}
           zoom={zoom}
+          availableElements={elements}
           onMouseDown={handleElementMouseDown}
           onClick={handleElementClick}
           onUpdateElement={onUpdateElement}
           onEditingChange={handleEditingChange}
+          onDuplicate={handleDuplicateElement}
+          onDelete={onDeleteElement}
         />
       ))}
       
