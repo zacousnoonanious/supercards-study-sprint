@@ -245,7 +245,7 @@ export const MassUserGeneration: React.FC = () => {
 
         if (tokenError) throw tokenError;
 
-        // Create organization invite
+        // Create organization invite - using the correct column name 'invited_by'
         const { error: inviteError } = await supabase
           .from('organization_invites')
           .insert({
@@ -255,7 +255,7 @@ export const MassUserGeneration: React.FC = () => {
             last_name: userToCreate.lastName,
             role: userToCreate.role,
             invite_token: tokenData,
-            created_by: user.id,
+            invited_by: user.id,
             expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
           });
 

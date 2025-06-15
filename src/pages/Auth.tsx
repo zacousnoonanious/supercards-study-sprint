@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Mail } from 'lucide-react';
+import { AuthForm } from '@/components/auth/AuthForm';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -85,7 +86,7 @@ const Auth = () => {
   // If we have invite details but no user, show invite preview
   if (inviteDetails && organizationDetails && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
+      <AuthLayout>
         <div className="w-full max-w-md space-y-6">
           <Card>
             <CardHeader className="text-center">
@@ -114,14 +115,18 @@ const Auth = () => {
               </div>
             </CardContent>
           </Card>
-          <AuthLayout />
+          <AuthForm />
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   // Default auth layout
-  return <AuthLayout />;
+  return (
+    <AuthLayout>
+      <AuthForm />
+    </AuthLayout>
+  );
 };
 
 export default Auth;
