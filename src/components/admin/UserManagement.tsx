@@ -13,6 +13,7 @@ import { UserManagementHeader } from './UserManagementHeader';
 import { AddUserInlineForm } from './AddUserInlineForm';
 import { UserFilters } from './UserFilters';
 import { UserManagementTable } from './UserManagementTable';
+import { SecurityNotice } from './SecurityNotice';
 
 interface OrganizationUser {
   id: string;
@@ -504,6 +505,8 @@ export const UserManagement: React.FC = () => {
           onToggleAddUser={() => setShowAddUserForm(!showAddUserForm)}
         />
         <CardContent className="space-y-4">
+          <SecurityNotice />
+          
           {showAddUserForm && (
             <AddUserInlineForm
               formData={addUserForm}

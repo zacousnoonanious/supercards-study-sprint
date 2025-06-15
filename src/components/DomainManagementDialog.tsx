@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Plus, X } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Settings, Plus, X, AlertTriangle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import { validateDomain, isPublicDomain } from '@/utils/domainValidation';
 
 interface DomainManagementDialogProps {
   trigger?: React.ReactNode;
@@ -18,6 +20,12 @@ export const DomainManagementDialog: React.FC<DomainManagementDialogProps> = ({ 
   const [domains, setDomains] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [domainValidation, setDomainValidation] = useState<{
+    isValid: boolean;
+    isPublic: boolean;
+    warnings: string[];
+  } | null>(null);
+  const [showPublicDomainWarning, setShowPublicDomainWarning] = useState(false);
   const { toast } = useToast();
   const { currentOrganization, updateApprovedDomains } = useOrganization();
 
@@ -27,10 +35,21 @@ export const DomainManagementDialog: React.FC<DomainManagementDialogProps> = ({ 
     }
   }, [currentOrganization]);
 
+  // Validate domain as user types
+  useEffect(() => {
+    if (newDomain.trim()) {
+      const validation = validateDomain(newDomain.trim());
+      setDomainValidation(validation);
+    } else {
+      setDomainValidation(null);
+    }
+  }, [newDomain]);
+
   const handleAddDomain = () => {
     if (!newDomain.trim()) return;
     
     const domain = newDomain.trim().toLowerCase();
+    
     if (domains.includes(domain)) {
       toast({
         title: "Domain already exists",
@@ -40,19 +59,41 @@ export const DomainManagementDialog: React.FC<DomainManagementDialogProps> = ({ 
       return;
     }
 
-    // Basic domain validation
-    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
-    if (!domainRegex.test(domain)) {
+    const validation = validateDomain(domain);
+    
+    if (!validation.isValid) {
       toast({
         title: "Invalid domain",
-        description: "Please enter a valid domain (e.g., company.com)",
+        description: validation.warnings[0] || "Please enter a valid domain (e.g., company.com)",
         variant: "destructive",
       });
       return;
     }
 
+    // If it's a public domain, show additional warning
+    if (validation.isPublic) {
+      setShowPublicDomainWarning(true);
+      return;
+    }
+
+    // Add domain if it passes validation
     setDomains([...domains, domain]);
     setNewDomain('');
+    setDomainValidation(null);
+  };
+
+  const confirmAddPublicDomain = () => {
+    const domain = newDomain.trim().toLowerCase();
+    setDomains([...domains, domain]);
+    setNewDomain('');
+    setDomainValidation(null);
+    setShowPublicDomainWarning(false);
+    
+    toast({
+      title: "Public domain added",
+      description: "Users from this public domain will be able to auto-join your organization. Consider reviewing your security settings.",
+      variant: "destructive",
+    });
   };
 
   const handleRemoveDomain = (domainToRemove: string) => {
@@ -90,6 +131,8 @@ export const DomainManagementDialog: React.FC<DomainManagementDialogProps> = ({ 
     }
   };
 
+  const publicDomainsCount = domains.filter(isPublicDomain).length;
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -100,7 +143,7 @@ export const DomainManagementDialog: React.FC<DomainManagementDialogProps> = ({ 
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
@@ -114,21 +157,48 @@ export const DomainManagementDialog: React.FC<DomainManagementDialogProps> = ({ 
             Others will need admin approval.
           </div>
 
+          {publicDomainsCount > 0 && (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                You have {publicDomainsCount} public domain(s) approved. This allows anyone with emails from these domains to auto-join your organization.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="new-domain">Add Domain</Label>
             <div className="flex gap-2">
               <Input
                 id="new-domain"
                 type="text"
-                placeholder="example.com"
+                placeholder="company.com"
                 value={newDomain}
                 onChange={(e) => setNewDomain(e.target.value)}
                 onKeyPress={handleKeyPress}
+                className={domainValidation?.isPublic ? "border-yellow-300" : ""}
               />
-              <Button onClick={handleAddDomain} size="sm">
+              <Button onClick={handleAddDomain} size="sm" disabled={!domainValidation?.isValid}>
                 <Plus className="w-4 h-4" />
               </Button>
             </div>
+            
+            {domainValidation && (
+              <div className="space-y-2">
+                {domainValidation.warnings.map((warning, index) => (
+                  <Alert key={index} variant={domainValidation.isPublic ? "default" : "destructive"}>
+                    {domainValidation.isPublic ? (
+                      <AlertTriangle className="h-4 w-4" />
+                    ) : (
+                      <Info className="h-4 w-4" />
+                    )}
+                    <AlertDescription className="text-sm">
+                      {warning}
+                    </AlertDescription>
+                  </Alert>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -140,8 +210,15 @@ export const DomainManagementDialog: React.FC<DomainManagementDialogProps> = ({ 
                 </div>
               ) : (
                 domains.map((domain) => (
-                  <Badge key={domain} variant="secondary" className="flex items-center gap-1">
+                  <Badge 
+                    key={domain} 
+                    variant={isPublicDomain(domain) ? "destructive" : "secondary"} 
+                    className="flex items-center gap-1"
+                  >
                     {domain}
+                    {isPublicDomain(domain) && (
+                      <AlertTriangle className="w-3 h-3" />
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -165,6 +242,39 @@ export const DomainManagementDialog: React.FC<DomainManagementDialogProps> = ({ 
             </Button>
           </div>
         </div>
+
+        {/* Public Domain Warning Dialog */}
+        <Dialog open={showPublicDomainWarning} onOpenChange={setShowPublicDomainWarning}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                Public Domain Warning
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                You're about to add <strong>{newDomain}</strong>, which is a public email domain. 
+                This means anyone with an email from this domain can automatically join your organization.
+              </p>
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Security Risk:</strong> This could allow unauthorized users to access your organization. 
+                  Consider using your corporate domain instead.
+                </AlertDescription>
+              </Alert>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowPublicDomainWarning(false)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={confirmAddPublicDomain}>
+                  Add Anyway
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );

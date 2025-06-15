@@ -1,362 +1,287 @@
-
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './AuthContext';
+import { Session } from '@supabase/supabase-js';
 
 interface Organization {
   id: string;
   name: string;
-  slug: string;
+  created_at: string;
   created_by: string;
-  created_at: string;
-  updated_at: string;
-  approved_domains?: string[];
-}
-
-interface OrganizationMember {
-  id: string;
-  organization_id: string;
-  user_id: string;
-  role: 'super_admin' | 'org_admin' | 'manager' | 'learner';
-  status: 'active' | 'invited' | 'pending' | 'pending_approval';
-  joined_at: string | null;
-  pending_reason?: string;
-}
-
-interface PendingApproval {
-  id: string;
-  organization_id: string;
-  user_id: string;
-  role: string;
-  pending_reason: string;
-  created_at: string;
-  organization_name: string;
-  first_name: string;
-  last_name: string;
-  email: string;
+  approved_domains: string[];
 }
 
 interface OrganizationContextType {
   currentOrganization: Organization | null;
-  userOrganizations: Organization[];
+  organizations: Organization[];
   userRole: string | null;
   isLoading: boolean;
-  pendingApprovals: PendingApproval[];
-  setCurrentOrganization: (org: Organization | null) => void;
-  fetchUserOrganizations: () => Promise<void>;
-  createOrganization: (name: string, approvedDomains?: string[]) => Promise<Organization | null>;
-  switchOrganization: (orgId: string) => Promise<void>;
-  joinOrganization: (orgId: string, userEmail: string) => Promise<{ success: boolean; message: string; status?: string }>;
-  fetchPendingApprovals: () => Promise<void>;
-  approveMember: (memberId: string) => Promise<boolean>;
-  rejectMember: (memberId: string) => Promise<boolean>;
-  updateApprovedDomains: (orgId: string, domains: string[]) => Promise<boolean>;
+  fetchOrganizations: () => Promise<void>;
+  createOrganization: (name: string, approvedDomains: string[]) => Promise<Organization | null>;
+  updateOrganization: (id: string, name: string) => Promise<boolean>;
+  updateApprovedDomains: (id: string, approvedDomains: string[]) => Promise<boolean>;
+  joinOrganization: (orgId: string, userEmail: string) => Promise<{ success: boolean; message: string }>;
 }
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
-export const useOrganization = () => {
-  const context = useContext(OrganizationContext);
-  if (!context) {
-    throw new Error('useOrganization must be used within an OrganizationProvider');
-  }
-  return context;
-};
+interface OrganizationProviderProps {
+  children: React.ReactNode;
+}
 
-export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+export const OrganizationProvider: React.FC<OrganizationProviderProps> = ({ children }) => {
   const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
-  const [userOrganizations, setUserOrganizations] = useState<Organization[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<any | null>(null);
 
-  const fetchUserOrganizations = async () => {
-    if (!user) {
-      setUserOrganizations([]);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (session?.user) {
+      setUser(session.user);
+      fetchOrganizations();
+    } else {
+      setOrganizations([]);
       setCurrentOrganization(null);
       setUserRole(null);
-      setIsLoading(false);
-      return;
     }
+  }, [session]);
 
+  const fetchOrganizations = async () => {
+    setIsLoading(true);
     try {
-      // Fetch user's organization memberships
-      const { data: memberships, error: membershipError } = await supabase
+      if (!user?.id) {
+        setOrganizations([]);
+        setCurrentOrganization(null);
+        setUserRole(null);
+        return;
+      }
+
+      const { data: orgMemberships, error: membershipsError } = await supabase
         .from('organization_members')
-        .select(`
-          *,
-          organizations:organization_id (*)
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'active');
+        .select('organization_id, role')
+        .eq('user_id', user.id);
 
-      if (membershipError) throw membershipError;
+      if (membershipsError) throw membershipsError;
 
-      const orgs = memberships?.map(m => m.organizations).filter(Boolean) || [];
-      setUserOrganizations(orgs);
+      const organizationIds = orgMemberships?.map(membership => membership.organization_id) || [];
 
-      // Set current organization (first one or from localStorage)
-      const savedOrgId = localStorage.getItem('currentOrganizationId');
-      let targetOrg = null;
-
-      if (savedOrgId) {
-        targetOrg = orgs.find(org => org.id === savedOrgId);
-      }
-      
-      if (!targetOrg && orgs.length > 0) {
-        targetOrg = orgs[0];
+      if (organizationIds.length === 0) {
+        setOrganizations([]);
+        setCurrentOrganization(null);
+        setUserRole(null);
+        return;
       }
 
-      if (targetOrg) {
-        setCurrentOrganization(targetOrg);
-        localStorage.setItem('currentOrganizationId', targetOrg.id);
-        
-        // Set user role for current organization
-        const membership = memberships?.find(m => m.organization_id === targetOrg.id);
-        setUserRole(membership?.role || null);
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('*')
+        .in('id', organizationIds);
+
+      if (orgError) throw orgError;
+
+      if (!orgData || orgData.length === 0) {
+        setOrganizations([]);
+        setCurrentOrganization(null);
+        setUserRole(null);
+        return;
       }
-    } catch (error) {
+
+      setOrganizations(orgData);
+
+      // Set current organization to the first one and user role
+      const firstOrg = orgData[0];
+      setCurrentOrganization(firstOrg);
+      setUserRole(orgMemberships.find(m => m.organization_id === firstOrg.id)?.role || null);
+    } catch (error: any) {
       console.error('Error fetching organizations:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const createOrganization = async (name: string, approvedDomains: string[] = []): Promise<Organization | null> => {
-    if (!user) return null;
-
+  const createOrganization = async (name: string, approvedDomains: string[]): Promise<Organization | null> => {
     try {
-      // Create organization
-      const { data: org, error: orgError } = await supabase
+      if (!user?.id) return null;
+
+      const { data: orgData, error: orgError } = await supabase
         .from('organizations')
-        .insert({
-          name,
-          created_by: user.id,
-          approved_domains: approvedDomains,
-        })
-        .select()
+        .insert([{ name, created_by: user.id, approved_domains }])
+        .select('*')
         .single();
 
       if (orgError) throw orgError;
 
-      // Add user as org admin
       const { error: memberError } = await supabase
         .from('organization_members')
-        .insert({
-          organization_id: org.id,
+        .insert([{
+          organization_id: orgData.id,
           user_id: user.id,
-          role: 'org_admin',
+          role: 'super_admin',
           status: 'active',
-          joined_at: new Date().toISOString(),
-        });
+          joined_at: new Date().toISOString()
+        }]);
 
       if (memberError) throw memberError;
 
-      // Refresh organizations
-      await fetchUserOrganizations();
-      
-      return org;
-    } catch (error) {
+      await fetchOrganizations();
+      return orgData;
+    } catch (error: any) {
       console.error('Error creating organization:', error);
       return null;
     }
   };
 
-  const switchOrganization = async (orgId: string) => {
-    const org = userOrganizations.find(o => o.id === orgId);
-    if (org) {
-      setCurrentOrganization(org);
-      localStorage.setItem('currentOrganizationId', orgId);
-      
-      // Update user role
-      const { data: membership } = await supabase
-        .from('organization_members')
-        .select('role')
-        .eq('organization_id', orgId)
-        .eq('user_id', user?.id)
-        .eq('status', 'active')
-        .single();
-      
-      setUserRole(membership?.role || null);
-    }
-  };
-
-  const joinOrganization = async (orgId: string, userEmail: string) => {
-    if (!user) return { success: false, message: 'User not authenticated' };
-
-    try {
-      // Use the database function to process the join
-      const { data, error } = await supabase.rpc('process_organization_join', {
-        org_id: orgId,
-        user_id: user.id,
-        user_email: userEmail,
-        invite_role: 'learner'
-      });
-
-      if (error) throw error;
-
-      const status = data as string;
-      
-      if (status === 'active') {
-        await fetchUserOrganizations();
-        return { 
-          success: true, 
-          message: 'Successfully joined organization!', 
-          status 
-        };
-      } else if (status === 'pending_approval') {
-        return { 
-          success: true, 
-          message: 'Your request to join has been submitted for admin approval.', 
-          status 
-        };
-      }
-
-      return { success: false, message: 'Unknown status returned' };
-    } catch (error) {
-      console.error('Error joining organization:', error);
-      return { success: false, message: 'Failed to join organization. Please try again.' };
-    }
-  };
-
-  const fetchPendingApprovals = async () => {
-    if (!user || !currentOrganization) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('organization_members')
-        .select(`
-          id,
-          organization_id,
-          user_id,
-          role,
-          pending_reason,
-          created_at
-        `)
-        .eq('organization_id', currentOrganization.id)
-        .eq('status', 'pending_approval');
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        // Fetch profiles separately to avoid join issues
-        const userIds = data.map(d => d.user_id);
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, first_name, last_name')
-          .in('id', userIds);
-
-        if (profilesError) {
-          console.warn('Could not fetch profiles:', profilesError);
-        }
-
-        const pendingData = data.map(approval => {
-          const profile = profiles?.find(p => p.id === approval.user_id);
-          return {
-            ...approval,
-            organization_name: currentOrganization.name,
-            first_name: profile?.first_name || '',
-            last_name: profile?.last_name || '',
-            email: 'Email not available' // Placeholder - in production, store email in profiles
-          };
-        });
-
-        setPendingApprovals(pendingData);
-      } else {
-        setPendingApprovals([]);
-      }
-    } catch (error) {
-      console.error('Error fetching pending approvals:', error);
-      setPendingApprovals([]);
-    }
-  };
-
-  const approveMember = async (memberId: string): Promise<boolean> => {
-    try {
-      const { error } = await supabase
-        .from('organization_members')
-        .update({
-          status: 'active',
-          joined_at: new Date().toISOString(),
-          pending_reason: null
-        })
-        .eq('id', memberId);
-
-      if (error) throw error;
-      
-      await fetchPendingApprovals();
-      return true;
-    } catch (error) {
-      console.error('Error approving member:', error);
-      return false;
-    }
-  };
-
-  const rejectMember = async (memberId: string): Promise<boolean> => {
-    try {
-      const { error } = await supabase
-        .from('organization_members')
-        .delete()
-        .eq('id', memberId);
-
-      if (error) throw error;
-      
-      await fetchPendingApprovals();
-      return true;
-    } catch (error) {
-      console.error('Error rejecting member:', error);
-      return false;
-    }
-  };
-
-  const updateApprovedDomains = async (orgId: string, domains: string[]): Promise<boolean> => {
+  const updateOrganization = async (id: string, name: string): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('organizations')
-        .update({ approved_domains: domains })
-        .eq('id', orgId);
+        .update({ name })
+        .eq('id', id);
 
       if (error) throw error;
-      
-      await fetchUserOrganizations();
+
+      await fetchOrganizations();
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error updating organization:', error);
+      return false;
+    }
+  };
+
+  const updateApprovedDomains = async (id: string, approvedDomains: string[]): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({ approved_domains: approvedDomains })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await fetchOrganizations();
+      return true;
+    } catch (error: any) {
       console.error('Error updating approved domains:', error);
       return false;
     }
   };
 
-  useEffect(() => {
-    fetchUserOrganizations();
-  }, [user]);
+  const joinOrganization = async (orgId: string, userEmail: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      // Get organization details to check approved domains
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('id, name, approved_domains')
+        .eq('id', orgId)
+        .single();
 
-  useEffect(() => {
-    if (currentOrganization && (userRole === 'org_admin' || userRole === 'super_admin')) {
-      fetchPendingApprovals();
+      if (orgError || !orgData) {
+        return { 
+          success: false, 
+          message: 'Organization not found. Please check the organization ID.' 
+        };
+      }
+
+      // Extract domain from email
+      const userDomain = userEmail.split('@')[1];
+      const approvedDomains = orgData.approved_domains || [];
+      
+      // Check if domain is approved and if it's a public domain
+      const isDomainApproved = approvedDomains.includes(userDomain);
+      const isPublicDomain = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com'].includes(userDomain);
+      
+      // Determine status based on domain approval and type
+      let status = 'pending_approval';
+      let pendingReason = 'Email domain not in approved list';
+      
+      if (isDomainApproved) {
+        if (isPublicDomain) {
+          // Even if public domain is approved, still require manual approval for security
+          status = 'pending_approval';
+          pendingReason = 'Public email domain requires manual approval for security';
+        } else {
+          // Corporate domain that's approved - auto-approve
+          status = 'active';
+          pendingReason = null;
+        }
+      }
+
+      // Add user to organization with determined status
+      const { error: memberError } = await supabase
+        .from('organization_members')
+        .insert({
+          organization_id: orgId,
+          user_id: user?.id,
+          role: 'learner',
+          status: status,
+          pending_reason: pendingReason,
+          joined_at: status === 'active' ? new Date().toISOString() : null
+        });
+
+      if (memberError) {
+        if (memberError.code === '23505') {
+          return { 
+            success: false, 
+            message: 'You are already a member of this organization or have a pending request.' 
+          };
+        }
+        throw memberError;
+      }
+
+      if (status === 'active') {
+        await fetchOrganizations();
+        return { 
+          success: true, 
+          message: `Successfully joined ${orgData.name}!` 
+        };
+      } else {
+        return { 
+          success: true, 
+          message: `Request to join ${orgData.name} submitted. ${isPublicDomain ? 'Public domain requests require admin approval for security.' : 'Waiting for admin approval.'}` 
+        };
+      }
+    } catch (error: any) {
+      console.error('Error joining organization:', error);
+      return { 
+        success: false, 
+        message: error.message || 'Failed to join organization. Please try again.' 
+      };
     }
-  }, [currentOrganization, userRole]);
+  };
+
+  const value: OrganizationContextType = {
+    currentOrganization,
+    organizations,
+    userRole,
+    isLoading,
+    fetchOrganizations,
+    createOrganization,
+    updateOrganization,
+    updateApprovedDomains,
+    joinOrganization,
+  };
 
   return (
-    <OrganizationContext.Provider
-      value={{
-        currentOrganization,
-        userOrganizations,
-        userRole,
-        isLoading,
-        pendingApprovals,
-        setCurrentOrganization,
-        fetchUserOrganizations,
-        createOrganization,
-        switchOrganization,
-        joinOrganization,
-        fetchPendingApprovals,
-        approveMember,
-        rejectMember,
-        updateApprovedDomains,
-      }}
-    >
+    <OrganizationContext.Provider value={value}>
       {children}
     </OrganizationContext.Provider>
   );
+};
+
+export const useOrganization = () => {
+  const context = useContext(OrganizationContext);
+  if (context === undefined) {
+    throw new Error('useOrganization must be used within an OrganizationProvider');
+  }
+  return context;
 };
