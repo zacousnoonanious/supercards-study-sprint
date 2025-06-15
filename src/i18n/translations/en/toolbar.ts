@@ -41,4 +41,5 @@ export const toolbar = {
   arrangeAlignElementsRight: "Align Elements Right",
   arrangeDistributeHorizontal: "Distribute Horizontally",
   arrangeDistributeVertical: "Distribute Vertically",
+  back: "Back",
 };

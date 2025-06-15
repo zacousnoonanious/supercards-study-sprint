@@ -79,7 +79,7 @@ const SetView = () => {
             <h2 className="text-xl font-semibold text-foreground">{t('setView.notFound')}</h2>
             <Button onClick={() => navigate(-1)} className="mt-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              {t('toolbar.back')}
             </Button>
           </div>
         </main>
