@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CardTemplate } from '@/types/flashcard';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface CardTemplateSelectorProps {
   onCreateCard: () => void;
@@ -24,6 +25,7 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
   onSetDefaultTemplate,
   defaultTemplate
 }) => {
+  const { t } = useI18n();
   const [templates] = useState<CardTemplate[]>([
     {
       id: 'simple-text',
@@ -169,7 +171,7 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
       <DropdownMenuContent align="start" className="w-64">
         <DropdownMenuItem onClick={onCreateCard}>
           <Plus className="w-4 h-4 mr-2" />
-          Blank Card
+          {t('editor.blankCard')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {templates.map((template) => (
@@ -181,7 +183,7 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-medium">{template.name}</span>
               {defaultTemplate?.id === template.id && (
-                <span className="text-xs bg-primary text-primary-foreground px-1 rounded">Default</span>
+                <span className="text-xs bg-primary text-primary-foreground px-1 rounded">{t('common.default')}</span>
               )}
             </div>
             {template.description && (
@@ -191,7 +193,7 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="text-xs text-muted-foreground" disabled>
-          Right-click any template to set as default
+          {t('editor.rightClickToSetDefault')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

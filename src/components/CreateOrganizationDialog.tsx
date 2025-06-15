@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Building, Plus, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface CreateOrganizationDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> =
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
   const { createOrganization } = useOrganization();
+  const { t } = useI18n();
 
   const handleAddDomain = () => {
     if (!newDomain.trim()) return;
@@ -33,8 +35,8 @@ export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> =
     const domain = newDomain.trim().toLowerCase();
     if (approvedDomains.includes(domain)) {
       toast({
-        title: "Domain already added",
-        description: "This domain is already in the list.",
+        title: t('common.domainAlreadyAdded'),
+        description: t('common.domainAlreadyAddedDescription'),
         variant: "destructive",
       });
       return;
@@ -44,8 +46,8 @@ export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> =
     const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
     if (!domainRegex.test(domain)) {
       toast({
-        title: "Invalid domain",
-        description: "Please enter a valid domain (e.g., company.com)",
+        title: t('common.invalidDomain'),
+        description: t('common.invalidDomainDescription'),
         variant: "destructive",
       });
       return;
@@ -62,8 +64,8 @@ export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> =
   const handleCreate = async () => {
     if (!name.trim()) {
       toast({
-        title: "Name required",
-        description: "Please enter an organization name.",
+        title: t('common.nameRequired'),
+        description: t('common.nameRequiredDescription'),
         variant: "destructive",
       });
       return;
@@ -75,8 +77,8 @@ export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> =
       
       if (org) {
         toast({
-          title: "Success!",
-          description: `Organization "${org.name}" has been created.`,
+          title: t('common.success') + "!",
+          description: t('common.orgCreatedSuccess', { name: org.name }),
         });
         
         // Reset form
@@ -89,8 +91,8 @@ export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> =
         }
       } else {
         toast({
-          title: "Error",
-          description: "Failed to create organization. Please try again.",
+          title: t('common.error'),
+          description: t('common.failedToCreateOrg'),
           variant: "destructive",
         });
       }
@@ -120,17 +122,17 @@ export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> =
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building className="w-5 h-5" />
-            Create Organization
+            {t('common.createOrganization')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="org-name">Organization Name</Label>
+            <Label htmlFor="org-name">{t('common.organizationName')}</Label>
             <Input
               id="org-name"
               type="text"
-              placeholder="Enter organization name"
+              placeholder={t('common.organizationNamePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isCreating}
@@ -138,15 +140,15 @@ export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> =
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="domain-input">Approved Email Domains (Optional)</Label>
+            <Label htmlFor="domain-input">{t('common.approvedEmailDomainsOptional')}</Label>
             <div className="text-sm text-muted-foreground mb-2">
-              Users with these email domains will automatically join your organization.
+              {t('common.approvedEmailDomainsDescription')}
             </div>
             <div className="flex gap-2">
               <Input
                 id="domain-input"
                 type="text"
-                placeholder="company.com"
+                placeholder={t('common.domainPlaceholder')}
                 value={newDomain}
                 onChange={(e) => setNewDomain(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -160,7 +162,7 @@ export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> =
 
           {approvedDomains.length > 0 && (
             <div className="space-y-2">
-              <Label>Added Domains</Label>
+              <Label>{t('common.addedDomains')}</Label>
               <div className="flex flex-wrap gap-2">
                 {approvedDomains.map((domain) => (
                   <Badge key={domain} variant="secondary" className="flex items-center gap-1">
@@ -182,16 +184,16 @@ export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> =
 
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={handleClose} disabled={isCreating}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleCreate} disabled={isCreating}>
               {isCreating ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
+                  {t('common.creating')}...
                 </>
               ) : (
-                'Create Organization'
+                t('common.createOrganization')
               )}
             </Button>
           </div>

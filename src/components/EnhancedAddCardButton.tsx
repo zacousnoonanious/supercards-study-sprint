@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { CardTemplate } from '@/types/flashcard';
 import { cardTemplates } from '@/data/cardTemplates';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface EnhancedAddCardButtonProps {
   onCreateCard: () => void;
@@ -27,6 +28,7 @@ export const EnhancedAddCardButton: React.FC<EnhancedAddCardButtonProps> = ({
   const [isLongPress, setIsLongPress] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { t } = useI18n();
 
   // Load saved template preference
   useEffect(() => {
@@ -100,7 +102,7 @@ export const EnhancedAddCardButton: React.FC<EnhancedAddCardButtonProps> = ({
           <Plus className="w-4 h-4" />
           {showText && (
             <span className="ml-2">
-              {selectedTemplate ? selectedTemplate.name : 'New Card'}
+              {selectedTemplate ? selectedTemplate.name : t('editor.newCard')}
             </span>
           )}
           <ChevronDown className="w-3 h-3 ml-1 opacity-60" />
@@ -109,7 +111,7 @@ export const EnhancedAddCardButton: React.FC<EnhancedAddCardButtonProps> = ({
       <DropdownMenuContent align="start" className="w-64">
         <DropdownMenuItem onClick={handleBlankCard}>
           <Plus className="w-4 h-4 mr-2" />
-          Blank Card
+          {t('editor.blankCard')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {cardTemplates.map((template) => (
@@ -122,7 +124,7 @@ export const EnhancedAddCardButton: React.FC<EnhancedAddCardButtonProps> = ({
               <span className="font-medium">{template.name}</span>
               {selectedTemplate?.id === template.id && (
                 <span className="text-xs bg-primary text-primary-foreground px-1 rounded ml-auto">
-                  Current
+                  {t('common.current')}
                 </span>
               )}
             </div>
@@ -133,7 +135,7 @@ export const EnhancedAddCardButton: React.FC<EnhancedAddCardButtonProps> = ({
         ))}
         <DropdownMenuSeparator />
         <div className="px-2 py-1 text-xs text-muted-foreground">
-          Long press to choose template
+          {t('editor.longPressToChoose')}
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

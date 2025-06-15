@@ -50,7 +50,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
   const generateWithAI = async () => {
     if (!aiPrompt.trim()) {
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: "Please enter a prompt for AI generation.",
         variant: "destructive",
       });
@@ -85,8 +85,8 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
         }
         
         toast({
-          title: "Success",
-          description: "Card content generated successfully!",
+          title: t('common.success'),
+          description: t('editor.cardContentGenerated'),
         });
       } else {
         throw new Error(data.error || 'Failed to generate card');
@@ -94,8 +94,8 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
     } catch (error) {
       console.error('Error generating card:', error);
       toast({
-        title: "Error",
-        description: "Failed to generate card content. Please try again.",
+        title: t('common.error'),
+        description: t('editor.errorGeneratingCard'),
         variant: "destructive",
       });
     } finally {
@@ -106,8 +106,8 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
   const createCard = async () => {
     if (!question.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a question.",
+        title: t('common.error'),
+        description: t('editor.questionRequiredError'),
         variant: "destructive",
       });
       return;
@@ -151,7 +151,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
         y: 180,
         width: 300,
         height: 60,
-        content: `Answers: ${blankAnswers.join(', ')}`,
+        content: `${t('editor.answer')}: ${blankAnswers.join(', ')}`,
         fontSize: 18,
         color: '#000000',
         textAlign: 'center'
@@ -247,8 +247,8 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Card created successfully!",
+        title: t('common.success'),
+        description: t('editor.cardCreatedSuccess'),
       });
       
       onCardCreated();
@@ -256,8 +256,8 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
     } catch (error) {
       console.error('Error creating card:', error);
       toast({
-        title: "Error",
-        description: "Failed to create card.",
+        title: t('common.error'),
+        description: t('editor.errorCreatingCard'),
         variant: "destructive",
       });
     }
@@ -315,8 +315,8 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
         if (error) throw error;
 
         toast({
-          title: "Success",
-          description: "Card created from template successfully!",
+          title: t('common.success'),
+          description: t('editor.cardCreatedSuccess'),
         });
         
         onCardCreated();
@@ -324,8 +324,8 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
       } catch (error) {
         console.error('Error creating card from template:', error);
         toast({
-          title: "Error",
-          description: "Failed to create card from template.",
+          title: t('common.error'),
+          description: t('editor.errorCreatingFromTemplate'),
           variant: "destructive",
         });
       }
@@ -339,15 +339,15 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
     <>
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle>Create New Card</CardTitle>
+          <CardTitle>{t('toolbar.createNewCard')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* AI Generation */}
           <div className="space-y-2">
-            <Label>AI Card Generation (Optional)</Label>
+            <Label>{t('editor.aiCardGenerationOptional')}</Label>
             <div className="flex gap-2">
               <Textarea
-                placeholder="e.g., 'Create a fill-in-blank about the solar system' or 'Make a multiple choice question about World War 2'"
+                placeholder={t('editor.aiPromptPlaceholder')}
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 className="flex-1"
@@ -364,16 +364,16 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
 
           {/* Card Type */}
           <div className="space-y-2">
-            <Label>Card Type</Label>
+            <Label>{t('editor.cardType')}</Label>
             <Select value={cardType} onValueChange={handleCardTypeChange}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="standard">Standard Card</SelectItem>
-                <SelectItem value="informational">Informational Card (Full View)</SelectItem>
-                <SelectItem value="no-back">No Back Side</SelectItem>
-                <SelectItem value="password-protected">Password Protected</SelectItem>
+                <SelectItem value="standard">{t('toolbar.normal')}</SelectItem>
+                <SelectItem value="informational">{t('toolbar.informational')}</SelectItem>
+                <SelectItem value="no-back">{t('editor.noBackSide')}</SelectItem>
+                <SelectItem value="password-protected">{t('toolbar.passwordProtected')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -381,39 +381,39 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
           {/* Password field for protected cards */}
           {cardType === 'password-protected' && (
             <div className="space-y-2">
-              <Label>Password</Label>
+              <Label>{t('common.password')}</Label>
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter card password"
+                placeholder={t('editor.enterCardPassword')}
               />
             </div>
           )}
 
           {/* Interactive Type */}
           <div className="space-y-2">
-            <Label>Interactive Elements</Label>
+            <Label>{t('editor.interactiveElements')}</Label>
             <Select value={interactiveType} onValueChange={handleInteractiveTypeChange}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
-                <SelectItem value="true-false">True/False</SelectItem>
-                <SelectItem value="fill-in-blank">Fill in the Blank</SelectItem>
+                <SelectItem value="none">{t('common.none')}</SelectItem>
+                <SelectItem value="multiple-choice">{t('toolbar.addMultipleChoice')}</SelectItem>
+                <SelectItem value="true-false">{t('toolbar.addTrueFalse')}</SelectItem>
+                <SelectItem value="fill-in-blank">{t('toolbar.addFillInBlank')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Question */}
           <div className="space-y-2">
-            <Label>Question</Label>
+            <Label>{t('editor.question')}</Label>
             <Textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Enter the question..."
+              placeholder={t('editor.questionPlaceholder')}
               className={cardType === 'informational' ? 'min-h-[120px]' : 'min-h-[80px]'}
             />
           </div>
@@ -421,13 +421,13 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
           {/* Interactive Elements Configuration */}
           {interactiveType === 'multiple-choice' && (
             <div className="space-y-4">
-              <Label>Multiple Choice Options</Label>
+              <Label>{t('editor.mcOptions')}</Label>
               {mcOptions.map((option, index) => (
                 <div key={index} className="flex gap-2 items-center">
                   <Input
                     value={option}
                     onChange={(e) => updateMcOption(index, e.target.value)}
-                    placeholder={`Option ${index + 1}`}
+                    placeholder={t('editor.mcOptionPlaceholder', { index: index + 1 })}
                     className="flex-1"
                   />
                   <Button
@@ -435,7 +435,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
                     size="sm"
                     onClick={() => setCorrectAnswer(index)}
                   >
-                    Correct
+                    {t('common.correct')}
                   </Button>
                 </div>
               ))}
@@ -444,14 +444,14 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
 
           {interactiveType === 'true-false' && (
             <div className="space-y-2">
-              <Label>Correct Answer</Label>
+              <Label>{t('editor.correctAnswer')}</Label>
               <Select value={tfAnswer.toString()} onValueChange={(value) => setTfAnswer(value === 'true')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="true">True</SelectItem>
-                  <SelectItem value="false">False</SelectItem>
+                  <SelectItem value="true">{t('editor.true')}</SelectItem>
+                  <SelectItem value="false">{t('editor.false')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -460,26 +460,26 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
           {interactiveType === 'fill-in-blank' && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Text with Blanks</Label>
+                <Label>{t('editor.textWithBlanks')}</Label>
                 <Textarea
                   value={blankText}
                   onChange={(e) => setBlankText(e.target.value)}
-                  placeholder="Enter your text. You'll specify the blank answers below."
+                  placeholder={t('editor.textWithBlanksPlaceholder')}
                   className="min-h-[100px]"
                 />
                 <p className="text-sm text-muted-foreground">
-                  Tip: Type your complete text above, then specify which words should be blanks using the fields below.
+                  {t('editor.textWithBlanksHint')}
                 </p>
               </div>
               
               <div className="space-y-2">
-                <Label>Blank Answers</Label>
+                <Label>{t('editor.blankAnswers')}</Label>
                 {blankAnswers.map((answer, index) => (
                   <div key={index} className="flex gap-2 items-center">
                     <Input
                       value={answer}
                       onChange={(e) => updateBlankAnswer(index, e.target.value)}
-                      placeholder={`Answer for blank ${index + 1}`}
+                      placeholder={t('editor.blankAnswerPlaceholder', { index: index + 1 })}
                       className="flex-1"
                     />
                     {blankAnswers.length > 1 && (
@@ -500,7 +500,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
                   className="w-full"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Another Blank
+                  {t('editor.addAnotherBlank')}
                 </Button>
               </div>
             </div>
@@ -509,11 +509,11 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
           {/* Answer (for non-interactive or fallback) */}
           {(interactiveType === 'none' || cardType !== 'no-back') && (
             <div className="space-y-2">
-              <Label>Answer</Label>
+              <Label>{t('editor.answer')}</Label>
               <Textarea
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Enter the answer..."
+                placeholder={t('editor.answerPlaceholder')}
                 className={cardType === 'informational' ? 'min-h-[120px]' : 'min-h-[80px]'}
               />
             </div>
@@ -521,11 +521,11 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
 
           {/* Hint */}
           <div className="space-y-2">
-            <Label>Hint (Optional)</Label>
+            <Label>{t('editor.hintOptional')}</Label>
             <Input
               value={hint}
               onChange={(e) => setHint(e.target.value)}
-              placeholder="Enter a helpful hint..."
+              placeholder={t('editor.hintPlaceholder')}
             />
           </div>
 
@@ -533,10 +533,10 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
           <div className="flex flex-col gap-3">
             <div className="flex gap-2">
               <Button onClick={onClose} variant="outline" className="flex-1">
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button onClick={createCard} className="flex-1">
-                Create Card
+                {t('editor.createCard')}
               </Button>
             </div>
             
@@ -547,7 +547,7 @@ export const InteractiveCardCreator: React.FC<InteractiveCardCreatorProps> = ({
               className="w-full flex items-center gap-2"
             >
               <LayoutTemplate className="w-4 h-4" />
-              {t('placeholders.browseAllTemplates')}
+              {t('editor.browseTemplates')}
             </Button>
           </div>
         </CardContent>

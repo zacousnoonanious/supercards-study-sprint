@@ -6,6 +6,7 @@ import { CardTemplate } from '@/types/flashcard';
 import { cardTemplates } from '@/data/cardTemplates';
 import { Plus, LayoutTemplate, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface NewCardTemplateSelectorProps {
   onCreateCard: () => void;
@@ -22,9 +23,11 @@ export const NewCardTemplateSelector: React.FC<NewCardTemplateSelectorProps> = (
   onSetDefaultTemplate,
   defaultTemplate,
   showAsDialog = true,
-  title = "Choose Card Template"
+  title,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useI18n();
+  const dialogTitle = title || t('editor.chooseCardTemplate');
 
   const handleTemplateSelect = (template: CardTemplate) => {
     onCreateFromTemplate(template);
@@ -48,8 +51,8 @@ export const NewCardTemplateSelector: React.FC<NewCardTemplateSelectorProps> = (
               <div className="w-16 h-12 border-2 border-dashed border-muted-foreground rounded flex items-center justify-center">
                 <Plus className="w-6 h-6 text-muted-foreground" />
               </div>
-              <h3 className="font-medium">Blank Card</h3>
-              <p className="text-sm text-muted-foreground">Start with an empty card</p>
+              <h3 className="font-medium">{t('editor.blankCard')}</h3>
+              <p className="text-sm text-muted-foreground">{t('editor.startWithEmpty')}</p>
             </div>
           </CardContent>
         </Card>
@@ -83,7 +86,7 @@ export const NewCardTemplateSelector: React.FC<NewCardTemplateSelectorProps> = (
                     }}
                     className="mt-2"
                   >
-                    {defaultTemplate?.id === template.id ? 'Default' : 'Set Default'}
+                    {defaultTemplate?.id === template.id ? t('common.default') : t('common.setAsDefault')}
                   </Button>
                 )}
               </div>
@@ -102,13 +105,13 @@ export const NewCardTemplateSelector: React.FC<NewCardTemplateSelectorProps> = (
     <>
       <Button onClick={() => setIsOpen(true)} className="flex items-center gap-2">
         <LayoutTemplate className="w-4 h-4" />
-        Choose Template
+        {t('editor.chooseTemplate')}
       </Button>
       
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>{dialogTitle}</DialogTitle>
           </DialogHeader>
           {content}
         </DialogContent>

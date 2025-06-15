@@ -17,6 +17,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface EnhancedCardButtonProps {
   onCreateCard: () => void;
@@ -34,6 +35,7 @@ export const EnhancedCardButton: React.FC<EnhancedCardButtonProps> = ({
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
   const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { t } = useI18n();
 
   const handleMouseDown = () => {
     const timer = setTimeout(() => {
@@ -83,7 +85,7 @@ export const EnhancedCardButton: React.FC<EnhancedCardButtonProps> = ({
         className="flex items-center gap-2 relative"
       >
         <Plus className="w-4 h-4" />
-        Add Card
+        {t('editor.addCard')}
         {defaultTemplate && (
           <span className="text-xs opacity-70">({defaultTemplate.name})</span>
         )}
@@ -98,7 +100,7 @@ export const EnhancedCardButton: React.FC<EnhancedCardButtonProps> = ({
         <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuItem onClick={onCreateCard}>
             <Plus className="w-4 h-4 mr-2" />
-            Blank Card
+            {t('editor.blankCard')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           {cardTemplates.map((template) => (
@@ -115,13 +117,13 @@ export const EnhancedCardButton: React.FC<EnhancedCardButtonProps> = ({
                     <span>{template.name}</span>
                   </div>
                   {defaultTemplate?.id === template.id && (
-                    <span className="text-xs text-primary">Default</span>
+                    <span className="text-xs text-primary">{t('common.default')}</span>
                   )}
                 </DropdownMenuItem>
               </ContextMenuTrigger>
               <ContextMenuContent>
                 <ContextMenuItem onClick={() => onSetDefaultTemplate(template)}>
-                  Set as Default
+                  {t('common.setAsDefault')}
                 </ContextMenuItem>
               </ContextMenuContent>
             </ContextMenu>

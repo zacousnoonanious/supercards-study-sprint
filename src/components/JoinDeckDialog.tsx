@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useInviteLinks } from '@/hooks/collaboration/useInviteLinks';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface JoinDeckDialogProps {
   trigger?: React.ReactNode;
@@ -41,6 +41,7 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
   const { joinDeckViaInvite } = useInviteLinks({ setId: '' });
   const { joinOrganization } = useOrganization();
   const { user } = useAuth();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (open) {
@@ -51,8 +52,8 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
   const handleJoinDeck = async () => {
     if (!inviteCode.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter an invite code.",
+        title: t('common.error'),
+        description: t('common.inviteCodeRequired'),
         variant: "destructive",
       });
       return;
@@ -64,7 +65,7 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
       
       if (result.success) {
         toast({
-          title: "Success!",
+          title: t('common.success') + "!",
           description: result.message,
         });
         handleClose();
@@ -77,13 +78,13 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
         if (result.requiresPassword) {
           setRequiresPassword(true);
           toast({
-            title: "Password Required",
+            title: t('common.passwordRequired'),
             description: result.message,
             variant: "default",
           });
         } else {
           toast({
-            title: "Failed to Join",
+            title: t('common.failedToJoin'),
             description: result.message,
             variant: "destructive",
           });
@@ -91,8 +92,8 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: t('common.error'),
+        description: t('common.unexpectedError'),
         variant: "destructive",
       });
     } finally {
@@ -103,8 +104,8 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
   const handleJoinOrganization = async () => {
     if (!orgId.trim() || !user?.email) {
       toast({
-        title: "Error",
-        description: "Please enter an organization ID.",
+        title: t('common.error'),
+        description: t('common.orgIdRequired'),
         variant: "destructive",
       });
       return;
@@ -129,15 +130,15 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
 
       } else {
         toast({
-          title: "Failed to Join",
+          title: t('common.failedToJoin'),
           description: result.message,
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: t('common.error'),
+        description: t('common.unexpectedError'),
         variant: "destructive",
       });
     } finally {
@@ -161,7 +162,7 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="w-5 h-5" />
-            Join Content
+            {t('common.joinContent')}
           </DialogTitle>
         </DialogHeader>
 
@@ -173,7 +174,7 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
               className="flex-1"
               size="sm"
             >
-              Join Deck
+              {t('common.joinDeck')}
             </Button>
             <Button
               variant={joinType === 'organization' ? 'default' : 'outline'}
@@ -182,18 +183,18 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
               size="sm"
             >
               <Building className="w-4 h-4 mr-1" />
-              Join Organization
+              {t('common.joinOrganization')}
             </Button>
           </div>
 
           {joinType === 'deck' ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="invite-code">Invite Code</Label>
+                <Label htmlFor="invite-code">{t('common.inviteCode')}</Label>
                 <Input
                   id="invite-code"
                   type="text"
-                  placeholder="Enter invite code (e.g., ABC12345)"
+                  placeholder={t('common.inviteCodePlaceholder')}
                   value={inviteCode}
                   onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                   maxLength={8}
@@ -202,11 +203,11 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
 
               {requiresPassword && (
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t('common.password')}</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter password"
+                    placeholder={t('common.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -215,41 +216,41 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({
 
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={handleClose}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleJoinDeck} disabled={isJoining}>
                   {isJoining ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   ) : null}
-                  Join Deck
+                  {t('common.joinDeck')}
                 </Button>
               </div>
             </>
           ) : (
             <>
               <div className="space-y-2">
-                <Label htmlFor="org-id">Organization ID</Label>
+                <Label htmlFor="org-id">{t('common.organizationId')}</Label>
                 <Input
                   id="org-id"
                   type="text"
-                  placeholder="Enter organization ID"
+                  placeholder={t('common.organizationIdPlaceholder')}
                   value={orgId}
                   onChange={(e) => setOrgId(e.target.value)}
                 />
                 <div className="text-xs text-muted-foreground">
-                  Ask your organization admin for the organization ID.
+                  {t('common.joinDescription')}
                 </div>
               </div>
 
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={handleClose}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleJoinOrganization} disabled={isJoining}>
                   {isJoining ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   ) : null}
-                  Join Organization
+                  {t('common.joinOrganization')}
                 </Button>
               </div>
             </>
