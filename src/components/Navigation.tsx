@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, GraduationCap, Shield, ArrowLeft } from 'lucide-react';
+import { Menu, GraduationCap, Shield, ArrowLeft, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { UserDropdown } from './UserDropdown';
@@ -41,6 +41,7 @@ export const Navigation = () => {
     { path: '/dashboard', label: t('nav.dashboard'), icon: null },
     { path: '/decks', label: t('nav.decks'), icon: null },
     { path: '/marketplace', label: t('nav.marketplace'), icon: null },
+    { path: '/analytics', label: 'Analytics', icon: BarChart3 },
     ...(isAdminUser ? [{ path: '/admin', label: t('nav.admin'), icon: Shield }] : []),
   ];
 
