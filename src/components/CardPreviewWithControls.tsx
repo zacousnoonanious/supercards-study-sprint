@@ -6,6 +6,7 @@ import { Edit, Play, Trash2 } from 'lucide-react';
 import { Flashcard } from '@/types/flashcard';
 import { StudyCardRenderer } from './StudyCardRenderer';
 import { DragHandle } from './DragHandle';
+import { useNavigate } from 'react-router-dom';
 
 interface CardPreviewWithControlsProps {
   card: Flashcard;
@@ -29,6 +30,7 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
   onDeleteCard
 }) => {
   const [showAnswer, setShowAnswer] = useState(false);
+  const navigate = useNavigate();
 
   const currentElements = showAnswer ? card.back_elements : card.front_elements;
   const cardWidth = card.canvas_width || 600;
@@ -101,7 +103,7 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              onClick();
+              navigate(`/editor/${card.set_id}/${card.id}`);
             }}
             className="flex-1"
           >
