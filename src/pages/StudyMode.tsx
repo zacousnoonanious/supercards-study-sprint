@@ -43,6 +43,9 @@ const StudyMode = () => {
     setId
   } = useStudyMode();
 
+  // Debug logging to help track the issue
+  console.log('StudyMode: Rendered with setId:', setId, 'loading:', loading, 'set:', !!set, 'cards count:', shuffledCards.length);
+
   useEffect(() => {
     console.log('StudyMode: useEffect - user:', !!user, 'setId:', setId);
     if (!user) {

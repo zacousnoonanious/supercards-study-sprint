@@ -18,9 +18,8 @@ interface FlashcardSet {
 }
 
 export const useStudyMode = () => {
-  // Get setId from the 'id' parameter to match the /study/:id route
-  const { id } = useParams();
-  const setId = id; // Use id parameter for study mode
+  // Fix: Get setId from the correct parameter name used in the route
+  const { id: setId } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -66,8 +65,6 @@ export const useStudyMode = () => {
   const [srsEnabled, setSrsEnabled] = useState(srsEnabledParam);
 
   const currentCard = shuffledCards[currentCardIndex];
-
-  // ... keep existing code (getActiveTimer, shuffleArray functions)
 
   const shuffleArray = (array: any[]) => {
     const newArray = [...array];
