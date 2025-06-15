@@ -4,12 +4,13 @@ import { useI18n } from '@/contexts/I18nContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { englishTranslations } from '@/contexts/I18nContext-english';
 
 export const I18nTester: React.FC = () => {
   const { t, language, setLanguage } = useI18n();
 
-  // Define available languages with the correct Chinese codes
-  const availableLanguages = ['en', 'zh-CN', 'zh-TW', 'hi', 'es', 'fr', 'ar', 'pt', 'ru'];
+  // Use the single source of truth for languages
+  const availableLanguages = Object.keys(englishTranslations.lang);
 
   const testKeys = [
     'welcome',
@@ -49,7 +50,7 @@ export const I18nTester: React.FC = () => {
                   setLanguage(lang);
                 }}
               >
-                {lang === 'zh-CN' ? 'ZH-CN' : lang === 'zh-TW' ? 'ZH-TW' : lang.toUpperCase()}
+                {t(`lang.${lang}`)}
               </Button>
             ))}
           </div>

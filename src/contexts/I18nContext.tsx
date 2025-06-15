@@ -63,8 +63,10 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // 2. Check static translations for current language
     if (value === undefined) {
-      const currentTranslations = availableTranslations[language as keyof typeof availableTranslations] || availableTranslations.en;
-      value = resolveKey(currentTranslations, keys);
+      const currentTranslations = availableTranslations[language as keyof typeof availableTranslations]; // No fallback here
+      if (currentTranslations) {
+        value = resolveKey(currentTranslations, keys);
+      }
     }
     
     // 3. Fallback to English, generate if missing, and trigger translation for other languages

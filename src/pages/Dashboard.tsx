@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -89,8 +88,8 @@ const Dashboard = () => {
           </h1>
           <p className="text-muted-foreground mt-2">
             {currentOrganization 
-              ? `Welcome to ${currentOrganization.name}` 
-              : 'Manage your flashcards and study progress'
+              ? t('dashboard.welcome', { name: currentOrganization.name }) 
+              : t('dashboard.welcomePersonal')
             }
           </p>
         </div>
@@ -103,15 +102,15 @@ const Dashboard = () => {
                 <div className="flex items-center space-x-4">
                   <Building className="h-8 w-8 text-primary" />
                   <div>
-                    <h3 className="font-semibold">Ready to collaborate?</h3>
+                    <h3 className="font-semibold">{t('dashboard.collaborateTitle')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Join or create an organization to work with your team on flashcard decks.
+                      {t('dashboard.collaborateDescription')}
                     </p>
                   </div>
                 </div>
                 <Button onClick={() => setShowOrgSetup(true)}>
                   <UserPlus className="w-4 h-4 mr-2" />
-                  Get Started
+                  {t('dashboard.getStarted')}
                 </Button>
               </div>
             </CardContent>
@@ -121,26 +120,26 @@ const Dashboard = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Decks</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.totalDecks')}</CardTitle>
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalDecks}</div>
               <p className="text-xs text-muted-foreground">
-                Your flashcard decks
+                {t('dashboard.totalDecksDescription')}
               </p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Study Sessions</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.studySessions')}</CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">0</div>
               <p className="text-xs text-muted-foreground">
-                +0 from last week
+                {t('dashboard.studySessionsDescription')}
               </p>
             </CardContent>
           </Card>
@@ -149,26 +148,26 @@ const Dashboard = () => {
             <>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Team Members</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dashboard.teamMembers')}</CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">1</div>
                   <p className="text-xs text-muted-foreground">
-                    Active members
+                    {t('dashboard.teamMembersDescription')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Assignments</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dashboard.assignments')}</CardTitle>
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">0</div>
                   <p className="text-xs text-muted-foreground">
-                    Active assignments
+                    {t('dashboard.assignmentsDescription')}
                   </p>
                 </CardContent>
               </Card>
@@ -182,20 +181,20 @@ const Dashboard = () => {
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Get started with your flashcards</CardDescription>
+              <CardTitle>{t('dashboard.quickActions')}</CardTitle>
+              <CardDescription>{t('dashboard.quickActionsDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Link to="/create-set">
                 <Button className="w-full justify-start">
                   <Plus className="mr-2 h-4 w-4" />
-                  Create New Deck
+                  {t('dashboard.createNewDeck')}
                 </Button>
               </Link>
               <Link to="/decks">
                 <Button variant="outline" className="w-full justify-start">
                   <BookOpen className="mr-2 h-4 w-4" />
-                  View All Decks
+                  {t('dashboard.viewAllDecks')}
                 </Button>
               </Link>
               {userOrganizations.length === 0 && (
@@ -205,7 +204,7 @@ const Dashboard = () => {
                   onClick={() => setShowOrgSetup(true)}
                 >
                   <Building className="mr-2 h-4 w-4" />
-                  Join or Create Organization
+                  {t('dashboard.joinOrCreateOrg')}
                 </Button>
               )}
             </CardContent>
@@ -213,12 +212,12 @@ const Dashboard = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your latest study sessions and progress</CardDescription>
+              <CardTitle>{t('dashboard.recentActivity')}</CardTitle>
+              <CardDescription>{t('dashboard.recentActivityDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8 text-muted-foreground">
-                No recent activity yet. Start studying to see your progress here!
+                {t('dashboard.noRecentActivity')}
               </div>
             </CardContent>
           </Card>
