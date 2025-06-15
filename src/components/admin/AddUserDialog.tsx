@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Textarea } from '@/components/ui/textarea';
 
 interface AddUserDialogProps {
   open: boolean;
@@ -57,12 +56,30 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({
       if (error) throw error;
 
       if (formData.sendInvite && data) {
-        // Send invite email (this would typically be done via an edge function)
-        console.log('Invite created:', data);
-        toast({
-          title: "Invite Sent",
-          description: `An invitation has been sent to ${formData.email}. They will have 7 days to accept.`,
+        // Send invite email using edge function
+        const { error: emailError } = await supabase.functions.invoke('send-invite-email', {
+          body: {
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            organizationName: currentOrganization.name,
+            inviteToken: data.invite_token,
+          },
         });
+
+        if (emailError) {
+          console.error('Error sending invite email:', emailError);
+          toast({
+            title: "Invite Created",
+            description: `Invitation created for ${formData.email}, but email could not be sent. You can share the invite link manually.`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Invite Sent",
+            description: `An invitation has been sent to ${formData.email}. They will have 7 days to accept.`,
+          });
+        }
       } else {
         toast({
           title: "Invite Created",
