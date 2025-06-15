@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Search, UserCog, Shield, Eye, RotateCcw, Filter, Info, UserPlus, Trash2 } from 'lucide-react';
+import { Users, Search, UserCog, Shield, Eye, RotateCcw, Filter, Info, UserPlus, Trash2, Plus } from 'lucide-react';
 import { UserDetailsDialog } from './UserDetailsDialog';
 import { UserRestrictionsDialog } from './UserRestrictionsDialog';
 import { PasswordResetDialog } from './PasswordResetDialog';
@@ -51,8 +50,17 @@ export const UserManagement: React.FC = () => {
   const [showUserDetails, setShowUserDetails] = useState(false);
   const [showRestrictions, setShowRestrictions] = useState(false);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
-  const [showAddUser, setShowAddUser] = useState(false);
   const [userToDelete, setUserToDelete] = useState<OrganizationUser | null>(null);
+  
+  // Add user inline form state
+  const [showAddUserForm, setShowAddUserForm] = useState(false);
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [addUserForm, setAddUserForm] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    role: 'learner',
+  });
 
   // Only allow org_admin and super_admin access
   if (!userRole || !['org_admin', 'super_admin'].includes(userRole)) {
@@ -240,6 +248,92 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  const handleAddUser = async () => {
+    if (!currentOrganization) return;
+
+    setIsAddingUser(true);
+    try {
+      // Create organization invite
+      const { data, error } = await supabase
+        .from('organization_invites')
+        .insert({
+          organization_id: currentOrganization.id,
+          email: addUserForm.email,
+          first_name: addUserForm.firstName,
+          last_name: addUserForm.lastName,
+          role: addUserForm.role,
+          invite_token: generateInviteToken(),
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+          invited_by: (await supabase.auth.getUser()).data.user?.id || '',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        // Send invite email using edge function
+        const { error: emailError } = await supabase.functions.invoke('send-invite-email', {
+          body: {
+            email: addUserForm.email,
+            firstName: addUserForm.firstName,
+            lastName: addUserForm.lastName,
+            organizationName: currentOrganization.name,
+            inviteToken: data.invite_token,
+          },
+        });
+
+        if (emailError) {
+          console.error('Error sending invite email:', emailError);
+          toast({
+            title: "Invite Created",
+            description: `Invitation created for ${addUserForm.email}, but email could not be sent. You can share the invite link manually.`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Invite Sent",
+            description: `An invitation has been sent to ${addUserForm.email}. They will have 7 days to accept.`,
+          });
+        }
+      } else {
+        toast({
+          title: "Invite Created",
+          description: `Invitation created for ${addUserForm.email}. You can share the invite link manually.`,
+        });
+      }
+
+      // Reset form
+      setAddUserForm({
+        email: '',
+        firstName: '',
+        lastName: '',
+        role: 'learner',
+      });
+
+      setShowAddUserForm(false);
+      await fetchUsers();
+    } catch (error: any) {
+      console.error('Error creating invite:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create user invitation.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingUser(false);
+    }
+  };
+
+  const generateInviteToken = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 16; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
   // Filter and sort users
   const filteredUsers = users
     .filter(user => {
@@ -348,13 +442,72 @@ export const UserManagement: React.FC = () => {
                 </CardDescription>
               </div>
             </div>
-            <Button onClick={() => setShowAddUser(true)} className="flex items-center gap-2">
+            <Button 
+              onClick={() => setShowAddUserForm(!showAddUserForm)} 
+              className="flex items-center gap-2"
+              variant={showAddUserForm ? "outline" : "default"}
+            >
               <UserPlus className="w-4 h-4" />
-              Add User
+              {showAddUserForm ? 'Cancel' : 'Add User'}
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Add User Inline Form */}
+          {showAddUserForm && (
+            <Card className="bg-muted/30">
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div>
+                    <Input
+                      placeholder="Email *"
+                      type="email"
+                      value={addUserForm.email}
+                      onChange={(e) => setAddUserForm({ ...addUserForm, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="First Name"
+                      value={addUserForm.firstName}
+                      onChange={(e) => setAddUserForm({ ...addUserForm, firstName: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="Last Name"
+                      value={addUserForm.lastName}
+                      onChange={(e) => setAddUserForm({ ...addUserForm, lastName: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Select value={addUserForm.role} onValueChange={(value) => setAddUserForm({ ...addUserForm, role: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="learner">Learner</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="org_admin">Organization Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Button 
+                      onClick={handleAddUser} 
+                      disabled={isAddingUser || !addUserForm.email}
+                      className="w-full"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {isAddingUser ? 'Sending...' : 'Send Invite'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Search and Filters */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
@@ -636,12 +789,6 @@ export const UserManagement: React.FC = () => {
           />
         </>
       )}
-
-      <AddUserDialog
-        open={showAddUser}
-        onOpenChange={setShowAddUser}
-        onUserAdded={fetchUsers}
-      />
 
       {/* Delete User Confirmation Dialog */}
       <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
