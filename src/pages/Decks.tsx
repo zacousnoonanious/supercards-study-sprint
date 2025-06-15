@@ -31,7 +31,8 @@ const Decks = () => {
       if (currentOrganization?.id) {
         query = query.eq('organization_id', currentOrganization.id);
       } else {
-        query = query.is('organization_id', null).eq('user_id', user.id);
+        // Show all decks owned by the user if no organization is selected.
+        query = query.eq('user_id', user.id);
       }
 
       const { data, error } = await query;
