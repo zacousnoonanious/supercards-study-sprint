@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -43,19 +42,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Handle sign out
         if (event === 'SIGNED_OUT') {
           console.log('User signed out, redirecting to auth page');
-          // Clear any local state
-          setUser(null);
-          setSession(null);
-          // Force navigation to auth page
+          // Force navigation to auth page, using setTimeout to avoid race conditions.
           setTimeout(() => {
             navigate('/auth', { replace: true });
-          }, 100);
+          }, 0);
         }
         
         // Handle sign in
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in, redirecting to dashboard');
-          navigate('/dashboard', { replace: true });
+          // Using setTimeout to avoid potential navigation issues during state updates.
+          setTimeout(() => {
+            navigate('/dashboard', { replace: true });
+          }, 0);
         }
       }
     );
