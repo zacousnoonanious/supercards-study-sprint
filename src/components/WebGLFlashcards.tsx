@@ -20,14 +20,37 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
   const cardsRef = useRef<THREE.Mesh[]>([]);
   const animationIdRef = useRef<number>();
   const mouseRef = useRef({ x: 0, y: 0 });
-  const vortexStateRef = useRef({
-    isActive: false,
-    transitionStart: 0,
-    transitionDuration: 2000,
-    lastToggle: 0,
-    vortexDuration: 10000 + Math.random() * 5000, // 10-15 seconds
-  });
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Expanded flashcard data with more interesting facts
+  const expandedFlashcards = [
+    ...flashcards,
+    { front: "Largest Desert", back: "Antarctica", color: "#06b6d4" },
+    { front: "Deepest Ocean Trench", back: "Mariana Trench", color: "#1e40af" },
+    { front: "Fastest Land Animal", back: "Cheetah", color: "#f59e0b" },
+    { front: "Smallest Country", back: "Vatican City", color: "#7c3aed" },
+    { front: "Longest River", back: "Nile River", color: "#059669" },
+    { front: "Highest Mountain", back: "Mount Everest", color: "#dc2626" },
+    { front: "Most Spoken Language", back: "Mandarin Chinese", color: "#ea580c" },
+    { front: "Largest Mammal", back: "Blue Whale", color: "#2563eb" },
+    { front: "Hardest Natural Substance", back: "Diamond", color: "#6b7280" },
+    { front: "Human Heart Chambers", back: "Four", color: "#ef4444" },
+    { front: "Boiling Point of Water", back: "100°C / 212°F", color: "#0891b2" },
+    { front: "DNA Structure", back: "Double Helix", color: "#16a34a" },
+    { front: "Speed of Sound", back: "343 m/s", color: "#9333ea" },
+    { front: "Earth's Layers", back: "Crust, Mantle, Core", color: "#ca8a04" },
+    { front: "Galaxy We Live In", back: "Milky Way", color: "#4338ca" },
+    { front: "Number of Bones (Adult)", back: "206", color: "#dc2626" },
+    { front: "Closest Star to Earth", back: "Sun", color: "#f59e0b" },
+    { front: "Chemical Symbol H₂SO₄", back: "Sulfuric Acid", color: "#059669" },
+    { front: "First Element (Periodic)", back: "Hydrogen", color: "#0891b2" },
+    { front: "Pi (π) Value", back: "3.14159...", color: "#7c3aed" },
+    { front: "Roman Numeral L", back: "50", color: "#dc2626" },
+    { front: "Capital of Australia", back: "Canberra", color: "#16a34a" },
+    { front: "Shakespeare's Hamlet Quote", back: "To be or not to be", color: "#9333ea" },
+    { front: "E=mc² Scientist", back: "Albert Einstein", color: "#ea580c" },
+    { front: "Human Genome Pairs", back: "23 Chromosome Pairs", color: "#2563eb" },
+  ];
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -43,7 +66,7 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       0.1,
       1000
     );
-    camera.position.z = 5;
+    camera.position.z = 8;
     cameraRef.current = camera;
 
     // Renderer setup
@@ -55,47 +78,50 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
 
     // Create flashcards
     const cards: THREE.Mesh[] = [];
-    flashcards.forEach((flashcard, index) => {
-      // Card geometry
-      const geometry = new THREE.PlaneGeometry(0.8, 0.5);
+    expandedFlashcards.forEach((flashcard, index) => {
+      // Card geometry - slightly larger for better visibility
+      const geometry = new THREE.PlaneGeometry(1.2, 0.8);
       const material = new THREE.MeshBasicMaterial({
         color: flashcard.color,
         transparent: true,
         opacity: 0, // Start invisible
+        side: THREE.DoubleSide,
       });
 
       const card = new THREE.Mesh(geometry, material);
       
-      // Position cards randomly across the screen
-      card.position.x = (Math.random() - 0.5) * 8;
-      card.position.y = Math.random() * 3 + 5; // Start above screen
-      card.position.z = Math.random() * 2 - 1;
+      // Orbital properties around center (login dialog)
+      const orbitRadius = 3 + Math.random() * 5; // Varying distances from center
+      const orbitAngle = (index / expandedFlashcards.length) * Math.PI * 2; // Evenly distribute around circle
+      const orbitHeight = (Math.random() - 0.5) * 4; // Vertical variation
       
-      // Store initial rotation values
-      (card as any).baseRotation = {
-        x: Math.random() * 0.3,
-        y: Math.random() * 0.3,
-        z: (Math.random() - 0.5) * 0.5,
+      // Position cards in orbit around center
+      card.position.x = Math.cos(orbitAngle) * orbitRadius;
+      card.position.y = Math.sin(orbitAngle) * orbitRadius + orbitHeight;
+      card.position.z = (Math.random() - 0.5) * 6; // 3D depth variation
+      
+      // Store orbital properties
+      (card as any).orbitProperties = {
+        radius: orbitRadius,
+        angle: orbitAngle,
+        height: orbitHeight,
+        speed: 0.3 + Math.random() * 0.4, // Varying orbital speeds
+        originalRadius: orbitRadius,
       };
 
-      // Store initial and target positions
-      (card as any).targetY = (Math.random() - 0.5) * 4;
-      (card as any).fallSpeed = 0.01 + Math.random() * 0.02;
-      (card as any).rotationSpeed = {
-        x: (Math.random() - 0.5) * 0.005,
-        y: (Math.random() - 0.5) * 0.005,
-        z: (Math.random() - 0.5) * 0.005,
-      };
-      (card as any).animationDelay = index * 200; // Stagger the animations
+      // Store card data for flipping
+      (card as any).cardData = flashcard;
+      (card as any).isFlipped = false;
+      (card as any).flipCooldown = 0;
+      (card as any).nextFlipTime = Math.random() * 10000 + 5000; // Random flip timing
+
+      // Animation properties
+      (card as any).animationDelay = index * 100;
       (card as any).hasStartedAnimation = false;
-
-      // Vortex properties
-      (card as any).vortexProperties = {
-        originalPosition: { x: card.position.x, y: card.position.y, z: card.position.z },
-        vortexAngle: Math.random() * Math.PI * 2,
-        vortexRadius: Math.sqrt(card.position.x ** 2 + card.position.y ** 2),
-        vortexSpeed: 0.02 + Math.random() * 0.03,
-        suckSpeed: 0.05 + Math.random() * 0.03,
+      (card as any).rotationSpeed = {
+        x: (Math.random() - 0.5) * 0.01,
+        y: (Math.random() - 0.5) * 0.01,
+        z: (Math.random() - 0.5) * 0.01,
       };
 
       scene.add(card);
@@ -106,7 +132,6 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
 
     // Mouse tracking
     const handleMouseMove = (event: MouseEvent) => {
-      // Normalize mouse position to -1 to 1 range
       mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
     };
@@ -118,25 +143,7 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       animationIdRef.current = requestAnimationFrame(animate);
 
       const currentTime = Date.now();
-      const mouseInfluence = 0.3; // How much the mouse affects rotation
-      const vortexState = vortexStateRef.current;
-      
-      // Check if we should toggle vortex state
-      if (currentTime - vortexState.lastToggle > vortexState.vortexDuration) {
-        vortexState.isActive = !vortexState.isActive;
-        vortexState.transitionStart = currentTime;
-        vortexState.lastToggle = currentTime;
-        vortexState.vortexDuration = 10000 + Math.random() * 5000; // Next duration 10-15s
-      }
-
-      // Calculate transition progress (0 to 1)
-      const transitionProgress = Math.min(
-        (currentTime - vortexState.transitionStart) / vortexState.transitionDuration,
-        1
-      );
-      const easeProgress = vortexState.isActive 
-        ? 1 - Math.pow(1 - transitionProgress, 3) // Ease out for sucking in
-        : Math.pow(transitionProgress, 3); // Ease in for spitting out
+      const mouseInfluence = 0.2;
       
       cards.forEach((card) => {
         const material = card.material as THREE.MeshBasicMaterial;
@@ -149,63 +156,63 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
         
         if (cardData.hasStartedAnimation) {
           // Fade in the card
-          if (material.opacity < 0.8) {
-            material.opacity += 0.02;
+          if (material.opacity < 0.9) {
+            material.opacity += 0.015;
           }
           
-          if (vortexState.isActive || transitionProgress < 1) {
-            // Vortex behavior
-            const vortexProps = cardData.vortexProperties;
+          // Orbital motion around center point
+          const orbitProps = cardData.orbitProperties;
+          orbitProps.angle += orbitProps.speed * 0.005; // Slow orbital rotation
+          
+          // Calculate new position
+          card.position.x = Math.cos(orbitProps.angle) * orbitProps.radius;
+          card.position.y = Math.sin(orbitProps.angle) * orbitProps.radius + orbitProps.height;
+          
+          // Add mouse influence to orbital motion
+          const mouseDistanceX = mouseRef.current.x * 2;
+          const mouseDistanceY = mouseRef.current.y * 2;
+          card.position.x += mouseDistanceX * mouseInfluence;
+          card.position.y += mouseDistanceY * mouseInfluence;
+          
+          // Calculate distance from center for blur effect
+          const distanceFromCenter = Math.sqrt(
+            card.position.x ** 2 + 
+            card.position.y ** 2 + 
+            card.position.z ** 2
+          );
+          
+          // Apply blur effect based on distance (opacity reduction simulates blur)
+          const maxDistance = 8;
+          const blurFactor = Math.min(distanceFromCenter / maxDistance, 1);
+          const baseOpacity = 0.9;
+          material.opacity = baseOpacity * (1 - blurFactor * 0.6);
+          
+          // 3D rotation based on orbital position and mouse
+          card.rotation.x = cardData.rotationSpeed.x * currentTime + mouseRef.current.y * mouseInfluence;
+          card.rotation.y = cardData.rotationSpeed.y * currentTime + mouseRef.current.x * mouseInfluence;
+          card.rotation.z = cardData.rotationSpeed.z * currentTime + orbitProps.angle * 0.1;
+          
+          // Card flipping logic
+          cardData.flipCooldown -= 16; // Assuming ~60fps
+          if (cardData.flipCooldown <= 0 && currentTime > cardData.nextFlipTime) {
+            cardData.isFlipped = !cardData.isFlipped;
+            cardData.flipCooldown = 3000; // 3 second cooldown
+            cardData.nextFlipTime = currentTime + Math.random() * 8000 + 7000; // Next flip in 7-15 seconds
             
-            if (vortexState.isActive) {
-              // Sucking into vortex
-              vortexProps.vortexAngle += vortexProps.vortexSpeed;
-              vortexProps.vortexRadius = Math.max(0.1, vortexProps.vortexRadius - vortexProps.suckSpeed);
-              
-              // Spiral motion towards center
-              card.position.x = Math.cos(vortexProps.vortexAngle) * vortexProps.vortexRadius;
-              card.position.y = Math.sin(vortexProps.vortexAngle) * vortexProps.vortexRadius;
-              card.position.z = -vortexProps.vortexRadius * 0.5; // Move forward as it gets closer
-              
-              // Increase rotation speed as it gets closer to center
-              const rotationMultiplier = 1 + (3 - vortexProps.vortexRadius);
-              card.rotation.x += cardData.rotationSpeed.x * rotationMultiplier;
-              card.rotation.y += cardData.rotationSpeed.y * rotationMultiplier;
-              card.rotation.z += cardData.rotationSpeed.z * rotationMultiplier;
+            // Visual indication of flip (rotate 180 degrees on Y-axis)
+            card.rotation.y += Math.PI;
+            
+            // In a real implementation, you might change the texture/material here
+            // For now, we'll just add a subtle color shift
+            if (cardData.isFlipped) {
+              material.color.multiplyScalar(0.8); // Darker when showing back
             } else {
-              // Spitting out from vortex - reset to floating behavior
-              if (transitionProgress < 1) {
-                // Interpolate back to original floating position
-                const targetX = cardData.targetY !== undefined ? vortexProps.originalPosition.x : (Math.random() - 0.5) * 8;
-                const targetY = cardData.targetY !== undefined ? cardData.targetY : (Math.random() - 0.5) * 4;
-                const targetZ = vortexProps.originalPosition.z;
-                
-                card.position.x = THREE.MathUtils.lerp(card.position.x, targetX, easeProgress * 0.02);
-                card.position.y = THREE.MathUtils.lerp(card.position.y, targetY, easeProgress * 0.02);
-                card.position.z = THREE.MathUtils.lerp(card.position.z, targetZ, easeProgress * 0.02);
-                
-                // Reset vortex radius for next time
-                vortexProps.vortexRadius = Math.sqrt(targetX ** 2 + targetY ** 2);
-              }
+              material.color.setHex(cardData.cardData.color); // Reset to original color
             }
-          } else {
-            // Normal floating behavior
-            // Animate down to target position
-            if (card.position.y > cardData.targetY) {
-              card.position.y -= cardData.fallSpeed;
-            }
-            
-            // Apply rotation based on mouse position and base rotation
-            const mouseRotationX = mouseRef.current.y * mouseInfluence;
-            const mouseRotationY = mouseRef.current.x * mouseInfluence;
-            
-            card.rotation.x = cardData.baseRotation.x + mouseRotationX + Math.sin(currentTime * cardData.rotationSpeed.x) * 0.1;
-            card.rotation.y = cardData.baseRotation.y + mouseRotationY + Math.sin(currentTime * cardData.rotationSpeed.y) * 0.1;
-            card.rotation.z = cardData.baseRotation.z + Math.sin(currentTime * cardData.rotationSpeed.z) * 0.1;
-            
-            // Gentle floating motion
-            card.position.x += Math.sin(currentTime * 0.001 + card.position.z) * 0.001;
           }
+          
+          // Gentle floating motion
+          card.position.z += Math.sin(currentTime * 0.001 + orbitProps.angle) * 0.002;
         }
       });
 
