@@ -34,7 +34,6 @@ export const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
         backgroundSize: `${gridSize}px ${gridSize}px`,
         backgroundPosition: '0 0, 0 0',
         opacity: 0.8,
-        zIndex: 1,
       }}
       data-canvas-background="true"
     />
