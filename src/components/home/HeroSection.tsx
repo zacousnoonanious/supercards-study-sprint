@@ -28,6 +28,105 @@ export const HeroSection = () => {
   return (
     <>
       <GlobalStyles />
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          
+          @keyframes particle-float {
+            0%, 100% { 
+              transform: translateY(0px) translateX(0px) scale(1);
+              opacity: 0;
+            }
+            10% {
+              opacity: 1;
+            }
+            90% {
+              opacity: 1;
+            }
+            50% { 
+              transform: translateY(-20px) translateX(10px) scale(1.2);
+              opacity: 0.8;
+            }
+          }
+          
+          .rainbow-text {
+            background: linear-gradient(
+              45deg,
+              #ff0000,
+              #ff7f00,
+              #ffff00,
+              #00ff00,
+              #0000ff,
+              #4b0082,
+              #9400d3,
+              #ff0000
+            );
+            background-size: 200% 200%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+            position: relative;
+          }
+          
+          .particle-container {
+            position: relative;
+            display: inline-block;
+          }
+          
+          .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle-float 2s ease-in-out infinite;
+          }
+          
+          .particle:nth-child(1) { 
+            top: 10%; 
+            left: 20%; 
+            animation-delay: 0s;
+            background: radial-gradient(circle, #ff6b6b, #ff8e8e);
+          }
+          .particle:nth-child(2) { 
+            top: 80%; 
+            left: 80%; 
+            animation-delay: 0.3s;
+            background: radial-gradient(circle, #4ecdc4, #6ee6d8);
+          }
+          .particle:nth-child(3) { 
+            top: 60%; 
+            left: 10%; 
+            animation-delay: 0.6s;
+            background: radial-gradient(circle, #45b7d1, #69c9e5);
+          }
+          .particle:nth-child(4) { 
+            top: 30%; 
+            left: 90%; 
+            animation-delay: 0.9s;
+            background: radial-gradient(circle, #96ceb4, #aad8c8);
+          }
+          .particle:nth-child(5) { 
+            top: 90%; 
+            left: 50%; 
+            animation-delay: 1.2s;
+            background: radial-gradient(circle, #feca57, #fed976);
+          }
+          .particle:nth-child(6) { 
+            top: 20%; 
+            left: 60%; 
+            animation-delay: 1.5s;
+            background: radial-gradient(circle, #a8e6cf, #c2f0db);
+          }
+        `
+      }} />
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background with gradient matching the reference design */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-400 via-purple-500 to-blue-600">
@@ -133,9 +232,27 @@ export const HeroSection = () => {
         {/* Main Content */}
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
           <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight">
-            {t('home.heroSection.title')}
+            <span className="particle-container rainbow-text">
+              Smarter
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+            </span>{" "}
+            Cards.
             <br />
-            {t('home.heroSection.subtitle')}
+            <span className="particle-container rainbow-text">
+              Better
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+            </span>{" "}
+            Learning.
           </h1>
 
           <Link to="/auth">
