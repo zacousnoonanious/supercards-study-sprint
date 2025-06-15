@@ -58,6 +58,7 @@ export const UserManagement: React.FC = () => {
     firstName: '',
     lastName: '',
     role: 'learner',
+    password: '',
   });
 
   // Only allow org_admin and super_admin access
@@ -246,6 +247,20 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let result = '';
+    for (let i = 0; i < 12; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const handleGeneratePassword = () => {
+    const newPassword = generatePassword();
+    setAddUserForm(prev => ({ ...prev, password: newPassword }));
+  };
+
   const handleAddUser = async () => {
     if (!currentOrganization) return;
 
@@ -305,7 +320,7 @@ export const UserManagement: React.FC = () => {
         // Direct user creation without invite
         const { data: authData, error: authError } = await supabase.auth.admin.createUser({
           email: addUserForm.email,
-          password: generateTemporaryPassword(),
+          password: addUserForm.password,
           user_metadata: {
             first_name: addUserForm.firstName,
             last_name: addUserForm.lastName,
@@ -331,7 +346,7 @@ export const UserManagement: React.FC = () => {
 
           toast({
             title: "User Added",
-            description: `${addUserForm.firstName} ${addUserForm.lastName} has been added to the organization directly. A temporary password has been generated and they will need to reset it on first login.`,
+            description: `${addUserForm.firstName} ${addUserForm.lastName} has been added to the organization directly. They can now login with their email and the provided password.`,
           });
         }
       }
@@ -342,6 +357,7 @@ export const UserManagement: React.FC = () => {
         firstName: '',
         lastName: '',
         role: 'learner',
+        password: '',
       });
 
       setShowAddUserForm(false);
@@ -496,6 +512,7 @@ export const UserManagement: React.FC = () => {
               onFormChange={setAddUserForm}
               onSendInviteChange={setSendInvite}
               onSubmit={handleAddUser}
+              onGeneratePassword={handleGeneratePassword}
             />
           )}
 

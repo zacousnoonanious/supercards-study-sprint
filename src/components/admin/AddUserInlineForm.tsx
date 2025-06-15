@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { UserPlus, Mail, User } from 'lucide-react';
+import { UserPlus, Mail, User, Key, RefreshCw } from 'lucide-react';
 
 interface AddUserInlineFormProps {
   formData: {
@@ -14,12 +14,14 @@ interface AddUserInlineFormProps {
     firstName: string;
     lastName: string;
     role: string;
+    password: string;
   };
   isLoading: boolean;
   sendInvite: boolean;
   onFormChange: (data: any) => void;
   onSendInviteChange: (sendInvite: boolean) => void;
   onSubmit: () => void;
+  onGeneratePassword: () => void;
 }
 
 export const AddUserInlineForm: React.FC<AddUserInlineFormProps> = ({
@@ -29,10 +31,14 @@ export const AddUserInlineForm: React.FC<AddUserInlineFormProps> = ({
   onFormChange,
   onSendInviteChange,
   onSubmit,
+  onGeneratePassword,
 }) => {
   const handleFormChange = (field: string, value: string) => {
     onFormChange({ ...formData, [field]: value });
   };
+
+  const isFormValid = formData.email && formData.firstName && formData.lastName && 
+    (sendInvite || (!sendInvite && formData.password));
 
   return (
     <Card className="border-dashed border-2 border-primary/20 bg-primary/5">
@@ -56,7 +62,7 @@ export const AddUserInlineForm: React.FC<AddUserInlineFormProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -105,13 +111,40 @@ export const AddUserInlineForm: React.FC<AddUserInlineFormProps> = ({
               </Select>
             </div>
 
+            {!sendInvite && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter password"
+                    value={formData.password}
+                    onChange={(e) => handleFormChange('password', e.target.value)}
+                    disabled={isLoading}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={onGeneratePassword}
+                    disabled={isLoading}
+                    title="Generate password"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-end">
               <Button 
                 onClick={onSubmit}
-                disabled={isLoading || !formData.email || !formData.firstName || !formData.lastName}
+                disabled={isLoading || !isFormValid}
                 className="w-full"
               >
-                {isLoading ? 'Adding...' : sendInvite ? 'Send Invite' : 'Add User'}
+                {isLoading ? 'Adding...' : sendInvite ? 'Send Invite' : 'Direct Add'}
               </Button>
             </div>
           </div>
@@ -119,8 +152,8 @@ export const AddUserInlineForm: React.FC<AddUserInlineFormProps> = ({
           {!sendInvite && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
               <p className="text-sm text-yellow-800">
-                <strong>Direct Add:</strong> User will be created immediately with a temporary password. 
-                They will need to reset their password on first login.
+                <strong>Direct Add:</strong> User will be created immediately with the specified password. 
+                They will be able to login immediately with these credentials.
               </p>
             </div>
           )}
