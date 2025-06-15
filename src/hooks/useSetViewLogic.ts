@@ -71,15 +71,15 @@ export const useSetViewLogic = () => {
       
       console.log('Cards data fetched:', data);
       
-      // Transform the data to match our Flashcard interface
-      const transformedCards: Flashcard[] = (data || []).map((card, index) => ({
+      // Type cast the data to match our Flashcard interface
+      const typedCards: Flashcard[] = (cardsData || []).map((card, index) => ({
         ...card,
-        front_elements: (card.front_elements as unknown as CanvasElement[]) || [],
-        back_elements: (card.back_elements as unknown as CanvasElement[]) || [],
+        front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
+        back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
         hint: card.hint || '',
         last_reviewed_at: card.last_reviewed_at || null,
-        card_type: (card.card_type === 'standard' ? 'normal' : card.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: card.interactive_type || null,
+        card_type: (card.card_type as Flashcard['card_type']) || 'normal',
+        interactive_type: (card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') || null,
         countdown_timer: card.countdown_timer || 0,
         countdown_timer_front: card.countdown_timer_front || 0,
         countdown_timer_back: card.countdown_timer_back || 0,
@@ -87,11 +87,10 @@ export const useSetViewLogic = () => {
         countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
         flips_before_next: card.flips_before_next || 2,
         password: card.password || null,
-        position: index,
         countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
       }));
       
-      return transformedCards;
+      return typedCards;
     },
     enabled: !!setId && !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes

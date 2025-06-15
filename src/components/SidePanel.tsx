@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ElementOptionsPanel } from './settings/ElementOptionsPanel';
 import { ElementControls } from './settings/ElementControls';
@@ -42,7 +43,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
         {selectedElement && (
           <ElementOptionsPanel
             element={selectedElement}
-            onUpdate={(updates) => onUpdateElement(selectedElement.id, updates)}
+            onUpdateElement={(updates) => onUpdateElement(selectedElement.id, updates)}
             onDelete={() => onDeleteElement(selectedElement.id)}
           />
         )}

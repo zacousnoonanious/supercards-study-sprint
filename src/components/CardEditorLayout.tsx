@@ -200,6 +200,27 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
     }
   };
 
+  // Mock functions for AI features
+  const handleTagsUpdate = (tags: string[]) => {
+    console.log('Tags updated:', tags);
+  };
+
+  const handleCreateCard = (question: string, answer: string) => {
+    console.log('Create card:', question, answer);
+    onCreateNewCard();
+  };
+
+  const handleApplyLayout = (elements: CanvasElement[]) => {
+    console.log('Apply layout:', elements);
+    // This would update the current card's elements
+    if (currentCard) {
+      const updates = currentSide === 'front' 
+        ? { front_elements: elements }
+        : { back_elements: elements };
+      onUpdateCard(updates);
+    }
+  };
+
   // Show enhanced overview if requested
   if (showCardOverview) {
     return (
@@ -336,6 +357,11 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
             selectedElement={selectedElement}
             onUpdateElement={onUpdateElement}
             onDeleteElement={onDeleteElement}
+            currentCard={currentCard}
+            currentSide={currentSide}
+            onTagsUpdate={handleTagsUpdate}
+            onCreateCard={handleCreateCard}
+            onApplyLayout={handleApplyLayout}
           />
         </div>
 

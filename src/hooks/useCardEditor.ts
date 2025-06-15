@@ -84,7 +84,6 @@ export const useCardEditor = () => {
         countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
         flips_before_next: card.flips_before_next || 2,
         password: card.password || null,
-        position: index,
         countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
       }));
       
@@ -359,7 +358,6 @@ export const useCardEditor = () => {
         countdown_behavior_back: (data.countdown_behavior_back as 'flip' | 'next') || 'next',
         flips_before_next: data.flips_before_next || 2,
         password: data.password || null,
-        position: cards.length, // Set position to current array length
         countdown_behavior: ((data as any).countdown_behavior as 'flip' | 'next') || 'flip'
       };
 
@@ -436,7 +434,6 @@ export const useCardEditor = () => {
         countdown_behavior_back: (data.countdown_behavior_back as 'flip' | 'next') || 'next',
         flips_before_next: data.flips_before_next || 2,
         password: data.password || null,
-        position: cards.length, // Set position to current array length
         countdown_behavior: ((data as any).countdown_behavior as 'flip' | 'next') || 'flip'
       };
 
@@ -507,7 +504,6 @@ export const useCardEditor = () => {
         countdown_behavior_back: (data.countdown_behavior_back as 'flip' | 'next') || 'next',
         flips_before_next: data.flips_before_next || 2,
         password: data.password || null,
-        position: cards.length, // Set position to current array length
         countdown_behavior: ((data as any).countdown_behavior as 'flip' | 'next') || 'flip'
       };
 
