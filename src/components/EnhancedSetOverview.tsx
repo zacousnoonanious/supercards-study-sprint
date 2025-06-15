@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -203,7 +202,7 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
         <div 
           className="grid gap-6"
           style={{
-            gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
           }}
         >
           {cards.map((card, index) => (
@@ -216,16 +215,18 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
             >
-              <CardPreviewWithControls
-                card={card}
-                cardIndex={index}
-                onClick={() => onNavigateToCard(index)}
-                isDragging={draggedIndex === index}
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragEnd={handleDragEnd}
-                onStudyFromCard={onStudyFromCard}
-                onDeleteCard={onDeleteCard}
-              />
+              <div className="h-full">
+                <CardPreviewWithControls
+                  card={card}
+                  cardIndex={index}
+                  onClick={() => onNavigateToCard(index)}
+                  isDragging={draggedIndex === index}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragEnd={handleDragEnd}
+                  onStudyFromCard={onStudyFromCard}
+                  onDeleteCard={onDeleteCard}
+                />
+              </div>
             </div>
           ))}
         </div>

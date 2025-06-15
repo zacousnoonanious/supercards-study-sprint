@@ -47,7 +47,7 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
 
   return (
     <Card 
-      className={`group relative hover:shadow-lg transition-all duration-300 ${
+      className={`group relative hover:shadow-lg transition-all duration-300 h-full flex flex-col ${
         isDragging ? 'shadow-2xl scale-105 rotate-2 z-50' : 'hover:scale-[1.02]'
       }`}
       style={{
@@ -65,7 +65,7 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
         <CardTitle className="text-sm">Card {cardIndex + 1}</CardTitle>
       </CardHeader>
       
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 flex-1 flex flex-col">
         {/* Card Preview - Fixed size container */}
         <div 
           className="border rounded overflow-hidden cursor-pointer bg-white flex items-center justify-center"
@@ -94,7 +94,7 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
         </div>
         
         {/* Card Info */}
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-muted-foreground flex-1">
           <p>Dimensions: {cardWidth} × {cardHeight}px</p>
           <p>Front: {card.front_elements?.length || 0} elements</p>
           <p>Back: {card.back_elements?.length || 0} elements</p>
@@ -104,7 +104,7 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
         </div>
         
         {/* Controls */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-auto">
           <Button
             variant="outline"
             size="sm"
