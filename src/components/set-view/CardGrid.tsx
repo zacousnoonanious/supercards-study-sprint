@@ -13,6 +13,7 @@ interface CardGridProps {
   onCreateFromTemplate: (template: CardTemplate) => void;
   onSetDefaultTemplate: (template: CardTemplate) => void;
   defaultTemplate?: CardTemplate;
+  onBrowseTemplates?: () => void;
 }
 
 export const CardGrid: React.FC<CardGridProps> = ({
@@ -22,6 +23,7 @@ export const CardGrid: React.FC<CardGridProps> = ({
   onCreateFromTemplate,
   onSetDefaultTemplate,
   defaultTemplate,
+  onBrowseTemplates,
 }) => {
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -60,6 +62,7 @@ export const CardGrid: React.FC<CardGridProps> = ({
             onCreateFromTemplate={onCreateFromTemplate}
             onSetDefaultTemplate={onSetDefaultTemplate}
             defaultTemplate={defaultTemplate}
+            onBrowseTemplates={onBrowseTemplates}
           />
         </CardContent>
       </Card>

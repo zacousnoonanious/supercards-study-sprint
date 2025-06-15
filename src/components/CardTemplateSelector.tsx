@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronDown } from 'lucide-react';
+import { Plus, ChevronDown, LayoutTemplate } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,13 +17,15 @@ interface CardTemplateSelectorProps {
   onCreateFromTemplate: (template: CardTemplate) => void;
   onSetDefaultTemplate: (template: CardTemplate) => void;
   defaultTemplate?: CardTemplate;
+  onBrowseTemplates?: () => void;
 }
 
 export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
   onCreateCard,
   onCreateFromTemplate,
   onSetDefaultTemplate,
-  defaultTemplate
+  defaultTemplate,
+  onBrowseTemplates,
 }) => {
   const { t } = useI18n();
   const [templates] = useState<CardTemplate[]>([
@@ -191,6 +193,15 @@ export const CardTemplateSelector: React.FC<CardTemplateSelectorProps> = ({
             )}
           </DropdownMenuItem>
         ))}
+        {onBrowseTemplates && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onBrowseTemplates}>
+              <LayoutTemplate className="w-4 h-4 mr-2" />
+              {t('common.browseLibrary')}
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="text-xs text-muted-foreground" disabled>
           {t('editor.rightClickToSetDefault')}

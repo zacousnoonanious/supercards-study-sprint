@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -17,6 +16,7 @@ import { useSetViewLogic } from '@/hooks/useSetViewLogic';
 import { CollaborationDialog } from '@/components/collaboration/CollaborationDialog';
 import { CollaborationIndicator } from '@/components/collaboration/CollaborationIndicator';
 import { useCollaborativeEditing } from '@/hooks/useCollaborativeEditing';
+import { TemplateLibrary } from '@/components/TemplateLibrary';
 
 const SetView = () => {
   const { user } = useAuth();
@@ -56,6 +56,8 @@ const SetView = () => {
     handleStartStudyWithSettings,
     handlePermanentShuffleToggle,
   } = useSetViewLogic();
+
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
 
   // Add collaborative editing functionality
   const {
@@ -160,6 +162,7 @@ const SetView = () => {
           onCreateFromTemplate={handleCreateFromTemplate}
           onSetDefaultTemplate={handleSetDefaultTemplate}
           defaultTemplate={defaultTemplate}
+          onBrowseTemplates={() => setShowTemplateLibrary(true)}
         />
       </main>
 
@@ -180,6 +183,16 @@ const SetView = () => {
         onStartStudyWithSettings={handleStartStudyWithSettings}
         onPermanentShuffleToggle={handlePermanentShuffleToggle}
       />
+
+      {showTemplateLibrary && (
+        <TemplateLibrary
+          onClose={() => setShowTemplateLibrary(false)}
+          onSelectTemplate={(template) => {
+            handleCreateFromTemplate(template);
+            setShowTemplateLibrary(false);
+          }}
+        />
+      )}
     </div>
   );
 };

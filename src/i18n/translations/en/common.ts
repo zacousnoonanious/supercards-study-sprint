@@ -203,4 +203,6 @@ export const common = {
   failedToJoin: "Failed to Join",
   createOrJoinOrganization: "Create / Join Organization",
   createOrJoinOrgDescription: "Create a new organization or join an existing one.",
+  templateLibrary: "Template Library",
+  browseLibrary: "Browse Library",
 };

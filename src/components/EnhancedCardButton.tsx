@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreHorizontal } from 'lucide-react';
+import { Plus, MoreHorizontal, LayoutTemplate } from 'lucide-react';
 import { CardTemplate } from '@/types/flashcard';
 import { cardTemplates } from '@/data/cardTemplates';
 import {
@@ -24,6 +24,7 @@ interface EnhancedCardButtonProps {
   onCreateFromTemplate: (template: CardTemplate) => void;
   onSetDefaultTemplate: (template: CardTemplate) => void;
   defaultTemplate?: CardTemplate;
+  onBrowseTemplates?: () => void;
 }
 
 export const EnhancedCardButton: React.FC<EnhancedCardButtonProps> = ({
@@ -31,6 +32,7 @@ export const EnhancedCardButton: React.FC<EnhancedCardButtonProps> = ({
   onCreateFromTemplate,
   onSetDefaultTemplate,
   defaultTemplate,
+  onBrowseTemplates,
 }) => {
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
   const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
@@ -128,6 +130,15 @@ export const EnhancedCardButton: React.FC<EnhancedCardButtonProps> = ({
               </ContextMenuContent>
             </ContextMenu>
           ))}
+          {onBrowseTemplates && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onBrowseTemplates}>
+                <LayoutTemplate className="w-4 h-4 mr-2" />
+                {t('common.browseLibrary')}
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

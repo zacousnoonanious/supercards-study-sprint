@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, Plus } from 'lucide-react';
+import { ChevronDown, Plus, LayoutTemplate } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,12 +17,14 @@ interface EnhancedAddCardButtonProps {
   onCreateCard: () => void;
   onCreateFromTemplate: (template: CardTemplate) => void;
   showText?: boolean;
+  onBrowseTemplates?: () => void;
 }
 
 export const EnhancedAddCardButton: React.FC<EnhancedAddCardButtonProps> = ({
   onCreateCard,
   onCreateFromTemplate,
   showText = false,
+  onBrowseTemplates,
 }) => {
   const [selectedTemplate, setSelectedTemplate] = useState<CardTemplate | null>(null);
   const [isLongPress, setIsLongPress] = useState(false);
@@ -133,6 +135,20 @@ export const EnhancedAddCardButton: React.FC<EnhancedAddCardButtonProps> = ({
             )}
           </DropdownMenuItem>
         ))}
+        {onBrowseTemplates && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                onBrowseTemplates();
+                setDropdownOpen(false);
+              }}
+            >
+              <LayoutTemplate className="w-4 h-4 mr-2" />
+              {t('common.browseLibrary')}
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <div className="px-2 py-1 text-xs text-muted-foreground">
           {t('editor.longPressToChoose')}

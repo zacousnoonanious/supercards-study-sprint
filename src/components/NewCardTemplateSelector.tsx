@@ -15,6 +15,7 @@ interface NewCardTemplateSelectorProps {
   defaultTemplate?: CardTemplate;
   showAsDialog?: boolean;
   title?: string;
+  onBrowseTemplates?: () => void;
 }
 
 export const NewCardTemplateSelector: React.FC<NewCardTemplateSelectorProps> = ({
@@ -24,6 +25,7 @@ export const NewCardTemplateSelector: React.FC<NewCardTemplateSelectorProps> = (
   defaultTemplate,
   showAsDialog = true,
   title,
+  onBrowseTemplates,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useI18n();
@@ -40,6 +42,22 @@ export const NewCardTemplateSelector: React.FC<NewCardTemplateSelectorProps> = (
 
   const content = (
     <div className="space-y-4">
+      {onBrowseTemplates && (
+        <div className="text-right -mb-2">
+          <Button
+            variant="link"
+            onClick={() => {
+              if (onBrowseTemplates) {
+                onBrowseTemplates();
+                setIsOpen(false);
+              }
+            }}
+          >
+            <LayoutTemplate className="w-4 h-4 mr-2" />
+            {t('common.browseLibrary')}
+          </Button>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Blank Card Option */}
         <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => {
