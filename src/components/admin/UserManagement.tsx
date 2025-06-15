@@ -66,48 +66,51 @@ export const UserManagement: React.FC = () => {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // First, get organization members
+      const { data: membersData, error: membersError } = await supabase
         .from('organization_members')
-        .select(`
-          id,
-          user_id,
-          role,
-          status,
-          joined_at,
-          profiles!inner(
-            id,
-            first_name,
-            last_name,
-            last_login
-          )
-        `)
+        .select('user_id, role, status, joined_at')
         .eq('organization_id', currentOrganization.id);
 
-      if (error) throw error;
+      if (membersError) throw membersError;
 
-      // Get user emails from auth.users (we'll need to do this through a function or differently)
-      // For now, we'll fetch user restrictions separately
-      const userIds = data?.map(member => member.user_id) || [];
+      if (!membersData || membersData.length === 0) {
+        setUsers([]);
+        return;
+      }
+
+      const userIds = membersData.map(member => member.user_id);
       
+      // Get profiles for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, last_login')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+      
+      // Get user restrictions
       const { data: restrictionsData } = await supabase
         .from('user_restrictions')
         .select('*')
         .in('user_id', userIds)
         .eq('organization_id', currentOrganization.id);
 
-      // Transform the data
-      const transformedUsers: OrganizationUser[] = data?.map(member => {
-        const profile = member.profiles;
+      // For now, we'll use placeholder emails since we can't access auth.users directly
+      // In a real implementation, you'd need to store emails in profiles or use a server function
+      const transformedUsers: OrganizationUser[] = membersData.map(member => {
+        const profile = profilesData?.find(p => p.id === member.user_id);
         const restrictions = restrictionsData?.find(r => r.user_id === member.user_id);
         
         return {
           id: member.user_id,
-          email: `user-${member.user_id.slice(0, 8)}@example.com`, // Placeholder - we'll get real emails from auth
-          first_name: profile.first_name,
-          last_name: profile.last_name,
+          email: `user-${member.user_id.slice(0, 8)}@example.com`, // Placeholder - needs proper implementation
+          first_name: profile?.first_name || null,
+          last_name: profile?.last_name || null,
           role: member.role,
           status: member.status,
-          last_login: profile.last_login,
+          last_login: profile?.last_login || null,
           joined_at: member.joined_at,
           restrictions: restrictions ? {
             view_only_mode: restrictions.view_only_mode,
@@ -116,7 +119,7 @@ export const UserManagement: React.FC = () => {
             disable_comments: restrictions.disable_comments,
           } : undefined
         };
-      }) || [];
+      });
 
       setUsers(transformedUsers);
     } catch (error: any) {
