@@ -156,9 +156,12 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
         metalness: 0.1, // A little bit of metalness for sheen
         normalMap: normalMap, // Apply the paper texture
         normalScale: new THREE.Vector2(0.05, 0.05), // Control the intensity of the bumps
+        transparent: true, // For entry animation
+        opacity: 0, // Start transparent
       });
 
       const card = new THREE.Mesh(geometry, material);
+      card.scale.set(0, 0, 0); // Start scaled down for entry animation
       
       // Orbital properties around center (login dialog)
       const orbitRadius = 3 + Math.random() * 5;
@@ -189,12 +192,15 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       (card as any).nextFlipTime = Math.random() * 20000 + 15000;
 
       // Animation properties
-      (card as any).animationDelay = index * 100;
+      (card as any).animationDelay = index * 50; // Quicker delay
       (card as any).hasStartedAnimation = false;
+      (card as any).isEntering = true;
+      (card as any).entryProgress = 0;
+      (card as any).baseRotation = { x: 0, y: 0, z: 0 }; // For smooth rotation
       (card as any).rotationSpeed = {
-        x: (Math.random() - 0.5) * 0.003,
-        y: (Math.random() - 0.5) * 0.003,
-        z: (Math.random() - 0.5) * 0.003,
+        x: (Math.random() - 0.5) * 0.001, // Slower base rotation
+        y: (Math.random() - 0.5) * 0.001,
+        z: (Math.random() - 0.5) * 0.001,
       };
 
       scene.add(card);
@@ -279,23 +285,36 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       animationIdRef.current = requestAnimationFrame(animate);
 
       const currentTime = Date.now();
-      const mouseInfluence = 0.4; // Increased mouse influence
+      const mouseInfluence = 0.6; // Increased mouse influence
       
       cards.forEach((card, index) => {
         const material = card.material as THREE.MeshStandardMaterial;
         const cardData = card as any;
         const particleSystem = particles[index];
+        const orbitProps = cardData.orbitProperties;
         
         // Check if animation should start
-        if (!cardData.hasStartedAnimation && currentTime > cardData.animationDelay + 1000) {
+        if (!cardData.hasStartedAnimation && currentTime > cardData.animationDelay + 500) {
           cardData.hasStartedAnimation = true;
         }
         
         if (cardData.hasStartedAnimation) {
-          // Cards are always fully visible (no opacity fade)
+          // --- Smooth Entry Animation ---
+          if (cardData.isEntering) {
+            cardData.entryProgress = Math.min(1, cardData.entryProgress + 0.02);
+            const easedProgress = 1 - Math.pow(1 - cardData.entryProgress, 4); // easeOutQuart
+
+            card.scale.set(easedProgress, easedProgress, easedProgress);
+            material.opacity = easedProgress;
+            
+            if (cardData.entryProgress >= 1) {
+                cardData.isEntering = false;
+                material.transparent = false; // Turn off for performance
+                material.opacity = 1;
+            }
+          }
           
           // Orbital motion around center point - much more subtle
-          const orbitProps = cardData.orbitProperties;
           orbitProps.angle += orbitProps.speed * 0.002;
           
           const basePositionX = Math.cos(orbitProps.angle) * orbitProps.radius;
@@ -321,26 +340,37 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
           material.color.setHex(parseInt(cardData.cardData.color.slice(1), 16));
           material.color.multiplyScalar(brightness);
           
-          // 3D rotation with increased mouse influence and smoothing
-          card.rotation.x += (cardData.rotationSpeed.x * currentTime * 0.1 + mouseRef.current.y * mouseInfluence - card.rotation.x) * 0.1;
-          card.rotation.y += (cardData.rotationSpeed.y * currentTime * 0.1 + mouseRef.current.x * mouseInfluence - card.rotation.y) * 0.1;
-          card.rotation.z += (cardData.rotationSpeed.z * currentTime * 0.1 + orbitProps.angle * 0.05 - card.rotation.z) * 0.1;
+          // --- New Rotation Logic ---
+          // Update base rotation (slow, constant spin)
+          cardData.baseRotation.x += cardData.rotationSpeed.x;
+          cardData.baseRotation.y += cardData.rotationSpeed.y;
+          cardData.baseRotation.z += cardData.rotationSpeed.z;
+          
+          // Interpolate current rotation towards base rotation + mouse influence
+          const targetRotationX = cardData.baseRotation.x + mouseRef.current.y * mouseInfluence;
+          const targetRotationY = cardData.baseRotation.y + mouseRef.current.x * mouseInfluence;
+
+          card.rotation.x += (targetRotationX - card.rotation.x) * 0.05;
+          card.rotation.y += (targetRotationY - card.rotation.y) * 0.05;
+          card.rotation.z += (cardData.baseRotation.z - card.rotation.z) * 0.05;
           
           // Card flipping logic - much slower
-          cardData.flipCooldown -= 16;
-          if (cardData.flipCooldown <= 0 && currentTime > cardData.nextFlipTime) {
-            cardData.isFlipped = !cardData.isFlipped;
-            cardData.flipCooldown = 8000;
-            cardData.nextFlipTime = currentTime + Math.random() * 15000 + 20000;
-            
-            // Visual indication of flip
-            card.rotation.y += Math.PI;
-            
-            // Subtle color shift for flip indication
-            if (cardData.isFlipped) {
-              material.color.multiplyScalar(0.9);
-            } else {
-              material.color.setHex(parseInt(cardData.cardData.color.slice(1), 16));
+          if (!cardData.isEntering) {
+            cardData.flipCooldown -= 16;
+            if (cardData.flipCooldown <= 0 && currentTime > cardData.nextFlipTime) {
+              cardData.isFlipped = !cardData.isFlipped;
+              cardData.flipCooldown = 8000;
+              cardData.nextFlipTime = currentTime + Math.random() * 15000 + 20000;
+              
+              // Visual indication of flip
+              card.rotation.y += Math.PI;
+              
+              // Subtle color shift for flip indication
+              if (cardData.isFlipped) {
+                material.color.multiplyScalar(0.9);
+              } else {
+                material.color.setHex(parseInt(cardData.cardData.color.slice(1), 16));
+              }
             }
           }
           
