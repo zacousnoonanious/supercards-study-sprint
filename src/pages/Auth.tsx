@@ -26,12 +26,54 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useI18n();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useReactEffect(() => {
     if (user) {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  // Effect for 3D card tilt
+  useEffect(() => {
+    const card = cardRef.current;
+    const container = containerRef.current;
+    if (!card || !container) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const { left, top, width, height } = container.getBoundingClientRect();
+      const x = e.clientX - left;
+      const y = e.clientY - top;
+
+      // Normalize mouse position from -1 to 1
+      const normalizedX = (x / width) * 2 - 1;
+      const normalizedY = (y / height) * 2 - 1;
+
+      const rotateX = -normalizedY * 10; // max 10deg rotation
+      const rotateY = normalizedX * 10; // max 10deg rotation
+
+      requestAnimationFrame(() => {
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
+      });
+    };
+
+    const handleMouseLeave = () => {
+      requestAnimationFrame(() => {
+        if (card) {
+          card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+        }
+      });
+    };
+
+    container.addEventListener('mousemove', handleMouseMove);
+    container.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      container.removeEventListener('mousemove', handleMouseMove);
+      container.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
 
   // Password strength calculation
   const getPasswordStrength = (password: string) => {
@@ -219,8 +261,8 @@ const Auth = () => {
       <WebGLFlashcards flashcards={flashcardFacts} />
 
       {/* Content */}
-      <div className="relative z-10 h-full flex items-center justify-center p-4 pt-16 pb-4">
-        <Card className="w-full max-w-sm md:max-w-md bg-white/10 backdrop-blur-lg border-white/20 shadow-2xl">
+      <div ref={containerRef} className="relative z-10 h-full flex items-center justify-center p-4 pt-16 pb-4">
+        <Card ref={cardRef} className="w-full max-w-sm md:max-w-md bg-white/10 backdrop-blur-lg border-white/20 shadow-2xl transition-transform duration-300 ease-out will-change-transform">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl md:text-3xl font-bold text-white">{t('auth.title')}</CardTitle>
             <CardDescription className="text-white/80 text-sm">
