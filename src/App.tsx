@@ -38,7 +38,7 @@ function App() {
                   <Route path="/create-set" element={<ProtectedRoute><CreateSet /></ProtectedRoute>} />
                   <Route path="/set/:id" element={<ProtectedRoute><SetView /></ProtectedRoute>} />
                   <Route path="/editor/:setId/:cardId?" element={<ProtectedRoute><CardEditorPage /></ProtectedRoute>} />
-                  <Route path="/study/:setId" element={<ProtectedRoute><StudyMode /></ProtectedRoute>} />
+                  <Route path="/study/:id" element={<ProtectedRoute><StudyMode /></ProtectedRoute>} />
                   <Route path="/decks" element={<ProtectedRoute><Decks /></ProtectedRoute>} />
                   <Route path="/join/:token" element={<ProtectedRoute><JoinDeck /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
