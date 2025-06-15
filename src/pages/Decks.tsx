@@ -1,110 +1,111 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useI18n } from '@/contexts/I18nContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { Navigation } from '@/components/Navigation';
-import { useOrganization } from '@/contexts/OrganizationContext';
-import { DecksHeader } from '@/components/DecksHeader';
-import { EmptyDecksState } from '@/components/EmptyDecksState';
-import { DeckCard } from '@/components/DeckCard';
 
-interface FlashcardSet {
-  id: string;
-  title: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { supabase } from '@/integrations/supabase/client';
+import { DecksHeader } from '@/components/DecksHeader';
+import { DeckCard } from '@/components/DeckCard';
+import { EmptyDecksState } from '@/components/EmptyDecksState';
+import { LoadingSkeletons } from '@/components/LoadingSkeletons';
+import { SRSProgress } from '@/components/SRSProgress';
+import { useDataPrefetcher } from '@/hooks/useDataPrefetcher';
 
 const Decks = () => {
   const { user } = useAuth();
-  const { t } = useI18n();
-  const { currentOrganization, userOrganizations, isLoading: orgLoading } = useOrganization();
-  const [sets, setSets] = useState<FlashcardSet[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const { currentOrganization } = useOrganization();
+  const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    fetchSets();
-  }, [user, navigate]);
+  useDataPrefetcher(user?.id);
 
-  const fetchSets = async () => {
-    try {
-      console.log('Fetching sets for user:', user?.id);
+  const { data: flashcardSets = [], isLoading } = useQuery({
+    queryKey: ['flashcard_sets', user?.id, currentOrganization?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
       
-      // Simplified query - just get user's sets based on RLS policies
-      const { data, error } = await supabase
+      let query = supabase
         .from('flashcard_sets')
         .select('*')
         .order('updated_at', { ascending: false });
 
+      if (currentOrganization?.id) {
+        query = query.eq('organization_id', currentOrganization.id);
+      } else {
+        query = query.is('organization_id', null).eq('user_id', user.id);
+      }
+
+      const { data, error } = await query;
       if (error) {
-        console.error('Error fetching sets:', error);
+        console.error('Error fetching flashcard sets:', error);
         throw error;
       }
-      
-      console.log('Sets fetched successfully:', data);
-      setSets(data || []);
-    } catch (error) {
-      console.error('Error fetching sets:', error);
-      toast({
-        title: t('error.general'),
-        description: t('decks.loadError'),
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
 
-  const handleDeleteSet = (deletedSetId: string) => {
-    setSets(sets.filter(set => set.id !== deletedSetId));
-  };
+  const filteredSets = flashcardSets.filter(set =>
+    set.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (set.description && set.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  if (orgLoading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg text-foreground">{t('common.loading')}</div>
+      <div className="container mx-auto p-6 space-y-6">
+        <LoadingSkeletons.DecksHeader />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-1">
+            <LoadingSkeletons.SRSProgress />
+          </div>
+          <div className="lg:col-span-3">
+            <LoadingSkeletons.DeckGrid />
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (loading) {
+  if (flashcardSets.length === 0) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg text-foreground">{t('common.loading')}</div>
+      <div className="container mx-auto p-6 space-y-6">
+        <DecksHeader searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-1">
+            <SRSProgress />
+          </div>
+          <div className="lg:col-span-3">
+            <EmptyDecksState />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <DecksHeader currentOrganization={currentOrganization} />
-
-        {sets.length === 0 ? (
-          <EmptyDecksState />
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {sets.map(set => (
-              <DeckCard 
-                key={set.id} 
-                set={set} 
-                onDelete={handleDeleteSet}
-              />
-            ))}
-          </div>
-        )}
-      </main>
+    <div className="container mx-auto p-6 space-y-6">
+      <DecksHeader searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* SRS Progress Sidebar */}
+        <div className="lg:col-span-1">
+          <SRSProgress />
+        </div>
+        
+        {/* Decks Grid */}
+        <div className="lg:col-span-3">
+          {filteredSets.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No decks found matching your search.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredSets.map((set) => (
+                <DeckCard key={set.id} set={set} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -50,6 +50,50 @@ export type Database = {
           },
         ]
       }
+      card_reviews: {
+        Row: {
+          card_id: string
+          created_at: string
+          ease_factor: number
+          id: string
+          interval_days: number
+          next_review: string
+          reviewed_at: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          next_review: string
+          reviewed_at?: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          next_review?: string
+          reviewed_at?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_reviews_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "flashcards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deck_collaborators: {
         Row: {
           accepted_at: string | null
@@ -685,6 +729,160 @@ export type Database = {
         }
         Relationships: []
       }
+      study_sessions: {
+        Row: {
+          cards_reviewed: number | null
+          correct_answers: number | null
+          created_at: string
+          ended_at: string | null
+          id: string
+          incorrect_answers: number | null
+          organization_id: string | null
+          set_id: string
+          srs_enabled: boolean | null
+          started_at: string
+          study_mode: string | null
+          total_time_seconds: number | null
+          user_id: string
+        }
+        Insert: {
+          cards_reviewed?: number | null
+          correct_answers?: number | null
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          incorrect_answers?: number | null
+          organization_id?: string | null
+          set_id: string
+          srs_enabled?: boolean | null
+          started_at?: string
+          study_mode?: string | null
+          total_time_seconds?: number | null
+          user_id: string
+        }
+        Update: {
+          cards_reviewed?: number | null
+          correct_answers?: number | null
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          incorrect_answers?: number | null
+          organization_id?: string | null
+          set_id?: string
+          srs_enabled?: boolean | null
+          started_at?: string
+          study_mode?: string | null
+          total_time_seconds?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_sessions_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "flashcard_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_badges: {
+        Row: {
+          badge_description: string | null
+          badge_name: string
+          badge_type: string
+          earned_at: string
+          id: string
+          metadata: Json | null
+          organization_id: string | null
+          user_id: string
+        }
+        Insert: {
+          badge_description?: string | null
+          badge_name: string
+          badge_type: string
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          organization_id?: string | null
+          user_id: string
+        }
+        Update: {
+          badge_description?: string | null
+          badge_name?: string
+          badge_type?: string
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          organization_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_card_stats: {
+        Row: {
+          card_id: string
+          correct_reviews: number | null
+          created_at: string
+          current_ease_factor: number | null
+          current_interval_days: number | null
+          id: string
+          last_reviewed_at: string | null
+          next_review_date: string | null
+          total_reviews: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          correct_reviews?: number | null
+          created_at?: string
+          current_ease_factor?: number | null
+          current_interval_days?: number | null
+          id?: string
+          last_reviewed_at?: string | null
+          next_review_date?: string | null
+          total_reviews?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          correct_reviews?: number | null
+          created_at?: string
+          current_ease_factor?: number | null
+          current_interval_days?: number | null
+          id?: string
+          last_reviewed_at?: string | null
+          next_review_date?: string | null
+          total_reviews?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_card_stats_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "flashcards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_restrictions: {
         Row: {
           block_deck_creation: boolean | null
@@ -735,6 +933,53 @@ export type Database = {
           },
         ]
       }
+      user_stats: {
+        Row: {
+          created_at: string
+          current_streak: number | null
+          id: string
+          last_study_date: string | null
+          longest_streak: number | null
+          organization_id: string | null
+          total_cards_reviewed: number | null
+          total_study_time_seconds: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number | null
+          id?: string
+          last_study_date?: string | null
+          longest_streak?: number | null
+          organization_id?: string | null
+          total_cards_reviewed?: number | null
+          total_study_time_seconds?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number | null
+          id?: string
+          last_study_date?: string | null
+          longest_streak?: number | null
+          organization_id?: string | null
+          total_cards_reviewed?: number | null
+          total_study_time_seconds?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_stats_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -743,6 +988,18 @@ export type Database = {
       accept_organization_invite: {
         Args: { invite_token: string; user_id: string }
         Returns: boolean
+      }
+      calculate_srs_values: {
+        Args: {
+          current_score: number
+          previous_ease_factor?: number
+          previous_interval?: number
+        }
+        Returns: {
+          new_ease_factor: number
+          new_interval: number
+          next_review_date: string
+        }[]
       }
       cleanup_old_editing_sessions: {
         Args: Record<PropertyKey, never>
@@ -768,6 +1025,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_cards_due_for_review: {
+        Args: { p_user_id: string; p_limit?: number }
+        Returns: {
+          card_id: string
+          set_id: string
+          next_review_date: string
+          current_ease_factor: number
+          total_reviews: number
+        }[]
+      }
       get_organizations_by_email_domain: {
         Args: { p_email: string }
         Returns: {
@@ -791,6 +1058,10 @@ export type Database = {
           invite_role?: string
         }
         Returns: string
+      }
+      update_user_streak: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
       verify_invite_password: {
         Args: { invite_token: string; password?: string }

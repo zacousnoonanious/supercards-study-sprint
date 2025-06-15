@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,6 +5,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Flashcard } from '@/types/flashcard';
+import { useSRS } from '@/hooks/useSRS';
 
 interface FlashcardSet {
   id: string;
@@ -26,6 +26,7 @@ export const useStudyMode = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const { recordCardReview, startStudySession, endStudySession } = useSRS();
 
   console.log('useStudyMode: Initialized with setId:', setId);
 
@@ -40,6 +41,13 @@ export const useStudyMode = () => {
   const [hasAnswered, setHasAnswered] = useState(false);
   const [flipCount, setFlipCount] = useState(0);
   const [currentTimer, setCurrentTimer] = useState<NodeJS.Timeout | null>(null);
+  const [studySessionId, setStudySessionId] = useState<string | null>(null);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [sessionStats, setSessionStats] = useState({
+    cardsReviewed: 0,
+    correctAnswers: 0,
+    incorrectAnswers: 0
+  });
 
   const shuffleParam = searchParams.get('shuffle') === 'true';
   const modeParam = searchParams.get('mode') || 'flashcard';
@@ -47,6 +55,7 @@ export const useStudyMode = () => {
   const timerParam = parseInt(searchParams.get('timer') || '0', 10);
   const hideHintsParam = searchParams.get('hideHints') === 'true';
   const singleAttemptParam = searchParams.get('singleAttempt') === 'true';
+  const srsEnabledParam = searchParams.get('srs') === 'true';
 
   const [shuffle, setShuffle] = useState(shuffleParam);
   const [mode, setMode] = useState<'flashcard' | 'quiz' | 'mixed'>(modeParam as 'flashcard' | 'quiz' | 'mixed');
@@ -54,8 +63,20 @@ export const useStudyMode = () => {
   const [countdownTimer, setCountdownTimer] = useState(timerParam);
   const [hideHints, setHideHints] = useState(hideHintsParam);
   const [singleAttempt, setSingleAttempt] = useState(singleAttemptParam);
+  const [srsEnabled, setSrsEnabled] = useState(srsEnabledParam);
 
   const currentCard = shuffledCards[currentCardIndex];
+
+  // ... keep existing code (getActiveTimer, shuffleArray functions)
+
+  const shuffleArray = (array: any[]) => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  };
 
   const getActiveTimer = () => {
     if (!currentCard) return 0;
@@ -69,15 +90,6 @@ export const useStudyMode = () => {
     } else {
       return frontTimer || globalTimer;
     }
-  };
-
-  const shuffleArray = (array: any[]) => {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
   };
 
   const applyStudySettings = (cardsToShuffle: Flashcard[]) => {
@@ -243,6 +255,15 @@ export const useStudyMode = () => {
       // Apply study settings immediately with the fetched cards
       applyStudySettings(transformedCards);
       
+      // Start study session
+      if (!studySessionId && user?.id) {
+        const session = await startStudySession(setId, mode, srsEnabled);
+        if (session) {
+          setStudySessionId(session.id);
+          setSessionStartTime(new Date());
+        }
+      }
+      
     } catch (error) {
       console.error('StudyMode: Error in fetchSetAndCards:', error);
       toast({
@@ -304,9 +325,22 @@ export const useStudyMode = () => {
     }
   };
 
-  const handleAnswerSubmit = (isCorrect: boolean) => {
+  const handleAnswerSubmit = async (isCorrect: boolean) => {
     setHasAnswered(true);
     setAnswerResult(isCorrect);
+
+    // Update session stats
+    setSessionStats(prev => ({
+      cardsReviewed: prev.cardsReviewed + 1,
+      correctAnswers: prev.correctAnswers + (isCorrect ? 1 : 0),
+      incorrectAnswers: prev.incorrectAnswers + (isCorrect ? 0 : 1)
+    }));
+
+    // Record SRS review if enabled
+    if (srsEnabled && currentCard) {
+      const score = isCorrect ? 4 : 1; // Simple mapping for now
+      await recordCardReview(currentCard.id, score);
+    }
   };
 
   const handleNextCard = () => {
@@ -318,10 +352,25 @@ export const useStudyMode = () => {
       setHasAnswered(false);
       setFlipCount(0);
     } else {
+      // End study session
+      handleEndSession();
       toast({
         title: t('study.deckComplete'),
         description: t('study.deckCompleteMessage'),
       });
+    }
+  };
+
+  const handleEndSession = async () => {
+    if (studySessionId && sessionStartTime) {
+      const totalTimeSeconds = Math.floor((new Date().getTime() - sessionStartTime.getTime()) / 1000);
+      await endStudySession(
+        studySessionId,
+        totalTimeSeconds,
+        sessionStats.cardsReviewed,
+        sessionStats.correctAnswers,
+        sessionStats.incorrectAnswers
+      );
     }
   };
 
@@ -369,6 +418,13 @@ export const useStudyMode = () => {
     }
   }, [currentCardIndex]);
 
+  // Cleanup session on unmount
+  useEffect(() => {
+    return () => {
+      handleEndSession();
+    };
+  }, []);
+
   return {
     // State
     set,
@@ -389,6 +445,8 @@ export const useStudyMode = () => {
     countdownTimer,
     hideHints,
     singleAttempt,
+    srsEnabled,
+    sessionStats,
     // Setters
     setShuffle,
     setMode,
@@ -396,6 +454,7 @@ export const useStudyMode = () => {
     setCountdownTimer,
     setHideHints,
     setSingleAttempt,
+    setSrsEnabled,
     setCurrentTimer,
     setFlipCount,
     // Methods
