@@ -1,9 +1,15 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -11,7 +17,8 @@ import { FlashcardSet, Flashcard, CanvasElement } from '@/types/flashcard';
 import { 
   Type, Image, Video, Music, Square, CheckSquare, 
   Circle, PenTool, Youtube, BookOpen, Save, Plus,
-  ArrowLeft, ArrowRight, Grid, Eye, EyeOff, Settings
+  ArrowLeft, ArrowRight, Grid, Eye, EyeOff, Settings,
+  AlignLeft, AlignCenter, AlignRight, StretchHorizontal, StretchVertical
 } from 'lucide-react';
 
 interface LockableToolbarProps {
@@ -28,7 +35,7 @@ interface LockableToolbarProps {
   onCreateNewCardWithLayout: () => void;
   onDeleteCard: () => void;
   onSave: () => void;
-  onAutoArrange: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'scale-to-fit') => void;
+  onAutoArrange: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'scale-to-fit' | 'align-elements-left' | 'align-elements-center' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical') => void;
   isBackSideDisabled?: boolean;
   showGrid?: boolean;
   onToggleGrid?: () => void;
@@ -203,21 +210,52 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
         <Separator orientation="vertical" className="h-6" />
 
         {/* Arrange */}
-        <Select onValueChange={(value) => onAutoArrange(value as any)}>
-          <SelectTrigger className="w-32 h-8">
-            <SelectValue placeholder={t('toolbar.arrange')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="grid">{t('toolbar.arrangeGrid')}</SelectItem>
-            <SelectItem value="center">{t('toolbar.arrangeCenter')}</SelectItem>
-            <SelectItem value="justify">{t('toolbar.arrangeJustify')}</SelectItem>
-            <SelectItem value="stack">{t('toolbar.arrangeStack')}</SelectItem>
-            <SelectItem value="align-left">{t('toolbar.arrangeAlignLeft')}</SelectItem>
-            <SelectItem value="align-center">{t('toolbar.arrangeAlignCenter')}</SelectItem>
-            <SelectItem value="align-right">{t('toolbar.arrangeAlignRight')}</SelectItem>
-            <SelectItem value="scale-to-fit">{t('toolbar.arrangeScaleToFit')}</SelectItem>
-          </SelectContent>
-        </Select>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-32 h-8">
+              {t('toolbar.arrange')}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>{t('toolbar.arrange')}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onAutoArrange('grid')}>{t('toolbar.arrangeGrid')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAutoArrange('center')}>{t('toolbar.arrangeCenter')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAutoArrange('justify')}>{t('toolbar.arrangeJustify')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAutoArrange('stack')}>{t('toolbar.arrangeStack')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAutoArrange('scale-to-fit')}>{t('toolbar.arrangeScaleToFit')}</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>{t('toolbar.arrangeElements')}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onAutoArrange('align-elements-left')}>
+              <AlignLeft className="mr-2 h-4 w-4" />
+              <span>{t('toolbar.arrangeAlignElementsLeft')}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAutoArrange('align-elements-center')}>
+              <AlignCenter className="mr-2 h-4 w-4" />
+              <span>{t('toolbar.arrangeAlignElementsCenter')}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAutoArrange('align-elements-right')}>
+              <AlignRight className="mr-2 h-4 w-4" />
+              <span>{t('toolbar.arrangeAlignElementsRight')}</span>
+            </DropdownMenuItem>
+             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onAutoArrange('distribute-horizontal')}>
+              <StretchHorizontal className="mr-2 h-4 w-4" />
+              <span>{t('toolbar.arrangeDistributeHorizontal')}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAutoArrange('distribute-vertical')}>
+              <StretchVertical className="mr-2 h-4 w-4" />
+              <span>{t('toolbar.arrangeDistributeVertical')}</span>
+            </DropdownMenuItem>
+             <DropdownMenuSeparator />
+            <DropdownMenuLabel>Text Alignment</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onAutoArrange('align-left')}>{t('toolbar.arrangeAlignLeft')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAutoArrange('align-center')}>{t('toolbar.arrangeAlignCenter')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAutoArrange('align-right')}>{t('toolbar.arrangeAlignRight')}</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Separator orientation="vertical" className="h-6" />
 

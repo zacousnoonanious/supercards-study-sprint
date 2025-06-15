@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { updateFlashcardSet } from '@/lib/api/sets';
@@ -77,8 +76,10 @@ export const useCardEditorHandlers = ({
     }
   };
 
-  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => {
-    const currentSide = 'front'; // This should come from props
+  const handleAutoArrange = (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'align-elements-center' | 'distribute-horizontal' | 'distribute-vertical') => {
+    // NOTE: This currently only works for the front side of the card.
+    // A future update could pass the current side to this handler.
+    const currentSide = 'front';
     const elements = currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements;
     if (elements.length === 0) return;
 
@@ -153,6 +154,58 @@ export const useCardEditorHandlers = ({
             };
           }
         });
+        break;
+
+      case 'align-elements-left':
+        updatedElements.forEach((element, index) => {
+          updatedElements[index] = { ...element, x: 10 };
+        });
+        break;
+      
+      case 'align-elements-center':
+        updatedElements.forEach((element, index) => {
+          updatedElements[index] = { ...element, x: (cardWidth - element.width) / 2 };
+        });
+        break;
+        
+      case 'align-elements-right':
+        updatedElements.forEach((element, index) => {
+          updatedElements[index] = { ...element, x: cardWidth - element.width - 10 };
+        });
+        break;
+
+      case 'distribute-horizontal':
+        if (elements.length > 1) {
+          const sortedElements = [...elements].sort((a, b) => a.x - b.x);
+          const totalWidth = sortedElements.reduce((sum, el) => sum + el.width, 0);
+          const totalSpacing = cardWidth - totalWidth;
+          const spacing = totalSpacing / (elements.length + 1);
+          let currentX = spacing;
+          sortedElements.forEach(element => {
+            const index = updatedElements.findIndex(el => el.id === element.id);
+            if (index !== -1) {
+              updatedElements[index] = { ...updatedElements[index], x: currentX };
+              currentX += element.width + spacing;
+            }
+          });
+        }
+        break;
+
+      case 'distribute-vertical':
+        if (elements.length > 1) {
+          const sortedElements = [...elements].sort((a, b) => a.y - b.y);
+          const totalHeight = sortedElements.reduce((sum, el) => sum + el.height, 0);
+          const totalSpacing = cardHeight - totalHeight;
+          const spacing = totalSpacing / (elements.length + 1);
+          let currentY = spacing;
+          sortedElements.forEach(element => {
+            const index = updatedElements.findIndex(el => el.id === element.id);
+            if (index !== -1) {
+              updatedElements[index] = { ...updatedElements[index], y: currentY };
+              currentY += element.height + spacing;
+            }
+          });
+        }
         break;
     }
 
