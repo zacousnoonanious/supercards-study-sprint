@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { ParsedCard } from '@/types/import';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { AnkiImportPreview } from './AnkiImportPreview';
 
 interface ImportPreviewProps {
   cards: ParsedCard[];
@@ -18,11 +18,12 @@ interface ImportPreviewProps {
 }
 
 export const ImportPreview: React.FC<ImportPreviewProps> = ({
-  cards,
+  cards: initialCards,
   sourceInfo,
   onImportComplete,
   onBack
 }) => {
+  const [cards, setCards] = useState(initialCards);
   const [selectedDeckId, setSelectedDeckId] = useState<string>('');
   const [isImporting, setIsImporting] = useState(false);
   const [showAllCards, setShowAllCards] = useState(false);
@@ -120,7 +121,12 @@ export const ImportPreview: React.FC<ImportPreviewProps> = ({
             color: '#000000'
           }
         ],
-        metadata: card.metadata || {}
+        metadata: {
+          ...card.metadata,
+          tags: card.tags,
+          importSource: sourceInfo.type,
+          importedAt: new Date().toISOString()
+        }
       }));
 
       const { error: cardsError } = await supabase
@@ -156,8 +162,6 @@ export const ImportPreview: React.FC<ImportPreviewProps> = ({
     }
   };
 
-  const displayedCards = showAllCards ? cards : cards.slice(0, 5);
-
   return (
     <div className="space-y-4 max-h-[70vh] overflow-y-auto">
       <div className="flex items-center justify-between">
@@ -187,39 +191,43 @@ export const ImportPreview: React.FC<ImportPreviewProps> = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium">Preview Cards</h3>
-            {cards.length > 5 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAllCards(!showAllCards)}
-                className="flex items-center gap-2"
-              >
-                {showAllCards ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                {showAllCards ? 'Show less' : `Show all ${cards.length}`}
-              </Button>
-            )}
-          </div>
+        {sourceInfo.type === 'anki' ? (
+          <AnkiImportPreview cards={cards} onCardsChange={setCards} />
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">Preview Cards</h3>
+              {cards.length > 5 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAllCards(!showAllCards)}
+                  className="flex items-center gap-2"
+                >
+                  {showAllCards ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showAllCards ? 'Show less' : `Show all ${cards.length}`}
+                </Button>
+              )}
+            </div>
 
-          <div className="grid gap-2 max-h-60 overflow-y-auto">
-            {displayedCards.map((card, index) => (
-              <Card key={index} className="p-3">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="font-medium text-xs text-muted-foreground mb-1">Front</p>
-                    <p className="truncate">{card.front}</p>
+            <div className="grid gap-2 max-h-60 overflow-y-auto">
+              {(showAllCards ? cards : cards.slice(0, 5)).map((card, index) => (
+                <Card key={index} className="p-3">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="font-medium text-xs text-muted-foreground mb-1">Front</p>
+                      <p className="truncate">{card.front}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-xs text-muted-foreground mb-1">Back</p>
+                      <p className="truncate">{card.back}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-xs text-muted-foreground mb-1">Back</p>
-                    <p className="truncate">{card.back}</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex gap-2 pt-4 border-t">
           <Button 
