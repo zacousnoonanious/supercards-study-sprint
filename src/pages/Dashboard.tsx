@@ -6,12 +6,13 @@ import { OptionalOrganizationSetup } from '@/components/OptionalOrganizationSetu
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Plus, BookOpen, Users, BarChart3, Building, UserPlus } from 'lucide-react';
+import { Plus, BookOpen, Users, BarChart3, Building, UserPlus, Upload } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { RecentDecks } from '@/components/dashboard/RecentDecks';
 import { Onboarding } from '@/components/Onboarding';
 import { useToast } from '@/hooks/use-toast';
+import { ImportFlashcardsDialog } from '@/components/ImportFlashcardsDialog';
 
 interface FlashcardSet {
   id: string;
@@ -213,6 +214,14 @@ const Dashboard = () => {
                   {t('dashboard.createNewDeck')}
                 </Button>
               </Link>
+              <ImportFlashcardsDialog
+                trigger={
+                  <Button variant="outline" className="w-full justify-start">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import Content
+                  </Button>
+                }
+              />
               <Link to="/decks">
                 <Button variant="outline" className="w-full justify-start">
                   <BookOpen className="mr-2 h-4 w-4" />
