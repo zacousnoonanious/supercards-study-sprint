@@ -30,6 +30,77 @@ export const HeroSection = () => {
       <GlobalStyles />
       <style dangerouslySetInnerHTML={{
         __html: `
+          @keyframes sparkle-1 {
+            0%, 100% { 
+              opacity: 0;
+              transform: scale(0) rotate(0deg);
+            }
+            50% { 
+              opacity: 1;
+              transform: scale(1) rotate(180deg);
+            }
+          }
+          
+          @keyframes sparkle-2 {
+            0%, 100% { 
+              opacity: 0;
+              transform: scale(0) rotate(0deg);
+            }
+            25% { 
+              opacity: 0.8;
+              transform: scale(0.8) rotate(90deg);
+            }
+            75% { 
+              opacity: 0.8;
+              transform: scale(0.8) rotate(270deg);
+            }
+          }
+          
+          @keyframes sparkle-3 {
+            0%, 100% { 
+              opacity: 0;
+              transform: scale(0) rotate(45deg);
+            }
+            33% { 
+              opacity: 1;
+              transform: scale(1.2) rotate(225deg);
+            }
+            66% { 
+              opacity: 0.6;
+              transform: scale(0.6) rotate(405deg);
+            }
+          }
+          
+          @keyframes sparkle-4 {
+            0%, 100% { 
+              opacity: 0;
+              transform: scale(0) rotate(30deg);
+            }
+            40% { 
+              opacity: 0.9;
+              transform: scale(1.1) rotate(210deg);
+            }
+            80% { 
+              opacity: 0.7;
+              transform: scale(0.9) rotate(390deg);
+            }
+          }
+          
+          @keyframes sparkle-5 {
+            0%, 100% { 
+              opacity: 0;
+              transform: scale(0) rotate(60deg);
+            }
+            20% { 
+              opacity: 0.7;
+              transform: scale(0.7) rotate(240deg);
+            }
+            60% { 
+              opacity: 1;
+              transform: scale(1.3) rotate(420deg);
+            }
+          }
+          
           @keyframes rainbow-shift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -191,6 +262,89 @@ export const HeroSection = () => {
             -webkit-text-fill-color: white;
             text-shadow: none;
             filter: none;
+          }
+          
+          .particle-container {
+            position: relative;
+            display: inline-block;
+          }
+          
+          .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
+          }
+          
+          .sparkle {
+            position: absolute;
+            pointer-events: none;
+            color: #FFD700;
+            font-size: 16px;
+            z-index: 1;
+          }
+          
+          .sparkle:nth-child(19) { 
+            top: 10%; 
+            left: 5%; 
+            animation: sparkle-1 2.5s ease-in-out infinite;
+            animation-delay: 0.2s;
+          }
+          .sparkle:nth-child(20) { 
+            top: 80%; 
+            left: 95%; 
+            animation: sparkle-2 3s ease-in-out infinite;
+            animation-delay: 0.8s;
+          }
+          .sparkle:nth-child(21) { 
+            top: 25%; 
+            left: 10%; 
+            animation: sparkle-3 2.8s ease-in-out infinite;
+            animation-delay: 1.2s;
+          }
+          .sparkle:nth-child(22) { 
+            top: 70%; 
+            left: 85%; 
+            animation: sparkle-4 2.3s ease-in-out infinite;
+            animation-delay: 0.5s;
+          }
+          .sparkle:nth-child(23) { 
+            top: 5%; 
+            left: 90%; 
+            animation: sparkle-5 3.2s ease-in-out infinite;
+            animation-delay: 1.5s;
+          }
+          .sparkle:nth-child(24) { 
+            top: 90%; 
+            left: 15%; 
+            animation: sparkle-1 2.7s ease-in-out infinite;
+            animation-delay: 0.9s;
+          }
+          .sparkle:nth-child(25) { 
+            top: 40%; 
+            left: 3%; 
+            animation: sparkle-3 2.4s ease-in-out infinite;
+            animation-delay: 1.8s;
+          }
+          .sparkle:nth-child(26) { 
+            top: 60%; 
+            left: 97%; 
+            animation: sparkle-2 2.9s ease-in-out infinite;
+            animation-delay: 0.3s;
+          }
+          .sparkle:nth-child(27) { 
+            top: 15%; 
+            left: 80%; 
+            animation: sparkle-4 3.1s ease-in-out infinite;
+            animation-delay: 1.1s;
+          }
+          .sparkle:nth-child(28) { 
+            top: 85%; 
+            left: 20%; 
+            animation: sparkle-5 2.6s ease-in-out infinite;
+            animation-delay: 0.7s;
           }
           
           .particle-container {
@@ -442,47 +596,39 @@ export const HeroSection = () => {
           <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight">
             <span className="particle-container rainbow-text" data-text="Smarter">
               Smarter
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
             </span>
             <span> Cards.</span>
             <br />
             <span className="particle-container rainbow-text" data-text="Better">
               Better
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
-              <div className="particle"></div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
+              <div className="sparkle">✨</div>
             </span>
             <span> Learning.</span>
           </h1>
