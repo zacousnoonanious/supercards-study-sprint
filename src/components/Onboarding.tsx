@@ -30,16 +30,16 @@ const WelcomeStep = ({ onNext }: { onNext: () => void }) => {
   return (
     <Card className="animate-fade-in">
       <CardHeader>
-        <CardTitle className="text-2xl">Welcome to SuperCards!</CardTitle>
-        <CardDescription>Let's get you set up in just a moment.</CardDescription>
+        <CardTitle className="text-2xl">{t('welcomeToSuperCards')}</CardTitle>
+        <CardDescription>{t('letsGetYouSetUpInJustAMoment')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <label className="text-sm font-medium mb-2 block">First, please confirm your language:</label>
+          <label className="text-sm font-medium mb-2 block">{t('firstPleaseConfirmYourLanguage')}</label>
           <OnboardingLanguageSelector />
         </div>
         <Button onClick={onNext} className="w-full">
-          Next <ArrowRight className="ml-2 h-4 w-4" />
+          {t('common.next')} <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </CardContent>
     </Card>
@@ -56,7 +56,7 @@ const OrgStep = ({ onComplete }: { onComplete: () => void }) => {
        onComplete();
     } else {
         // Placeholder for future implementation
-        alert("This feature is coming soon! For now, you can continue as an individual.");
+        alert(t('thisFeatureIsComingSoonForNowYouCanContinueAsAnIndividual'));
         onComplete();
     }
   };
@@ -64,29 +64,29 @@ const OrgStep = ({ onComplete }: { onComplete: () => void }) => {
   return (
     <Card className="animate-fade-in">
       <CardHeader>
-        <CardTitle>How will you be using SuperCards?</CardTitle>
-        <CardDescription>You can always change this later from your settings.</CardDescription>
+        <CardTitle>{t('howWillYouBeUsingSuperCards')}</CardTitle>
+        <CardDescription>{t('youCanAlwaysChangeThisLaterFromYourSettings')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <Button variant="outline" className="w-full h-auto p-4 justify-start text-left" onClick={() => handleSelection('create')}>
           <Building className="mr-4 h-6 w-6 flex-shrink-0" />
           <div>
-            <p className="font-semibold">Create an organization</p>
-            <p className="text-sm text-muted-foreground">Collaborate with your team on shared decks.</p>
+            <p className="font-semibold">{t('createAnOrganization')}</p>
+            <p className="text-sm text-muted-foreground">{t('collaborateWithYourTeamOnSharedDecks')}</p>
           </div>
         </Button>
         <Button variant="outline" className="w-full h-auto p-4 justify-start text-left" onClick={() => handleSelection('join')}>
           <Users className="mr-4 h-6 w-6 flex-shrink-0" />
           <div>
-            <p className="font-semibold">Join an organization</p>
-            <p className="text-sm text-muted-foreground">Join via an invite code or email.</p>
+            <p className="font-semibold">{t('joinAnOrganization')}</p>
+            <p className="text-sm text-muted-foreground">{t('joinViaAnInviteCodeOrEmail')}</p>
           </div>
         </Button>
         <Button variant="outline" className="w-full h-auto p-4 justify-start text-left" onClick={() => handleSelection('individual')}>
           <User className="mr-4 h-6 w-6 flex-shrink-0" />
           <div>
-            <p className="font-semibold">Use as an individual</p>
-            <p className="text-sm text-muted-foreground">For personal study and creating your own decks.</p>
+            <p className="font-semibold">{t('useAsAnIndividual')}</p>
+            <p className="text-sm text-muted-foreground">{t('forPersonalStudyAndCreatingYourOwnDecks')}</p>
           </div>
         </Button>
       </CardContent>
