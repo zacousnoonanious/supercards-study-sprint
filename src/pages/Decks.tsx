@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -80,7 +79,7 @@ const Decks = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg text-foreground">{t('loading')}</div>
+        <div className="text-lg text-foreground">{t('common.loading')}</div>
       </div>
     );
   }

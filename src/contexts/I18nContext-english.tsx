@@ -1,4 +1,3 @@
-
 export const englishTranslations = {
   common: {
     save: "Save",
@@ -169,6 +168,7 @@ export const englishTranslations = {
     showText: "Show Text",
     toggleView: "Toggle View",
     cardProgress: "Card {current} of {total}",
+    percentSign: "%",
   },
   editor: {
     content: "Content",
@@ -304,6 +304,7 @@ export const englishTranslations = {
     cardsText: "cards",
     timeUp: "Time's up!",
     continueStudying: "Continue Studying",
+    secondsLeft: "{count}s",
   },
   nav: {
     home: "Home",

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
@@ -78,7 +77,7 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
 
           {countdownTimer > 0 && timeLeft > 0 && (
             <div className="text-sm text-muted-foreground">
-              {timeLeft}s
+              {t('study.secondsLeft', { count: timeLeft })}
             </div>
           )}
         </div>

@@ -96,7 +96,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
               className="w-16 h-8 text-center text-sm"
               onBlur={() => setZoomInput(Math.round(zoom * 100).toString())}
             />
-            <span className="text-xs text-muted-foreground">%</span>
+            <span className="text-xs text-muted-foreground">{t('common.percentSign')}</span>
           </div>
           
           <Button
