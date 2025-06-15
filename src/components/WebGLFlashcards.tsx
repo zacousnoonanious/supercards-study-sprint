@@ -101,20 +101,44 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Enhanced lighting setup for cardboard effect
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    // Enhanced lighting setup for more realistic reflections
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
     directionalLight.position.set(5, 5, 5);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
     scene.add(directionalLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 0.5, 50);
+    const pointLight = new THREE.PointLight(0xffffff, 0.7, 50);
     pointLight.position.set(-5, 5, 5);
     scene.add(pointLight);
+
+    // Create a procedural normal map for a paper/cardboard texture
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = 256;
+    canvas.height = 256;
+    if (context) {
+        context.fillStyle = 'rgb(128, 128, 255)'; // Neutral normal color
+        context.fillRect(0, 0, 256, 256);
+        for (let i = 0; i < 4000; i++) {
+            const x = Math.random() * 256;
+            const y = Math.random() * 256;
+            const r = Math.random() * 1.5;
+            context.fillStyle = `rgba(${Math.floor(Math.random() * 50 + 100)}, ${Math.floor(Math.random() * 50 + 100)}, 255, ${Math.random() * 0.2})`;
+            context.beginPath();
+            context.arc(x, y, r, 0, Math.PI * 2);
+            context.fill();
+        }
+    }
+    const normalMap = new THREE.CanvasTexture(canvas);
+    normalMap.wrapS = THREE.RepeatWrapping;
+    normalMap.wrapT = THREE.RepeatWrapping;
+    normalMap.repeat.set(2, 2);
+    normalMap.needsUpdate = true;
 
     // Create flashcards
     const cards: THREE.Mesh[] = [];
@@ -124,27 +148,14 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       // Enhanced card geometry with thickness for 3D effect
       const geometry = new THREE.BoxGeometry(1.2, 0.8, 0.05);
       
-      // Add roughness texture simulation for cardboard effect
-      const grayscaleValues = [128, 140, 120, 135]; // 4 values for a 2x2 texture
-      const data = new Uint8Array(4 * 4);
-      for (let i = 0; i < grayscaleValues.length; i++) {
-        const v = grayscaleValues[i];
-        data[i * 4 + 0] = v; // R
-        data[i * 4 + 1] = v; // G
-        data[i * 4 + 2] = v; // B
-        data[i * 4 + 3] = 255; // A
-      }
-      const roughnessMap = new THREE.DataTexture(data, 2, 2, THREE.RGBAFormat);
-      roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
-      roughnessMap.repeat.set(4, 4);
-      roughnessMap.needsUpdate = true;
-      
-      // Create cardboard-like material with enhanced properties
+      // Create realistic paper/cardboard material
       const material = new THREE.MeshStandardMaterial({
         color: flashcard.color,
         side: THREE.DoubleSide,
-        roughness: 1,
-        roughnessMap: roughnessMap,
+        roughness: 0.6, // Less rough to allow some light reflection
+        metalness: 0.1, // A little bit of metalness for sheen
+        normalMap: normalMap, // Apply the paper texture
+        normalScale: new THREE.Vector2(0.05, 0.05), // Control the intensity of the bumps
       });
 
       const card = new THREE.Mesh(geometry, material);
@@ -268,7 +279,7 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       animationIdRef.current = requestAnimationFrame(animate);
 
       const currentTime = Date.now();
-      const mouseInfluence = 0.1;
+      const mouseInfluence = 0.4; // Increased mouse influence
       
       cards.forEach((card, index) => {
         const material = card.material as THREE.MeshStandardMaterial;
@@ -287,15 +298,14 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
           const orbitProps = cardData.orbitProperties;
           orbitProps.angle += orbitProps.speed * 0.002;
           
-          // Calculate new position
-          card.position.x = Math.cos(orbitProps.angle) * orbitProps.radius;
-          card.position.y = Math.sin(orbitProps.angle) * orbitProps.radius + orbitProps.height;
-          
-          // Add very subtle mouse influence
-          const mouseDistanceX = mouseRef.current.x * 1;
-          const mouseDistanceY = mouseRef.current.y * 1;
-          card.position.x += mouseDistanceX * mouseInfluence;
-          card.position.y += mouseDistanceY * mouseInfluence;
+          const basePositionX = Math.cos(orbitProps.angle) * orbitProps.radius;
+          const basePositionY = Math.sin(orbitProps.angle) * orbitProps.radius + orbitProps.height;
+
+          // Add mouse influence with smooth interpolation
+          const mouseDistanceX = mouseRef.current.x * 2;
+          const mouseDistanceY = mouseRef.current.y * 2;
+          card.position.x += (basePositionX + mouseDistanceX * mouseInfluence - card.position.x) * 0.1;
+          card.position.y += (basePositionY + mouseDistanceY * mouseInfluence - card.position.y) * 0.1;
           
           // Calculate distance from center for blur effect
           const distanceFromCenter = Math.sqrt(
@@ -311,10 +321,10 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
           material.color.setHex(parseInt(cardData.cardData.color.slice(1), 16));
           material.color.multiplyScalar(brightness);
           
-          // Much more subtle 3D rotation
-          card.rotation.x = cardData.rotationSpeed.x * currentTime + mouseRef.current.y * mouseInfluence * 0.5;
-          card.rotation.y = cardData.rotationSpeed.y * currentTime + mouseRef.current.x * mouseInfluence * 0.5;
-          card.rotation.z = cardData.rotationSpeed.z * currentTime + orbitProps.angle * 0.05;
+          // 3D rotation with increased mouse influence and smoothing
+          card.rotation.x += (cardData.rotationSpeed.x * currentTime * 0.1 + mouseRef.current.y * mouseInfluence - card.rotation.x) * 0.1;
+          card.rotation.y += (cardData.rotationSpeed.y * currentTime * 0.1 + mouseRef.current.x * mouseInfluence - card.rotation.y) * 0.1;
+          card.rotation.z += (cardData.rotationSpeed.z * currentTime * 0.1 + orbitProps.angle * 0.05 - card.rotation.z) * 0.1;
           
           // Card flipping logic - much slower
           cardData.flipCooldown -= 16;
