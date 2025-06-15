@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -43,7 +44,7 @@ export const Navigation = () => {
     { path: '/dashboard', label: t('nav.dashboard'), icon: null },
     { path: '/decks', label: t('nav.decks'), icon: null },
     { path: '/marketplace', label: t('nav.marketplace'), icon: null },
-    { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+    { path: '/analytics', label: t('analytics.title'), icon: BarChart3 },
     ...(isAdminUser ? [{ path: '/admin', label: t('nav.admin'), icon: Shield }] : []),
   ];
 
