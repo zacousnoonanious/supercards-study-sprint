@@ -2,7 +2,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
@@ -23,42 +22,38 @@ import Marketplace from "./pages/Marketplace";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
 function App() {
   return (
     <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <AuthProvider>
-            <OrganizationProvider>
-              <I18nProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/create-set" element={<CreateSet />} />
-                    <Route path="/decks" element={<Decks />} />
-                    <Route path="/set/:id" element={<SetView />} />
-                    <Route path="/edit/:setId" element={<CardEditorPage />} />
-                    <Route path="/edit/:setId/:cardId" element={<CardEditorPage />} />
-                    <Route path="/study/:id" element={<StudyMode />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/join/:token" element={<JoinDeck />} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="/marketplace" element={<Marketplace />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </TooltipProvider>
-              </I18nProvider>
-            </OrganizationProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <OrganizationProvider>
+            <I18nProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/create-set" element={<CreateSet />} />
+                  <Route path="/decks" element={<Decks />} />
+                  <Route path="/set/:id" element={<SetView />} />
+                  <Route path="/edit/:setId" element={<CardEditorPage />} />
+                  <Route path="/edit/:setId/:cardId" element={<CardEditorPage />} />
+                  <Route path="/study/:id" element={<StudyMode />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/join/:token" element={<JoinDeck />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/marketplace" element={<Marketplace />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </TooltipProvider>
+            </I18nProvider>
+          </OrganizationProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
