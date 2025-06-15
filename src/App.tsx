@@ -44,6 +44,8 @@ function App() {
                   <Route path="/decks" element={<ProtectedRoute><Decks /></ProtectedRoute>} />
                   <Route path="/set/:id" element={<ProtectedRoute><SetView /></ProtectedRoute>} />
                   <Route path="/set/:id/study" element={<ProtectedRoute><StudyMode /></ProtectedRoute>} />
+                  <Route path="/set/:id/edit" element={<ProtectedRoute><CardEditorPage /></ProtectedRoute>} />
+                  <Route path="/set/:id/edit/:cardId" element={<ProtectedRoute><CardEditorPage /></ProtectedRoute>} />
                   <Route path="/edit/:setId" element={<ProtectedRoute><CardEditorPage /></ProtectedRoute>} />
                   <Route path="/edit/:setId/:cardId" element={<ProtectedRoute><CardEditorPage /></ProtectedRoute>} />
                   <Route path="/study/:id" element={<ProtectedRoute><StudyMode /></ProtectedRoute>} />
