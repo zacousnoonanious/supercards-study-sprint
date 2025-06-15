@@ -54,7 +54,7 @@ const Decks = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto p-6 space-y-6">
+        <div className="container mx-auto p-6 space-y-6 pt-24">
           <LoadingSkeletons.DecksHeader />
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-1">
@@ -73,7 +73,7 @@ const Decks = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto p-6 space-y-6">
+        <div className="container mx-auto p-6 space-y-6 pt-24">
           <DecksHeader searchTerm={searchTerm} onSearchChange={setSearchTerm} />
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-1">
@@ -91,7 +91,7 @@ const Decks = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto p-6 space-y-6 pt-24">
         <DecksHeader searchTerm={searchTerm} onSearchChange={setSearchTerm} />
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
