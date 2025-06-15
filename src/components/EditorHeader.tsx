@@ -61,7 +61,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-14">
+    <div className="flex items-center justify-between px-4 py-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-14 mt-16">
       <div className="flex items-center space-x-4">
         <EditableDeckTitle
           title={deckName}
