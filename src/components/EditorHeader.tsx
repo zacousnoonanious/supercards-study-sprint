@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Save, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { FlashcardSet } from '@/types/flashcard';
-import { EditableDeckTitle } from './EditableDeckTitle';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface EditorHeaderProps {
@@ -63,14 +62,6 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-14 mt-16">
       <div className="flex items-center space-x-4">
-        <EditableDeckTitle
-          title={deckName}
-          onTitleUpdate={onUpdateDeckTitle}
-          className="text-lg font-semibold"
-        />
-        
-        <Separator orientation="vertical" className="h-6" />
-        
         <div className="text-sm text-muted-foreground">
           {t('common.created')}: {new Date(set.created_at).toLocaleDateString()}
         </div>

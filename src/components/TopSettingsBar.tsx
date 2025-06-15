@@ -7,6 +7,7 @@ import { CanvasSizeControls } from './settings/CanvasSizeControls';
 import { GridControls } from './settings/GridControls';
 import { TimerControls } from './settings/TimerControls';
 import { ElementControls } from './settings/ElementControls';
+import { EditableDeckTitle } from './EditableDeckTitle';
 
 interface TopSettingsBarProps {
   selectedElement: CanvasElement | null;
@@ -22,6 +23,8 @@ interface TopSettingsBarProps {
   snapToGrid?: boolean;
   onSnapToGridChange?: (snap: boolean) => void;
   currentSide?: 'front' | 'back';
+  deckName?: string;
+  onUpdateDeckTitle?: (title: string) => Promise<void>;
 }
 
 export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
@@ -38,6 +41,8 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
   snapToGrid = false,
   onSnapToGridChange,
   currentSide = 'front',
+  deckName,
+  onUpdateDeckTitle,
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
@@ -53,45 +58,58 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
 
   return (
     <div className={`border-b p-2 ${isDarkTheme ? 'bg-gray-800 border-gray-600' : 'bg-background border-border'}`}>
-      <div className="flex items-center gap-4 flex-wrap">
-        {/* Canvas Size Controls */}
-        <CanvasSizeControls
-          canvasWidth={canvasWidth}
-          canvasHeight={canvasHeight}
-          onCanvasSizeChange={handleCanvasSizeChange}
-        />
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Canvas Size Controls */}
+          <CanvasSizeControls
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
+            onCanvasSizeChange={handleCanvasSizeChange}
+          />
 
-        <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-8" />
 
-        {/* Grid Controls */}
-        <GridControls
-          showGrid={showGrid}
-          onShowGridChange={onShowGridChange}
-          snapToGrid={snapToGrid}
-          onSnapToGridChange={onSnapToGridChange}
-        />
+          {/* Grid Controls */}
+          <GridControls
+            showGrid={showGrid}
+            onShowGridChange={onShowGridChange}
+            snapToGrid={snapToGrid}
+            onSnapToGridChange={onSnapToGridChange}
+          />
 
-        <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-8" />
 
-        {/* Timer Settings - Side Specific */}
-        <TimerControls
-          currentCard={currentCard}
-          onUpdateCard={onUpdateCard}
-          currentSide={currentSide}
-        />
+          {/* Timer Settings - Side Specific */}
+          <TimerControls
+            currentCard={currentCard}
+            onUpdateCard={onUpdateCard}
+            currentSide={currentSide}
+          />
 
-        {/* Only show separator if there are element controls to show */}
-        {selectedElement && (
-          <>
-            <Separator orientation="vertical" className="h-8" />
-            
-            {/* Element Controls */}
-            <ElementControls
-              selectedElement={selectedElement}
-              onUpdateElement={onUpdateElement}
-              onDeleteElement={onDeleteElement}
+          {/* Only show separator if there are element controls to show */}
+          {selectedElement && (
+            <>
+              <Separator orientation="vertical" className="h-8" />
+              
+              {/* Element Controls */}
+              <ElementControls
+                selectedElement={selectedElement}
+                onUpdateElement={onUpdateElement}
+                onDeleteElement={onDeleteElement}
+              />
+            </>
+          )}
+        </div>
+
+        {/* Deck Title positioned to the right */}
+        {deckName && onUpdateDeckTitle && (
+          <div className="ml-auto">
+            <EditableDeckTitle
+              title={deckName}
+              onTitleUpdate={onUpdateDeckTitle}
+              className="text-sm font-medium"
             />
-          </>
+          </div>
         )}
       </div>
     </div>
