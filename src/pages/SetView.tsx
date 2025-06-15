@@ -158,7 +158,6 @@ const SetView = () => {
         <CardGrid
           cards={cards}
           setId={urlSetId!}
-          onCreateCard={handleCreateCard}
           onCreateFromTemplate={handleCreateFromTemplate}
           onSetDefaultTemplate={handleSetDefaultTemplate}
           defaultTemplate={defaultTemplate}

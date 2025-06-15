@@ -4,12 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EnhancedCardButton } from '@/components/EnhancedCardButton';
 import { Flashcard, CardTemplate } from '@/types/flashcard';
 import { useI18n } from '@/contexts/I18nContext';
-import { useNavigate } from 'react-router-dom';
 
 interface CardGridProps {
   cards: Flashcard[];
   setId: string;
-  onCreateCard: () => void;
   onCreateFromTemplate: (template: CardTemplate) => void;
   onSetDefaultTemplate: (template: CardTemplate) => void;
   defaultTemplate?: CardTemplate;
@@ -19,18 +17,17 @@ interface CardGridProps {
 export const CardGrid: React.FC<CardGridProps> = ({
   cards,
   setId,
-  onCreateCard,
   onCreateFromTemplate,
   onSetDefaultTemplate,
   defaultTemplate,
   onBrowseTemplates,
 }) => {
   const { t } = useI18n();
-  const navigate = useNavigate();
 
   const handleAddCard = () => {
-    console.log('CardGrid: Navigating to add card for setId:', setId);
-    navigate(`/add-card/${setId}`);
+    if (onBrowseTemplates) {
+      onBrowseTemplates();
+    }
   };
 
   return (
