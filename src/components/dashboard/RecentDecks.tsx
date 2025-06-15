@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Play, View } from 'lucide-react';
+import { BookOpen, Play, View, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -55,6 +55,10 @@ export const RecentDecks: React.FC<RecentDecksProps> = ({ recentSets }) => {
                   <Button variant="outline" size="sm" onClick={() => navigate(`/set/${set.id}`)} className="flex-1">
                     <View className="w-3 h-3 mr-1" />
                     {t('common.view')}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/editor/${set.id}`)} className="flex-1">
+                    <Edit className="w-3 h-3 mr-1" />
+                    Edit
                   </Button>
                   <Button size="sm" onClick={() => navigate(`/set/${set.id}/study`)} className="flex-1">
                     <Play className="w-3 h-3 mr-1" />
