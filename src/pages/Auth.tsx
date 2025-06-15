@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -166,7 +165,6 @@ const Auth = () => {
       } else {
         if (!isLogin) {
           setShowCelebration(true);
-          setTimeout(() => setShowCelebration(false), 5000);
         } else {
           toast({
             title: t('auth.welcomeBack'),
@@ -230,7 +228,7 @@ const Auth = () => {
                   onClick={() => setShowCelebration(false)}
                   className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                 >
-                  Continue
+                  {t('common.continue')}
                 </Button>
               </div>
             </CardContent>
