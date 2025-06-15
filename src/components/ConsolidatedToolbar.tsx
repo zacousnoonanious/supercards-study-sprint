@@ -14,7 +14,6 @@ import {
   FileText,
   Grid3x3,
   AlignCenter,
-  AlignJustify,
   Layers3,
   AlignLeft as AlignLeftIcon,
   AlignCenter as AlignCenterIcon,
@@ -33,7 +32,7 @@ import { EnhancedAddCardButton } from './EnhancedAddCardButton';
 
 interface ConsolidatedToolbarProps {
   onAddElement: (type: string) => void;
-  onAutoArrange: (type: 'grid' | 'center' | 'justify' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => void;
+  onAutoArrange: (type: 'grid' | 'center' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => void;
   currentCard: Flashcard;
   currentCardIndex: number;
   totalCards: number;
@@ -102,7 +101,6 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   const arrangements = [
     { type: 'grid' as const, icon: Grid3x3, label: t('toolbar.arrangeGrid'), key: 'g' },
     { type: 'center' as const, icon: AlignCenter, label: t('toolbar.arrangeCenter'), key: 'c' },
-    { type: 'justify' as const, icon: AlignJustify, label: t('toolbar.arrangeJustify'), key: 'j' },
     { type: 'stack' as const, icon: Layers3, label: t('toolbar.arrangeStack'), key: 's' },
     { type: 'align-left' as const, icon: AlignLeftIcon, label: t('toolbar.arrangeAlignLeft'), key: '1' },
     { type: 'align-center' as const, icon: AlignCenterIcon, label: t('toolbar.arrangeAlignCenter'), key: '2' },
