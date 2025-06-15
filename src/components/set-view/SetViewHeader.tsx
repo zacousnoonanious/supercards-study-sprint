@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Play, Edit, Settings, Shuffle, Eye } from 'lucide-react';
+import { ArrowLeft, Play, Edit, Settings, Shuffle, Eye, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -43,14 +43,24 @@ export const SetViewHeader: React.FC<SetViewHeaderProps> = ({
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {t('toolbar.back')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t('toolbar.back')}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <Home className="w-4 h-4" />
+            {t('toolbar.backToDashboard')}
+          </Button>
+        </div>
 
         <div className="flex items-center gap-2">
           <Button

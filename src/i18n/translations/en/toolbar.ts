@@ -42,4 +42,5 @@ export const toolbar = {
   arrangeDistributeHorizontal: "Distribute Horizontally",
   arrangeDistributeVertical: "Distribute Vertically",
   back: "Back",
+  backToDashboard: "Back to Dashboard",
 };
