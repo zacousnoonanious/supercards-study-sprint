@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, UserPlus, ShoppingBag, Search } from 'lucide-react';
+import { Plus, UserPlus, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/contexts/I18nContext';
 import { JoinDeckDialog } from '@/components/JoinDeckDialog';
@@ -23,14 +23,6 @@ export const DecksHeader: React.FC<DecksHeaderProps> = ({ searchTerm, onSearchCh
           <h2 className="text-xl font-semibold text-foreground">{t('decks.title')}</h2>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/marketplace')}
-            className="flex items-center gap-2"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            {t('nav.marketplace')}
-          </Button>
           <JoinDeckDialog 
             trigger={
               <Button variant="outline" className="flex items-center gap-2">
