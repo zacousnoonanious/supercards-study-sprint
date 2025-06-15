@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, Brain, Users, Zap, BarChart3, Sparkles } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 export const CoreFeatures = () => {
+  const { t } = useI18n();
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -15,33 +17,33 @@ export const CoreFeatures = () => {
   const features = [
     { 
       icon: BookOpen, 
-      title: "Smart Organization", 
-      desc: "Organize flashcards into decks and sets. Tag, filter, and search to find content instantly." 
+      titleKey: "smartOrganization",
+      descKey: "smartOrganization"
     },
     { 
       icon: Brain, 
-      title: "AI-Powered Learning", 
-      desc: "Generate quizzes automatically, get study recommendations, and track your progress with AI insights." 
+      titleKey: "aiPoweredLearning",
+      descKey: "aiPoweredLearning"
     },
     { 
       icon: Sparkles, 
-      title: "Interactive Cards", 
-      desc: "Create engaging content with polls, quizzes, media, and interactive elements that boost retention." 
+      titleKey: "interactiveCards",
+      descKey: "interactiveCards"
     },
     { 
       icon: BarChart3, 
-      title: "Progress Tracking", 
-      desc: "Detailed analytics show your learning streaks, weak areas, and improvement over time." 
+      titleKey: "progressTracking",
+      descKey: "progressTracking"
     },
     { 
       icon: Users, 
-      title: "Collaborate & Share", 
-      desc: "Share decks with teammates, study together, and access thousands of community-created sets." 
+      titleKey: "collaborateShare",
+      descKey: "collaborateShare"
     },
     { 
       icon: Zap, 
-      title: "Study Anywhere", 
-      desc: "Offline support, mobile-optimized interface, and sync across all your devices seamlessly." 
+      titleKey: "studyAnywhere",
+      descKey: "studyAnywhere"
     }
   ];
 
@@ -174,10 +176,10 @@ export const CoreFeatures = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
             <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              Everything you need to learn faster
+              {t('home.coreFeatures.title')}
             </h2>
             <p className="text-2xl text-gray-700 max-w-4xl mx-auto">
-              Powerful features designed to make studying more effective, engaging, and enjoyable.
+              {t('home.coreFeatures.subtitle')}
             </p>
           </div>
           
@@ -193,10 +195,10 @@ export const CoreFeatures = () => {
               >
                 <CardHeader>
                   <feature.icon className="w-14 h-14 text-purple-600 mx-auto mb-6 group-hover:scale-125 transition-transform duration-300" />
-                  <CardTitle className="text-2xl text-gray-900">{feature.title}</CardTitle>
+                  <CardTitle className="text-2xl text-gray-900">{t(`home.coreFeatures.${feature.titleKey}.title`)}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-gray-800 text-lg">{feature.desc}</CardDescription>
+                  <CardDescription className="text-gray-800 text-lg">{t(`home.coreFeatures.${feature.descKey}.desc`)}</CardDescription>
                 </CardContent>
               </Card>
             ))}

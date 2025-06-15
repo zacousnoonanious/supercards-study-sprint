@@ -1,11 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ParallaxFlashcards } from './ParallaxFlashcards';
 import { GlobalStyles } from './GlobalStyles';
+import { useI18n } from '@/contexts/I18nContext';
 
 export const HeroSection = () => {
+  const { t } = useI18n();
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -117,11 +118,11 @@ export const HeroSection = () => {
               <span className="text-2xl font-bold text-white">SuperDeck</span>
             </div>
             <nav className="hidden md:flex items-center gap-8 text-white">
-              <a href="#" className="hover:text-purple-200 transition-colors">Home</a>
-              <a href="#" className="hover:text-purple-200 transition-colors">Features</a>
-              <a href="#" className="hover:text-purple-200 transition-colors">Pricing</a>
+              <a href="#" className="hover:text-purple-200 transition-colors">{t('home.heroSection.home')}</a>
+              <a href="#" className="hover:text-purple-200 transition-colors">{t('home.heroSection.features')}</a>
+              <a href="#" className="hover:text-purple-200 transition-colors">{t('home.heroSection.pricing')}</a>
               <Link to="/auth" className="bg-white text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-50 transition-colors">
-                Log in
+                {t('home.heroSection.login')}
               </Link>
             </nav>
           </div>
@@ -130,9 +131,9 @@ export const HeroSection = () => {
         {/* Main Content */}
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
           <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight">
-            Master your studies
+            {t('home.heroSection.title')}
             <br />
-            with flashcards
+            {t('home.heroSection.subtitle')}
           </h1>
 
           <Link to="/auth">
@@ -140,7 +141,7 @@ export const HeroSection = () => {
               size="lg" 
               className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-xl px-12 py-6 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
-              Get Started
+              {t('home.heroSection.getStarted')}
             </Button>
           </Link>
         </div>

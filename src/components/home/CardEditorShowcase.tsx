@@ -1,10 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Palette, Type, Image, Layers, Zap, MousePointer } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 export const CardEditorShowcase = () => {
+  const { t } = useI18n();
   const [scrollY, setScrollY] = useState(0);
   const [animationStep, setAnimationStep] = useState(0);
   const [typingText, setTypingText] = useState('');
@@ -91,12 +92,12 @@ export const CardEditorShowcase = () => {
   }, [animationStep]);
 
   const features = [
-    { icon: Palette, title: "Visual Design", desc: "Drag and drop interface with real-time preview" },
-    { icon: Type, title: "Rich Text", desc: "Advanced text formatting and typography controls" },
-    { icon: Image, title: "Media Support", desc: "Add images, videos, and audio to your cards" },
-    { icon: Layers, title: "Multiple Sides", desc: "Create front and back sides with different layouts" },
-    { icon: Zap, title: "Templates", desc: "Start with professional templates or build from scratch" },
-    { icon: MousePointer, title: "Interactive", desc: "Add quizzes, polls, and interactive elements" }
+    { icon: Palette, titleKey: "visualDesign", descKey: "visualDesign" },
+    { icon: Type, titleKey: "richText", descKey: "richText" },
+    { icon: Image, titleKey: "mediaSupport", descKey: "mediaSupport" },
+    { icon: Layers, titleKey: "multipleSides", descKey: "multipleSides" },
+    { icon: Zap, titleKey: "templates", descKey: "templates" },
+    { icon: MousePointer, titleKey: "interactive", descKey: "interactive" }
   ];
 
   // Move floating cards away from the editor demo area (left side only)
@@ -221,11 +222,10 @@ export const CardEditorShowcase = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
             <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              Our Built-in Card Editor
+              {t('home.cardEditor.title')}
             </h2>
             <p className="text-2xl text-gray-700 max-w-4xl mx-auto">
-              Create stunning, interactive flashcards with our powerful visual editor. 
-              No design experience needed.
+              {t('home.cardEditor.subtitle')}
             </p>
           </div>
 
@@ -244,8 +244,8 @@ export const CardEditorShowcase = () => {
                   >
                     <feature.icon className="w-8 h-8 text-orange-600 mt-1 flex-shrink-0 group-hover:scale-125 transition-transform duration-300" />
                     <div>
-                      <h3 className="font-bold text-gray-900 mb-2 text-lg">{feature.title}</h3>
-                      <p className="text-gray-800">{feature.desc}</p>
+                      <h3 className="font-bold text-gray-900 mb-2 text-lg">{t(`home.cardEditor.${feature.titleKey}.title`)}</h3>
+                      <p className="text-gray-800">{t(`home.cardEditor.${feature.descKey}.desc`)}</p>
                     </div>
                   </div>
                 ))}
@@ -254,7 +254,7 @@ export const CardEditorShowcase = () => {
               <div className="pt-8">
                 <Link to="/auth">
                   <Button size="lg" className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 text-xl rounded-full">
-                    Try the Editor Free
+                    {t('home.cardEditor.tryEditor')}
                   </Button>
                 </Link>
               </div>
