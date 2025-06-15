@@ -103,7 +103,7 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/editor/${card.set_id}/${card.id}`);
+              navigate(`/edit/${card.set_id}/${card.id}`);
             }}
             className="flex-1"
           >
