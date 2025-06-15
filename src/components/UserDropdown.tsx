@@ -76,7 +76,6 @@ export const UserDropdown = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
   };
 
   const getUserInitials = () => {

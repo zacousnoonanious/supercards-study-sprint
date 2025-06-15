@@ -109,8 +109,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const { error } = await supabase.auth.signOut();
       
-      // Don't treat "session_not_found" as an error since the user is already signed out
-      if (error && !error.message?.includes('session_not_found')) {
+      // Don't show an error toast if the session is already missing.
+      if (error && !error.message?.toLowerCase().includes('session')) {
         console.error('Sign out error:', error);
         toast({
           title: "Error signing out",
