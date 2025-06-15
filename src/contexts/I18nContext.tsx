@@ -37,6 +37,22 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return typeof result === 'string' ? result : undefined;
   };
 
+  // Helper function to generate fallback text from a key
+  const generateTextFromKey = (key: string): string => {
+    const lastPart = key.split('.').pop() || '';
+    // Convert camelCase or kebab-case to Title Case
+    const words = lastPart
+      .replace(/([A-Z])/g, ' $1') // insert a space before all caps
+      .replace(/[-_]/g, ' ');   // replace dashes and underscores with a space
+    // capitalize the first letter of each word
+    return words
+      .split(' ')
+      .filter(word => word.length > 0)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+      .trim();
+  };
+
   // Helper function to get nested translation value
   const getTranslation = (key: string, replacements?: { [key: string]: string | number }): string => {
     const keys = key.split('.');
@@ -51,11 +67,18 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value = resolveKey(currentTranslations, keys);
     }
     
-    // 3. Fallback to English and trigger translation
-    if (value === undefined && language !== 'en') {
-      const englishValue = resolveKey(availableTranslations.en, keys);
-      if (typeof englishValue === 'string') {
-        value = englishValue; // Use English as fallback for now
+    // 3. Fallback to English, generate if missing, and trigger translation for other languages
+    if (value === undefined) {
+      let englishValue = resolveKey(availableTranslations.en, keys);
+      
+      if (englishValue === undefined) {
+        englishValue = generateTextFromKey(key);
+        console.warn(`i18n: Auto-generated English fallback for key "${key}": "${englishValue}". Consider adding it to the main translation file.`);
+      }
+      
+      value = englishValue;
+      
+      if (language !== 'en' && typeof englishValue === 'string') {
         translateAndStore(key, englishValue, language);
       }
     }
