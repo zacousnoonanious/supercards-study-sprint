@@ -574,7 +574,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
                   onElementSelect(element.id);
                 }}
               >
-                {/* Element rendering logic */}
+                {/* Element rendering logic with fixed textAlign */}
                 {element.type === 'text' ? (
                   editingElementId === element.id ? (
                     <textarea
@@ -585,7 +585,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
                         fontWeight: element.fontWeight || 'normal',
                         fontStyle: element.fontStyle || 'normal',
                         textDecoration: element.textDecoration || 'none',
-                        textAlign: element.textAlign || 'left',
+                        textAlign: (element.textAlign as 'left' | 'center' | 'right' | 'justify') || 'left',
                       }}
                       value={element.content || ''}
                       onChange={(e) => handleTextChange(element.id, e.target.value)}
@@ -601,7 +601,7 @@ export const PowerPointEditor: React.FC<PowerPointEditorProps> = ({
                         fontWeight: element.fontWeight || 'normal',
                         fontStyle: element.fontStyle || 'normal',
                         textDecoration: element.textDecoration || 'none',
-                        textAlign: element.textAlign || 'left',
+                        textAlign: (element.textAlign as 'left' | 'center' | 'right' | 'justify') || 'left',
                       }}
                     >
                       {element.hyperlink ? (

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,7 +57,7 @@ export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
           hint: card.hint || '',
           last_reviewed_at: card.last_reviewed_at || null,
           card_type: (card.card_type === 'standard' ? 'normal' : card.card_type as Flashcard['card_type']) || 'normal',
-          interactive_type: card.interactive_type || null,
+          interactive_type: (card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') || null,
           countdown_timer: card.countdown_timer || 0,
           countdown_timer_front: card.countdown_timer_front || 0,
           countdown_timer_back: card.countdown_timer_back || 0,
@@ -163,7 +162,7 @@ export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
           }}
         >
           <StudyCardRenderer
-            elements={currentElements}
+            elements={currentElements || []}
             className="w-full h-full border-0"
             style={{ 
               width: '800px', 

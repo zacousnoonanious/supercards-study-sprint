@@ -1,5 +1,6 @@
 
 
+
 export interface Flashcard {
   id: string;
   set_id: string;
@@ -26,6 +27,11 @@ export interface Flashcard {
   created_at: string;
   updated_at: string;
   last_reviewed_at?: string;
+  templateId?: string;
+  allowedElementTypes?: string[];
+  restrictedToolbar?: boolean;
+  showBackSide?: boolean;
+  autoAdvanceOnAnswer?: boolean;
 }
 
 export interface FlashcardSet {
@@ -37,6 +43,7 @@ export interface FlashcardSet {
   updated_at: string;
   permanent_shuffle?: boolean;
   is_collaborative?: boolean;
+  is_public?: boolean;
   collaboration_settings?: {
     allowEditors: boolean;
     allowViewers: boolean;
@@ -71,7 +78,7 @@ export interface CanvasElement {
   fontFamily?: string;
   fontWeight?: string;
   fontStyle?: string;
-  textAlign?: string;
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
   textDecoration?: string;
   opacity?: number;
   border?: string;
@@ -151,7 +158,7 @@ export interface CardTemplate {
   name: string;
   description: string;
   image: string;
-  category: 'study' | 'quiz' | 'information' | 'interactive';
+  category: 'study' | 'quiz' | 'information' | 'interactive' | 'vocab' | 'custom';
   card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
   canvas_width: number;
   canvas_height: number;
@@ -161,6 +168,13 @@ export interface CardTemplate {
   restrictedToolbar: boolean;
   front_elements: CanvasElement[];
   back_elements: CanvasElement[];
+  countdown_timer_front?: number;
+  countdown_timer_back?: number;
+  countdown_behavior_front?: string;
+  countdown_behavior_back?: string;
+  showGrid?: boolean;
+  snapToGrid?: boolean;
+  showBorder?: boolean;
 }
 
 export interface StudySession {
@@ -191,4 +205,3 @@ export interface UserCardStats {
   created_at: string;
   updated_at: string;
 }
-

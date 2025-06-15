@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -62,15 +61,15 @@ export const EmbeddedDeckPopup: React.FC<EmbeddedDeckPopupProps> = ({
           question: card.question,
           answer: card.answer,
           hint: card.hint,
-          front_elements: (card.front_elements as CanvasElement[]) || [],
-          back_elements: (card.back_elements as CanvasElement[]) || [],
+          front_elements: (card.front_elements as unknown as CanvasElement[]) || [],
+          back_elements: (card.back_elements as unknown as CanvasElement[]) || [],
           card_type: card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected',
-          interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null,
+          interactive_type: (card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') || null,
           password: card.password,
           countdown_timer: card.countdown_timer,
           countdown_timer_front: card.countdown_timer_front,
           countdown_timer_back: card.countdown_timer_back,
-          countdown_behavior: card.countdown_behavior as 'flip' | 'next',
+          countdown_behavior: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
           countdown_behavior_front: card.countdown_behavior_front,
           countdown_behavior_back: card.countdown_behavior_back,
           flips_before_next: card.flips_before_next,
@@ -154,7 +153,7 @@ export const EmbeddedDeckPopup: React.FC<EmbeddedDeckPopupProps> = ({
                     }}
                   >
                     <StudyCardRenderer
-                      elements={showAnswer ? currentCard.back_elements : currentCard.front_elements}
+                      elements={showAnswer ? (currentCard.back_elements || []) : (currentCard.front_elements || [])}
                       textScale={1}
                       cardWidth={currentCard.canvas_width || 600}
                       cardHeight={currentCard.canvas_height || 450}
