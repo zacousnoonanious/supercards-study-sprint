@@ -492,33 +492,42 @@ export type Database = {
           created_at: string
           email: string
           expires_at: string
+          first_name: string | null
           id: string
           invite_token: string
           invited_by: string
+          last_name: string | null
           organization_id: string
           role: string
+          status: string
         }
         Insert: {
           accepted_at?: string | null
           created_at?: string
           email: string
           expires_at: string
+          first_name?: string | null
           id?: string
           invite_token: string
           invited_by: string
+          last_name?: string | null
           organization_id: string
           role?: string
+          status?: string
         }
         Update: {
           accepted_at?: string | null
           created_at?: string
           email?: string
           expires_at?: string
+          first_name?: string | null
           id?: string
           invite_token?: string
           invited_by?: string
+          last_name?: string | null
           organization_id?: string
           role?: string
+          status?: string
         }
         Relationships: [
           {
@@ -645,6 +654,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_organization_invite: {
+        Args: { invite_token: string; user_id: string }
+        Returns: boolean
+      }
       cleanup_old_editing_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
