@@ -102,22 +102,55 @@ export const HeroSection = () => {
             }
           }
           
+          @keyframes sparkle-6 {
+            0%, 100% { 
+              opacity: 0;
+              transform: scale(0) rotate(15deg);
+            }
+            35% { 
+              opacity: 0.9;
+              transform: scale(1.1) rotate(195deg);
+            }
+            70% { 
+              opacity: 0.5;
+              transform: scale(0.8) rotate(375deg);
+            }
+          }
+          
+          @keyframes sparkle-7 {
+            0%, 100% { 
+              opacity: 0;
+              transform: scale(0) rotate(75deg);
+            }
+            45% { 
+              opacity: 0.8;
+              transform: scale(0.9) rotate(255deg);
+            }
+            85% { 
+              opacity: 1;
+              transform: scale(1.4) rotate(435deg);
+            }
+          }
+          
+          @keyframes sparkle-8 {
+            0%, 100% { 
+              opacity: 0;
+              transform: scale(0) rotate(105deg);
+            }
+            30% { 
+              opacity: 1;
+              transform: scale(1.2) rotate(285deg);
+            }
+            65% { 
+              opacity: 0.6;
+              transform: scale(0.7) rotate(465deg);
+            }
+          }
+          
           @keyframes rainbow-shift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
-          }
-          
-          @keyframes rainbow-shift-2 {
-            0% { background-position: 50% 0%; }
-            50% { background-position: 50% 100%; }
-            100% { background-position: 50% 0%; }
-          }
-          
-          @keyframes rainbow-shift-3 {
-            0% { background-position: 100% 100%; }
-            50% { background-position: 0% 0%; }
-            100% { background-position: 100% 100%; }
           }
           
           .rainbow-text {
@@ -143,10 +176,7 @@ export const HeroSection = () => {
             position: absolute;
             pointer-events: none;
             color: #FFD700;
-            font-size: 20px;
             z-index: 1;
-            width: 20px;
-            height: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -155,56 +185,122 @@ export const HeroSection = () => {
           .sparkle::before {
             content: '✨';
             color: #FFD700;
-            text-shadow: 0 0 8px #FFD700, 0 0 16px #FFD700;
           }
           
-          .sparkle:nth-child(1) { 
-            top: -10%; 
-            left: -5%; 
+          .sparkle-small {
+            font-size: 12px;
+            width: 12px;
+            height: 12px;
+          }
+          
+          .sparkle-medium {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+          }
+          
+          .sparkle-large {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+          
+          /* Natural sparkle positioning across the text */
+          .sparkle-1 { 
+            top: -15%; 
+            left: 10%; 
             animation: sparkle-1 2.5s ease-in-out infinite;
             animation-delay: 0.2s;
           }
-          .sparkle:nth-child(2) { 
+          .sparkle-2 { 
             top: 110%; 
-            left: 105%; 
+            left: 85%; 
             animation: sparkle-2 3s ease-in-out infinite;
             animation-delay: 0.8s;
           }
-          .sparkle:nth-child(3) { 
+          .sparkle-3 { 
             top: 20%; 
-            left: -8%; 
+            left: -5%; 
             animation: sparkle-3 2.8s ease-in-out infinite;
             animation-delay: 1.2s;
           }
-          .sparkle:nth-child(4) { 
+          .sparkle-4 { 
             top: 80%; 
-            left: 102%; 
+            left: 95%; 
             animation: sparkle-4 2.3s ease-in-out infinite;
             animation-delay: 0.5s;
           }
-          .sparkle:nth-child(5) { 
-            top: -5%; 
-            left: 108%; 
+          .sparkle-5 { 
+            top: -10%; 
+            left: 70%; 
             animation: sparkle-5 3.2s ease-in-out infinite;
             animation-delay: 1.5s;
           }
-          .sparkle:nth-child(6) { 
-            top: 115%; 
-            left: -3%; 
-            animation: sparkle-1 2.7s ease-in-out infinite;
+          .sparkle-6 { 
+            top: 105%; 
+            left: 25%; 
+            animation: sparkle-6 2.7s ease-in-out infinite;
             animation-delay: 0.9s;
           }
-          .sparkle:nth-child(7) { 
-            top: 50%; 
-            left: -12%; 
-            animation: sparkle-3 2.4s ease-in-out infinite;
+          .sparkle-7 { 
+            top: 40%; 
+            left: 5%; 
+            animation: sparkle-7 2.4s ease-in-out infinite;
             animation-delay: 1.8s;
           }
-          .sparkle:nth-child(8) { 
-            top: 50%; 
-            left: 112%; 
-            animation: sparkle-2 2.9s ease-in-out infinite;
+          .sparkle-8 { 
+            top: 60%; 
+            left: 90%; 
+            animation: sparkle-8 2.9s ease-in-out infinite;
             animation-delay: 0.3s;
+          }
+          .sparkle-9 { 
+            top: -5%; 
+            left: 40%; 
+            animation: sparkle-1 3.1s ease-in-out infinite;
+            animation-delay: 1.1s;
+          }
+          .sparkle-10 { 
+            top: 100%; 
+            left: 60%; 
+            animation: sparkle-2 2.6s ease-in-out infinite;
+            animation-delay: 0.7s;
+          }
+          .sparkle-11 { 
+            top: 30%; 
+            left: 100%; 
+            animation: sparkle-3 2.8s ease-in-out infinite;
+            animation-delay: 1.4s;
+          }
+          .sparkle-12 { 
+            top: 70%; 
+            left: -8%; 
+            animation: sparkle-4 3.3s ease-in-out infinite;
+            animation-delay: 0.6s;
+          }
+          .sparkle-13 { 
+            top: 15%; 
+            left: 25%; 
+            animation: sparkle-5 2.2s ease-in-out infinite;
+            animation-delay: 2.1s;
+          }
+          .sparkle-14 { 
+            top: 85%; 
+            left: 75%; 
+            animation: sparkle-6 2.9s ease-in-out infinite;
+            animation-delay: 1.6s;
+          }
+          .sparkle-15 { 
+            top: 50%; 
+            left: 50%; 
+            animation: sparkle-7 3.4s ease-in-out infinite;
+            animation-delay: 0.4s;
+          }
+          .sparkle-16 { 
+            top: 5%; 
+            left: 80%; 
+            animation: sparkle-8 2.1s ease-in-out infinite;
+            animation-delay: 1.9s;
           }
           
           .particle-container {
@@ -320,27 +416,43 @@ export const HeroSection = () => {
           <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight">
             <span className="particle-container rainbow-text">
               Smarter
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
+              <div className="sparkle sparkle-small sparkle-1"></div>
+              <div className="sparkle sparkle-medium sparkle-2"></div>
+              <div className="sparkle sparkle-small sparkle-3"></div>
+              <div className="sparkle sparkle-large sparkle-4"></div>
+              <div className="sparkle sparkle-medium sparkle-5"></div>
+              <div className="sparkle sparkle-small sparkle-6"></div>
+              <div className="sparkle sparkle-large sparkle-7"></div>
+              <div className="sparkle sparkle-medium sparkle-8"></div>
+              <div className="sparkle sparkle-small sparkle-9"></div>
+              <div className="sparkle sparkle-medium sparkle-10"></div>
+              <div className="sparkle sparkle-large sparkle-11"></div>
+              <div className="sparkle sparkle-small sparkle-12"></div>
+              <div className="sparkle sparkle-medium sparkle-13"></div>
+              <div className="sparkle sparkle-small sparkle-14"></div>
+              <div className="sparkle sparkle-large sparkle-15"></div>
+              <div className="sparkle sparkle-medium sparkle-16"></div>
             </span>
             <span> Cards.</span>
             <br />
             <span className="particle-container rainbow-text">
               Better
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
-              <div className="sparkle"></div>
+              <div className="sparkle sparkle-medium sparkle-1"></div>
+              <div className="sparkle sparkle-small sparkle-2"></div>
+              <div className="sparkle sparkle-large sparkle-3"></div>
+              <div className="sparkle sparkle-medium sparkle-4"></div>
+              <div className="sparkle sparkle-small sparkle-5"></div>
+              <div className="sparkle sparkle-large sparkle-6"></div>
+              <div className="sparkle sparkle-medium sparkle-7"></div>
+              <div className="sparkle sparkle-small sparkle-8"></div>
+              <div className="sparkle sparkle-medium sparkle-9"></div>
+              <div className="sparkle sparkle-large sparkle-10"></div>
+              <div className="sparkle sparkle-small sparkle-11"></div>
+              <div className="sparkle sparkle-medium sparkle-12"></div>
+              <div className="sparkle sparkle-large sparkle-13"></div>
+              <div className="sparkle sparkle-small sparkle-14"></div>
+              <div className="sparkle sparkle-medium sparkle-15"></div>
+              <div className="sparkle sparkle-large sparkle-16"></div>
             </span>
             <span> Learning.</span>
           </h1>
