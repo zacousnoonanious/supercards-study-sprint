@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, GraduationCap, Shield } from 'lucide-react';
+import { Menu, GraduationCap, Shield, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { UserDropdown } from './UserDropdown';
@@ -23,6 +23,19 @@ export const Navigation = () => {
 
   const isActive = (path: string) => location.pathname === path;
   const isAdminUser = userRole && ['org_admin', 'super_admin'].includes(userRole);
+  
+  // Show back button if user is logged in and not on dashboard
+  const showBackButton = user && location.pathname !== '/dashboard';
+
+  const handleGoBack = () => {
+    // Check if there's history to go back to
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      // Fallback to dashboard if no history
+      navigate('/dashboard');
+    }
+  };
 
   const navigationItems = [
     { path: '/dashboard', label: t('nav.dashboard'), icon: null },
@@ -36,10 +49,24 @@ export const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-8">
-            <Link to={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
-              <GraduationCap className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">SuperCards</span>
-            </Link>
+            <div className="flex items-center space-x-4">
+              {showBackButton && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleGoBack}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('toolbar.back')}</span>
+                </Button>
+              )}
+              
+              <Link to={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
+                <GraduationCap className="h-8 w-8 text-primary" />
+                <span className="text-xl font-bold">SuperCards</span>
+              </Link>
+            </div>
 
             {user && (
               <>
