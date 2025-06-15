@@ -34,9 +34,10 @@ const CardEditorPage = () => {
 
           if (cards && cards.length > 0) {
             console.log('CardEditorPage: Redirecting to first card:', cards[0].id);
-            navigate(`/editor/${setId}/${cards[0].id}`, { replace: true });
+            navigate(`/edit/${setId}/${cards[0].id}`, { replace: true });
           } else {
-            console.log('CardEditorPage: No cards found in set');
+            console.log('CardEditorPage: No cards found in set, staying on editor page');
+            // Don't redirect if no cards found - let the editor handle creating a new card
           }
         } catch (error) {
           console.error('CardEditorPage: Error in fetchFirstCard:', error);
