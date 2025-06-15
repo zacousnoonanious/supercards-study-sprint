@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Search, UserCog, Shield, Eye, Edit, RotateCcw, UserX, Filter } from 'lucide-react';
+import { Users, Search, UserCog, Shield, Eye, RotateCcw, Filter, Info } from 'lucide-react';
 import { UserDetailsDialog } from './UserDetailsDialog';
 import { UserRestrictionsDialog } from './UserRestrictionsDialog';
 import { PasswordResetDialog } from './PasswordResetDialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface OrganizationUser {
   id: string;
@@ -77,6 +78,7 @@ export const UserManagement: React.FC = () => {
 
       if (!membersData || membersData.length === 0) {
         setUsers([]);
+        setLoading(false);
         return;
       }
 
@@ -85,7 +87,7 @@ export const UserManagement: React.FC = () => {
       // Get profiles for these users
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, last_login')
+        .select('id, first_name, last_name, last_login, email')
         .in('id', userIds);
 
       if (profilesError) throw profilesError;
@@ -97,15 +99,14 @@ export const UserManagement: React.FC = () => {
         .in('user_id', userIds)
         .eq('organization_id', currentOrganization.id);
 
-      // For now, we'll use placeholder emails since we can't access auth.users directly
-      // In a real implementation, you'd need to store emails in profiles or use a server function
+      // We now get real emails from profiles
       const transformedUsers: OrganizationUser[] = membersData.map(member => {
         const profile = profilesData?.find(p => p.id === member.user_id);
         const restrictions = restrictionsData?.find(r => r.user_id === member.user_id);
         
         return {
           id: member.user_id,
-          email: `user-${member.user_id.slice(0, 8)}@example.com`, // Placeholder - needs proper implementation
+          email: profile?.email || 'Email not available',
           first_name: profile?.first_name || null,
           last_name: profile?.last_name || null,
           role: member.role,
@@ -141,6 +142,15 @@ export const UserManagement: React.FC = () => {
 
   const handleRoleUpdate = async (userId: string, newRole: string) => {
     if (!currentOrganization) return;
+
+    if (userId === currentOrganization.created_by) {
+      toast({
+        title: "Action Forbidden",
+        description: "The organization creator's role cannot be changed.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -449,23 +459,38 @@ export const UserManagement: React.FC = () => {
                         {user.email}
                       </TableCell>
                       <TableCell>
-                        <Select
-                          value={user.role}
-                          onValueChange={(newRole) => handleRoleUpdate(user.id, newRole)}
-                        >
-                          <SelectTrigger className="w-auto h-8">
-                            <Badge className={getRoleColor(user.role)}>
-                              {user.role.replace('_', ' ')}
-                            </Badge>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="learner">Learner</SelectItem>
-                            <SelectItem value="manager">Manager</SelectItem>
-                            {userRole === 'super_admin' && (
-                              <SelectItem value="org_admin">Org Admin</SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-1">
+                          <Select
+                            value={user.role}
+                            onValueChange={(newRole) => handleRoleUpdate(user.id, newRole)}
+                            disabled={user.id === currentOrganization?.created_by}
+                          >
+                            <SelectTrigger className="w-auto h-8">
+                              <Badge className={getRoleColor(user.role)}>
+                                {user.role.replace('_', ' ')}
+                              </Badge>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="learner">Learner</SelectItem>
+                              <SelectItem value="manager">Manager</SelectItem>
+                              {(userRole === 'super_admin' || userRole === 'org_admin' || user.role === 'org_admin') && (
+                                <SelectItem value="org_admin">Org Admin</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          {user.id === currentOrganization?.created_by && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>The organization creator's role cannot be changed.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Select
