@@ -99,7 +99,7 @@ export const useCardEditor = () => {
           // Card not found, redirect to first card
           if (typedCards[0]) {
             console.log('useCardEditor: Card not found, redirecting to first card');
-            const newUrl = `/editor/${providedSetId}/${typedCards[0].id}`;
+            const newUrl = `/edit/${providedSetId}/${typedCards[0].id}`;
             navigate(newUrl, { replace: true });
           }
         }
@@ -108,7 +108,7 @@ export const useCardEditor = () => {
         console.log('useCardEditor: No card specified, setting to first card');
         setCurrentCardIndex(0);
         // Update URL to include the first card ID
-        const newUrl = `/editor/${providedSetId}/${typedCards[0].id}`;
+        const newUrl = `/edit/${providedSetId}/${typedCards[0].id}`;
         navigate(newUrl, { replace: true });
       }
     } catch (error) {
@@ -124,7 +124,7 @@ export const useCardEditor = () => {
       const currentCard = cards[currentCardIndex];
       if (currentCard && currentCard.id !== cardId) {
         setIsUrlUpdating(true);
-        const newUrl = `/editor/${setId}/${currentCard.id}`;
+        const newUrl = `/edit/${setId}/${currentCard.id}`;
         console.log('useCardEditor: Updating URL to:', newUrl);
         navigate(newUrl, { replace: true });
         
