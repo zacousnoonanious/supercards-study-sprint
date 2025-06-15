@@ -30,10 +30,9 @@ export const HeroSection = () => {
       <GlobalStyles />
       <style dangerouslySetInnerHTML={{
         __html: `
-          @keyframes rainbow {
+          @keyframes rainbow-flow {
             0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            100% { background-position: 400% 50%; }
           }
           
           @keyframes particle-float {
@@ -55,7 +54,14 @@ export const HeroSection = () => {
           
           .rainbow-text {
             background: linear-gradient(
-              45deg,
+              90deg,
+              #ff0000,
+              #ff7f00,
+              #ffff00,
+              #00ff00,
+              #0000ff,
+              #4b0082,
+              #9400d3,
               #ff0000,
               #ff7f00,
               #ffff00,
@@ -65,11 +71,11 @@ export const HeroSection = () => {
               #9400d3,
               #ff0000
             );
-            background-size: 200% 200%;
+            background-size: 400% 100%;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: rainbow 3s ease-in-out infinite;
+            animation: rainbow-flow 8s linear infinite;
             filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
             position: relative;
           }
