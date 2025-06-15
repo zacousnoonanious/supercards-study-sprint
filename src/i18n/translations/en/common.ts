@@ -201,4 +201,6 @@ export const common = {
   unexpectedError: "An unexpected error occurred. Please try again.",
   orgIdRequired: "Please enter an organization ID.",
   failedToJoin: "Failed to Join",
+  createOrJoinOrganization: "Create / Join Organization",
+  createOrJoinOrgDescription: "Create a new organization or join an existing one.",
 };

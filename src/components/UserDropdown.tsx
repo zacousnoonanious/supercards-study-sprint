@@ -18,10 +18,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { User, Settings, LogOut, Palette, Type, Plus, UserPlus } from 'lucide-react';
+import { User, Settings, LogOut, Palette, Type, Building, Plus, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { CreateOrganizationDialog } from './CreateOrganizationDialog';
-import { JoinOrganizationDialog } from './JoinOrganizationDialog';
+import { OrganizationDialog } from './OrganizationDialog';
 
 const allThemes = [
   { value: 'light', label: 'Light' },
@@ -49,8 +48,7 @@ export const UserDropdown = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState('/placeholder.svg');
-  const [showCreateOrgDialog, setShowCreateOrgDialog] = useState(false);
-  const [showJoinOrgDialog, setShowJoinOrgDialog] = useState(false);
+  const [showOrgDialog, setShowOrgDialog] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -117,13 +115,9 @@ export const UserDropdown = () => {
           
           <DropdownMenuSeparator />
           <DropdownMenuLabel>{t('common.organization')}</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => setShowCreateOrgDialog(true)} className="cursor-pointer">
-            <Plus className="mr-2 h-4 w-4" />
-            <span>{t('common.createOrganization')}</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowJoinOrgDialog(true)} className="cursor-pointer">
-            <UserPlus className="mr-2 h-4 w-4" />
-            <span>{t('common.joinOrganization')}</span>
+          <DropdownMenuItem onClick={() => setShowOrgDialog(true)} className="cursor-pointer">
+            <Building className="mr-2 h-4 w-4" />
+            <span>{t('common.createOrJoinOrganization')}</span>
           </DropdownMenuItem>
           
           <DropdownMenuSeparator />
@@ -183,13 +177,9 @@ export const UserDropdown = () => {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <CreateOrganizationDialog 
-        open={showCreateOrgDialog} 
-        onOpenChange={setShowCreateOrgDialog} 
-      />
-      <JoinOrganizationDialog 
-        open={showJoinOrgDialog} 
-        onOpenChange={setShowJoinOrgDialog} 
+      <OrganizationDialog 
+        open={showOrgDialog} 
+        onOpenChange={setShowOrgDialog} 
       />
     </>
   );
