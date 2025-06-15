@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,20 +22,13 @@ const Decks = () => {
     queryFn: async () => {
       if (!user?.id) return [];
       
-      let query = supabase
+      // Use the same simple query logic as the dashboard
+      const { data, error } = await supabase
         .from('flashcard_sets')
         .select('*')
+        .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
 
-      if (currentOrganization?.id) {
-        // Show decks from the current org AND the user's personal decks (where org id is null).
-        query = query.or(`organization_id.eq.${currentOrganization.id},and(user_id.eq.${user.id},organization_id.is.null)`);
-      } else {
-        // Show all decks owned by the user if no organization is selected.
-        query = query.eq('user_id', user.id);
-      }
-
-      const { data, error } = await query;
       if (error) {
         console.error('Error fetching flashcard sets:', error);
         throw error;
