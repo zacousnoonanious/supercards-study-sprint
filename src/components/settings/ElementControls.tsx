@@ -91,37 +91,6 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
                 </Button>
               </div>
 
-              {/* Text Alignment Controls */}
-              <div className="flex items-center gap-1">
-                <Button
-                  variant={selectedElement.textAlign === 'left' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleElementUpdate({ textAlign: 'left' })}
-                  className="h-7 px-2"
-                  title={t('editor.alignLeft') || 'Align Left'}
-                >
-                  <AlignLeft className="w-3 h-3" />
-                </Button>
-                <Button
-                  variant={selectedElement.textAlign === 'center' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleElementUpdate({ textAlign: 'center' })}
-                  className="h-7 px-2"
-                  title={t('editor.alignCenter') || 'Align Center'}
-                >
-                  <AlignCenter className="w-3 h-3" />
-                </Button>
-                <Button
-                  variant={selectedElement.textAlign === 'right' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleElementUpdate({ textAlign: 'right' })}
-                  className="h-7 px-2"
-                  title={t('editor.alignRight') || 'Align Right'}
-                >
-                  <AlignRight className="w-3 h-3" />
-                </Button>
-              </div>
-
               {/* Color and Font Size */}
               <div className="flex items-center gap-1">
                 <Input

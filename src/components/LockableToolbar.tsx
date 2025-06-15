@@ -35,7 +35,7 @@ interface LockableToolbarProps {
   onCreateNewCardWithLayout: () => void;
   onDeleteCard: () => void;
   onSave: () => void;
-  onAutoArrange: (type: 'grid' | 'center' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'scale-to-fit' | 'align-elements-left' | 'align-elements-center' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical') => void;
+  onAutoArrange: (type: 'grid' | 'center' | 'stack' | 'scale-to-fit' | 'align-elements-left' | 'align-elements-center' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical') => void;
   isBackSideDisabled?: boolean;
   showGrid?: boolean;
   onToggleGrid?: () => void;
@@ -247,12 +247,6 @@ export const LockableToolbar: React.FC<LockableToolbarProps> = ({
               <StretchVertical className="mr-2 h-4 w-4" />
               <span>{t('toolbar.arrangeDistributeVertical')}</span>
             </DropdownMenuItem>
-             <DropdownMenuSeparator />
-            <DropdownMenuLabel>Text Alignment</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onAutoArrange('align-left')}>{t('toolbar.arrangeAlignLeft')}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onAutoArrange('align-center')}>{t('toolbar.arrangeAlignCenter')}</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onAutoArrange('align-right')}>{t('toolbar.arrangeAlignRight')}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 

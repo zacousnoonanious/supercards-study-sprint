@@ -196,23 +196,6 @@ export const ElementOptionsPanel: React.FC<ElementOptionsPanelProps> = ({
                 </Button>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">{t('editor.textAlign') || 'Text Alignment'}</Label>
-              <Select
-                value={element.textAlign || 'left'}
-                onValueChange={(value) => onUpdate({ textAlign: value as 'left' | 'center' | 'right' })}
-              >
-                <SelectTrigger className="h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="left">{t('editor.alignLeft') || 'Left'}</SelectItem>
-                  <SelectItem value="center">{t('editor.alignCenter') || 'Center'}</SelectItem>
-                  <SelectItem value="right">{t('editor.alignRight') || 'Right'}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </>
         )}
 

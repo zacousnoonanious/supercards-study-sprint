@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { updateFlashcardSet } from '@/lib/api/sets';
@@ -78,7 +79,7 @@ export const useCardEditorHandlers = ({
     }
   };
 
-  const handleAutoArrange = (type: 'grid' | 'center' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'align-elements-center' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit' | 'justify') => {
+  const handleAutoArrange = (type: 'grid' | 'center' | 'stack' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit' | 'align-elements-center') => {
     const elements = currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements;
     if (!elements || elements.length === 0) return;
 
@@ -139,24 +140,6 @@ export const useCardEditorHandlers = ({
             currentYStack += element.height + 20;
           }
         });
-        break;
-        
-      case 'align-left':
-      case 'align-center':
-      case 'align-right':
-        const alignment = type.replace('align-', '') as 'left' | 'center' | 'right';
-        elements.forEach((element, index) => {
-          if (element.type === 'text') {
-            updatedElements[index] = {
-              ...element,
-              textAlign: alignment
-            };
-          }
-        });
-        break;
-
-      case 'justify':
-        // Deprecated, do nothing. This is here for type compatibility.
         break;
 
       case 'align-elements-left':
@@ -243,3 +226,4 @@ export const useCardEditorHandlers = ({
     handleCardUpdate,
   };
 };
+

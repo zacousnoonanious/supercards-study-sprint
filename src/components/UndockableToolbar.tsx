@@ -7,7 +7,7 @@ import { Flashcard, CardTemplate } from '@/types/flashcard';
 
 interface UndockableToolbarProps {
   onAddElement: (type: string) => void;
-  onAutoArrange: (type: 'grid' | 'center' | 'stack' | 'align-left' | 'align-center' | 'align-right' | 'center-horizontal' | 'center-vertical') => void;
+  onAutoArrange: (type: 'grid' | 'center' | 'stack' | 'center-horizontal' | 'center-vertical') => void;
   currentCard: Flashcard;
   currentCardIndex: number;
   totalCards: number;
