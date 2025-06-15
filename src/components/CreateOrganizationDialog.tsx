@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,11 +12,13 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 interface CreateOrganizationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> = ({ 
   open, 
-  onOpenChange 
+  onOpenChange,
+  onSuccess,
 }) => {
   const [name, setName] = useState('');
   const [approvedDomains, setApprovedDomains] = useState<string[]>([]);
@@ -82,6 +84,9 @@ export const CreateOrganizationDialog: React.FC<CreateOrganizationDialogProps> =
         setApprovedDomains([]);
         setNewDomain('');
         onOpenChange(false);
+        if (onSuccess) {
+          onSuccess();
+        }
       } else {
         toast({
           title: "Error",

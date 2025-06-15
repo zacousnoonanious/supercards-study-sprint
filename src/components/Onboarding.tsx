@@ -6,6 +6,8 @@ import { useI18n } from '@/contexts/I18nContext';
 import { Building, User, Users, ArrowRight } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { lang } from '@/i18n/translations/en/lang';
+import { CreateOrganizationDialog } from '@/components/CreateOrganizationDialog';
+import { JoinDeckDialog } from '@/components/JoinDeckDialog';
 
 const OnboardingLanguageSelector = () => {
   const { language, setLanguage } = useI18n();
@@ -48,49 +50,62 @@ const WelcomeStep = ({ onNext }: { onNext: () => void }) => {
 
 const OrgStep = ({ onComplete }: { onComplete: () => void }) => {
   const { t } = useI18n();
+  const [showCreateOrg, setShowCreateOrg] = useState(false);
+  const [showJoinOrg, setShowJoinOrg] = useState(false);
 
   const handleSelection = (type: 'create' | 'join' | 'individual') => {
-    // For now, all paths lead to completion.
-    // This can be expanded later to include actual org creation/joining logic.
     if (type === 'individual') {
-       onComplete();
-    } else {
-        // Placeholder for future implementation
-        alert(t('thisFeatureIsComingSoonForNowYouCanContinueAsAnIndividual'));
-        onComplete();
+      onComplete();
+    } else if (type === 'create') {
+      setShowCreateOrg(true);
+    } else if (type === 'join') {
+      setShowJoinOrg(true);
     }
   };
 
   return (
-    <Card className="animate-fade-in">
-      <CardHeader>
-        <CardTitle>{t('howWillYouBeUsingSuperCards')}</CardTitle>
-        <CardDescription>{t('youCanAlwaysChangeThisLaterFromYourSettings')}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <Button variant="outline" className="w-full h-auto p-4 justify-start text-left" onClick={() => handleSelection('create')}>
-          <Building className="mr-4 h-6 w-6 flex-shrink-0" />
-          <div>
-            <p className="font-semibold">{t('createAnOrganization')}</p>
-            <p className="text-sm text-muted-foreground">{t('collaborateWithYourTeamOnSharedDecks')}</p>
-          </div>
-        </Button>
-        <Button variant="outline" className="w-full h-auto p-4 justify-start text-left" onClick={() => handleSelection('join')}>
-          <Users className="mr-4 h-6 w-6 flex-shrink-0" />
-          <div>
-            <p className="font-semibold">{t('joinAnOrganization')}</p>
-            <p className="text-sm text-muted-foreground">{t('joinViaAnInviteCodeOrEmail')}</p>
-          </div>
-        </Button>
-        <Button variant="outline" className="w-full h-auto p-4 justify-start text-left" onClick={() => handleSelection('individual')}>
-          <User className="mr-4 h-6 w-6 flex-shrink-0" />
-          <div>
-            <p className="font-semibold">{t('useAsAnIndividual')}</p>
-            <p className="text-sm text-muted-foreground">{t('forPersonalStudyAndCreatingYourOwnDecks')}</p>
-          </div>
-        </Button>
-      </CardContent>
-    </Card>
+    <>
+      <Card className="animate-fade-in">
+        <CardHeader>
+          <CardTitle>{t('howWillYouBeUsingSuperCards')}</CardTitle>
+          <CardDescription>{t('youCanAlwaysChangeThisLaterFromYourSettings')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Button variant="outline" className="w-full h-auto p-4 justify-start text-left" onClick={() => handleSelection('create')}>
+            <Building className="mr-4 h-6 w-6 flex-shrink-0" />
+            <div>
+              <p className="font-semibold">{t('createAnOrganization')}</p>
+              <p className="text-sm text-muted-foreground">{t('collaborateWithYourTeamOnSharedDecks')}</p>
+            </div>
+          </Button>
+          <Button variant="outline" className="w-full h-auto p-4 justify-start text-left" onClick={() => handleSelection('join')}>
+            <Users className="mr-4 h-6 w-6 flex-shrink-0" />
+            <div>
+              <p className="font-semibold">{t('joinAnOrganization')}</p>
+              <p className="text-sm text-muted-foreground">{t('joinViaAnInviteCodeOrEmail')}</p>
+            </div>
+          </Button>
+          <Button variant="outline" className="w-full h-auto p-4 justify-start text-left" onClick={() => handleSelection('individual')}>
+            <User className="mr-4 h-6 w-6 flex-shrink-0" />
+            <div>
+              <p className="font-semibold">{t('useAsAnIndividual')}</p>
+              <p className="text-sm text-muted-foreground">{t('forPersonalStudyAndCreatingYourOwnDecks')}</p>
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+      <CreateOrganizationDialog
+        open={showCreateOrg}
+        onOpenChange={setShowCreateOrg}
+        onSuccess={onComplete}
+      />
+      <JoinDeckDialog
+        open={showJoinOrg}
+        onOpenChange={setShowJoinOrg}
+        onJoinOrgSuccess={onComplete}
+        initialView="organization"
+      />
+    </>
   );
 };
 

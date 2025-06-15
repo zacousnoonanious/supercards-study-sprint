@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,20 +12,41 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface JoinDeckDialogProps {
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onJoinDeckSuccess?: () => void;
+  onJoinOrgSuccess?: () => void;
+  initialView?: 'deck' | 'organization';
 }
 
-export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({ trigger }) => {
-  const [isOpen, setIsOpen] = useState(false);
+export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({ 
+  trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  onJoinDeckSuccess,
+  onJoinOrgSuccess,
+  initialView = 'deck',
+}) => {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
+  const onOpenChange = controlledOnOpenChange || setUncontrolledOpen;
+
   const [inviteCode, setInviteCode] = useState('');
   const [orgId, setOrgId] = useState('');
   const [password, setPassword] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [requiresPassword, setRequiresPassword] = useState(false);
-  const [joinType, setJoinType] = useState<'deck' | 'organization'>('deck');
+  const [joinType, setJoinType] = useState<'deck' | 'organization'>(initialView);
   const { toast } = useToast();
   const { joinDeckViaInvite } = useInviteLinks({ setId: '' });
   const { joinOrganization } = useOrganization();
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (open) {
+      setJoinType(initialView);
+    }
+  }, [open, initialView]);
 
   const handleJoinDeck = async () => {
     if (!inviteCode.trim()) {
@@ -47,7 +68,11 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({ trigger }) => {
           description: result.message,
         });
         handleClose();
-        window.location.reload();
+        if (onJoinDeckSuccess) {
+          onJoinDeckSuccess();
+        } else {
+          window.location.reload();
+        }
       } else {
         if (result.requiresPassword) {
           setRequiresPassword(true);
@@ -95,12 +120,13 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({ trigger }) => {
           description: result.message,
         });
         
-        if (result.status === 'active') {
-          handleClose();
+        handleClose();
+        if (onJoinOrgSuccess) {
+          onJoinOrgSuccess();
+        } else if (result.status === 'active') {
           window.location.reload();
-        } else {
-          handleClose();
         }
+
       } else {
         toast({
           title: "Failed to Join",
@@ -120,7 +146,7 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({ trigger }) => {
   };
 
   const handleClose = () => {
-    setIsOpen(false);
+    onOpenChange(false);
     setInviteCode('');
     setOrgId('');
     setPassword('');
@@ -129,15 +155,8 @@ export const JoinDeckDialog: React.FC<JoinDeckDialogProps> = ({ trigger }) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline">
-            <UserPlus className="w-4 h-4 mr-2" />
-            Join Deck
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
