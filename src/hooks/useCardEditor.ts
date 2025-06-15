@@ -99,13 +99,17 @@ export const useCardEditor = () => {
           // Card not found, redirect to first card
           if (typedCards[0]) {
             console.log('useCardEditor: Card not found, redirecting to first card');
-            navigate(`/editor/${providedSetId}/${typedCards[0].id}`, { replace: true });
+            const newUrl = `/editor/${providedSetId}/${typedCards[0].id}`;
+            navigate(newUrl, { replace: true });
           }
         }
       } else if (typedCards.length > 0) {
         // No specific card requested, go to first card
         console.log('useCardEditor: No card specified, setting to first card');
         setCurrentCardIndex(0);
+        // Update URL to include the first card ID
+        const newUrl = `/editor/${providedSetId}/${typedCards[0].id}`;
+        navigate(newUrl, { replace: true });
       }
     } catch (error) {
       console.error('useCardEditor: Error initializing editor:', error);
@@ -120,7 +124,9 @@ export const useCardEditor = () => {
       const currentCard = cards[currentCardIndex];
       if (currentCard && currentCard.id !== cardId) {
         setIsUrlUpdating(true);
-        navigate(`/editor/${setId}/${currentCard.id}`, { replace: true });
+        const newUrl = `/editor/${setId}/${currentCard.id}`;
+        console.log('useCardEditor: Updating URL to:', newUrl);
+        navigate(newUrl, { replace: true });
         
         // Reset the flag after navigation
         setTimeout(() => {
@@ -362,7 +368,11 @@ export const useCardEditor = () => {
       };
 
       const newCardIndex = cards.length;
+      
+      // Update cards state first
       setCards(prevCards => [...prevCards, createdCard]);
+      
+      // Then navigate to the new card - this will automatically update the URL
       setCurrentCardIndex(newCardIndex);
       setSelectedElement(null);
       setCurrentSide('front');
@@ -438,7 +448,11 @@ export const useCardEditor = () => {
       };
 
       const newCardIndex = cards.length;
+      
+      // Update cards state first
       setCards(prevCards => [...prevCards, createdCard]);
+      
+      // Then navigate to the new card - this will automatically update the URL
       setCurrentCardIndex(newCardIndex);
       setSelectedElement(null);
       setCurrentSide('front');
