@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Users, Eye, Edit3 } from 'lucide-react';
 import { CollaborativeUser, CollaboratorInfo } from '@/hooks/useCollaborativeEditing';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface CollaborationIndicatorProps {
   activeUsers: CollaborativeUser[];
@@ -19,6 +20,7 @@ export const CollaborationIndicator: React.FC<CollaborationIndicatorProps> = ({
   currentCardId,
   isCollaborative,
 }) => {
+  const { t } = useI18n();
   if (!isCollaborative) return null;
 
   const usersOnCurrentCard = activeUsers.filter(user => user.card_id === currentCardId);
@@ -37,6 +39,17 @@ export const CollaborationIndicator: React.FC<CollaborationIndicatorProps> = ({
   const getUserRole = (userId: string) => {
     const collaborator = collaborators.find(c => c.user_id === userId);
     return collaborator?.role || 'viewer';
+  };
+
+  const TranslatedUserTooltip: React.FC<{user: CollaborativeUser, messageKey: string}> = ({ user, messageKey }) => {
+    const userRole = getUserRole(user.id);
+    const translatedRole = userRole === 'editor' ? t('collaboration.roleEditor') : t('collaboration.roleViewer');
+    return (
+      <TooltipContent>
+        <p>{t('collaboration.userTooltip', { name: user.name, role: translatedRole })}</p>
+        <p className="text-xs text-muted-foreground">{t(messageKey)}</p>
+      </TooltipContent>
+    );
   };
 
   return (
@@ -66,10 +79,7 @@ export const CollaborationIndicator: React.FC<CollaborationIndicatorProps> = ({
                     </div>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>{user.name} - {getUserRole(user.id)}</p>
-                  <p className="text-xs text-muted-foreground">Active on this card</p>
-                </TooltipContent>
+                <TranslatedUserTooltip user={user} messageKey="collaboration.activeOnThisCard" />
               </Tooltip>
             ))}
             {usersOnCurrentCard.length > 3 && (
@@ -97,10 +107,7 @@ export const CollaborationIndicator: React.FC<CollaborationIndicatorProps> = ({
                     </Avatar>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>{user.name} - {getUserRole(user.id)}</p>
-                  <p className="text-xs text-muted-foreground">Active on another card</p>
-                </TooltipContent>
+                <TranslatedUserTooltip user={user} messageKey="collaboration.activeOnAnotherCard" />
               </Tooltip>
             ))}
             {usersOnOtherCards.length > 2 && (
@@ -126,10 +133,7 @@ export const CollaborationIndicator: React.FC<CollaborationIndicatorProps> = ({
                     </AvatarFallback>
                   </Avatar>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>{user.name} - {getUserRole(user.id)}</p>
-                  <p className="text-xs text-muted-foreground">Browsing deck</p>
-                </TooltipContent>
+                <TranslatedUserTooltip user={user} messageKey="collaboration.browsingDeck" />
               </Tooltip>
             ))}
           </TooltipProvider>
@@ -137,7 +141,7 @@ export const CollaborationIndicator: React.FC<CollaborationIndicatorProps> = ({
       )}
 
       {activeUsers.length === 0 && (
-        <span className="text-xs text-muted-foreground">No other users online</span>
+        <span className="text-xs text-muted-foreground">{t('collaboration.noOtherUsersOnline')}</span>
       )}
     </div>
   );

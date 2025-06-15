@@ -28,16 +28,16 @@ export const I18nTester: React.FC = () => {
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
-        <CardTitle>i18n Translation Tester</CardTitle>
+        <CardTitle>{t('i18nTester.title')}</CardTitle>
         <div className="flex items-center gap-2">
-          <span>Current Language: </span>
+          <span>{t('i18nTester.currentLanguage')}</span>
           <Badge variant="secondary">{language}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Language Switcher */}
         <div className="space-y-2">
-          <h4 className="font-medium">Available Languages:</h4>
+          <h4 className="font-medium">{t('i18nTester.availableLanguages')}</h4>
           <div className="flex flex-wrap gap-2">
             {availableLanguages.map((lang) => (
               <Button
@@ -57,7 +57,7 @@ export const I18nTester: React.FC = () => {
 
         {/* Test Translations */}
         <div className="space-y-2">
-          <h4 className="font-medium">Test Translations:</h4>
+          <h4 className="font-medium">{t('i18nTester.testTranslations')}</h4>
           <div className="space-y-1 text-sm">
             {testKeys.map((key) => {
               const translation = t(key);
@@ -74,13 +74,13 @@ export const I18nTester: React.FC = () => {
 
         {/* Debug Info */}
         <div className="space-y-2 pt-4 border-t">
-          <h4 className="font-medium">Debug Info:</h4>
+          <h4 className="font-medium">{t('i18nTester.debugInfo')}</h4>
           <div className="text-xs space-y-1">
-            <div>Language: {JSON.stringify(language)}</div>
-            <div>Available Languages: {JSON.stringify(availableLanguages)}</div>
-            <div>Sample Translation Test: {t('welcome') || 'NOT FOUND'}</div>
-            <div>Chinese Simplified Test: {language === 'zh-CN' ? t('welcome') : 'Not in zh-CN mode'}</div>
-            <div>Chinese Traditional Test: {language === 'zh-TW' ? t('welcome') : 'Not in zh-TW mode'}</div>
+            <div>{t('i18nTester.language')} {JSON.stringify(language)}</div>
+            <div>{t('i18nTester.availableLanguages')} {JSON.stringify(availableLanguages)}</div>
+            <div>{t('i18nTester.sampleTranslationTest')} {t('welcome') || t('i18nTester.notFound')}</div>
+            <div>{t('i18nTester.chineseSimplifiedTest')} {language === 'zh-CN' ? t('welcome') : t('i18nTester.notInZhCnMode')}</div>
+            <div>{t('i18nTester.chineseTraditionalTest')} {language === 'zh-TW' ? t('welcome') : t('i18nTester.notInZhTwMode')}</div>
           </div>
         </div>
       </CardContent>

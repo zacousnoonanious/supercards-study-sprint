@@ -15,7 +15,7 @@ const availableTranslations = {
 interface I18nContextType {
   language: string;
   setLanguage: (lang: string) => void;
-  t: (key: string) => string;
+  t: (key: string, replacements?: { [key: string]: string | number }) => string;
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
@@ -23,37 +23,43 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined);
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState('en');
 
-  // Helper function to get nested translation value
-  const getTranslation = (key: string): string => {
-    const keys = key.split('.');
-    const translations = availableTranslations[language as keyof typeof availableTranslations] || availableTranslations.en;
-    let value: any = translations;
-    
+  const resolveKey = (translations: any, keys: string[]): string | undefined => {
+    let result: any = translations;
     for (const k of keys) {
-      if (value && typeof value === 'object' && k in value) {
-        value = value[k];
+      if (result && typeof result === 'object' && k in result) {
+        result = result[k];
       } else {
-        // Fallback to English if translation not found in current language
-        if (language !== 'en') {
-          let englishValue: any = availableTranslations.en;
-          for (const englishKey of keys) {
-            if (englishValue && typeof englishValue === 'object' && englishKey in englishValue) {
-              englishValue = englishValue[englishKey];
-            } else {
-              return key; // Return key if even English doesn't have it
-            }
-          }
-          return typeof englishValue === 'string' ? englishValue : key;
-        }
-        return key;
+        return undefined;
       }
     }
-    
-    return typeof value === 'string' ? value : key;
+    return typeof result === 'string' ? result : undefined;
   };
 
-  const t = (key: string): string => {
-    return getTranslation(key);
+  // Helper function to get nested translation value
+  const getTranslation = (key: string, replacements?: { [key: string]: string | number }): string => {
+    const keys = key.split('.');
+    const currentTranslations = availableTranslations[language as keyof typeof availableTranslations] || availableTranslations.en;
+    
+    let value = resolveKey(currentTranslations, keys);
+    
+    // Fallback to English if not found in current language
+    if (value === undefined && language !== 'en') {
+      value = resolveKey(availableTranslations.en, keys);
+    }
+
+    let finalValue = value !== undefined ? value : key;
+
+    if (replacements && typeof finalValue === 'string') {
+      Object.entries(replacements).forEach(([placeholder, replacementValue]) => {
+        finalValue = finalValue.replace(new RegExp(`\\{${placeholder}\\}`, 'g'), String(replacementValue));
+      });
+    }
+    
+    return finalValue;
+  };
+
+  const t = (key: string, replacements?: { [key: string]: string | number }): string => {
+    return getTranslation(key, replacements);
   };
 
   // Load language preference from localStorage

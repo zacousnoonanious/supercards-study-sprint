@@ -6,11 +6,13 @@ import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 const AddCard = () => {
   const { setId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   console.log('AddCard: setId from params:', setId);
 
@@ -33,7 +35,7 @@ const AddCard = () => {
   if (!setId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg">Set ID not found</div>
+        <div className="text-lg">{t('addCard.setIdNotFound')}</div>
       </div>
     );
   }
@@ -50,9 +52,9 @@ const AddCard = () => {
             className="flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Set
+            {t('addCard.backToSet')}
           </Button>
-          <h2 className="text-2xl font-bold text-foreground">Add New Card</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t('addCard.addNewCard')}</h2>
         </div>
         
         <div className="flex items-center justify-center">

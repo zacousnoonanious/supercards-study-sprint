@@ -72,7 +72,7 @@ const Decks = () => {
   if (orgLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg text-foreground">Loading...</div>
+        <div className="text-lg text-foreground">{t('common.loading')}</div>
       </div>
     );
   }

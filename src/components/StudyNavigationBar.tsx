@@ -73,7 +73,7 @@ export const StudyNavigationBar: React.FC<StudyNavigationBarProps> = ({
             className="flex items-center gap-2 min-w-[100px]"
           >
             <RotateCcw className="w-4 h-4" />
-            {showAnswer ? 'Back' : 'Front'}
+            {t(showAnswer ? 'setView.back' : 'setView.front')}
           </Button>
 
           {countdownTimer > 0 && timeLeft > 0 && (

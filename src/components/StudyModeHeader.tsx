@@ -46,7 +46,7 @@ export const StudyModeHeader: React.FC<StudyModeHeaderProps> = ({
             <div>
               <h1 className="text-lg sm:text-2xl font-bold text-primary">{set.title}</h1>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Card {currentIndex + 1} of {totalCards} • {t('common.correct')}: {sessionStats.correct} • {t('common.incorrect')}: {sessionStats.incorrect}
+                {t('common.cardProgress', { current: currentIndex + 1, total: totalCards })} • {t('common.correct')}: {sessionStats.correct} • {t('common.incorrect')}: {sessionStats.incorrect}
               </p>
             </div>
           </div>

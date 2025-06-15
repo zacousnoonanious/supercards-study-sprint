@@ -1,3 +1,4 @@
+
 export const englishTranslations = {
   common: {
     save: "Save",
@@ -167,6 +168,7 @@ export const englishTranslations = {
     showIcons: "Show Icons",
     showText: "Show Text",
     toggleView: "Toggle View",
+    cardProgress: "Card {current} of {total}",
   },
   editor: {
     content: "Content",
@@ -258,6 +260,7 @@ export const englishTranslations = {
     createNewCard: "Create new card",
     card: "Card",
     save: "Save",
+    overview: "Overview",
   },
   contextMenu: {
     bringToFront: "Bring to Front",
@@ -454,7 +457,8 @@ export const englishTranslations = {
     deleteMessage: "Are you sure you want to delete '{title}'? This action cannot be undone.",
     deleteSuccess: "Deck '{title}' has been deleted successfully",
     deleteError: "Failed to delete deck",
-    loadError: "Failed to load decks"
+    loadError: "Failed to load decks",
+    joinDeck: "Join Existing Deck",
   },
   ai: {
     generateDeck: "Generate AI Deck",
@@ -636,5 +640,33 @@ export const englishTranslations = {
     unexpectedError: "An unexpected error occurred.",
     noAccount: "Don't have an account? Sign up",
     hasAccount: "Already have an account? Sign in",
+  },
+  addCard: {
+    setIdNotFound: "Set ID not found",
+    backToSet: "Back to Set",
+    addNewCard: "Add New Card",
+  },
+  i18nTester: {
+    title: "i18n Translation Tester",
+    currentLanguage: "Current Language: ",
+    availableLanguages: "Available Languages:",
+    testTranslations: "Test Translations:",
+    debugInfo: "Debug Info:",
+    language: "Language:",
+    sampleTranslationTest: "Sample Translation Test:",
+    notFound: "NOT FOUND",
+    chineseSimplifiedTest: "Chinese Simplified Test:",
+    notInZhCnMode: "Not in zh-CN mode",
+    chineseTraditionalTest: "Chinese Traditional Test:",
+    notInZhTwMode: "Not in zh-TW mode",
+  },
+  collaboration: {
+    roleEditor: "Editor",
+    roleViewer: "Viewer",
+    activeOnThisCard: "Active on this card",
+    activeOnAnotherCard: "Active on another card",
+    browsingDeck: "Browsing deck",
+    noOtherUsersOnline: "No other users online",
+    userTooltip: "{name} - {role}",
   },
 };

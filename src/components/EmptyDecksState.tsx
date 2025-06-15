@@ -26,7 +26,7 @@ export const EmptyDecksState: React.FC = () => {
             trigger={
               <Button variant="outline">
                 <UserPlus className="w-4 h-4 mr-2" />
-                Join Existing Deck
+                {t('decks.joinDeck')}
               </Button>
             }
           />

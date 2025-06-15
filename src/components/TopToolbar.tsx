@@ -9,6 +9,7 @@ import { Flashcard } from '@/types/flashcard';
 import { EditableDeckTitle } from './EditableDeckTitle';
 import { CollaborationIndicator } from './collaboration/CollaborationIndicator';
 import { CollaborativeUser, CollaboratorInfo } from '@/hooks/useCollaborativeEditing';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface TopToolbarProps {
   deckName: string;
@@ -40,6 +41,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   currentCardId,
   isCollaborative = false,
 }) => {
+  const { t } = useI18n();
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center gap-4">
@@ -50,7 +52,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
         <Separator orientation="vertical" className="h-6" />
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-xs">
-            Card {currentCardIndex + 1} of {cards.length}
+            {t('common.cardProgress', { current: currentCardIndex + 1, total: cards.length })}
           </Badge>
         </div>
       </div>
@@ -74,7 +76,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
           onClick={() => onShowCardOverviewChange(!showCardOverview)}
         >
           <Eye className="w-4 h-4 mr-2" />
-          Overview
+          {t('toolbar.overview')}
         </Button>
         
         <Button variant="ghost" size="sm">
