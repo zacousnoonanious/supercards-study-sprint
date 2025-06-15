@@ -28,12 +28,8 @@ export const Navigation = () => {
     { path: '/dashboard', label: t('nav.dashboard'), icon: null },
     { path: '/decks', label: t('nav.decks'), icon: null },
     { path: '/marketplace', label: t('nav.marketplace'), icon: null },
+    ...(isAdminUser ? [{ path: '/admin', label: t('nav.admin'), icon: Shield }] : []),
   ];
-
-  // Add admin link for org_admin and super_admin users
-  if (isAdminUser) {
-    navigationItems.push({ path: '/admin', label: 'Admin', icon: Shield });
-  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">

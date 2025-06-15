@@ -13,4 +13,5 @@ export const nav = {
   marketplace: "Marketplace",
   navigation: "Navigation",
   signOut: "Sign Out",
+  admin: "Admin",
 };
