@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
-import { InteractiveCardCreator } from '@/components/InteractiveCardCreator';
 import { StudyModePreSettings, StudySettings } from '@/components/StudyModePreSettings';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -18,8 +17,6 @@ interface FlashcardSet {
 interface SetViewDialogsProps {
   showAIGenerator: boolean;
   onShowAIGenerator: (show: boolean) => void;
-  showCardCreator: boolean;
-  onShowCardCreator: (show: boolean) => void;
   showStudySettings: boolean;
   onShowStudySettings: (show: boolean) => void;
   showPermanentShuffleSettings: boolean;
@@ -28,7 +25,6 @@ interface SetViewDialogsProps {
   set?: FlashcardSet;
   cards: any[];
   onAIGenerated: () => void;
-  onCardCreated: () => void;
   onStartStudyWithSettings: (settings: StudySettings) => void;
   onPermanentShuffleToggle: (enabled: boolean) => void;
 }
@@ -36,8 +32,6 @@ interface SetViewDialogsProps {
 export const SetViewDialogs: React.FC<SetViewDialogsProps> = ({
   showAIGenerator,
   onShowAIGenerator,
-  showCardCreator,
-  onShowCardCreator,
   showStudySettings,
   onShowStudySettings,
   showPermanentShuffleSettings,
@@ -46,7 +40,6 @@ export const SetViewDialogs: React.FC<SetViewDialogsProps> = ({
   set,
   cards,
   onAIGenerated,
-  onCardCreated,
   onStartStudyWithSettings,
   onPermanentShuffleToggle,
 }) => {
@@ -96,20 +89,6 @@ export const SetViewDialogs: React.FC<SetViewDialogsProps> = ({
             setId={setId}
             onGenerated={onAIGenerated}
             mode="add-to-set"
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Card Creator Dialog */}
-      <Dialog open={showCardCreator} onOpenChange={onShowCardCreator}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('setView.createNewCardTitle')}</DialogTitle>
-          </DialogHeader>
-          <InteractiveCardCreator
-            setId={setId}
-            onCardCreated={onCardCreated}
-            onClose={() => onShowCardCreator(false)}
           />
         </DialogContent>
       </Dialog>

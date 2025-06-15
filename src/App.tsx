@@ -17,7 +17,6 @@ import StudyMode from "./pages/StudyMode";
 import Decks from "./pages/Decks";
 import Profile from "./pages/Profile";
 import CardEditorPage from "./pages/CardEditorPage";
-import AddCard from "./pages/AddCard";
 import JoinDeck from "./pages/JoinDeck";
 import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
@@ -82,11 +81,6 @@ function App() {
                     <Route path="/editor/:setId/:cardId?" element={
                       <ProtectedRoute>
                         <CardEditorPage />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/add-card/:setId" element={
-                      <ProtectedRoute>
-                        <AddCard />
                       </ProtectedRoute>
                     } />
                     <Route path="/marketplace" element={

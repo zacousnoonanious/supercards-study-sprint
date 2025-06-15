@@ -35,8 +35,6 @@ const SetView = () => {
     cards,
     showAIGenerator,
     setShowAIGenerator,
-    showCardCreator,
-    setShowCardCreator,
     showEnhancedOverview,
     setShowEnhancedOverview,
     showStudySettings,
@@ -45,8 +43,6 @@ const SetView = () => {
     setShowPermanentShuffleSettings,
     defaultTemplate,
     handleAIGenerated,
-    handleCardCreated,
-    handleCreateCard,
     handleCreateFromTemplate,
     handleSetDefaultTemplate,
     handleDeleteCard,
@@ -98,7 +94,7 @@ const SetView = () => {
         onReorderCards={handleReorderCards}
         onNavigateToCard={handleNavigateToCard}
         onBackToSet={() => setShowEnhancedOverview(false)}
-        onCreateCard={handleCreateCard}
+        onCreateCard={() => setShowTemplateLibrary(true)}
         onCreateFromTemplate={handleCreateFromTemplate}
         onSetDefaultTemplate={handleSetDefaultTemplate}
         onDeleteCard={handleDeleteCard}
@@ -168,8 +164,6 @@ const SetView = () => {
       <SetViewDialogs
         showAIGenerator={showAIGenerator}
         onShowAIGenerator={setShowAIGenerator}
-        showCardCreator={showCardCreator}
-        onShowCardCreator={setShowCardCreator}
         showStudySettings={showStudySettings}
         onShowStudySettings={setShowStudySettings}
         showPermanentShuffleSettings={showPermanentShuffleSettings}
@@ -178,7 +172,6 @@ const SetView = () => {
         set={set}
         cards={cards}
         onAIGenerated={handleAIGenerated}
-        onCardCreated={handleCardCreated}
         onStartStudyWithSettings={handleStartStudyWithSettings}
         onPermanentShuffleToggle={handlePermanentShuffleToggle}
       />

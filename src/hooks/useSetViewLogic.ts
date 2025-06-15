@@ -27,7 +27,6 @@ export const useSetViewLogic = () => {
   const { toast } = useToast();
 
   const [showAIGenerator, setShowAIGenerator] = useState(false);
-  const [showCardCreator, setShowCardCreator] = useState(false);
   const [showEnhancedOverview, setShowEnhancedOverview] = useState(false);
   const [showStudySettings, setShowStudySettings] = useState(false);
   const [showPermanentShuffleSettings, setShowPermanentShuffleSettings] = useState(false);
@@ -116,18 +115,6 @@ export const useSetViewLogic = () => {
       title: t('setView.success'),
       description: t('setView.aiCardsAdded'),
     });
-  };
-
-  const handleCardCreated = () => {
-    setShowCardCreator(false);
-    refetchCards();
-  };
-
-  const handleCreateCard = async () => {
-    if (!setId) return;
-
-    // Navigate to the add card page instead of creating inline
-    navigate(`/set/${setId}/add-card`);
   };
 
   const handleCreateFromTemplate = async (template: CardTemplate) => {
@@ -319,8 +306,6 @@ export const useSetViewLogic = () => {
     cards,
     showAIGenerator,
     setShowAIGenerator,
-    showCardCreator,
-    setShowCardCreator,
     showEnhancedOverview,
     setShowEnhancedOverview,
     showStudySettings,
@@ -329,8 +314,6 @@ export const useSetViewLogic = () => {
     setShowPermanentShuffleSettings,
     defaultTemplate,
     handleAIGenerated,
-    handleCardCreated,
-    handleCreateCard,
     handleCreateFromTemplate,
     handleSetDefaultTemplate,
     handleDeleteCard,
