@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 
@@ -93,45 +92,75 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
     camera.position.z = 8;
     cameraRef.current = camera;
 
-    // Renderer setup
+    // Renderer setup with shadows
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
+
+    // Enhanced lighting setup for cardboard effect
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 5, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    scene.add(directionalLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 0.5, 50);
+    pointLight.position.set(-5, 5, 5);
+    scene.add(pointLight);
 
     // Create flashcards
     const cards: THREE.Mesh[] = [];
     const particles: THREE.Points[] = [];
     
     expandedFlashcards.forEach((flashcard, index) => {
-      // Card geometry - slightly larger for better visibility
-      const geometry = new THREE.PlaneGeometry(1.2, 0.8);
-      const material = new THREE.MeshBasicMaterial({
+      // Enhanced card geometry with thickness for 3D effect
+      const geometry = new THREE.BoxGeometry(1.2, 0.8, 0.05);
+      
+      // Create cardboard-like material with enhanced properties
+      const material = new THREE.MeshLambertMaterial({
         color: flashcard.color,
-        transparent: true,
-        opacity: 0, // Start invisible
+        transparent: false, // Fully opaque
         side: THREE.DoubleSide,
       });
+
+      // Add roughness texture simulation for cardboard effect
+      const roughnessMap = new THREE.DataTexture(
+        new Uint8Array([128, 140, 120, 135, 125, 145, 130, 138]).map(v => [v, v, v, 255]).flat(),
+        2, 2, THREE.RGBAFormat
+      );
+      roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
+      roughnessMap.repeat.set(4, 4);
+      roughnessMap.needsUpdate = true;
 
       const card = new THREE.Mesh(geometry, material);
       
       // Orbital properties around center (login dialog)
-      const orbitRadius = 3 + Math.random() * 5; // Varying distances from center
-      const orbitAngle = (index / expandedFlashcards.length) * Math.PI * 2; // Evenly distribute around circle
-      const orbitHeight = (Math.random() - 0.5) * 4; // Vertical variation
+      const orbitRadius = 3 + Math.random() * 5;
+      const orbitAngle = (index / expandedFlashcards.length) * Math.PI * 2;
+      const orbitHeight = (Math.random() - 0.5) * 4;
       
-      // Position cards in orbit around center
       card.position.x = Math.cos(orbitAngle) * orbitRadius;
       card.position.y = Math.sin(orbitAngle) * orbitRadius + orbitHeight;
-      card.position.z = (Math.random() - 0.5) * 6; // 3D depth variation
+      card.position.z = (Math.random() - 0.5) * 6;
+      
+      // Enable shadows
+      card.castShadow = true;
+      card.receiveShadow = true;
       
       // Store orbital properties
       (card as any).orbitProperties = {
         radius: orbitRadius,
         angle: orbitAngle,
         height: orbitHeight,
-        speed: 0.1 + Math.random() * 0.15, // Much slower orbital speeds
+        speed: 0.1 + Math.random() * 0.15,
         originalRadius: orbitRadius,
       };
 
@@ -139,13 +168,13 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       (card as any).cardData = flashcard;
       (card as any).isFlipped = false;
       (card as any).flipCooldown = 0;
-      (card as any).nextFlipTime = Math.random() * 20000 + 15000; // Much slower flipping (15-35 seconds)
+      (card as any).nextFlipTime = Math.random() * 20000 + 15000;
 
       // Animation properties
       (card as any).animationDelay = index * 100;
       (card as any).hasStartedAnimation = false;
       (card as any).rotationSpeed = {
-        x: (Math.random() - 0.5) * 0.003, // Much more subtle rotation
+        x: (Math.random() - 0.5) * 0.003,
         y: (Math.random() - 0.5) * 0.003,
         z: (Math.random() - 0.5) * 0.003,
       };
@@ -153,24 +182,56 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       scene.add(card);
       cards.push(card);
 
-      // Create particle effect for each card
+      // Enhanced particle system that emits from all sides
       const particleGeometry = new THREE.BufferGeometry();
-      const particleCount = 8; // Small number of particles per card
+      const particleCount = 20; // More particles for better effect
       const positions = new Float32Array(particleCount * 3);
+      const velocities = new Float32Array(particleCount * 3);
+      const ages = new Float32Array(particleCount);
       
-      for (let i = 0; i < particleCount * 3; i += 3) {
-        positions[i] = (Math.random() - 0.5) * 0.5; // x
-        positions[i + 1] = (Math.random() - 0.5) * 0.5; // y
-        positions[i + 2] = (Math.random() - 0.5) * 0.2; // z
+      // Initialize particles around the card perimeter
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+        
+        // Start particles at the edges of the card
+        const side = Math.floor(Math.random() * 4); // 4 sides
+        switch (side) {
+          case 0: // Top edge
+            positions[i3] = (Math.random() - 0.5) * 1.2;
+            positions[i3 + 1] = 0.4;
+            break;
+          case 1: // Right edge
+            positions[i3] = 0.6;
+            positions[i3 + 1] = (Math.random() - 0.5) * 0.8;
+            break;
+          case 2: // Bottom edge
+            positions[i3] = (Math.random() - 0.5) * 1.2;
+            positions[i3 + 1] = -0.4;
+            break;
+          case 3: // Left edge
+            positions[i3] = -0.6;
+            positions[i3 + 1] = (Math.random() - 0.5) * 0.8;
+            break;
+        }
+        positions[i3 + 2] = (Math.random() - 0.5) * 0.1;
+        
+        // Set initial velocities radiating outward
+        velocities[i3] = (Math.random() - 0.5) * 0.02;
+        velocities[i3 + 1] = (Math.random() - 0.5) * 0.02;
+        velocities[i3 + 2] = (Math.random() - 0.5) * 0.01;
+        
+        ages[i] = Math.random() * 100;
       }
       
       particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      (particleGeometry as any).velocities = velocities;
+      (particleGeometry as any).ages = ages;
       
       const particleMaterial = new THREE.PointsMaterial({
         color: flashcard.color,
-        size: 0.02,
+        size: 0.03,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.8,
         blending: THREE.AdditiveBlending,
       });
       
@@ -200,10 +261,10 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
       animationIdRef.current = requestAnimationFrame(animate);
 
       const currentTime = Date.now();
-      const mouseInfluence = 0.1; // Reduced mouse influence for subtlety
+      const mouseInfluence = 0.1;
       
       cards.forEach((card, index) => {
-        const material = card.material as THREE.MeshBasicMaterial;
+        const material = card.material as THREE.MeshLambertMaterial;
         const cardData = card as any;
         const particleSystem = particles[index];
         
@@ -213,14 +274,11 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
         }
         
         if (cardData.hasStartedAnimation) {
-          // Fade in the card
-          if (material.opacity < 0.9) {
-            material.opacity += 0.015;
-          }
+          // Cards are always fully visible (no opacity fade)
           
           // Orbital motion around center point - much more subtle
           const orbitProps = cardData.orbitProperties;
-          orbitProps.angle += orbitProps.speed * 0.002; // Much slower orbital rotation
+          orbitProps.angle += orbitProps.speed * 0.002;
           
           // Calculate new position
           card.position.x = Math.cos(orbitProps.angle) * orbitProps.radius;
@@ -239,11 +297,12 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
             card.position.z ** 2
           );
           
-          // Apply blur effect based on distance (opacity reduction simulates blur)
+          // Apply subtle brightness variation based on distance instead of opacity
           const maxDistance = 8;
-          const blurFactor = Math.min(distanceFromCenter / maxDistance, 1);
-          const baseOpacity = 0.9;
-          material.opacity = baseOpacity * (1 - blurFactor * 0.6);
+          const distanceFactor = Math.min(distanceFromCenter / maxDistance, 1);
+          const brightness = 1 - distanceFactor * 0.3; // Subtle darkening instead of transparency
+          material.color.setHex(parseInt(cardData.cardData.color.slice(1), 16));
+          material.color.multiplyScalar(brightness);
           
           // Much more subtle 3D rotation
           card.rotation.x = cardData.rotationSpeed.x * currentTime + mouseRef.current.y * mouseInfluence * 0.5;
@@ -251,48 +310,78 @@ export const WebGLFlashcards: React.FC<WebGLFlashcardsProps> = ({ flashcards }) 
           card.rotation.z = cardData.rotationSpeed.z * currentTime + orbitProps.angle * 0.05;
           
           // Card flipping logic - much slower
-          cardData.flipCooldown -= 16; // Assuming ~60fps
+          cardData.flipCooldown -= 16;
           if (cardData.flipCooldown <= 0 && currentTime > cardData.nextFlipTime) {
             cardData.isFlipped = !cardData.isFlipped;
-            cardData.flipCooldown = 8000; // 8 second cooldown
-            cardData.nextFlipTime = currentTime + Math.random() * 15000 + 20000; // Next flip in 20-35 seconds
+            cardData.flipCooldown = 8000;
+            cardData.nextFlipTime = currentTime + Math.random() * 15000 + 20000;
             
-            // Visual indication of flip (rotate 180 degrees on Y-axis)
+            // Visual indication of flip
             card.rotation.y += Math.PI;
             
-            // Color shift for flip indication
+            // Subtle color shift for flip indication
             if (cardData.isFlipped) {
-              material.color.multiplyScalar(0.8); // Darker when showing back
+              material.color.multiplyScalar(0.9);
             } else {
-              material.color.setHex(cardData.cardData.color); // Reset to original color
+              material.color.setHex(parseInt(cardData.cardData.color.slice(1), 16));
             }
           }
           
           // Very gentle floating motion
           card.position.z += Math.sin(currentTime * 0.0005 + orbitProps.angle) * 0.001;
           
-          // Update particle system position and animation
+          // Update particle system - particles move independently
           if (particleSystem) {
+            // Keep particle system near the card but not exactly on it
             particleSystem.position.copy(card.position);
-            particleSystem.rotation.copy(card.rotation);
             
-            // Animate particles
+            // Animate particles to emit from all sides
             const positions = particleSystem.geometry.attributes.position.array as Float32Array;
+            const velocities = (particleSystem.geometry as any).velocities;
+            const ages = (particleSystem.geometry as any).ages;
+            
             for (let i = 0; i < positions.length; i += 3) {
-              positions[i] += (Math.random() - 0.5) * 0.002; // x movement
-              positions[i + 1] += (Math.random() - 0.5) * 0.002; // y movement
-              positions[i + 2] += (Math.random() - 0.5) * 0.001; // z movement
+              // Age the particles
+              ages[i / 3] += 1;
               
-              // Reset particle if it gets too far
-              if (Math.abs(positions[i]) > 0.3) positions[i] *= 0.1;
-              if (Math.abs(positions[i + 1]) > 0.3) positions[i + 1] *= 0.1;
-              if (Math.abs(positions[i + 2]) > 0.2) positions[i + 2] *= 0.1;
+              // Move particles based on velocity
+              positions[i] += velocities[i];
+              positions[i + 1] += velocities[i + 1];
+              positions[i + 2] += velocities[i + 2];
+              
+              // Reset particles that are too old or too far
+              if (ages[i / 3] > 100 || Math.abs(positions[i]) > 1 || Math.abs(positions[i + 1]) > 1) {
+                // Respawn at a random edge
+                const side = Math.floor(Math.random() * 4);
+                switch (side) {
+                  case 0: // Top
+                    positions[i] = (Math.random() - 0.5) * 1.2;
+                    positions[i + 1] = 0.4;
+                    break;
+                  case 1: // Right
+                    positions[i] = 0.6;
+                    positions[i + 1] = (Math.random() - 0.5) * 0.8;
+                    break;
+                  case 2: // Bottom
+                    positions[i] = (Math.random() - 0.5) * 1.2;
+                    positions[i + 1] = -0.4;
+                    break;
+                  case 3: // Left
+                    positions[i] = -0.6;
+                    positions[i + 1] = (Math.random() - 0.5) * 0.8;
+                    break;
+                }
+                positions[i + 2] = (Math.random() - 0.5) * 0.1;
+                
+                // New random velocity radiating outward
+                velocities[i] = (Math.random() - 0.5) * 0.02;
+                velocities[i + 1] = (Math.random() - 0.5) * 0.02;
+                velocities[i + 2] = (Math.random() - 0.5) * 0.01;
+                
+                ages[i / 3] = 0;
+              }
             }
             particleSystem.geometry.attributes.position.needsUpdate = true;
-            
-            // Match particle opacity to card
-            const particleMaterial = particleSystem.material as THREE.PointsMaterial;
-            particleMaterial.opacity = material.opacity * 0.6;
           }
         }
       });
