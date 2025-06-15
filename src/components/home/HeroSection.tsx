@@ -386,8 +386,8 @@ export const HeroSection = () => {
 
         {/* Main Content */}
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
-          <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight rainbow-text">
-            <span className="particle-container">
+          <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight">
+            <span className="particle-container rainbow-text">
               Smarter
               <div className="particle"></div>
               <div className="particle"></div>
@@ -408,9 +408,9 @@ export const HeroSection = () => {
               <div className="particle"></div>
               <div className="particle"></div>
             </span>
-            <span className="non-rainbow"> Cards.</span>
+            <span> Cards.</span>
             <br />
-            <span className="particle-container">
+            <span className="particle-container rainbow-text">
               Better
               <div className="particle"></div>
               <div className="particle"></div>
@@ -431,7 +431,7 @@ export const HeroSection = () => {
               <div className="particle"></div>
               <div className="particle"></div>
             </span>
-            <span className="non-rainbow"> Learning.</span>
+            <span> Learning.</span>
           </h1>
 
           <Link to="/auth">
