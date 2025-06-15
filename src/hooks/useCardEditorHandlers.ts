@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { updateFlashcardSet } from '@/lib/api/sets';
@@ -79,7 +78,7 @@ export const useCardEditorHandlers = ({
     }
   };
 
-  const handleAutoArrange = (type: 'grid' | 'center' | 'stack' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit' | 'align-elements-center') => {
+  const handleAutoArrange = (type: 'grid' | 'center' | 'stack' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit' | 'align-elements-center' | 'justify' | 'align-left' | 'align-center' | 'align-right') => {
     const elements = currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements;
     if (!elements || elements.length === 0) return;
 
@@ -197,6 +196,13 @@ export const useCardEditorHandlers = ({
           updatedElements[index] = { ...element, x: 10, width: cardWidth - 20 };
         });
         break;
+      
+      case 'justify':
+      case 'align-left':
+      case 'align-center':
+      case 'align-right':
+        // These are deprecated but kept for type compatibility
+        break;
     }
 
     updatedElements.forEach(element => {
@@ -226,4 +232,3 @@ export const useCardEditorHandlers = ({
     handleCardUpdate,
   };
 };
-

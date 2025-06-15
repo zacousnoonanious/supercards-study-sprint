@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
@@ -76,9 +77,9 @@ const SetView = () => {
         <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-foreground">{t('setView.notFound')}</h2>
-            <Button onClick={() => navigate('/decks')} className="mt-4">
+            <Button onClick={() => navigate(-1)} className="mt-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              {t('setView.backToDecks')}
+              Back
             </Button>
           </div>
         </main>

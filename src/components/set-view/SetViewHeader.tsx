@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Play, Edit, Settings, Shuffle, Eye } from 'lucide-react';
@@ -45,11 +44,11 @@ export const SetViewHeader: React.FC<SetViewHeaderProps> = ({
       <div className="flex items-center justify-between mb-4">
         <Button
           variant="ghost"
-          onClick={() => navigate('/decks')}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
-          {t('setView.backToDecks')}
+          Back
         </Button>
 
         <div className="flex items-center gap-2">
