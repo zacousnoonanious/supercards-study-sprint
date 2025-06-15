@@ -5,22 +5,26 @@ import { Copy, Trash2, RotateCcw } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
 
 interface ElementControlsProps {
-  element: CanvasElement;
-  onUpdateElement: (updates: Partial<CanvasElement>) => void;
-  onDelete: () => void;
+  selectedElement: CanvasElement;
+  onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
+  onDeleteElement: (id: string) => void;
 }
 
 export const ElementControls: React.FC<ElementControlsProps> = ({
-  element,
+  selectedElement,
   onUpdateElement,
-  onDelete,
+  onDeleteElement,
 }) => {
   const handleReset = () => {
-    onUpdateElement({
+    onUpdateElement(selectedElement.id, {
       x: 100,
       y: 100,
       rotation: 0,
     });
+  };
+
+  const handleDelete = () => {
+    onDeleteElement(selectedElement.id);
   };
 
   return (
@@ -34,7 +38,7 @@ export const ElementControls: React.FC<ElementControlsProps> = ({
       </Button>
       
       <Button
-        onClick={onDelete}
+        onClick={handleDelete}
         variant="destructive"
         size="sm"
       >
