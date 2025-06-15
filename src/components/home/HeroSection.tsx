@@ -113,17 +113,16 @@ export const HeroSection = () => {
           .rainbow-text {
             background: linear-gradient(
               90deg,
-              #e4a5ff 0%,
-              #b794ff 12.5%,
-              #9d84ff 25%,
-              #84c7ff 37.5%,
-              #70dcff 50%,
-              #84c7ff 62.5%,
-              #9d84ff 75%,
-              #b794ff 87.5%,
-              #e4a5ff 100%
+              #ff6b6b, /* red */
+              #ffac6b, /* orange */
+              #ffea6b, /* yellow */
+              #6bff81, /* green */
+              #6bffff, /* cyan */
+              #6b6bff, /* blue */
+              #ac6bff, /* violet */
+              #ff6b6b  /* red again for looping */
             );
-            background-size: 200% 100%;
+            background-size: 400% 100%;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -133,7 +132,12 @@ export const HeroSection = () => {
                          0 0 60px rgba(180, 148, 255, 0.2);
             filter: drop-shadow(0 0 15px rgba(180, 148, 255, 0.6)) 
                     drop-shadow(0 0 30px rgba(180, 148, 255, 0.4));
-            position: relative;
+          }
+          
+          .non-rainbow {
+            -webkit-text-fill-color: white;
+            text-shadow: none;
+            filter: none;
           }
           
           .particle-container {
@@ -382,8 +386,8 @@ export const HeroSection = () => {
 
         {/* Main Content */}
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
-          <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight">
-            <span className="particle-container rainbow-text">
+          <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight rainbow-text">
+            <span className="particle-container">
               Smarter
               <div className="particle"></div>
               <div className="particle"></div>
@@ -403,10 +407,10 @@ export const HeroSection = () => {
               <div className="particle"></div>
               <div className="particle"></div>
               <div className="particle"></div>
-            </span>{" "}
-            Cards.
+            </span>
+            <span className="non-rainbow"> Cards.</span>
             <br />
-            <span className="particle-container rainbow-text">
+            <span className="particle-container">
               Better
               <div className="particle"></div>
               <div className="particle"></div>
@@ -426,8 +430,8 @@ export const HeroSection = () => {
               <div className="particle"></div>
               <div className="particle"></div>
               <div className="particle"></div>
-            </span>{" "}
-            Learning.
+            </span>
+            <span className="non-rainbow"> Learning.</span>
           </h1>
 
           <Link to="/auth">
