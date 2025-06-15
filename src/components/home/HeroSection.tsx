@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ParallaxFlashcards } from './ParallaxFlashcards';
 import { GlobalStyles } from './GlobalStyles';
 import { useI18n } from '@/contexts/I18nContext';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export const HeroSection = () => {
   const { t } = useI18n();
@@ -121,6 +122,7 @@ export const HeroSection = () => {
               <a href="#" className="hover:text-purple-200 transition-colors">{t('home.heroSection.home')}</a>
               <a href="#" className="hover:text-purple-200 transition-colors">{t('home.heroSection.features')}</a>
               <a href="#" className="hover:text-purple-200 transition-colors">{t('home.heroSection.pricing')}</a>
+              <LanguageSelector />
               <Link to="/auth" className="bg-white text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-50 transition-colors">
                 {t('home.heroSection.login')}
               </Link>

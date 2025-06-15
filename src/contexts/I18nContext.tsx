@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { englishTranslations } from './I18nContext-english';
 import { spanishTranslations } from './I18nContext-spanish';
@@ -20,6 +21,11 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
+// Cache keys for localStorage
+const DYNAMIC_TRANSLATIONS_CACHE_KEY = 'dynamicTranslations';
+const TRANSLATION_CACHE_EXPIRY_KEY = 'translationCacheExpiry';
+const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState('en');
   const [dynamicTranslations, setDynamicTranslations] = useState<Record<string, any>>({});
@@ -35,6 +41,22 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     return typeof result === 'string' ? result : undefined;
+  };
+
+  // Helper function to check if cache is expired
+  const isCacheExpired = (): boolean => {
+    const expiryTime = localStorage.getItem(TRANSLATION_CACHE_EXPIRY_KEY);
+    if (!expiryTime) return true;
+    return Date.now() > parseInt(expiryTime);
+  };
+
+  // Helper function to clear expired cache
+  const clearExpiredCache = () => {
+    if (isCacheExpired()) {
+      localStorage.removeItem(DYNAMIC_TRANSLATIONS_CACHE_KEY);
+      localStorage.removeItem(TRANSLATION_CACHE_EXPIRY_KEY);
+      setDynamicTranslations({});
+    }
   };
 
   // Helper function to generate fallback text from a key
@@ -63,7 +85,7 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // 2. Check static translations for current language
     if (value === undefined) {
-      const currentTranslations = availableTranslations[language as keyof typeof availableTranslations]; // No fallback here
+      const currentTranslations = availableTranslations[language as keyof typeof availableTranslations];
       if (currentTranslations) {
         value = resolveKey(currentTranslations, keys);
       }
@@ -104,6 +126,12 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const translationKey = `${targetLang}:${key}`;
     if (pendingKeys.has(translationKey)) return;
 
+    // Check if we already have this translation cached
+    const cachedTranslations = dynamicTranslations[targetLang];
+    if (cachedTranslations && resolveKey(cachedTranslations, key.split('.')) !== undefined) {
+      return; // Already cached, don't translate again
+    }
+
     try {
       setPendingKeys(prev => new Set(prev).add(translationKey));
       
@@ -142,33 +170,41 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return newSet;
       });
     }
-  }, [pendingKeys]);
+  }, [pendingKeys, dynamicTranslations]);
 
   // Load language and dynamic translations from localStorage
   useEffect(() => {
+    // Clear expired cache first
+    clearExpiredCache();
+    
     const savedLanguage = localStorage.getItem('language');
     if (savedLanguage && savedLanguage in availableTranslations) {
       setLanguage(savedLanguage);
     }
-    const savedDynamicTranslations = localStorage.getItem('dynamicTranslations');
-    if (savedDynamicTranslations) {
+    
+    const savedDynamicTranslations = localStorage.getItem(DYNAMIC_TRANSLATIONS_CACHE_KEY);
+    if (savedDynamicTranslations && !isCacheExpired()) {
       try {
         setDynamicTranslations(JSON.parse(savedDynamicTranslations));
       } catch (e) {
         console.error("Failed to parse dynamic translations from localStorage", e);
+        // Clear corrupted cache
+        localStorage.removeItem(DYNAMIC_TRANSLATIONS_CACHE_KEY);
+        localStorage.removeItem(TRANSLATION_CACHE_EXPIRY_KEY);
       }
     }
   }, []);
 
-  // Save language and dynamic translations to localStorage
+  // Save language to localStorage
   useEffect(() => {
     localStorage.setItem('language', language);
   }, [language]);
 
+  // Save dynamic translations to localStorage with cache expiry
   useEffect(() => {
-    // Only save if there's something to save, to avoid clearing on initial render
     if (Object.keys(dynamicTranslations).length > 0) {
-      localStorage.setItem('dynamicTranslations', JSON.stringify(dynamicTranslations));
+      localStorage.setItem(DYNAMIC_TRANSLATIONS_CACHE_KEY, JSON.stringify(dynamicTranslations));
+      localStorage.setItem(TRANSLATION_CACHE_EXPIRY_KEY, (Date.now() + CACHE_DURATION).toString());
     }
   }, [dynamicTranslations]);
 
