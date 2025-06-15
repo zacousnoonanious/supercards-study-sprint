@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect as useReactEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { useI18n } from '@/contexts/I18nContext';
@@ -27,6 +27,25 @@ const Auth = () => {
   const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('verified') === 'true') {
+      toast({
+        title: t('auth.emailVerifiedTitle'),
+        description: t('auth.emailVerifiedDescription'),
+      });
+      const emailFromQuery = searchParams.get('email');
+      if (emailFromQuery) {
+        setEmail(emailFromQuery);
+      }
+      // Clean up URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('verified');
+      newSearchParams.delete('email');
+      setSearchParams(newSearchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, toast, t]);
 
   useReactEffect(() => {
     if (user) {

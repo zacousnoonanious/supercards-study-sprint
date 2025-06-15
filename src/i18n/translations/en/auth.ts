@@ -17,4 +17,6 @@ export const auth = {
   unexpectedError: "An unexpected error occurred.",
   noAccount: "Don't have an account? Sign up",
   hasAccount: "Already have an account? Sign in",
+  emailVerifiedTitle: "Email Verified!",
+  emailVerifiedDescription: "Thank you for verifying your email. You can now sign in.",
 };
