@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -35,20 +36,93 @@ export const HeroSection = () => {
             100% { background-position: 400% 50%; }
           }
           
-          @keyframes particle-float {
-            0%, 100% { 
-              transform: translateY(0px) translateX(0px) scale(1);
+          @keyframes particle-burst-1 {
+            0% { 
+              transform: translateY(0px) translateX(0px) scale(0);
+              opacity: 0;
+            }
+            15% {
+              opacity: 1;
+              transform: translateY(-5px) translateX(3px) scale(1);
+            }
+            100% { 
+              transform: translateY(-40px) translateX(15px) scale(0.8);
+              opacity: 0;
+            }
+          }
+          
+          @keyframes particle-burst-2 {
+            0% { 
+              transform: translateY(0px) translateX(0px) scale(0);
+              opacity: 0;
+            }
+            20% {
+              opacity: 1;
+              transform: translateY(-8px) translateX(-5px) scale(1.2);
+            }
+            100% { 
+              transform: translateY(-50px) translateX(-20px) scale(0.6);
+              opacity: 0;
+            }
+          }
+          
+          @keyframes particle-burst-3 {
+            0% { 
+              transform: translateY(0px) translateX(0px) scale(0);
               opacity: 0;
             }
             10% {
               opacity: 1;
+              transform: translateY(-3px) translateX(8px) scale(0.8);
             }
-            90% {
+            100% { 
+              transform: translateY(-35px) translateX(25px) scale(1.1);
+              opacity: 0;
+            }
+          }
+          
+          @keyframes particle-burst-4 {
+            0% { 
+              transform: translateY(0px) translateX(0px) scale(0);
+              opacity: 0;
+            }
+            25% {
               opacity: 1;
+              transform: translateY(-10px) translateX(-8px) scale(1);
             }
-            50% { 
-              transform: translateY(-20px) translateX(10px) scale(1.2);
-              opacity: 0.8;
+            100% { 
+              transform: translateY(-45px) translateX(-18px) scale(0.9);
+              opacity: 0;
+            }
+          }
+          
+          @keyframes particle-burst-5 {
+            0% { 
+              transform: translateY(0px) translateX(0px) scale(0);
+              opacity: 0;
+            }
+            18% {
+              opacity: 1;
+              transform: translateY(-6px) translateX(12px) scale(1.3);
+            }
+            100% { 
+              transform: translateY(-55px) translateX(30px) scale(0.7);
+              opacity: 0;
+            }
+          }
+          
+          @keyframes particle-burst-6 {
+            0% { 
+              transform: translateY(0px) translateX(0px) scale(0);
+              opacity: 0;
+            }
+            12% {
+              opacity: 1;
+              transform: translateY(-4px) translateX(-12px) scale(0.9);
+            }
+            100% { 
+              transform: translateY(-42px) translateX(-28px) scale(1.2);
+              opacity: 0;
             }
           }
           
@@ -87,49 +161,96 @@ export const HeroSection = () => {
           
           .particle {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: radial-gradient(circle, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             pointer-events: none;
-            animation: particle-float 2s ease-in-out infinite;
+            box-shadow: 0 0 8px currentColor;
           }
           
           .particle:nth-child(1) { 
-            top: 10%; 
-            left: 20%; 
-            animation-delay: 0s;
+            top: 15%; 
+            left: 25%; 
             background: radial-gradient(circle, #ff6b6b, #ff8e8e);
+            animation: particle-burst-1 1.8s ease-out infinite;
+            animation-delay: 0s;
           }
           .particle:nth-child(2) { 
-            top: 80%; 
-            left: 80%; 
-            animation-delay: 0.3s;
+            top: 75%; 
+            left: 85%; 
             background: radial-gradient(circle, #4ecdc4, #6ee6d8);
+            animation: particle-burst-2 2.1s ease-out infinite;
+            animation-delay: 0.3s;
           }
           .particle:nth-child(3) { 
-            top: 60%; 
-            left: 10%; 
-            animation-delay: 0.6s;
+            top: 45%; 
+            left: 15%; 
             background: radial-gradient(circle, #45b7d1, #69c9e5);
+            animation: particle-burst-3 1.9s ease-out infinite;
+            animation-delay: 0.6s;
           }
           .particle:nth-child(4) { 
-            top: 30%; 
-            left: 90%; 
-            animation-delay: 0.9s;
+            top: 35%; 
+            left: 95%; 
             background: radial-gradient(circle, #96ceb4, #aad8c8);
+            animation: particle-burst-4 2.2s ease-out infinite;
+            animation-delay: 0.9s;
           }
           .particle:nth-child(5) { 
-            top: 90%; 
-            left: 50%; 
-            animation-delay: 1.2s;
+            top: 85%; 
+            left: 55%; 
             background: radial-gradient(circle, #feca57, #fed976);
+            animation: particle-burst-5 2.0s ease-out infinite;
+            animation-delay: 1.2s;
           }
           .particle:nth-child(6) { 
-            top: 20%; 
-            left: 60%; 
-            animation-delay: 1.5s;
+            top: 25%; 
+            left: 65%; 
             background: radial-gradient(circle, #a8e6cf, #c2f0db);
+            animation: particle-burst-6 1.7s ease-out infinite;
+            animation-delay: 1.5s;
+          }
+          .particle:nth-child(7) { 
+            top: 55%; 
+            left: 35%; 
+            background: radial-gradient(circle, #ff9ff3, #ffb3f7);
+            animation: particle-burst-1 2.3s ease-out infinite;
+            animation-delay: 0.4s;
+          }
+          .particle:nth-child(8) { 
+            top: 65%; 
+            left: 75%; 
+            background: radial-gradient(circle, #54a0ff, #74b9ff);
+            animation: particle-burst-3 1.6s ease-out infinite;
+            animation-delay: 1.1s;
+          }
+          .particle:nth-child(9) { 
+            top: 20%; 
+            left: 45%; 
+            background: radial-gradient(circle, #5f27cd, #8854d0);
+            animation: particle-burst-5 2.4s ease-out infinite;
+            animation-delay: 0.7s;
+          }
+          .particle:nth-child(10) { 
+            top: 80%; 
+            left: 15%; 
+            background: radial-gradient(circle, #ff3838, #ff6b6b);
+            animation: particle-burst-2 1.8s ease-out infinite;
+            animation-delay: 1.8s;
+          }
+          .particle:nth-child(11) { 
+            top: 40%; 
+            left: 85%; 
+            background: radial-gradient(circle, #2ed573, #7bed9f);
+            animation: particle-burst-4 2.1s ease-out infinite;
+            animation-delay: 0.2s;
+          }
+          .particle:nth-child(12) { 
+            top: 70%; 
+            left: 25%; 
+            background: radial-gradient(circle, #ffa502, #ff6348);
+            animation: particle-burst-6 1.9s ease-out infinite;
+            animation-delay: 1.6s;
           }
         `
       }} />
@@ -246,11 +367,23 @@ export const HeroSection = () => {
               <div className="particle"></div>
               <div className="particle"></div>
               <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
             </span>{" "}
             Cards.
             <br />
             <span className="particle-container rainbow-text">
               Better
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
+              <div className="particle"></div>
               <div className="particle"></div>
               <div className="particle"></div>
               <div className="particle"></div>
