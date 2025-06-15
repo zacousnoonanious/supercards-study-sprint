@@ -30,9 +30,9 @@ export const QuickActions = () => {
         />
         
         <Button asChild className="w-full justify-start" variant="outline">
-          <Link to="/analytics">
+          <Link to="/decks">
             <BarChart3 className="w-4 h-4 mr-2" />
-            View Analytics
+            View All Decks
           </Link>
         </Button>
         
