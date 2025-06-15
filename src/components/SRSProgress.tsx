@@ -12,22 +12,22 @@ interface SRSProgressProps {
 }
 
 export const SRSProgress: React.FC<SRSProgressProps> = ({ className }) => {
-  const { cardsdue, loading, fetchCardsdue } = useSRS();
+  const { cardsDue, loading, fetchCardsDue } = useSRS();
   const navigate = useNavigate();
 
   const handleStudyDueCards = () => {
-    if (cardsdue.length > 0) {
+    if (cardsDue.length > 0) {
       // Navigate to study mode with SRS filter
-      const firstDeckId = cardsdue[0].set_id;
+      const firstDeckId = cardsDue[0].set_id;
       navigate(`/study/${firstDeckId}?srs=true`);
     }
   };
 
-  const dueTodayCount = cardsdue.filter(card => 
+  const dueTodayCount = cardsDue.filter(card => 
     new Date(card.next_review_date) <= new Date()
   ).length;
 
-  const overDueCount = cardsdue.filter(card => 
+  const overDueCount = cardsDue.filter(card => 
     new Date(card.next_review_date) < new Date()
   ).length;
 
@@ -68,16 +68,16 @@ export const SRSProgress: React.FC<SRSProgressProps> = ({ className }) => {
             <div className="text-sm text-muted-foreground">Overdue</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{cardsdue.length}</div>
+            <div className="text-2xl font-bold text-green-600">{cardsDue.length}</div>
             <div className="text-sm text-muted-foreground">Total Queue</div>
           </div>
         </div>
 
-        {cardsdue.length > 0 && (
+        {cardsDue.length > 0 && (
           <div className="space-y-2">
             <h4 className="font-medium text-sm">Recent Due Cards:</h4>
             <div className="space-y-1 max-h-32 overflow-y-auto">
-              {cardsdue.slice(0, 5).map((card) => (
+              {cardsDue.slice(0, 5).map((card) => (
                 <div key={card.card_id} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3 h-3" />
@@ -95,7 +95,7 @@ export const SRSProgress: React.FC<SRSProgressProps> = ({ className }) => {
         <div className="flex gap-2">
           <Button 
             onClick={handleStudyDueCards} 
-            disabled={cardsdue.length === 0}
+            disabled={cardsDue.length === 0}
             className="flex-1"
           >
             <Clock className="w-4 h-4 mr-2" />
@@ -103,14 +103,14 @@ export const SRSProgress: React.FC<SRSProgressProps> = ({ className }) => {
           </Button>
           <Button 
             variant="outline" 
-            onClick={fetchCardsdue}
+            onClick={fetchCardsDue}
             disabled={loading}
           >
             <TrendingUp className="w-4 h-4" />
           </Button>
         </div>
 
-        {cardsdue.length === 0 && (
+        {cardsDue.length === 0 && (
           <div className="text-center py-4 text-muted-foreground">
             <Brain className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>No cards due for review today!</p>

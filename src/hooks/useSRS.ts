@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -225,10 +226,10 @@ export const useSRS = () => {
 
   return {
     loading,
-    cardsdue: cardsDue,
+    cardsDue,
     recordCardReview,
     getCardsDueForReview,
-    fetchCardsdue: fetchCardsDue,
+    fetchCardsDue,
     startStudySession,
     endStudySession,
     calculateSRSValues
