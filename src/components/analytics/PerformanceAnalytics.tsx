@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { StudyActivityHeatmap } from './StudyActivityHeatmap';
 import { DeckPerformanceBreakdown } from './DeckPerformanceBreakdown';
+import { CardDifficultyAnalysis } from './CardDifficultyAnalysis';
 
 interface StudyMetrics {
   totalStudyTime: number;
@@ -366,6 +367,7 @@ export const PerformanceAnalytics: React.FC = () => {
           <TabsTrigger value="activity">Study Activity</TabsTrigger>
           <TabsTrigger value="patterns">Learning Patterns</TabsTrigger>
           <TabsTrigger value="performance">Deck & Tag Performance</TabsTrigger>
+          <TabsTrigger value="difficulty">Card Difficulty</TabsTrigger>
           <TabsTrigger value="weak-areas">Weak Areas</TabsTrigger>
           <TabsTrigger value="categories">Category Performance</TabsTrigger>
           <TabsTrigger value="detailed">Detailed Insights</TabsTrigger>
@@ -441,6 +443,10 @@ export const PerformanceAnalytics: React.FC = () => {
 
         <TabsContent value="performance" className="space-y-4">
           <DeckPerformanceBreakdown />
+        </TabsContent>
+
+        <TabsContent value="difficulty" className="space-y-4">
+          <CardDifficultyAnalysis />
         </TabsContent>
 
         <TabsContent value="weak-areas" className="space-y-4">
