@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,15 +7,13 @@ import { OptionalOrganizationSetup } from '@/components/OptionalOrganizationSetu
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Plus, BookOpen, Users, BarChart3, Building, UserPlus, Upload } from 'lucide-react';
+import { Plus, BookOpen, BarChart3, Upload } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { RecentDecks } from '@/components/dashboard/RecentDecks';
 import { Onboarding } from '@/components/Onboarding';
 import { useToast } from '@/hooks/use-toast';
 import { ImportFlashcardsDialog } from '@/components/ImportFlashcardsDialog';
-import { CreateOrganizationDialog } from '@/components/CreateOrganizationDialog';
-import { JoinDeckDialog } from '@/components/JoinDeckDialog';
 
 interface FlashcardSet {
   id: string;
@@ -32,7 +31,6 @@ const Dashboard = () => {
   const [totalDecks, setTotalDecks] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(true);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -110,60 +108,12 @@ const Dashboard = () => {
             {t('nav.dashboard')}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {currentOrganization 
-              ? t('dashboard.welcome', { name: currentOrganization.name }) 
-              : t('dashboard.welcomePersonal')
-            }
+            {t('dashboard.welcomePersonal')}
           </p>
         </div>
 
-        {/* Organization section - always show */}
-        <Card className="mb-8 border-primary/20 bg-primary/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Building className="h-8 w-8 text-primary" />
-                <div>
-                  {userOrganizations.length > 0 ? (
-                    <>
-                      <h3 className="font-semibold">Organizations ({userOrganizations.length})</h3>
-                      <p className="text-sm text-muted-foreground">
-                        You're a member of {userOrganizations.length} organization{userOrganizations.length > 1 ? 's' : ''}. Current: {currentOrganization?.name || 'None selected'}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <h3 className="font-semibold">{t('dashboard.collaborateTitle')}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {t('dashboard.collaborateDescription')}
-                      </p>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowCreateDialog(true)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Organization
-                </Button>
-                <JoinDeckDialog 
-                  trigger={
-                    <Button variant="outline">
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Join Organization
-                    </Button>
-                  }
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* dashboard stats cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('dashboard.totalDecks')}</CardTitle>
@@ -190,35 +140,18 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {currentOrganization && (
-            <>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{t('dashboard.teamMembers')}</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">1</div>
-                  <p className="text-xs text-muted-foreground">
-                    {t('dashboard.teamMembersDescription')}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{t('dashboard.assignments')}</CardTitle>
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0</div>
-                  <p className="text-xs text-muted-foreground">
-                    {t('dashboard.assignmentsDescription')}
-                  </p>
-                </CardContent>
-              </Card>
-            </>
-          )}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Progress</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">0%</div>
+              <p className="text-xs text-muted-foreground">
+                Overall learning progress
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Recent decks section */}
@@ -268,11 +201,6 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
-
-      <CreateOrganizationDialog 
-        open={showCreateDialog} 
-        onOpenChange={setShowCreateDialog} 
-      />
     </div>
   );
 };

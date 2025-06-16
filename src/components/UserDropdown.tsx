@@ -19,9 +19,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { User, Settings, LogOut, Palette, Type, Building, Plus, UserPlus } from 'lucide-react';
+import { User, LogOut, Palette, Type } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { OrganizationDialog } from './OrganizationDialog';
 
 const allThemes = [
   { value: 'light', label: 'Light' },
@@ -49,7 +48,6 @@ export const UserDropdown = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState('/placeholder.svg');
-  const [showOrgDialog, setShowOrgDialog] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -85,102 +83,89 @@ export const UserDropdown = () => {
   };
 
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={avatarUrl} alt={user?.email || ''} />
-              <AvatarFallback className="bg-indigo-100 text-indigo-600">
-                {getUserInitials()}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-80 bg-popover" align="end" forceMount>
-          <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{t('common.account')}</p>
-              <p className="text-xs leading-none text-muted-foreground truncate">
-                {user?.email}
-              </p>
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
-            <User className="mr-2 h-4 w-4" />
-            <span>{t('nav.profile')}</span>
-          </DropdownMenuItem>
-          
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel>{t('common.organization')}</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => setShowOrgDialog(true)} className="cursor-pointer">
-            <Building className="mr-2 h-4 w-4" />
-            <span>{t('common.createOrJoinOrganization')}</span>
-          </DropdownMenuItem>
-          
-          <DropdownMenuSeparator />
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={avatarUrl} alt={user?.email || ''} />
+            <AvatarFallback className="bg-indigo-100 text-indigo-600">
+              {getUserInitials()}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-80 bg-popover" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{t('common.account')}</p>
+            <p className="text-xs leading-none text-muted-foreground truncate">
+              {user?.email}
+            </p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
+          <User className="mr-2 h-4 w-4" />
+          <span>{t('nav.profile')}</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
 
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="cursor-pointer">
-              <Palette className="mr-2 h-4 w-4" />
-              <span>{t('theme.settings')}</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="w-64 bg-popover">
-              <div className="p-3 space-y-4">
-                <div>
-                  <Label htmlFor="theme-select" className="text-sm font-medium mb-2 block">
-                    {t('theme.colorTheme')}
-                  </Label>
-                  <Select value={theme} onValueChange={setTheme}>
-                    <SelectTrigger id="theme-select" className="w-full">
-                      <SelectValue placeholder={t('placeholders.selectOption')} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {allThemes.map((themeOption) => (
-                        <SelectItem key={themeOption.value} value={themeOption.value}>
-                          {themeOption.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="size-select" className="text-sm font-medium mb-2 flex items-center gap-2">
-                    <Type className="w-4 h-4" />
-                    {t('theme.interfaceSize')}
-                  </Label>
-                  <Select value={size} onValueChange={setSize}>
-                    <SelectTrigger id="size-select" className="w-full">
-                      <SelectValue placeholder={t('placeholders.selectOption')} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {sizes.map((sizeOption) => (
-                        <SelectItem key={sizeOption.value} value={sizeOption.value}>
-                          {sizeOption.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger className="cursor-pointer">
+            <Palette className="mr-2 h-4 w-4" />
+            <span>{t('theme.settings')}</span>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="w-64 bg-popover">
+            <div className="p-3 space-y-4">
+              <div>
+                <Label htmlFor="theme-select" className="text-sm font-medium mb-2 block">
+                  {t('theme.colorTheme')}
+                </Label>
+                <Select value={theme} onValueChange={setTheme}>
+                  <SelectTrigger id="theme-select" className="w-full">
+                    <SelectValue placeholder={t('placeholders.selectOption')} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {allThemes.map((themeOption) => (
+                      <SelectItem key={themeOption.value} value={themeOption.value}>
+                        {themeOption.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
 
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600 focus:text-red-600">
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>{t('nav.signOut')}</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <OrganizationDialog 
-        open={showOrgDialog} 
-        onOpenChange={setShowOrgDialog} 
-      />
-    </>
+              <div>
+                <Label htmlFor="size-select" className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <Type className="w-4 h-4" />
+                  {t('theme.interfaceSize')}
+                </Label>
+                <Select value={size} onValueChange={setSize}>
+                  <SelectTrigger id="size-select" className="w-full">
+                    <SelectValue placeholder={t('placeholders.selectOption')} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {sizes.map((sizeOption) => (
+                      <SelectItem key={sizeOption.value} value={sizeOption.value}>
+                        {sizeOption.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600 focus:text-red-600">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>{t('nav.signOut')}</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

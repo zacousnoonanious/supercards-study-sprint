@@ -1,145 +1,128 @@
 
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, GraduationCap, Shield, ArrowLeft, BarChart3 } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, BookOpen, BarChart3, Home, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useOrganization } from '@/contexts/OrganizationContext';
-import { UserDropdown } from './UserDropdown';
-import { OrganizationSelector } from './OrganizationSelector';
-import { LanguageSelector } from './LanguageSelector';
-import { ThemeToggle } from './ThemeToggle';
 import { useI18n } from '@/contexts/I18nContext';
-import { MobileMenu } from './MobileMenu';
-import { MobileBottomNav } from './mobile/MobileBottomNav';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { UserDropdown } from './UserDropdown';
 
 export const Navigation = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
-  const { userRole } = useOrganization();
+  const location = useLocation();
   const { t } = useI18n();
-  const isMobile = useIsMobile();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const isActive = (path: string) => location.pathname === path;
-  const isAdminUser = userRole && ['org_admin', 'super_admin'].includes(userRole);
-  
-  // Show back button if user is logged in and not on dashboard
-  const showBackButton = user && location.pathname !== '/dashboard';
-
-  const handleGoBack = () => {
-    // Check if there's history to go back to
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      // Fallback to dashboard if no history
-      navigate('/dashboard');
-    }
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
   };
 
-  const navigationItems = [
-    { path: '/dashboard', label: t('nav.dashboard'), icon: null },
-    { path: '/decks', label: t('nav.decks'), icon: null },
-    { path: '/marketplace', label: t('nav.marketplace'), icon: null },
-    { path: '/analytics', label: t('analytics.title'), icon: BarChart3 },
-    ...(isAdminUser ? [{ path: '/admin', label: t('nav.admin'), icon: Shield }] : []),
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
+  const navItems = [
+    { path: '/', label: t('nav.dashboard'), icon: Home },
+    { path: '/decks', label: t('nav.flashcards'), icon: BookOpen },
+    { path: '/stats', label: t('nav.stats'), icon: BarChart3 },
   ];
 
-  // On mobile, don't render the top navigation if we're showing the bottom nav
-  if (isMobile && user) {
-    return <MobileBottomNav />;
+  if (!user) {
+    return null;
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-8">
-            <div className="flex items-center space-x-4">
-              {/* Always reserve space for back button to keep layout consistent */}
-              <div className="w-[80px] flex justify-start">
-                {showBackButton && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleGoBack}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span className="hidden sm:inline">{t('toolbar.back')}</span>
-                  </Button>
-                )}
-              </div>
-              
-              <Link to={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
-                <GraduationCap className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold">SuperCards</span>
-              </Link>
-            </div>
-
-            {user && !isMobile && (
-              <>
-                <div className="hidden md:flex items-center space-x-6">
-                  {navigationItems.map(({ path, label, icon: Icon }) => (
-                    <Link
-                      key={path}
-                      to={path}
-                      className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary ${
-                        isActive(path) ? 'text-primary' : 'text-muted-foreground'
-                      }`}
-                    >
-                      {Icon && <Icon className="w-4 h-4" />}
-                      {label}
-                    </Link>
-                  ))}
-                </div>
-              </>
-            )}
+    <nav className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b border-border/40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link to="/" className="flex-shrink-0 flex items-center">
+              <div className="text-2xl font-bold text-primary">📚</div>
+              <span className="ml-2 text-xl font-bold text-foreground hidden sm:block">
+                SuperCards
+              </span>
+            </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
-            {user && (
-              <>
-                <div className="hidden md:flex items-center space-x-4">
-                  <OrganizationSelector />
-                  <LanguageSelector />
-                  <ThemeToggle />
-                  <UserDropdown />
-                </div>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    isActive(item.path)
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 mr-2" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
 
-                <div className="md:hidden">
-                  <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <Menu className="h-5 w-5" />
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent side="right" className="w-[300px]">
-                      <MobileMenu 
-                        navigationItems={navigationItems}
-                        onItemClick={() => setIsMobileMenuOpen(false)}
-                      />
-                    </SheetContent>
-                  </Sheet>
-                </div>
-              </>
-            )}
+          {/* User Menu */}
+          <div className="hidden md:flex items-center space-x-4">
+            <UserDropdown />
+          </div>
 
-            {!user && (
-              <div className="flex items-center space-x-4">
-                <LanguageSelector />
-                <ThemeToggle />
-                <Button onClick={() => navigate('/auth')} size="sm">
-                  {t('nav.signIn')}
-                </Button>
-              </div>
-            )}
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleMenu}
+              className="inline-flex items-center justify-center p-2"
+            >
+              {isOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </Button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation */}
+      {isOpen && (
+        <div className="md:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border/40">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
+                    isActive(item.path)
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  }`}
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Icon className="w-5 h-5 mr-3" />
+                  {item.label}
+                </Link>
+              );
+            })}
+            <div className="border-t border-border/40 pt-4 pb-3">
+              <div className="flex items-center px-3">
+                <UserDropdown />
+                <div className="ml-3">
+                  <div className="text-base font-medium text-foreground">
+                    {user?.email}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
