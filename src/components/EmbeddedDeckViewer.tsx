@@ -1,226 +1,175 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Play, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { StudyCardRenderer } from './StudyCardRenderer';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { StudyNavigationBar } from './StudyNavigationBar';
 import { Flashcard, CanvasElement } from '@/types/flashcard';
 
 interface EmbeddedDeckViewerProps {
   deckId: string;
-  width: number;
-  height: number;
-  className?: string;
-  textScale?: number;
+  deckTitle?: string;
+  cardCount?: number;
+  onClose?: () => void;
 }
 
 export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
   deckId,
-  width,
-  height,
-  className = '',
-  textScale = 1
+  deckTitle,
+  cardCount,
+  onClose,
 }) => {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [cards, setCards] = useState<Flashcard[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Calculate scaling factor to fit the standard card size (800x533) into the element dimensions
-  const scaleX = width / 800;
-  const scaleY = height / 533;
-  const scale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
-  const finalTextScale = textScale * scale;
 
   useEffect(() => {
-    if (!user || !deckId) return;
+    if (!deckId || !user) return;
 
     const fetchCards = async () => {
       try {
-        setLoading(true);
-        setError(null);
-
-        const { data: cardsData, error: cardsError } = await supabase
+        const { data: cardsData, error } = await supabase
           .from('flashcards')
           .select('*')
           .eq('set_id', deckId)
-          .order('created_at', { ascending: true });
+          .order('created_at');
 
-        if (cardsError) throw cardsError;
+        if (error) throw error;
 
-        const transformedCards: Flashcard[] = cardsData?.map((card, index) => ({
-          ...card,
-          front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
-          back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
-          hint: card.hint || '',
-          last_reviewed_at: card.last_reviewed_at || null,
-          card_type: (card.card_type === 'standard' ? 'normal' : card.card_type as Flashcard['card_type']) || 'normal',
+        // Transform the cards data to match Flashcard interface
+        const transformedCards: Flashcard[] = (cardsData || []).map(card => ({
+          id: card.id,
+          set_id: card.set_id,
+          question: card.question,
+          answer: card.answer,
+          hint: card.hint,
+          front_elements: (card.front_elements as unknown as CanvasElement[]) || [],
+          back_elements: (card.back_elements as unknown as CanvasElement[]) || [],
+          card_type: card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected',
           interactive_type: (card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') || null,
-          countdown_timer: card.countdown_timer || 0,
-          countdown_timer_front: card.countdown_timer_front || 0,
-          countdown_timer_back: card.countdown_timer_back || 0,
-          countdown_behavior_front: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
-          countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
-          flips_before_next: card.flips_before_next || 2,
-          password: card.password || null,
-          position: index, // Add position based on array index
-          countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
-        })) || [];
-
+          password: card.password,
+          countdown_timer: card.countdown_timer,
+          countdown_timer_front: card.countdown_timer_front,
+          countdown_timer_back: card.countdown_timer_back,
+          countdown_behavior_front: card.countdown_behavior_front,
+          countdown_behavior_back: card.countdown_behavior_back,
+          flips_before_next: card.flips_before_next,
+          canvas_width: card.canvas_width,
+          canvas_height: card.canvas_height,
+          metadata: typeof card.metadata === 'object' && card.metadata !== null 
+            ? card.metadata as { tags?: string[]; aiTags?: string[]; [key: string]: any; }
+            : { tags: [], aiTags: [] },
+          created_at: card.created_at,
+          updated_at: card.updated_at,
+          last_reviewed_at: card.last_reviewed_at,
+        }));
+        
         setCards(transformedCards);
       } catch (error) {
         console.error('Error fetching embedded deck cards:', error);
-        setError('Failed to load deck');
       } finally {
         setLoading(false);
       }
     };
 
     fetchCards();
-  }, [user, deckId]);
+  }, [deckId, user]);
 
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+  const currentCard = cards[currentCardIndex];
+
+  const handleNavigate = (direction: 'prev' | 'next') => {
+    if (direction === 'prev' && currentCardIndex > 0) {
+      setCurrentCardIndex(currentCardIndex - 1);
+      setShowAnswer(false);
+    } else if (direction === 'next' && currentCardIndex < cards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1);
       setShowAnswer(false);
     }
   };
 
-  const handleNext = () => {
-    if (currentIndex < cards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setShowAnswer(false);
-    }
-  };
-
-  const handleFlip = () => {
+  const handleFlipCard = () => {
     setShowAnswer(!showAnswer);
   };
 
   if (loading) {
     return (
-      <div 
-        className={`flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded ${className}`}
-        style={{ width, height }}
-      >
-        <div className="text-sm text-gray-600 dark:text-gray-400" style={{ fontSize: `${12 * finalTextScale}px` }}>
-          Loading deck...
-        </div>
+      <div className="text-center p-8">
+        <div className="text-lg text-foreground">Loading deck...</div>
       </div>
     );
   }
 
-  if (error || cards.length === 0) {
+  if (!currentCard) {
     return (
-      <div 
-        className={`flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded ${className}`}
-        style={{ width, height }}
-      >
-        <div className="text-sm text-gray-600 dark:text-gray-400" style={{ fontSize: `${12 * finalTextScale}px` }}>
-          {error || 'No cards in this deck'}
-        </div>
+      <div className="text-center p-8">
+        <div className="text-lg text-foreground">No cards found in this deck</div>
       </div>
     );
   }
-
-  const currentCard = cards[currentIndex];
-  const currentElements = showAnswer ? currentCard.back_elements : currentCard.front_elements;
-
-  const headerHeight = Math.max(20, 24 * scale);
-  const controlsHeight = Math.max(20, 32 * scale);
-  const cardHeight = height - headerHeight - controlsHeight;
 
   return (
-    <div 
-      className={`flex flex-col bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}
-      style={{ width, height }}
-    >
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div 
-        className="flex items-center justify-between px-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
-        style={{ height: headerHeight }}
-      >
-        <div className="text-gray-600 dark:text-gray-400" style={{ fontSize: `${10 * finalTextScale}px` }}>
-          {currentIndex + 1} / {cards.length}
-        </div>
-        <div className="text-gray-600 dark:text-gray-400" style={{ fontSize: `${10 * finalTextScale}px` }}>
-          {showAnswer ? 'Answer' : 'Question'}
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center gap-3">
+          {onClose && (
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          )}
+          <div>
+            <h3 className="font-semibold">{deckTitle || 'Embedded Deck'}</h3>
+            <p className="text-sm text-muted-foreground">
+              {currentCardIndex + 1} of {cards.length} cards
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Card Content */}
-      <div className="flex-1 overflow-hidden" style={{ height: cardHeight }}>
-        <div 
-          className="w-full h-full"
-          style={{ 
-            transform: `scale(${scale})`,
-            transformOrigin: 'top left',
-            width: `${100 / scale}%`,
-            height: `${100 / scale}%`
-          }}
-        >
-          <StudyCardRenderer
-            elements={currentElements || []}
-            className="w-full h-full border-0"
+      {/* Content */}
+      <div className="flex-1 flex flex-col justify-center p-6">
+        <div className="flex justify-center mb-6">
+          <div 
+            className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-lg"
             style={{ 
-              width: '800px', 
-              height: '533px',
-              minHeight: '533px',
-              maxWidth: 'none',
-              aspectRatio: 'unset'
+              width: `${currentCard.canvas_width || 600}px`,
+              height: `${currentCard.canvas_height || 450}px`,
+              maxWidth: '100%',
             }}
-            textScale={finalTextScale}
-          />
+          >
+            <StudyCardRenderer
+              elements={showAnswer ? (currentCard.back_elements || []) : (currentCard.front_elements || [])}
+              textScale={1}
+              cardWidth={currentCard.canvas_width || 600}
+              cardHeight={currentCard.canvas_height || 450}
+              className="w-full h-full"
+            />
+          </div>
         </div>
+
+        {currentCard.hint && !showAnswer && (
+          <div className="text-sm text-muted-foreground flex justify-center mb-4">
+            💡 {currentCard.hint}
+          </div>
+        )}
       </div>
 
-      {/* Controls */}
-      <div 
-        className="flex items-center justify-between px-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700"
-        style={{ height: controlsHeight }}
-      >
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handlePrevious}
-          disabled={currentIndex === 0}
-          style={{ 
-            height: `${Math.max(16, 24 * scale)}px`, 
-            padding: `0 ${Math.max(4, 8 * scale)}px`,
-            fontSize: `${10 * finalTextScale}px`
-          }}
-        >
-          <ChevronLeft style={{ width: `${12 * scale}px`, height: `${12 * scale}px` }} />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleFlip}
-          style={{ 
-            height: `${Math.max(16, 24 * scale)}px`, 
-            padding: `0 ${Math.max(8, 12 * scale)}px`,
-            fontSize: `${10 * finalTextScale}px`
-          }}
-        >
-          Flip
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleNext}
-          disabled={currentIndex === cards.length - 1}
-          style={{ 
-            height: `${Math.max(16, 24 * scale)}px`, 
-            padding: `0 ${Math.max(4, 8 * scale)}px`,
-            fontSize: `${10 * finalTextScale}px`
-          }}
-        >
-          <ChevronRight style={{ width: `${12 * scale}px`, height: `${12 * scale}px` }} />
-        </Button>
+      {/* Navigation */}
+      <div className="border-t p-4">
+        <StudyNavigationBar
+          currentIndex={currentCardIndex}
+          totalCards={cards.length}
+          onNavigate={handleNavigate}
+          onFlipCard={handleFlipCard}
+          showAnswer={showAnswer}
+          allowNavigation={true}
+        />
       </div>
     </div>
   );
