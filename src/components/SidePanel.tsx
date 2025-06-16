@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { ElementOptionsPanel } from './settings/ElementOptionsPanel';
-import { ElementControls } from './settings/ElementControls';
 import { AIFeaturesPanel } from './ai/AIFeaturesPanel';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 
@@ -29,7 +28,16 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   return (
     <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
       <div className="p-4 space-y-4">
-        {/* AI Features Panel */}
+        {/* Element Properties Panel - Shows when element is selected */}
+        {selectedElement && (
+          <ElementOptionsPanel
+            element={selectedElement}
+            onUpdateElement={(updates) => onUpdateElement(selectedElement.id, updates)}
+            onDelete={() => onDeleteElement(selectedElement.id)}
+          />
+        )}
+
+        {/* AI Features Panel - Always visible */}
         <AIFeaturesPanel
           currentCard={currentCard}
           currentSide={currentSide}
@@ -39,14 +47,6 @@ export const SidePanel: React.FC<SidePanelProps> = ({
           onTagsUpdate={onTagsUpdate}
           onCreateCard={onCreateCard}
         />
-
-        {selectedElement && (
-          <ElementOptionsPanel
-            element={selectedElement}
-            onUpdateElement={(updates) => onUpdateElement(selectedElement.id, updates)}
-            onDelete={() => onDeleteElement(selectedElement.id)}
-          />
-        )}
       </div>
     </div>
   );
