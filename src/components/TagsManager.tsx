@@ -25,6 +25,7 @@ export const TagsManager: React.FC<TagsManagerProps> = ({
   const [newTag, setNewTag] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [aiTags, setAiTags] = useState<string[]>([]);
+  const [addedTagsThisSession, setAddedTagsThisSession] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -38,18 +39,21 @@ export const TagsManager: React.FC<TagsManagerProps> = ({
     }
   }, [currentCard]);
 
+  // Reset added tags tracker when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setAddedTagsThisSession([]);
+    }
+  }, [isOpen]);
+
   const handleAddTag = (tagText: string) => {
     const trimmedTag = tagText.trim();
     if (trimmedTag && !tags.includes(trimmedTag) && !aiTags.includes(trimmedTag)) {
       const updatedTags = [...tags, trimmedTag];
       setTags(updatedTags);
+      setAddedTagsThisSession(prev => [...prev, trimmedTag]);
       updateCardTags(updatedTags, aiTags);
       setNewTag('');
-      
-      toast({
-        title: "Tag added",
-        description: `"${trimmedTag}" has been added to your card.`,
-      });
     }
   };
 
@@ -71,12 +75,9 @@ export const TagsManager: React.FC<TagsManagerProps> = ({
       const updatedTags = tags.filter(tag => tag !== tagToRemove);
       setTags(updatedTags);
       updateCardTags(updatedTags, aiTags);
+      // Remove from session tracker if it was added this session
+      setAddedTagsThisSession(prev => prev.filter(tag => tag !== tagToRemove));
     }
-    
-    toast({
-      title: "Tag removed",
-      description: `"${tagToRemove}" has been removed from your card.`,
-    });
   };
 
   const updateCardTags = (manualTags: string[], aiGeneratedTags: string[]) => {
@@ -133,8 +134,19 @@ export const TagsManager: React.FC<TagsManagerProps> = ({
     }
   };
 
+  const handleClose = () => {
+    // Show summary notification if tags were added this session
+    if (addedTagsThisSession.length > 0) {
+      toast({
+        title: "Tags added successfully",
+        description: `Added ${addedTagsThisSession.length} tag(s): ${addedTagsThisSession.join(', ')}`,
+      });
+    }
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
