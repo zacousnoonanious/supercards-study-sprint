@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -10,6 +11,7 @@ import { CardEditorLayout } from './CardEditorLayout';
 import { FullscreenEditor } from './FullscreenEditor';
 import { CanvasElement } from '@/types/flashcard';
 import { useTemplateConfiguration } from '@/hooks/useTemplateConfiguration';
+import { useEnhancedKeyboardShortcuts } from '@/hooks/useEnhancedKeyboardShortcuts';
 
 interface CardEditorProps {
   setId?: string;
@@ -26,10 +28,10 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     cards,
     currentCardIndex,
     currentSide,
-    selectedElement: selectedElementId,
+    selectedElementId,
     loading,
     setCurrentSide,
-    setSelectedElement: setSelectedElementId,
+    setSelectedElementId,
     setCurrentCardIndex,
     addElement,
     updateElement,
@@ -161,18 +163,29 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     cardHeight,
   });
 
-  useKeyboardShortcuts({
-    addElement,
+  // Enhanced keyboard shortcuts with cursor position support
+  useEnhancedKeyboardShortcuts({
+    onAddElement: addElement,
+    onDeleteElement: handleDeleteElement,
+    onNavigateCard: navigateCard,
+    onSideChange: setCurrentSide,
+    onCreateNewCard: createNewCard,
+    onSaveCard: () => currentCard && updateCard({}),
+    onAutoArrange: handleAutoArrange,
+    onShowCardOverview: () => setShowCardOverview(!showCardOverview),
+    onCopyElement: () => {
+      // TODO: Implement copy element
+      console.log('Copy element');
+    },
+    onPasteElement: () => {
+      // TODO: Implement paste element
+      console.log('Paste element');
+    },
     selectedElementId,
-    handleDeleteElement,
-    currentCardIndex,
-    cards,
-    navigateCard,
-    setCurrentSide,
-    handleAutoArrange,
     isTextSelecting,
-    showCardOverview,
-    setShowCardOverview,
+    currentCardIndex,
+    totalCards: cards.length,
+    currentSide,
   });
 
   // Update user position when card changes
@@ -229,8 +242,8 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     );
   }
 
-  if (!set || !currentCard) {
-    console.log('CardEditor: Missing data - Set:', !!set, 'Current card:', !!currentCard);
+  if (!set) {
+    console.log('CardEditor: Missing set data');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">{t('cardNotFound')}</div>
@@ -238,7 +251,66 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     );
   }
 
-  console.log('CardEditor: Rendering with set:', set.title, 'and card:', currentCard.question);
+  // Show empty state if no cards
+  if (cards.length === 0) {
+    return (
+      <CardEditorLayout
+        cards={[]}
+        currentCard={null}
+        currentCardIndex={0}
+        currentSide={currentSide}
+        selectedElement={null}
+        deckName={deckName}
+        cardWidth={cardWidth}
+        cardHeight={cardHeight}
+        zoom={zoom}
+        showGrid={showGrid}
+        snapToGrid={snapToGrid}
+        showBorder={showBorder}
+        toolbarPosition={toolbarPosition}
+        toolbarIsDocked={toolbarIsDocked}
+        toolbarShowText={toolbarShowText}
+        isPanning={isPanning}
+        showCardOverview={showCardOverview}
+        onZoomChange={setZoom}
+        onShowGridChange={setShowGrid}
+        onSnapToGridChange={setSnapToGrid}
+        onShowBorderChange={setShowBorder}
+        onToolbarPositionChange={setToolbarPosition}
+        onToolbarDockChange={setToolbarIsDocked}
+        onToolbarShowTextChange={setToolbarShowText}
+        onShowCardOverviewChange={setShowCardOverview}
+        onDeckTitleChange={handleUpdateDeckTitle}
+        onCardSideChange={setCurrentSide}
+        onElementSelect={handleElementSelect}
+        onUpdateElement={handleUpdateElement}
+        onDeleteElement={handleDeleteElement}
+        onCanvasSizeChange={handleCanvasSizeChange}
+        onUpdateCard={handleCardUpdate}
+        onAddElement={addElement}
+        onAutoArrange={handleAutoArrange}
+        onNavigateCard={navigateCard}
+        onCreateNewCard={createNewCard}
+        onCreateNewCardWithLayout={createNewCardWithLayout}
+        onCreateNewCardFromTemplate={createNewCardFromTemplate}
+        onDeleteCard={handleDeleteCard}
+        onShowCardOverview={() => setShowCardOverview(!showCardOverview)}
+        onFitToView={fitToView}
+        onOpenFullscreen={handleOpenFullscreen}
+        // Collaboration props
+        isCollaborative={isCollaborative}
+        collaborators={collaborators}
+        onEnableCollaboration={enableCollaboration}
+        onRemoveCollaborator={removeCollaborator}
+        // Pass collaboration data to TopToolbar
+        activeUsers={activeUsers}
+        currentCardId={currentCard?.id}
+        showEmptyState={true}
+      />
+    );
+  }
+
+  console.log('CardEditor: Rendering with set:', set.title, 'and card:', currentCard?.question);
 
   return (
     <div className="flex flex-col h-screen">

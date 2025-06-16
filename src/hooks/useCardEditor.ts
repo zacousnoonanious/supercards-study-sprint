@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,9 +28,11 @@ export const useCardEditor = () => {
     isCollaborative,
     enableCollaboration,
     removeCollaborator,
-    broadcastCursorPosition,
-    broadcastElementSelection,
-  } = useCollaborativeEditing(setId || '', cardId || '');
+    updateUserPosition,
+  } = useCollaborativeEditing({
+    setId: setId || '',
+    cardId: cardId || '',
+  });
 
   // Computed values and helper functions
   const currentCard = cards[currentCardIndex];
@@ -37,9 +40,9 @@ export const useCardEditor = () => {
     ? currentCard?.[currentSide === 'front' ? 'front_elements' : 'back_elements']?.find(el => el.id === selectedElementId)
     : null;
 
-  // Fetch functions with proper metadata handling
-  const fetchSetAndCards = useCallback(async () => {
-    if (!setId || !user) return;
+  // Initialize editor
+  const initializeEditor = useCallback(async (setId: string) => {
+    if (!user) return;
 
     try {
       setLoading(true);
@@ -51,7 +54,24 @@ export const useCardEditor = () => {
         .single();
 
       if (setError) throw setError;
-      setSet(setData);
+      
+      // Transform set data to match FlashcardSet interface
+      const transformedSet: FlashcardSet = {
+        id: setData.id,
+        title: setData.title,
+        description: setData.description,
+        user_id: setData.user_id,
+        organization_id: setData.organization_id,
+        is_collaborative: setData.is_collaborative,
+        collaboration_settings: typeof setData.collaboration_settings === 'object' && setData.collaboration_settings !== null
+          ? setData.collaboration_settings as { allowEditors: boolean; allowViewers: boolean; requireApproval: boolean; }
+          : { allowEditors: true, allowViewers: true, requireApproval: false },
+        permanent_shuffle: setData.permanent_shuffle,
+        created_at: setData.created_at,
+        updated_at: setData.updated_at,
+      };
+      
+      setSet(transformedSet);
 
       const { data: cardsData, error: cardsError } = await supabase
         .from('flashcards')
@@ -67,8 +87,8 @@ export const useCardEditor = () => {
         question: card.question || '',
         answer: card.answer || '',
         hint: card.hint,
-        front_elements: Array.isArray(card.front_elements) ? card.front_elements as CanvasElement[] : [],
-        back_elements: Array.isArray(card.back_elements) ? card.back_elements as CanvasElement[] : [],
+        front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
+        back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
         card_type: (card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') || 'normal',
         interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null,
         password: card.password,
@@ -86,11 +106,12 @@ export const useCardEditor = () => {
         metadata: typeof card.metadata === 'object' && card.metadata !== null 
           ? card.metadata as { tags?: string[]; aiTags?: string[]; [key: string]: any; }
           : { tags: [], aiTags: [] },
-        templateId: card.templateId,
-        allowedElementTypes: card.allowedElementTypes || ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
-        restrictedToolbar: card.restrictedToolbar || false,
-        showBackSide: card.showBackSide !== false,
-        autoAdvanceOnAnswer: card.autoAdvanceOnAnswer || false,
+        templateId: (card as any).templateId,
+        allowedElementTypes: (card as any).allowedElementTypes || ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
+        restrictedToolbar: (card as any).restrictedToolbar || false,
+        showBackSide: (card as any).showBackSide !== false,
+        autoAdvanceOnAnswer: (card as any).autoAdvanceOnAnswer || false,
+        constraints: [],
       }));
 
       setCards(transformedCards);
@@ -111,7 +132,7 @@ export const useCardEditor = () => {
     } finally {
       setLoading(false);
     }
-  }, [setId, cardId, user, toast]);
+  }, [user, toast, cardId]);
 
   // Save functions and other methods
   const saveCard = useCallback(async (card: Flashcard) => {
@@ -126,8 +147,8 @@ export const useCardEditor = () => {
           question: card.question,
           answer: card.answer,
           hint: card.hint,
-          front_elements: card.front_elements,
-          back_elements: card.back_elements,
+          front_elements: card.front_elements as any,
+          back_elements: card.back_elements as any,
           card_type: card.card_type,
           interactive_type: card.interactive_type,
           password: card.password,
@@ -159,13 +180,79 @@ export const useCardEditor = () => {
     }
   }, [user, saving, toast]);
 
+  const addElement = useCallback((type: string, x?: number, y?: number) => {
+    if (!currentCard) return;
+
+    const newElement: CanvasElement = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: type as any,
+      x: x || 100,
+      y: y || 100,
+      width: type === 'text' ? 200 : 150,
+      height: type === 'text' ? 40 : 150,
+      content: type === 'text' ? 'Double-click to edit' : '',
+      zIndex: 0,
+      constraints: [],
+    };
+
+    const updatedCard = {
+      ...currentCard,
+      [currentSide === 'front' ? 'front_elements' : 'back_elements']: [
+        ...(currentCard[currentSide === 'front' ? 'front_elements' : 'back_elements'] || []),
+        newElement
+      ]
+    };
+
+    setCards(prev => prev.map(card => 
+      card.id === currentCard.id ? updatedCard : card
+    ));
+
+    saveCard(updatedCard);
+    setSelectedElementId(newElement.id);
+  }, [currentCard, currentSide, saveCard]);
+
+  const updateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
+    if (!currentCard) return;
+
+    const updatedCard = {
+      ...currentCard,
+      [currentSide === 'front' ? 'front_elements' : 'back_elements']: 
+        currentCard[currentSide === 'front' ? 'front_elements' : 'back_elements'].map(el =>
+          el.id === elementId ? { ...el, ...updates } : el
+        )
+    };
+
+    setCards(prev => prev.map(card => 
+      card.id === currentCard.id ? updatedCard : card
+    ));
+
+    saveCard(updatedCard);
+  }, [currentCard, currentSide, saveCard]);
+
+  const deleteElement = useCallback((elementId: string) => {
+    if (!currentCard) return;
+
+    const updatedCard = {
+      ...currentCard,
+      [currentSide === 'front' ? 'front_elements' : 'back_elements']: 
+        currentCard[currentSide === 'front' ? 'front_elements' : 'back_elements'].filter(el => el.id !== elementId)
+    };
+
+    setCards(prev => prev.map(card => 
+      card.id === currentCard.id ? updatedCard : card
+    ));
+
+    saveCard(updatedCard);
+    setSelectedElementId(null);
+  }, [currentCard, currentSide, saveCard]);
+
   const createNewCard = useCallback(async () => {
     if (!setId || !user) return;
 
     const newCard: Partial<Flashcard> = {
       set_id: setId,
-      question: '',
-      answer: '',
+      question: 'New Card',
+      answer: 'Answer',
       hint: '',
       front_elements: [],
       back_elements: [],
@@ -191,11 +278,17 @@ export const useCardEditor = () => {
 
       if (error) throw error;
 
-      const fullCard = {
+      const fullCard: Flashcard = {
         ...data,
-        front_elements: data.front_elements || [],
-        back_elements: data.back_elements || [],
+        front_elements: data.front_elements as unknown as CanvasElement[] || [],
+        back_elements: data.back_elements as unknown as CanvasElement[] || [],
         metadata: data.metadata || { tags: [], aiTags: [] },
+        constraints: [],
+        templateId: undefined,
+        allowedElementTypes: ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
+        restrictedToolbar: false,
+        showBackSide: true,
+        autoAdvanceOnAnswer: false,
       } as Flashcard;
 
       setCards(prev => [...prev, fullCard]);
@@ -259,11 +352,12 @@ export const useCardEditor = () => {
 
       if (error) throw error;
 
-      const fullCard = {
+      const fullCard: Flashcard = {
         ...data,
-        front_elements: data.front_elements || [],
-        back_elements: data.back_elements || [],
+        front_elements: data.front_elements as unknown as CanvasElement[] || [],
+        back_elements: data.back_elements as unknown as CanvasElement[] || [],
         metadata: data.metadata || { tags: [], aiTags: [] },
+        constraints: [],
       } as Flashcard;
 
       setCards(prev => [...prev, fullCard]);
@@ -284,7 +378,7 @@ export const useCardEditor = () => {
     }
   }, [setId, user, cards.length, navigate, toast]);
 
-  const createNewCardWithLayout = async () => {
+  const createNewCardWithLayout = useCallback(async () => {
     if (!setId || cards.length === 0) return;
 
     const currentCard = cards[currentCardIndex];
@@ -339,7 +433,12 @@ export const useCardEditor = () => {
         countdown_behavior_back: (data.countdown_behavior_back as 'flip' | 'next') || 'next',
         flips_before_next: data.flips_before_next || 2,
         password: data.password || null,
-        countdown_behavior: ((data as any).countdown_behavior as 'flip' | 'next') || 'flip'
+        constraints: [],
+        templateId: undefined,
+        allowedElementTypes: ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
+        restrictedToolbar: false,
+        showBackSide: true,
+        autoAdvanceOnAnswer: false,
       };
 
       // Calculate the new index before updating state
@@ -350,16 +449,16 @@ export const useCardEditor = () => {
       
       // Navigate to the new card using the pre-calculated index
       setCurrentCardIndex(newCardIndex);
-      setSelectedElement(null);
+      setSelectedElementId(null);
       setCurrentSide('front');
       
       console.log('Set current card index to:', newCardIndex);
     } catch (error) {
       console.error('Error creating new card with layout:', error);
     }
-  };
+  }, [setId, cards, currentCardIndex]);
 
-  const deleteCard = async (cardId: string) => {
+  const deleteCard = useCallback(async (cardId: string) => {
     if (cards.length <= 1) {
       console.log('Cannot delete the last card');
       return false;
@@ -384,16 +483,16 @@ export const useCardEditor = () => {
         setCurrentCardIndex(Math.max(0, cards.length - 2));
       }
 
-      setSelectedElement(null);
+      setSelectedElementId(null);
       console.log('Card deleted successfully');
       return true;
     } catch (error) {
       console.error('Error deleting card:', error);
       return false;
     }
-  };
+  }, [cards, currentCardIndex]);
 
-  const reorderCards = async (reorderedCards: Flashcard[]) => {
+  const reorderCards = useCallback(async (reorderedCards: Flashcard[]) => {
     setCards(reorderedCards);
     
     // Update the order in the database by updating each card with a new position or timestamp
@@ -410,10 +509,10 @@ export const useCardEditor = () => {
     } catch (error) {
       console.error('Error reordering cards:', error);
     }
-  };
+  }, []);
 
   // New function to handle canvas size changes
-  const updateCanvasSize = async (width: number, height: number) => {
+  const updateCanvasSize = useCallback(async (width: number, height: number) => {
     const currentCard = cards[currentCardIndex];
     if (!currentCard) return;
 
@@ -428,7 +527,7 @@ export const useCardEditor = () => {
       );
 
       // Update database
-      await updateCard(currentCard.id, { 
+      await updateCard({ 
         canvas_width: width, 
         canvas_height: height 
       });
@@ -437,7 +536,7 @@ export const useCardEditor = () => {
     } catch (error) {
       console.error('Error updating canvas size:', error);
     }
-  };
+  }, [cards, currentCardIndex]);
 
   // Helper function to update card metadata
   const updateCard = useCallback((updates: Partial<Flashcard>) => {
@@ -464,8 +563,10 @@ export const useCardEditor = () => {
   }, [currentCardIndex, cards, setId, navigate]);
 
   useEffect(() => {
-    fetchSetAndCards();
-  }, [fetchSetAndCards]);
+    if (setId) {
+      initializeEditor(setId);
+    }
+  }, [setId, initializeEditor]);
 
   useEffect(() => {
     if (cardId && cards.length > 0) {
@@ -496,15 +597,23 @@ export const useCardEditor = () => {
     // Methods
     setCurrentSide,
     setSelectedElementId,
-    fetchSetAndCards,
+    setCurrentCardIndex,
+    initializeEditor,
     saveCard,
     updateCard,
+    addElement,
+    updateElement,
+    deleteElement,
+    updateCanvasSize,
     createNewCard,
     createNewCardFromTemplate,
+    createNewCardWithLayout,
+    deleteCard,
+    reorderCards,
     navigateCard,
     enableCollaboration,
     removeCollaborator,
-    broadcastCursorPosition,
-    broadcastElementSelection,
+    broadcastCursorPosition: () => {},
+    broadcastElementSelection: () => {},
   };
 };

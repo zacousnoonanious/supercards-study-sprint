@@ -1,90 +1,80 @@
 
 import React from 'react';
 import { CanvasElement } from '@/types/flashcard';
-import { YouTubeElementEditor } from '../YouTubeElementEditor';
 import { EmbeddedDeckViewer } from '../EmbeddedDeckViewer';
-import { EnhancedDrawingCanvas } from '../EnhancedDrawingCanvas';
 
 interface MediaElementRendererProps {
   element: CanvasElement;
-  textScale?: number;
-  isStudyMode?: boolean;
+  isSelected: boolean;
+  zoom: number;
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
-  onElementSelect?: (elementId: string) => void;
-  isDarkTheme: boolean;
-  isSelected?: boolean;
-  onElementDragStart?: (e: React.MouseEvent, elementId: string) => void;
-  isDragging?: boolean;
 }
 
 export const MediaElementRenderer: React.FC<MediaElementRendererProps> = ({
   element,
-  textScale = 1,
-  isStudyMode = false,
+  isSelected,
+  zoom,
   onUpdateElement,
-  onElementSelect,
-  isDarkTheme,
-  isSelected = false,
-  onElementDragStart,
-  isDragging = false,
 }) => {
-  const handleElementClick = () => {
-    onElementSelect?.(element.id);
+  const handleError = (error: any) => {
+    console.error('Media element error:', error);
   };
 
-  switch (element.type) {
-    case 'youtube':
-      return (
-        <div 
-          className="w-full h-full"
-          onClick={handleElementClick}
-        >
-          <YouTubeElementEditor
-            element={element}
-            onUpdate={(updates) => onUpdateElement(element.id, updates)}
-            textScale={textScale}
+  const renderContent = () => {
+    switch (element.type) {
+      case 'video':
+        return (
+          <video
+            src={element.content}
+            controls
+            className="w-full h-full object-contain"
+            onError={handleError}
           />
-        </div>
-      );
-
-    case 'deck-embed':
-      return (
-        <div 
-          className="w-full h-full"
-          onClick={handleElementClick}
-        >
+        );
+      
+      case 'iframe':
+        return (
+          <iframe
+            src={element.content}
+            className="w-full h-full border-0"
+            allowFullScreen
+            onError={handleError}
+          />
+        );
+      
+      case 'embedded-deck':
+        if (!element.content) {
+          return (
+            <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">
+              No deck selected
+            </div>
+          );
+        }
+        
+        return (
           <EmbeddedDeckViewer
-            deckId={element.deckId || ''}
-            width={element.width}
-            height={element.height}
+            deckId={element.content}
           />
-        </div>
-      );
+        );
+      
+      default:
+        return (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">
+            Unsupported media type: {element.type}
+          </div>
+        );
+    }
+  };
 
-    case 'drawing':
-      return (
-        <div 
-          className="w-full h-full"
-          onClick={handleElementClick}
-        >
-          <EnhancedDrawingCanvas
-            width={element.width}
-            height={element.height}
-            onDrawingComplete={(drawingData) => onUpdateElement(element.id, { drawingData })}
-            initialDrawing={element.drawingData}
-            strokeColor={element.strokeColor || '#000000'}
-            strokeWidth={element.strokeWidth || 2}
-            opacity={element.opacity || 1}
-            highlightMode={element.highlightMode || false}
-            onDragStart={(e) => onElementDragStart?.(e, element.id)}
-            isDragging={isDragging}
-            isActive={isSelected}
-            onActivate={() => onElementSelect?.(element.id)}
-          />
-        </div>
-      );
-
-    default:
-      return null;
-  }
+  return (
+    <div
+      className={`w-full h-full ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+      style={{
+        borderRadius: element.borderRadius || 0,
+        overflow: 'hidden',
+      }}
+    >
+      {renderContent()}
+    </div>
+  );
 };

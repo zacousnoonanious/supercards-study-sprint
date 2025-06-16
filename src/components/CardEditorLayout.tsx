@@ -12,10 +12,12 @@ import { CollaborationDialog } from './collaboration/CollaborationDialog';
 import { Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
 import { CollaboratorInfo, CollaborativeUser } from '@/hooks/useCollaborativeEditing';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
 interface CardEditorLayoutProps {
   cards: Flashcard[];
-  currentCard: Flashcard;
+  currentCard: Flashcard | null;
   currentCardIndex: number;
   currentSide: 'front' | 'back';
   selectedElement: CanvasElement | null;
@@ -63,6 +65,7 @@ interface CardEditorLayoutProps {
   currentCardId?: string;
   onEnableCollaboration?: () => Promise<boolean>;
   onRemoveCollaborator?: (collaboratorId: string) => Promise<boolean>;
+  showEmptyState?: boolean;
 }
 
 export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
@@ -115,6 +118,7 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   currentCardId,
   onEnableCollaboration,
   onRemoveCollaborator,
+  showEmptyState = false,
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
@@ -228,9 +232,9 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
         <Navigation />
         <EnhancedSetOverview
           cards={cards}
-          setId={currentCard.set_id}
-          onReorderCards={handleReorderCards}
-          onNavigateToCard={handleNavigateToCard}
+          setId={currentCard?.set_id || ''}
+          onReorderCards={() => {}}
+          onNavigateToCard={() => onShowCardOverviewChange(false)}
           onBackToSet={() => onShowCardOverviewChange(false)}
           onCreateCard={onCreateNewCard}
           onCreateFromTemplate={onCreateNewCardFromTemplate}
@@ -267,7 +271,7 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
           collaborationDialog={
             onEnableCollaboration ? (
               <CollaborationDialog
-                setId={currentCard.set_id}
+                setId={currentCard?.set_id || ''}
                 collaborators={collaborators}
                 isCollaborative={isCollaborative}
                 onEnableCollaboration={onEnableCollaboration}
@@ -279,23 +283,26 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
           collaborators={collaborators}
           currentCardId={currentCardId}
           isCollaborative={isCollaborative}
+          onNavigateCard={cards.length > 0 ? onNavigateCard : undefined}
         />
         
-        <TopSettingsBar
-          selectedElement={selectedElement}
-          onUpdateElement={onUpdateElement}
-          onDeleteElement={onDeleteElement}
-          canvasWidth={cardWidth}
-          canvasHeight={cardHeight}
-          onCanvasSizeChange={onCanvasSizeChange}
-          currentCard={currentCard}
-          onUpdateCard={onUpdateCard}
-          showGrid={showGrid}
-          onShowGridChange={onShowGridChange}
-          snapToGrid={snapToGrid}
-          onSnapToGridChange={onSnapToGridChange}
-          currentSide={currentSide}
-        />
+        {!showEmptyState && currentCard && (
+          <TopSettingsBar
+            selectedElement={selectedElement}
+            onUpdateElement={onUpdateElement}
+            onDeleteElement={onDeleteElement}
+            canvasWidth={cardWidth}
+            canvasHeight={cardHeight}
+            onCanvasSizeChange={onCanvasSizeChange}
+            currentCard={currentCard}
+            onUpdateCard={onUpdateCard}
+            showGrid={showGrid}
+            onShowGridChange={onShowGridChange}
+            snapToGrid={snapToGrid}
+            onSnapToGridChange={onSnapToGridChange}
+            currentSide={currentSide}
+          />
+        )}
 
         <div className="flex flex-1 overflow-hidden">
           {/* Left Toolbar Panel - Dynamic width based on text mode */}
@@ -326,65 +333,80 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
             className="flex-1 flex items-center justify-center p-4 overflow-hidden relative"
             data-canvas-background="true"
           >
-            <div
-              className="relative"
-              style={{
-                transform: `scale(${zoom})`,
-                transformOrigin: 'center center',
-                width: cardWidth,
-                height: cardHeight,
-                cursor: isPanning ? 'grabbing' : 'default',
-              }}
-            >
-              <CardCanvas
-                elements={currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements}
-                selectedElement={selectedElement?.id || null}
-                onSelectElement={onElementSelect}
-                onUpdateElement={onUpdateElement}
-                onDeleteElement={onDeleteElement}
-                cardSide={currentSide}
-                style={canvasStyle}
-                showGrid={showGrid}
-                snapToGrid={snapToGrid}
-                showBorder={showBorder}
-                zoom={zoom}
-              />
-            </div>
+            {showEmptyState ? (
+              <div className="text-center">
+                <h3 className="text-lg font-semibold mb-2">No cards yet</h3>
+                <p className="text-muted-foreground mb-4">Consider adding your first one!</p>
+                <Button onClick={onCreateNewCard} className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create First Card
+                </Button>
+              </div>
+            ) : currentCard ? (
+              <div
+                className="relative"
+                style={{
+                  transform: `scale(${zoom})`,
+                  transformOrigin: 'center center',
+                  width: cardWidth,
+                  height: cardHeight,
+                  cursor: isPanning ? 'grabbing' : 'default',
+                }}
+              >
+                <CardCanvas
+                  elements={currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements}
+                  selectedElement={selectedElement?.id || null}
+                  onSelectElement={onElementSelect}
+                  onUpdateElement={onUpdateElement}
+                  onDeleteElement={onDeleteElement}
+                  cardSide={currentSide}
+                  style={{ width: cardWidth, height: cardHeight }}
+                  showGrid={showGrid}
+                  snapToGrid={snapToGrid}
+                  showBorder={showBorder}
+                  zoom={zoom}
+                />
+              </div>
+            ) : null}
           </div>
 
           {/* Right Side Panel */}
-          <SidePanel
-            selectedElement={selectedElement}
-            onUpdateElement={onUpdateElement}
-            onDeleteElement={onDeleteElement}
-            currentCard={currentCard}
-            currentSide={currentSide}
-            onTagsUpdate={handleTagsUpdate}
-            onCreateCard={handleCreateCard}
-            onApplyLayout={handleApplyLayout}
-          />
+          {!showEmptyState && currentCard && (
+            <SidePanel
+              selectedElement={selectedElement}
+              onUpdateElement={onUpdateElement}
+              onDeleteElement={onDeleteElement}
+              currentCard={currentCard}
+              currentSide={currentSide}
+              onTagsUpdate={() => {}}
+              onCreateCard={() => onCreateNewCard()}
+              onApplyLayout={() => {}}
+            />
+          )}
         </div>
 
-        <BottomToolbar
-          zoom={zoom}
-          showGrid={showGrid}
-          snapToGrid={snapToGrid}
-          toolbarPosition={toolbarPosition}
-          toolbarIsDocked={toolbarIsDocked}
-          toolbarShowText={toolbarShowText}
-          showBorder={showBorder}
-          onZoomChange={onZoomChange}
-          onShowGridChange={onShowGridChange}
-          onSnapToGridChange={onSnapToGridChange}
-          onShowBorderChange={onShowBorderChange}
-          onToolbarPositionChange={onToolbarPositionChange}
-          onToolbarDockChange={onToolbarDockChange}
-          onToolbarShowTextChange={onToolbarShowTextChange}
-          currentSide={currentSide}
-          onCardSideChange={onCardSideChange}
-          onFitToView={onFitToView}
-          onOpenFullscreen={onOpenFullscreen}
-        />
+        {!showEmptyState && (
+          <BottomToolbar
+            zoom={zoom}
+            showGrid={showGrid}
+            snapToGrid={snapToGrid}
+            toolbarPosition={toolbarPosition}
+            toolbarIsDocked={toolbarIsDocked}
+            toolbarShowText={toolbarShowText}
+            showBorder={showBorder}
+            onZoomChange={onZoomChange}
+            onShowGridChange={onShowGridChange}
+            onSnapToGridChange={onSnapToGridChange}
+            onShowBorderChange={onShowBorderChange}
+            onToolbarPositionChange={onToolbarPositionChange}
+            onToolbarDockChange={onToolbarDockChange}
+            onToolbarShowTextChange={onToolbarShowTextChange}
+            currentSide={currentSide}
+            onCardSideChange={onCardSideChange}
+            onFitToView={onFitToView}
+            onOpenFullscreen={onOpenFullscreen}
+          />
+        )}
       </div>
     </div>
   );
