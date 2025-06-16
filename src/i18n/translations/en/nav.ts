@@ -14,4 +14,6 @@ export const nav = {
   navigation: "Navigation",
   signOut: "Sign Out",
   admin: "Admin",
+  analytics: "Analytics",
+  stats: "Stats",
 };

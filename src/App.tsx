@@ -51,7 +51,7 @@ function App() {
                   <Route path="/study/:id" element={<ProtectedRoute><StudyMode /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-                  <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+                  <Route path="/stats" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>
