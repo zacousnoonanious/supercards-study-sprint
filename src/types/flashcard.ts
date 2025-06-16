@@ -1,37 +1,30 @@
-
-
-
 export interface Flashcard {
   id: string;
   set_id: string;
   question: string;
   answer: string;
   hint?: string;
-  front_content?: string;
-  back_content?: string;
-  front_elements?: CanvasElement[];
-  back_elements?: CanvasElement[];
-  card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
-  interactive_type?: 'multiple-choice' | 'true-false' | 'fill-in-blank' | null;
-  password?: string;
-  countdown_timer?: number;
-  countdown_timer_front?: number;
-  countdown_timer_back?: number;
-  countdown_behavior?: 'flip' | 'next';
-  countdown_behavior_front?: string;
-  countdown_behavior_back?: string;
-  flips_before_next?: number;
-  canvas_width?: number;
-  canvas_height?: number;
-  metadata?: any;
   created_at: string;
   updated_at: string;
   last_reviewed_at?: string;
-  templateId?: string;
-  allowedElementTypes?: string[];
-  restrictedToolbar?: boolean;
-  showBackSide?: boolean;
-  autoAdvanceOnAnswer?: boolean;
+  front_elements: CanvasElement[];
+  back_elements: CanvasElement[];
+  canvas_width?: number;
+  canvas_height?: number;
+  countdown_timer?: number;
+  countdown_timer_front?: number;
+  countdown_timer_back?: number;
+  countdown_behavior_front?: string;
+  countdown_behavior_back?: string;
+  flips_before_next?: number;
+  card_type?: string;
+  interactive_type?: string;
+  password?: string;
+  metadata?: {
+    tags?: string[];
+    aiTags?: string[];
+    [key: string]: any;
+  };
 }
 
 export interface FlashcardSet {

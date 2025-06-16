@@ -1,6 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { Tags } from 'lucide-react';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CanvasSizeControls } from './settings/CanvasSizeControls';
@@ -8,6 +10,7 @@ import { GridControls } from './settings/GridControls';
 import { TimerControls } from './settings/TimerControls';
 import { ElementControls } from './settings/ElementControls';
 import { EditableDeckTitle } from './EditableDeckTitle';
+import { TagsManager } from './TagsManager';
 
 interface TopSettingsBarProps {
   selectedElement: CanvasElement | null;
@@ -46,11 +49,17 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
+  const [showTagsManager, setShowTagsManager] = useState(false);
 
   const handleCanvasSizeChange = (width: number, height: number) => {
     console.log('Canvas size change requested:', width, height);
     onCanvasSizeChange(width, height);
   };
+
+  // Get tag counts for display
+  const manualTagsCount = currentCard?.metadata?.tags?.length || 0;
+  const aiTagsCount = currentCard?.metadata?.aiTags?.length || 0;
+  const totalTagsCount = manualTagsCount + aiTagsCount;
 
   return (
     <div className={`border-b p-2 ${isDarkTheme ? 'bg-gray-800 border-gray-600' : 'bg-background border-border'}`}>
@@ -70,6 +79,24 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
               <Separator orientation="vertical" className="h-8" />
             </>
           )}
+
+          {/* Tags Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowTagsManager(true)}
+            className="flex items-center gap-2"
+          >
+            <Tags className="w-4 h-4" />
+            Tags
+            {totalTagsCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                {totalTagsCount}
+              </span>
+            )}
+          </Button>
+
+          <Separator orientation="vertical" className="h-8" />
 
           {/* Canvas Size Controls */}
           <CanvasSizeControls
@@ -112,6 +139,14 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
           )}
         </div>
       </div>
+
+      {/* Tags Manager Dialog */}
+      <TagsManager
+        isOpen={showTagsManager}
+        onClose={() => setShowTagsManager(false)}
+        currentCard={currentCard}
+        onUpdateCard={onUpdateCard}
+      />
     </div>
   );
 };
