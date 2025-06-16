@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
@@ -9,10 +8,7 @@ import {
   Maximize, 
   Lock, 
   Unlock,
-  CornerDownLeft,
-  CornerDownRight,
-  CornerUpLeft,
-  CornerUpRight
+  Move
 } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
 
@@ -31,6 +27,9 @@ interface LayoutConstraintsProps {
   availableElements: CanvasElement[];
   isVisible: boolean;
   onToggle: () => void;
+  canvasWidth: number;
+  canvasHeight: number;
+  onApplyConstraints: () => void;
 }
 
 export const LayoutConstraints: React.FC<LayoutConstraintsProps> = ({
@@ -39,11 +38,30 @@ export const LayoutConstraints: React.FC<LayoutConstraintsProps> = ({
   availableElements,
   isVisible,
   onToggle,
+  canvasWidth,
+  canvasHeight,
+  onApplyConstraints,
 }) => {
   const currentConstraints = (element as any).layoutConstraints || [];
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Apply constraints immediately when they change
+  useEffect(() => {
+    if (currentConstraints.length > 0) {
+      onApplyConstraints();
+    }
+  }, [currentConstraints, onApplyConstraints]);
 
   const addConstraint = (constraint: LayoutConstraint) => {
-    const newConstraints = [...currentConstraints, constraint];
+    // Remove existing constraints of the same type to avoid conflicts
+    const filteredConstraints = currentConstraints.filter((c: LayoutConstraint) => {
+      if (constraint.type === 'pin-to-edge' && c.type === 'pin-to-edge') {
+        return c.edge !== constraint.edge;
+      }
+      return c.type !== constraint.type;
+    });
+    
+    const newConstraints = [...filteredConstraints, constraint];
     onUpdateConstraints(newConstraints);
   };
 
@@ -52,8 +70,44 @@ export const LayoutConstraints: React.FC<LayoutConstraintsProps> = ({
     onUpdateConstraints(newConstraints);
   };
 
-  const hasConstraint = (type: string) => {
-    return currentConstraints.some((c: LayoutConstraint) => c.type === type);
+  const hasConstraint = (type: string, edge?: string) => {
+    return currentConstraints.some((c: LayoutConstraint) => {
+      if (edge) {
+        return c.type === type && c.edge === edge;
+      }
+      return c.type === type;
+    });
+  };
+
+  const clearAllConstraints = () => {
+    onUpdateConstraints([]);
+  };
+
+  // Calculate menu position to keep it on canvas
+  const getMenuPosition = () => {
+    const baseLeft = element.x + element.width + 10;
+    const baseTop = element.y;
+    const menuWidth = 320; // Approximate menu width
+    const menuHeight = 400; // Approximate menu height
+
+    let left = baseLeft;
+    let top = baseTop;
+
+    // Keep menu within canvas bounds
+    if (left + menuWidth > canvasWidth) {
+      left = element.x - menuWidth - 10;
+    }
+    if (left < 0) {
+      left = 10;
+    }
+    if (top + menuHeight > canvasHeight) {
+      top = canvasHeight - menuHeight - 10;
+    }
+    if (top < 0) {
+      top = 10;
+    }
+
+    return { left, top };
   };
 
   if (!isVisible) {
@@ -70,21 +124,41 @@ export const LayoutConstraints: React.FC<LayoutConstraintsProps> = ({
     );
   }
 
+  const menuPosition = getMenuPosition();
+
   return (
-    <div className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-50 animate-scale-in min-w-80">
+    <div 
+      ref={panelRef}
+      className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-50 animate-scale-in min-w-80 max-w-80"
+      style={{
+        left: `${menuPosition.left}px`,
+        top: `${menuPosition.top}px`,
+      }}
+    >
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium">Layout Constraints</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggle}
-          className="h-6 w-6 p-0"
-        >
-          ×
-        </Button>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAllConstraints}
+            className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+            title="Clear all constraints"
+          >
+            <Unlock className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggle}
+            className="h-6 w-6 p-0"
+          >
+            ×
+          </Button>
+        </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-80 overflow-y-auto">
         {/* Pin to Edges */}
         <div>
           <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">
@@ -92,88 +166,106 @@ export const LayoutConstraints: React.FC<LayoutConstraintsProps> = ({
           </label>
           <div className="grid grid-cols-3 gap-1">
             <Button
-              variant={hasConstraint('pin-to-edge') && currentConstraints.some((c: any) => c.edge === 'top') ? 'default' : 'outline'}
+              variant={hasConstraint('pin-to-edge', 'top') ? 'default' : 'outline'}
               size="sm"
               onClick={() => {
-                if (hasConstraint('pin-to-edge')) {
-                  removeConstraint(currentConstraints.findIndex((c: any) => c.edge === 'top'));
+                if (hasConstraint('pin-to-edge', 'top')) {
+                  const index = currentConstraints.findIndex((c: any) => c.type === 'pin-to-edge' && c.edge === 'top');
+                  removeConstraint(index);
                 } else {
                   addConstraint({ type: 'pin-to-edge', edge: 'top' });
                 }
               }}
-              className="h-8"
+              className="h-8 text-xs"
+              title="Pin to Top"
             >
-              <CornerUpLeft className="w-4 h-4" />
+              <Pin className="w-3 h-3" />
+              T
             </Button>
             <Button
-              variant={hasConstraint('pin-to-edge') && currentConstraints.some((c: any) => c.edge === 'center-y') ? 'default' : 'outline'}
+              variant={hasConstraint('pin-to-edge', 'center-y') ? 'default' : 'outline'}
               size="sm"
               onClick={() => {
-                if (hasConstraint('pin-to-edge')) {
-                  removeConstraint(currentConstraints.findIndex((c: any) => c.edge === 'center-y'));
+                if (hasConstraint('pin-to-edge', 'center-y')) {
+                  const index = currentConstraints.findIndex((c: any) => c.type === 'pin-to-edge' && c.edge === 'center-y');
+                  removeConstraint(index);
                 } else {
                   addConstraint({ type: 'pin-to-edge', edge: 'center-y' });
                 }
               }}
-              className="h-8"
+              className="h-8 text-xs"
+              title="Center Vertically"
             >
-              <Pin className="w-4 h-4" />
+              <Pin className="w-3 h-3" />
+              ⊞
             </Button>
             <Button
-              variant={hasConstraint('pin-to-edge') && currentConstraints.some((c: any) => c.edge === 'bottom') ? 'default' : 'outline'}
+              variant={hasConstraint('pin-to-edge', 'bottom') ? 'default' : 'outline'}
               size="sm"
               onClick={() => {
-                if (hasConstraint('pin-to-edge')) {
-                  removeConstraint(currentConstraints.findIndex((c: any) => c.edge === 'bottom'));
+                if (hasConstraint('pin-to-edge', 'bottom')) {
+                  const index = currentConstraints.findIndex((c: any) => c.type === 'pin-to-edge' && c.edge === 'bottom');
+                  removeConstraint(index);
                 } else {
                   addConstraint({ type: 'pin-to-edge', edge: 'bottom' });
                 }
               }}
-              className="h-8"
+              className="h-8 text-xs"
+              title="Pin to Bottom"
             >
-              <CornerDownLeft className="w-4 h-4" />
+              <Pin className="w-3 h-3 rotate-180" />
+              B
             </Button>
             <Button
-              variant={hasConstraint('pin-to-edge') && currentConstraints.some((c: any) => c.edge === 'left') ? 'default' : 'outline'}
+              variant={hasConstraint('pin-to-edge', 'left') ? 'default' : 'outline'}
               size="sm"
               onClick={() => {
-                if (hasConstraint('pin-to-edge')) {
-                  removeConstraint(currentConstraints.findIndex((c: any) => c.edge === 'left'));
+                if (hasConstraint('pin-to-edge', 'left')) {
+                  const index = currentConstraints.findIndex((c: any) => c.type === 'pin-to-edge' && c.edge === 'left');
+                  removeConstraint(index);
                 } else {
                   addConstraint({ type: 'pin-to-edge', edge: 'left' });
                 }
               }}
-              className="h-8"
+              className="h-8 text-xs"
+              title="Pin to Left"
             >
-              <Pin className="w-4 h-4 rotate-90" />
+              <Pin className="w-3 h-3 rotate-90" />
+              L
             </Button>
             <Button
-              variant={hasConstraint('pin-to-edge') && currentConstraints.some((c: any) => c.edge === 'center-x') ? 'default' : 'outline'}
+              variant={hasConstraint('pin-to-edge', 'center-x') ? 'default' : 'outline'}
               size="sm"
               onClick={() => {
-                if (hasConstraint('pin-to-edge')) {
-                  removeConstraint(currentConstraints.findIndex((c: any) => c.edge === 'center-x'));
+                if (hasConstraint('pin-to-edge', 'center-x')) {
+                  const index = currentConstraints.findIndex((c: any) => c.type === 'pin-to-edge' && c.edge === 'center-x');
+                  removeConstraint(index);
                 } else {
                   addConstraint({ type: 'pin-to-edge', edge: 'center-x' });
                 }
               }}
-              className="h-8"
+              className="h-8 text-xs"
+              title="Center Horizontally"
             >
-              <Pin className="w-4 h-4" />
+              <Pin className="w-3 h-3" />
+              ⊟
             </Button>
             <Button
-              variant={hasConstraint('pin-to-edge') && currentConstraints.some((c: any) => c.edge === 'right') ? 'default' : 'outline'}
+              variant={hasConstraint('pin-to-edge', 'right') ? 'default' : 'outline'}
               size="sm"
               onClick={() => {
-                if (hasConstraint('pin-to-edge')) {
-                  removeConstraint(currentConstraints.findIndex((c: any) => c.edge === 'right'));
+                if (hasConstraint('pin-to-edge', 'right')) {
+                  const index = currentConstraints.findIndex((c: any) => c.type === 'pin-to-edge' && c.edge === 'right');
+                  removeConstraint(index);
                 } else {
                   addConstraint({ type: 'pin-to-edge', edge: 'right' });
                 }
               }}
-              className="h-8"
+              className="h-8 text-xs"
+              title="Pin to Right"
             >
-              <Pin className="w-4 h-4 -rotate-90" />
+              <Pin className="w-3 h-3 -rotate-90" />
+              R
             </Button>
           </div>
         </div>
@@ -191,12 +283,14 @@ export const LayoutConstraints: React.FC<LayoutConstraintsProps> = ({
               size="sm"
               onClick={() => {
                 if (hasConstraint('scale-with-canvas')) {
-                  removeConstraint(currentConstraints.findIndex((c: any) => c.type === 'scale-with-canvas'));
+                  const index = currentConstraints.findIndex((c: any) => c.type === 'scale-with-canvas');
+                  removeConstraint(index);
                 } else {
                   addConstraint({ type: 'scale-with-canvas', scaleX: true, scaleY: true });
                 }
               }}
-              className="h-8"
+              className="h-8 flex-1"
+              title="Element will scale proportionally with canvas resize"
             >
               <Maximize className="w-4 h-4 mr-1" />
               Auto Scale
@@ -223,7 +317,7 @@ export const LayoutConstraints: React.FC<LayoutConstraintsProps> = ({
             <SelectTrigger className="h-8">
               <SelectValue placeholder="Select element to anchor to" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50">
               {availableElements
                 .filter(el => el.id !== element.id)
                 .map(el => (
@@ -241,13 +335,14 @@ export const LayoutConstraints: React.FC<LayoutConstraintsProps> = ({
             <Separator />
             <div>
               <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">
-                Active Constraints
+                Active Constraints ({currentConstraints.length})
               </label>
-              <div className="space-y-1">
+              <div className="space-y-1 max-h-32 overflow-y-auto">
                 {currentConstraints.map((constraint: LayoutConstraint, index: number) => (
                   <div key={index} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-700 rounded p-2">
-                    <span>
-                      {constraint.type === 'pin-to-edge' && `Pin to ${constraint.edge}`}
+                    <span className="flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-green-500" />
+                      {constraint.type === 'pin-to-edge' && `Pin to ${constraint.edge?.replace('-', ' ')}`}
                       {constraint.type === 'scale-with-canvas' && 'Scale with canvas'}
                       {constraint.type === 'anchor-to-element' && `Anchored to element`}
                     </span>
@@ -255,7 +350,8 @@ export const LayoutConstraints: React.FC<LayoutConstraintsProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => removeConstraint(index)}
-                      className="h-4 w-4 p-0"
+                      className="h-4 w-4 p-0 hover:bg-red-100 hover:text-red-600"
+                      title="Remove constraint"
                     >
                       ×
                     </Button>

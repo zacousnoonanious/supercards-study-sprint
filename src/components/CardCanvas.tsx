@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasBackground } from './CanvasBackground';
@@ -64,6 +63,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   });
 
   const {
+    applyConstraints,
     applyConstraintsToAll,
     addConstraintToElement,
     removeConstraintFromElement,
@@ -97,6 +97,11 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         }
       }
       onUpdateElement(elementId, updates);
+      
+      // Apply layout constraints after update
+      setTimeout(() => {
+        applyConstraints(elementId);
+      }, 0);
     },
     canvasWidth,
     canvasHeight,
@@ -177,6 +182,10 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     }
   }, [onDuplicateElement, onUpdateElement, onSelectElement]);
 
+  const handleApplyConstraints = useCallback((elementId: string) => {
+    applyConstraints(elementId);
+  }, [applyConstraints]);
+
   return (
     <div
       ref={canvasRef}
@@ -224,12 +233,15 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           editingElement={editingElement}
           zoom={zoom}
           availableElements={elements}
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
           onMouseDown={handleElementMouseDown}
           onClick={handleElementClick}
           onUpdateElement={onUpdateElement}
           onEditingChange={handleEditingChange}
           onDuplicate={handleDuplicateElement}
           onDelete={onDeleteElement}
+          onApplyConstraints={handleApplyConstraints}
         />
       ))}
       

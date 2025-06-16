@@ -12,12 +12,15 @@ interface EnhancedCanvasElementWrapperProps {
   editingElement: string | null;
   zoom: number;
   availableElements: CanvasElement[];
+  canvasWidth: number;
+  canvasHeight: number;
   onMouseDown: (e: React.MouseEvent, elementId: string, action?: 'drag' | 'resize', handle?: string) => void;
   onClick: (e: React.MouseEvent, elementId: string) => void;
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
   onEditingChange: (id: string | null) => void;
   onDuplicate: (element: CanvasElement) => void;
   onDelete: (elementId: string) => void;
+  onApplyConstraints: (elementId: string) => void;
 }
 
 export const EnhancedCanvasElementWrapper: React.FC<EnhancedCanvasElementWrapperProps> = ({
@@ -27,12 +30,15 @@ export const EnhancedCanvasElementWrapper: React.FC<EnhancedCanvasElementWrapper
   editingElement,
   zoom,
   availableElements,
+  canvasWidth,
+  canvasHeight,
   onMouseDown,
   onClick,
   onUpdateElement,
   onEditingChange,
   onDuplicate,
   onDelete,
+  onApplyConstraints,
 }) => {
   const [showLayoutConstraints, setShowLayoutConstraints] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -47,6 +53,21 @@ export const EnhancedCanvasElementWrapper: React.FC<EnhancedCanvasElementWrapper
   const handleLayoutConstraintsUpdate = (constraints: any[]) => {
     onUpdateElement(element.id, { layoutConstraints: constraints } as any);
   };
+
+  const handleApplyConstraints = () => {
+    onApplyConstraints(element.id);
+  };
+
+  const toggleLayoutConstraints = () => {
+    setShowLayoutConstraints(!showLayoutConstraints);
+  };
+
+  // Close constraints panel when element is no longer selected
+  useEffect(() => {
+    if (!isSelected) {
+      setShowLayoutConstraints(false);
+    }
+  }, [isSelected]);
 
   return (
     <>
@@ -96,20 +117,23 @@ export const EnhancedCanvasElementWrapper: React.FC<EnhancedCanvasElementWrapper
             <span className="text-xs text-white">⚓</span>
           </div>
         )}
-      </div>
 
-      {/* Layout constraints panel */}
-      {isSelected && (
-        <div className="absolute" style={{ left: element.x + element.width + 10, top: element.y }}>
-          <LayoutConstraints
-            element={element}
-            onUpdateConstraints={handleLayoutConstraintsUpdate}
-            availableElements={availableElements}
-            isVisible={showLayoutConstraints}
-            onToggle={() => setShowLayoutConstraints(!showLayoutConstraints)}
-          />
-        </div>
-      )}
+        {/* Layout constraints button - only show when selected */}
+        {isSelected && editingElement !== element.id && (
+          <div className="absolute -top-8 -right-8">
+            <LayoutConstraints
+              element={element}
+              onUpdateConstraints={handleLayoutConstraintsUpdate}
+              availableElements={availableElements}
+              isVisible={showLayoutConstraints}
+              onToggle={toggleLayoutConstraints}
+              canvasWidth={canvasWidth}
+              canvasHeight={canvasHeight}
+              onApplyConstraints={handleApplyConstraints}
+            />
+          </div>
+        )}
+      </div>
     </>
   );
 };

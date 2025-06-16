@@ -142,8 +142,15 @@ export interface CanvasElement {
   // Audio properties
   autoplay?: boolean;
   
-  // Layout constraints (from previous feature)
-  layoutConstraints?: any[];
+  // Layout constraints (extended feature)
+  layoutConstraints?: Array<{
+    type: 'pin-to-edge' | 'scale-with-canvas' | 'fixed-distance' | 'anchor-to-element';
+    edge?: 'top' | 'bottom' | 'left' | 'right' | 'center-x' | 'center-y';
+    targetElementId?: string;
+    distance?: number;
+    scaleX?: boolean;
+    scaleY?: boolean;
+  }>;
 }
 
 export interface CardTemplate {

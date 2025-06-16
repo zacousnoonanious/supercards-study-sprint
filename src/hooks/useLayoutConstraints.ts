@@ -62,33 +62,59 @@ export const useLayoutConstraints = ({
           break;
 
         case 'scale-with-canvas':
-          const scaleX = canvasWidth / originalCanvasWidth;
-          const scaleY = canvasHeight / originalCanvasHeight;
-          
-          if (constraint.scaleX) {
-            updates.width = Math.round(element.width * scaleX);
-            updates.x = Math.round(element.x * scaleX);
-          }
-          if (constraint.scaleY) {
-            updates.height = Math.round(element.height * scaleY);
-            updates.y = Math.round(element.y * scaleY);
+          if (originalCanvasWidth > 0 && originalCanvasHeight > 0) {
+            const scaleX = canvasWidth / originalCanvasWidth;
+            const scaleY = canvasHeight / originalCanvasHeight;
+            
+            if (constraint.scaleX) {
+              updates.width = Math.round(element.width * scaleX);
+              updates.x = Math.round(element.x * scaleX);
+            }
+            if (constraint.scaleY) {
+              updates.height = Math.round(element.height * scaleY);
+              updates.y = Math.round(element.y * scaleY);
+            }
           }
           break;
 
         case 'anchor-to-element':
           const targetElement = elements.find(el => el.id === constraint.targetElementId);
-          if (targetElement && constraint.distance) {
-            // Position relative to target element
+          if (targetElement && constraint.distance !== undefined) {
+            // Position relative to target element (to the right by default)
             updates.x = targetElement.x + targetElement.width + constraint.distance;
             updates.y = targetElement.y;
           }
           break;
 
         case 'fixed-distance':
-          // Maintain fixed distance from an edge or element
+          // Maintain fixed distance from an edge
+          if (constraint.edge && constraint.distance !== undefined) {
+            switch (constraint.edge) {
+              case 'top':
+                updates.y = constraint.distance;
+                break;
+              case 'bottom':
+                updates.y = canvasHeight - element.height - constraint.distance;
+                break;
+              case 'left':
+                updates.x = constraint.distance;
+                break;
+              case 'right':
+                updates.x = canvasWidth - element.width - constraint.distance;
+                break;
+            }
+          }
           break;
       }
     });
+
+    // Ensure element stays within canvas bounds
+    if (updates.x !== undefined) {
+      updates.x = Math.max(0, Math.min(updates.x, canvasWidth - element.width));
+    }
+    if (updates.y !== undefined) {
+      updates.y = Math.max(0, Math.min(updates.y, canvasHeight - element.height));
+    }
 
     if (Object.keys(updates).length > 0) {
       onUpdateElement(elementId, updates);
@@ -97,7 +123,7 @@ export const useLayoutConstraints = ({
 
   const applyConstraintsToAll = useCallback(() => {
     elements.forEach(element => {
-      if ((element as any).layoutConstraints) {
+      if ((element as any).layoutConstraints?.length > 0) {
         applyConstraints(element.id);
       }
     });
@@ -111,7 +137,10 @@ export const useLayoutConstraints = ({
     const newConstraints = [...currentConstraints, constraint];
     
     onUpdateElement(elementId, { layoutConstraints: newConstraints } as any);
-  }, [elements, onUpdateElement]);
+    
+    // Apply constraints immediately
+    setTimeout(() => applyConstraints(elementId), 0);
+  }, [elements, onUpdateElement, applyConstraints]);
 
   const removeConstraintFromElement = useCallback((elementId: string, constraintIndex: number) => {
     const element = elements.find(el => el.id === elementId);
