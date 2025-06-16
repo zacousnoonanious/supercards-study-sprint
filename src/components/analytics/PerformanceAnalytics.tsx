@@ -14,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { StudyActivityHeatmap } from './StudyActivityHeatmap';
 import { DeckPerformanceBreakdown } from './DeckPerformanceBreakdown';
 import { CardDifficultyAnalysis } from './CardDifficultyAnalysis';
+import { PersonalizedInsights } from './PersonalizedInsights';
 
 interface StudyMetrics {
   totalStudyTime: number;
@@ -362,8 +363,9 @@ export const PerformanceAnalytics: React.FC = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="activity" className="space-y-4">
+      <Tabs defaultValue="insights" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="insights">Personal Insights</TabsTrigger>
           <TabsTrigger value="activity">Study Activity</TabsTrigger>
           <TabsTrigger value="patterns">Learning Patterns</TabsTrigger>
           <TabsTrigger value="performance">Deck & Tag Performance</TabsTrigger>
@@ -372,6 +374,10 @@ export const PerformanceAnalytics: React.FC = () => {
           <TabsTrigger value="categories">Category Performance</TabsTrigger>
           <TabsTrigger value="detailed">Detailed Insights</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="insights" className="space-y-4">
+          <PersonalizedInsights />
+        </TabsContent>
 
         <TabsContent value="activity" className="space-y-4">
           <StudyActivityHeatmap />

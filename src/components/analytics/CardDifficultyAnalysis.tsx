@@ -239,6 +239,13 @@ export const CardDifficultyAnalysis: React.FC = () => {
     }
   };
 
+  const getBarFillColor = (accuracy: number) => {
+    if (accuracy >= 85) return '#22c55e'; // green
+    if (accuracy >= 70) return '#eab308'; // yellow
+    if (accuracy >= 55) return '#f97316'; // orange
+    return '#ef4444'; // red
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -384,12 +391,10 @@ export const CardDifficultyAnalysis: React.FC = () => {
                   />
                   <Bar 
                     dataKey="avgAccuracy" 
-                    fill={(entry) => {
-                      const acc = entry.avgAccuracy;
-                      if (acc >= 85) return '#22c55e'; // green
-                      if (acc >= 70) return '#eab308'; // yellow
-                      if (acc >= 55) return '#f97316'; // orange
-                      return '#ef4444'; // red
+                    fill="#8884d8"
+                    shape={(props: any) => {
+                      const fill = getBarFillColor(props.payload.avgAccuracy);
+                      return <Bar {...props} fill={fill} />;
                     }}
                   />
                 </BarChart>
