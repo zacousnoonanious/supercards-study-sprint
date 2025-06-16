@@ -9,11 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Save, Sparkles, Plus } from 'lucide-react';
+import { ArrowLeft, Save, Sparkles, Plus, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
 import { AIFlashcardGenerator } from '@/components/AIFlashcardGenerator';
+import { ImportFlashcardsDialog } from '@/components/ImportFlashcardsDialog';
 
 const CreateSet = () => {
   const { user } = useAuth();
@@ -87,6 +88,14 @@ const CreateSet = () => {
     navigate(`/set/${deckId}`);
   };
 
+  const handleImportComplete = (deckId: string, cardsImported: number) => {
+    toast({
+      title: "Import successful",
+      description: `Successfully imported ${cardsImported} cards`,
+    });
+    navigate(`/set/${deckId}`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -105,10 +114,14 @@ const CreateSet = () => {
         </div>
 
         <Tabs defaultValue="ai" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="ai" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               {t('ai.generateDeck')}
+            </TabsTrigger>
+            <TabsTrigger value="import" className="flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              Import Content
             </TabsTrigger>
             <TabsTrigger value="manual" className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
@@ -131,6 +144,25 @@ const CreateSet = () => {
                 <AIFlashcardGenerator
                   mode="create-new-deck"
                   onDeckCreated={handleAIDeckCreated}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="import" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="w-5 h-5 text-blue-600" />
+                  Import Content
+                </CardTitle>
+                <CardDescription>
+                  Import flashcards from various sources including Anki decks, CSV files, PDFs, and Google Docs.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImportFlashcardsDialog
+                  onImportComplete={handleImportComplete}
                 />
               </CardContent>
             </Card>

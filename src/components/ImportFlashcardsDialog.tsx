@@ -44,6 +44,43 @@ export const ImportFlashcardsDialog: React.FC<ImportFlashcardsDialogProps> = ({
     setParsedCards([]);
   };
 
+  // If no trigger is provided, render the content directly (for embedding in other components)
+  if (!trigger) {
+    return (
+      <div className="w-full">
+        {currentStep === 'import' ? (
+          <Tabs defaultValue="files" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="files" className="flex items-center gap-2">
+                <FileUp className="w-4 h-4" />
+                Upload Files
+              </TabsTrigger>
+              <TabsTrigger value="google-docs" className="flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                Google Docs
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="files" className="mt-4">
+              <FileUploadImport onParseComplete={handleParseComplete} />
+            </TabsContent>
+            
+            <TabsContent value="google-docs" className="mt-4">
+              <GoogleDocsImport onParseComplete={handleParseComplete} />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <ImportPreview
+            cards={parsedCards}
+            sourceInfo={sourceInfo}
+            onImportComplete={handleImportComplete}
+            onBack={handleBack}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
