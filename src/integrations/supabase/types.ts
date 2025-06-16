@@ -756,34 +756,40 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          display_name: string | null
           email: string | null
           first_name: string | null
           id: string
           language: string | null
           last_login: string | null
           last_name: string | null
+          show_in_leaderboard: boolean | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          display_name?: string | null
           email?: string | null
           first_name?: string | null
           id: string
           language?: string | null
           last_login?: string | null
           last_name?: string | null
+          show_in_leaderboard?: boolean | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          display_name?: string | null
           email?: string | null
           first_name?: string | null
           id?: string
           language?: string | null
           last_login?: string | null
           last_name?: string | null
+          show_in_leaderboard?: boolean | null
           updated_at?: string
         }
         Relationships: []
@@ -1041,7 +1047,23 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      leaderboard_stats: {
+        Row: {
+          avatar_url: string | null
+          cards_rank: number | null
+          current_streak: number | null
+          display_name: string | null
+          id: string | null
+          last_study_date: string | null
+          longest_streak: number | null
+          overall_score: number | null
+          streak_rank: number | null
+          time_rank: number | null
+          total_cards_reviewed: number | null
+          total_study_time_seconds: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_organization_invite: {
@@ -1103,6 +1125,16 @@ export type Database = {
         Returns: {
           id: string
           name: string
+        }[]
+      }
+      get_user_leaderboard_position: {
+        Args: { p_user_id: string }
+        Returns: {
+          streak_position: number
+          cards_position: number
+          time_position: number
+          overall_position: number
+          total_users: number
         }[]
       }
       hash_password: {

@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
 import { AvatarSelector } from '@/components/AvatarSelector';
 import { ProfileForm } from '@/components/profile/ProfileForm';
+import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings';
 
 interface Profile {
   id: string;
@@ -136,16 +137,20 @@ const Profile = () => {
       <main className="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <h2 className="text-2xl font-bold text-foreground mb-6">{t('profile.title')}</h2>
 
-        {profile && (
-          <ProfileForm
-            profile={profile}
-            user={user}
-            saving={saving}
-            onSubmit={handleSubmit}
-            onProfileChange={handleProfileChange}
-            onShowAvatarSelector={() => setShowAvatarSelector(true)}
-          />
-        )}
+        <div className="space-y-6">
+          {profile && (
+            <ProfileForm
+              profile={profile}
+              user={user}
+              saving={saving}
+              onSubmit={handleSubmit}
+              onProfileChange={handleProfileChange}
+              onShowAvatarSelector={() => setShowAvatarSelector(true)}
+            />
+          )}
+
+          <ProfilePrivacySettings />
+        </div>
 
         {showAvatarSelector && (
           <AvatarSelector
