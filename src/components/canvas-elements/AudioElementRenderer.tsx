@@ -4,20 +4,24 @@ import { CanvasElement } from '@/types/flashcard';
 
 interface AudioElementRendererProps {
   element: CanvasElement;
+  isSelected: boolean;
+  zoom: number;
+  onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
   textScale?: number;
   isStudyMode?: boolean;
-  onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
   onElementSelect?: (elementId: string) => void;
-  isDarkTheme: boolean;
+  isDarkTheme?: boolean;
 }
 
 export const AudioElementRenderer: React.FC<AudioElementRendererProps> = ({
   element,
+  isSelected = false,
+  zoom = 1,
+  onUpdateElement,
   textScale = 1,
   isStudyMode = false,
-  onUpdateElement,
   onElementSelect,
-  isDarkTheme,
+  isDarkTheme = false,
 }) => {
   const handleElementClick = (e: React.MouseEvent) => {
     if (isStudyMode && onElementSelect) {

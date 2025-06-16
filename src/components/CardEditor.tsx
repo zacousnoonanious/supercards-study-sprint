@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -8,7 +9,7 @@ import { useCardEditorHandlers } from '@/hooks/useCardEditorHandlers';
 import { useCollaborativeEditing } from '@/hooks/useCollaborativeEditing';
 import { CardEditorLayout } from './CardEditorLayout';
 import { FullscreenEditor } from './FullscreenEditor';
-import { CanvasElement } from '@/types/flashcard';
+import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { useTemplateConfiguration } from '@/hooks/useTemplateConfiguration';
 import { useEnhancedKeyboardShortcuts } from '@/hooks/useEnhancedKeyboardShortcuts';
 
@@ -310,10 +311,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   }
 
   console.log('CardEditor: Rendering with set:', set.title, 'and card:', currentCard?.question);
-
-  const handleCardUpdate = useCallback((updates: Partial<Flashcard>) => {
-    updateCard(updates);
-  }, [updateCard]);
 
   return (
     <div className="flex flex-col h-screen">

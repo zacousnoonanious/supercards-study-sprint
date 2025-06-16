@@ -5,20 +5,28 @@ import { ImageElementEditor } from '../ImageElementEditor';
 
 interface ImageElementRendererProps {
   element: CanvasElement;
+  isSelected: boolean;
+  zoom: number;
+  onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
+  onElementDragStart?: (e: React.MouseEvent, elementId: string) => void;
+  isDragging?: boolean;
   textScale?: number;
   isStudyMode?: boolean;
-  onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
   onElementSelect?: (elementId: string) => void;
-  isDarkTheme: boolean;
+  isDarkTheme?: boolean;
 }
 
 export const ImageElementRenderer: React.FC<ImageElementRendererProps> = ({
   element,
+  isSelected = false,
+  zoom = 1,
+  onUpdateElement,
+  onElementDragStart,
+  isDragging = false,
   textScale = 1,
   isStudyMode = false,
-  onUpdateElement,
   onElementSelect,
-  isDarkTheme,
+  isDarkTheme = false,
 }) => {
   const getBackgroundColor = () => {
     return isDarkTheme ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300';

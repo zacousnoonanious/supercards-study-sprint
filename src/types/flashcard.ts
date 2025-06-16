@@ -1,3 +1,4 @@
+
 export interface Flashcard {
   id: string;
   set_id: string;
@@ -76,6 +77,27 @@ export interface CanvasElement {
   zIndex: number;
   constraints?: ElementConstraint[];
   
+  // Style properties
+  fontSize?: number;
+  color?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  borderWidth?: number;
+  borderStyle?: string;
+  borderRadius?: number;
+  opacity?: number;
+  rotation?: number;
+  
+  // Image properties
+  imageUrl?: string;
+  
+  // Audio properties
+  audioUrl?: string;
+  autoplay?: boolean;
+  
+  // Link properties
+  hyperlink?: string;
+  
   // Interactive element properties
   options?: string[];
   correctAnswer?: number;
@@ -133,9 +155,6 @@ export interface CanvasElement {
   strokeColor?: string;
   strokeWidth?: number;
   highlightMode?: boolean;
-  
-  // Audio properties
-  autoplay?: boolean;
   
   // Layout constraints (extended feature)
   layoutConstraints?: Array<{

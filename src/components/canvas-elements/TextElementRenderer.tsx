@@ -6,26 +6,32 @@ import { useI18n } from '@/contexts/I18nContext';
 
 interface TextElementRendererProps {
   element: CanvasElement;
-  editingElement: string | null;
+  isSelected: boolean;
+  zoom: number;
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
-  onEditingChange: (id: string | null) => void;
+  onElementDragStart?: (e: React.MouseEvent, elementId: string) => void;
+  isDragging?: boolean;
+  onEditingChange?: (id: string) => void;
+  editingElement?: string | null;
   textScale?: number;
   isStudyMode?: boolean;
   onElementSelect?: (elementId: string) => void;
-  isSelected?: boolean;
-  isDarkTheme: boolean;
+  isDarkTheme?: boolean;
 }
 
 export const TextElementRenderer: React.FC<TextElementRendererProps> = ({
   element,
-  editingElement,
+  isSelected = false,
+  zoom = 1,
   onUpdateElement,
+  onElementDragStart,
+  isDragging = false,
   onEditingChange,
+  editingElement = null,
   textScale = 1,
   isStudyMode = false,
   onElementSelect,
-  isSelected = false,
-  isDarkTheme,
+  isDarkTheme = false,
 }) => {
   const { t } = useI18n();
 
@@ -41,7 +47,7 @@ export const TextElementRenderer: React.FC<TextElementRendererProps> = ({
           color: getTextColor()
         }}
         onUpdate={(updates) => onUpdateElement(element.id, updates)}
-        onEditingChange={(editing) => onEditingChange(editing ? element.id : null)}
+        onEditingChange={(editing) => onEditingChange && onEditingChange(editing ? element.id : null)}
         textScale={textScale}
         isSelected={isSelected}
         isStudyMode={isStudyMode}
