@@ -68,6 +68,25 @@ export interface Flashcard {
   constraints: any[];
 }
 
+// Updated link data interface
+export interface ElementLinkData {
+  url: string;
+  target: '_blank' | '_self';
+  text: string;
+  type?: 'card-jump' | 'external' | 'action';
+  targetCardId?: string;
+  actionType?: string;
+  actionData?: any;
+}
+
+// Updated fill-in-blank blank interface
+export interface FillInBlankBlank {
+  id: string;
+  answer: string;
+  word?: string;
+  position?: number;
+}
+
 export interface CanvasElement {
   id: string;
   type: 'text' | 'image' | 'audio' | 'drawing' | 'youtube' | 'video' | 'iframe' | 'embedded-deck' | 'deck-embed' | 'multiple-choice' | 'true-false' | 'fill-in-blank' | 'tts';
@@ -120,7 +139,7 @@ export interface CanvasElement {
   // Fill in blank properties
   fillInBlankText?: string;
   fillInBlankAnswers?: string[];
-  fillInBlankBlanks?: Array<{ id: string; answer: string; }>;
+  fillInBlankBlanks?: FillInBlankBlank[];
   showLetterCount?: boolean;
   ignoreCase?: boolean;
   
@@ -137,14 +156,13 @@ export interface CanvasElement {
   ttsPitch?: number;
   ttsAutoplay?: boolean;
   ttsRate?: number;
+  text?: string; // For TTS content
+  rate?: number; // TTS rate
+  pitch?: number; // TTS pitch
   
   // Link properties
   hyperlink?: string;
-  linkData?: {
-    url: string;
-    target: '_blank' | '_self';
-    text: string;
-  };
+  linkData?: ElementLinkData;
   
   // Interactive properties
   isInteractive?: boolean;

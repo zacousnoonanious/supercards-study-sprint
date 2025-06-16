@@ -140,10 +140,12 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     selectedElementId,
   });
 
-  // Create a wrapper for updateCard that matches the expected signature
+  // Create a wrapper for updateCard that matches the expected signature for the layout
   const handleCardUpdate = useCallback((updates: Partial<Flashcard>) => {
-    updateCard(updates);
-  }, [updateCard]);
+    if (currentCard) {
+      updateCard(updates);
+    }
+  }, [updateCard, currentCard]);
 
   const {
     startPan,

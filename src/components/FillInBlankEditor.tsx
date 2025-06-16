@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { TextInputModal } from './TextInputModal';
-import { CanvasElement } from '@/types/flashcard';
+import { CanvasElement, FillInBlankBlank } from '@/types/flashcard';
 
 interface FillInBlankEditorProps {
   element: CanvasElement;
@@ -17,7 +17,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
   textScale = 1
 }) => {
   const [originalText, setOriginalText] = useState(element.fillInBlankText || '');
-  const [blanks, setBlanks] = useState(element.fillInBlankBlanks || []);
+  const [blanks, setBlanks] = useState<FillInBlankBlank[]>(element.fillInBlankBlanks || []);
 
   const updateParent = useCallback((updates: Partial<CanvasElement>) => {
     onUpdate(updates);
@@ -50,7 +50,7 @@ export const FillInBlankEditor: React.FC<FillInBlankEditorProps> = ({
       newBlanks = blanks.filter((_, index) => index !== existingBlankIndex);
     } else {
       // Add new blank
-      newBlanks = [...blanks, { word, position, id: blankId }];
+      newBlanks = [...blanks, { word, position, id: blankId, answer: word }];
     }
     
     setBlanks(newBlanks);

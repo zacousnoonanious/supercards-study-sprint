@@ -81,7 +81,7 @@ export const deleteFlashcard = async (id: string) => {
   console.log('Flashcard deleted successfully');
 };
 
-export const getFlashcardsBySetId = async (setId: string) => {
+export const getFlashcardsBySetId = async (setId: string): Promise<Flashcard[]> => {
   const { data, error } = await supabase
     .from('flashcards')
     .select('*')
@@ -94,5 +94,16 @@ export const getFlashcardsBySetId = async (setId: string) => {
   }
   
   console.log('Flashcards fetched successfully:', data);
-  return data || [];
+  
+  // Ensure all cards have required fields for type safety
+  const flashcards: Flashcard[] = (data || []).map(card => ({
+    ...card,
+    allowedElementTypes: card.allowedElementTypes || ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
+    restrictedToolbar: card.restrictedToolbar || false,
+    showBackSide: card.showBackSide !== false,
+    autoAdvanceOnAnswer: card.autoAdvanceOnAnswer || false,
+    constraints: card.constraints || [],
+  }));
+  
+  return flashcards;
 };
