@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Flashcard } from '@/types/flashcard';
 import { useSRS } from '@/hooks/useSRS';
+import { transformDatabaseCardToFlashcard } from '@/utils/cardTransforms';
 
 interface FlashcardSet {
   id: string;
@@ -179,72 +180,8 @@ export const useStudyMode = () => {
         return;
       }
 
-      // Transform cards with better error handling for each card
-      const transformedCards: Flashcard[] = cardsData.map((card, index) => {
-        console.log('StudyMode: Transforming card:', card.id);
-        
-        try {
-          return {
-            id: card.id,
-            set_id: card.set_id,
-            question: card.question || '',
-            answer: card.answer || '',
-            front_content: card.question || '',
-            back_content: card.answer || '',
-            front_elements: Array.isArray(card.front_elements) ? card.front_elements as any[] : [],
-            back_elements: Array.isArray(card.back_elements) ? card.back_elements as any[] : [],
-            card_type: (card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') || 'normal',
-            interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null,
-            hint: card.hint || '',
-            created_at: card.created_at,
-            updated_at: card.updated_at,
-            last_reviewed_at: card.last_reviewed_at || null,
-            countdown_timer: card.countdown_timer || 0,
-            countdown_timer_front: card.countdown_timer_front || 0,
-            countdown_timer_back: card.countdown_timer_back || 0,
-            countdown_behavior_front: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
-            countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
-            flips_before_next: card.flips_before_next || 2,
-            password: card.password || null,
-            position: index,
-            canvas_width: card.canvas_width || 600,
-            canvas_height: card.canvas_height || 400,
-            metadata: typeof card.metadata === 'object' && card.metadata !== null 
-              ? card.metadata as { tags?: string[]; aiTags?: string[]; [key: string]: any; }
-              : { tags: [], aiTags: [] }
-          };
-        } catch (transformError) {
-          console.error('StudyMode: Error transforming card:', card.id, transformError);
-          // Return a basic card structure if transformation fails
-          return {
-            id: card.id,
-            set_id: card.set_id,
-            question: card.question || 'Error loading card',
-            answer: card.answer || 'Error loading card',
-            front_content: card.question || 'Error loading card',
-            back_content: card.answer || 'Error loading card',
-            front_elements: [],
-            back_elements: [],
-            card_type: 'normal' as const,
-            interactive_type: null,
-            hint: '',
-            created_at: card.created_at,
-            updated_at: card.updated_at,
-            last_reviewed_at: null,
-            countdown_timer: 0,
-            countdown_timer_front: 0,
-            countdown_timer_back: 0,
-            countdown_behavior_front: 'flip' as const,
-            countdown_behavior_back: 'next' as const,
-            flips_before_next: 2,
-            password: null,
-            position: index,
-            canvas_width: 600,
-            canvas_height: 400,
-            metadata: { tags: [], aiTags: [] }
-          };
-        }
-      });
+      // Transform cards using the utility function
+      const transformedCards: Flashcard[] = cardsData.map(transformDatabaseCardToFlashcard);
       
       console.log('StudyMode: Transformed cards:', transformedCards.length);
       setCards(transformedCards);

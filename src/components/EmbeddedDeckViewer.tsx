@@ -56,8 +56,8 @@ export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
           countdown_timer: card.countdown_timer,
           countdown_timer_front: card.countdown_timer_front,
           countdown_timer_back: card.countdown_timer_back,
-          countdown_behavior_front: card.countdown_behavior_front,
-          countdown_behavior_back: card.countdown_behavior_back,
+          countdown_behavior_front: card.countdown_behavior_front as 'flip' | 'next' || 'flip',
+          countdown_behavior_back: card.countdown_behavior_back as 'flip' | 'next' || 'flip',
           flips_before_next: card.flips_before_next,
           canvas_width: card.canvas_width,
           canvas_height: card.canvas_height,
@@ -67,6 +67,12 @@ export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
           created_at: card.created_at,
           updated_at: card.updated_at,
           last_reviewed_at: card.last_reviewed_at,
+          // Add required properties
+          allowedElementTypes: ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
+          restrictedToolbar: false,
+          showBackSide: true,
+          autoAdvanceOnAnswer: false,
+          constraints: [],
         }));
         
         setCards(transformedCards);

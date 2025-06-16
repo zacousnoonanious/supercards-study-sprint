@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { CardTemplate, Flashcard, CanvasElement } from '@/types/flashcard';
 import { getTemplateById } from '@/data/cardTemplates';
@@ -77,8 +78,7 @@ export const useTemplateConfiguration = () => {
       restrictedToolbar: template.restrictedToolbar,
       countdown_timer_front: template.countdown_timer_front,
       countdown_timer_back: template.countdown_timer_back,
-      countdown_behavior_front: template.countdown_behavior_front,
-      countdown_behavior_back: template.countdown_behavior_back,
+      // Remove references to non-existent properties
     };
   }, [fitElementToCanvas]);
 
@@ -91,9 +91,10 @@ export const useTemplateConfiguration = () => {
           restrictedToolbar: template.restrictedToolbar,
           showBackSide: template.showBackSide,
           autoAdvanceOnAnswer: template.autoAdvanceOnAnswer,
-          showGrid: template.showGrid,
-          snapToGrid: template.snapToGrid,
-          showBorder: template.showBorder,
+          // Set default values for non-template properties
+          showGrid: false,
+          snapToGrid: false,
+          showBorder: false,
         };
       }
     }

@@ -14,14 +14,17 @@ export const getFlashcard = async (id: string) => {
 };
 
 export const createFlashcard = async (flashcard: Partial<Flashcard>) => {
+  // Only include database fields
   const cardData = {
-    ...flashcard,
-    // Ensure required fields have defaults
-    allowedElementTypes: flashcard.allowedElementTypes || ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
-    restrictedToolbar: flashcard.restrictedToolbar || false,
-    showBackSide: flashcard.showBackSide !== false,
-    autoAdvanceOnAnswer: flashcard.autoAdvanceOnAnswer || false,
-    constraints: flashcard.constraints || [],
+    set_id: flashcard.set_id,
+    question: flashcard.question || '',
+    answer: flashcard.answer || '',
+    hint: flashcard.hint,
+    front_elements: flashcard.front_elements as any || [],
+    back_elements: flashcard.back_elements as any || [],
+    card_type: flashcard.card_type || 'normal',
+    interactive_type: flashcard.interactive_type,
+    password: flashcard.password,
     countdown_timer: flashcard.countdown_timer || 0,
     countdown_timer_front: flashcard.countdown_timer_front || 0,
     countdown_timer_back: flashcard.countdown_timer_back || 0,
@@ -30,8 +33,6 @@ export const createFlashcard = async (flashcard: Partial<Flashcard>) => {
     flips_before_next: flashcard.flips_before_next || 0,
     canvas_width: flashcard.canvas_width || 600,
     canvas_height: flashcard.canvas_height || 400,
-    front_elements: flashcard.front_elements || [],
-    back_elements: flashcard.back_elements || [],
     metadata: flashcard.metadata || {},
   };
 
@@ -51,9 +52,31 @@ export const createFlashcard = async (flashcard: Partial<Flashcard>) => {
 };
 
 export const updateFlashcard = async (flashcard: Partial<Flashcard> & { id: string }) => {
+  // Only include database fields
+  const updateData = {
+    question: flashcard.question,
+    answer: flashcard.answer,
+    hint: flashcard.hint,
+    front_elements: flashcard.front_elements as any,
+    back_elements: flashcard.back_elements as any,
+    card_type: flashcard.card_type,
+    interactive_type: flashcard.interactive_type,
+    password: flashcard.password,
+    countdown_timer: flashcard.countdown_timer,
+    countdown_timer_front: flashcard.countdown_timer_front,
+    countdown_timer_back: flashcard.countdown_timer_back,
+    countdown_behavior_front: flashcard.countdown_behavior_front,
+    countdown_behavior_back: flashcard.countdown_behavior_back,
+    flips_before_next: flashcard.flips_before_next,
+    canvas_width: flashcard.canvas_width,
+    canvas_height: flashcard.canvas_height,
+    metadata: flashcard.metadata,
+    updated_at: new Date().toISOString(),
+  };
+
   const { data, error } = await supabase
     .from('flashcards')
-    .update(flashcard)
+    .update(updateData)
     .eq('id', flashcard.id)
     .select()
     .single();
@@ -95,14 +118,38 @@ export const getFlashcardsBySetId = async (setId: string): Promise<Flashcard[]> 
   
   console.log('Flashcards fetched successfully:', data);
   
-  // Ensure all cards have required fields for type safety
+  // Transform database cards to full Flashcard objects
   const flashcards: Flashcard[] = (data || []).map(card => ({
-    ...card,
-    allowedElementTypes: card.allowedElementTypes || ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
-    restrictedToolbar: card.restrictedToolbar || false,
-    showBackSide: card.showBackSide !== false,
-    autoAdvanceOnAnswer: card.autoAdvanceOnAnswer || false,
-    constraints: card.constraints || [],
+    id: card.id,
+    set_id: card.set_id,
+    question: card.question || '',
+    answer: card.answer || '',
+    hint: card.hint,
+    front_elements: Array.isArray(card.front_elements) ? card.front_elements as any : [],
+    back_elements: Array.isArray(card.back_elements) ? card.back_elements as any : [],
+    card_type: card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected' || 'normal',
+    interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null,
+    password: card.password,
+    countdown_timer: card.countdown_timer || 0,
+    countdown_timer_front: card.countdown_timer_front || 0,
+    countdown_timer_back: card.countdown_timer_back || 0,
+    countdown_behavior_front: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
+    countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'flip',
+    flips_before_next: card.flips_before_next || 0,
+    canvas_width: card.canvas_width || 600,
+    canvas_height: card.canvas_height || 400,
+    created_at: card.created_at,
+    updated_at: card.updated_at,
+    last_reviewed_at: card.last_reviewed_at,
+    metadata: typeof card.metadata === 'object' && card.metadata !== null 
+      ? card.metadata as { tags?: string[]; aiTags?: string[]; [key: string]: any; }
+      : { tags: [], aiTags: [] },
+    // Add default values for new properties
+    allowedElementTypes: ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
+    restrictedToolbar: false,
+    showBackSide: true,
+    autoAdvanceOnAnswer: false,
+    constraints: [],
   }));
   
   return flashcards;
