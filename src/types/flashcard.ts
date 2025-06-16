@@ -1,3 +1,4 @@
+
 export interface FlashcardSet {
   id: string;
   title: string;
@@ -92,6 +93,10 @@ export interface CanvasElement {
   // Image-specific properties
   imageUrl?: string;
   imageFit?: 'contain' | 'cover' | 'fill' | 'scale-down' | 'none';
+  borderWidth?: number;
+  borderColor?: string;
+  borderStyle?: string;
+  borderRadius?: number;
   
   // Audio-specific properties
   audioUrl?: string;
@@ -101,6 +106,10 @@ export interface CanvasElement {
   youtubeVideoId?: string;
   videoId?: string;
   youtubeAutoplay?: boolean;
+  youtubeUrl?: string;
+  youtubeMuted?: boolean;
+  youtubeStartTime?: number;
+  autoplay?: boolean;
   
   // Multiple choice properties
   multipleChoiceOptions?: string[];
@@ -111,6 +120,9 @@ export interface CanvasElement {
   // Fill in blank properties
   fillInBlankText?: string;
   fillInBlankAnswers?: string[];
+  fillInBlankBlanks?: Array<{ id: string; answer: string; }>;
+  showLetterCount?: boolean;
+  ignoreCase?: boolean;
   
   // Drawing-specific properties
   drawingData?: string;
@@ -124,9 +136,15 @@ export interface CanvasElement {
   ttsSpeed?: number;
   ttsPitch?: number;
   ttsAutoplay?: boolean;
+  ttsRate?: number;
   
   // Link properties
   hyperlink?: string;
+  linkData?: {
+    url: string;
+    target: '_blank' | '_self';
+    text: string;
+  };
   
   // Interactive properties
   isInteractive?: boolean;
@@ -135,6 +153,8 @@ export interface CanvasElement {
   // Deck embed properties
   embeddedDeckId?: string;
   embeddedDeckTitle?: string;
+  deckTitle?: string;
+  deckId?: string;
   
   // Timer properties
   hasTimer?: boolean;

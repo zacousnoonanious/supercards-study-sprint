@@ -141,9 +141,9 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   });
 
   // Create a wrapper for updateCard that matches the expected signature
-  const handleCardUpdate = (updates: Partial<Flashcard>) => {
+  const handleCardUpdate = useCallback((updates: Partial<Flashcard>) => {
     updateCard(updates);
-  };
+  }, [updateCard]);
 
   const {
     startPan,
