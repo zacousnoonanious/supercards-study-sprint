@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -311,6 +310,10 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   }
 
   console.log('CardEditor: Rendering with set:', set.title, 'and card:', currentCard?.question);
+
+  const handleCardUpdate = useCallback((updates: Partial<Flashcard>) => {
+    updateCard(updates);
+  }, [updateCard]);
 
   return (
     <div className="flex flex-col h-screen">

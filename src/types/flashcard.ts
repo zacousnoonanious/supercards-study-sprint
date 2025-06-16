@@ -1,4 +1,3 @@
-
 export interface Flashcard {
   id: string;
   set_id: string;
@@ -68,32 +67,14 @@ export interface ElementLinkData {
 
 export interface CanvasElement {
   id: string;
-  type: 'text' | 'image' | 'audio' | 'tts' | 'multiple-choice' | 'true-false' | 'fill-in-blank' | 'youtube' | 'deck-embed' | 'drawing';
+  type: 'text' | 'image' | 'audio' | 'tts' | 'multiple-choice' | 'true-false' | 'fill-in-blank' | 'youtube' | 'deck-embed' | 'drawing' | 'video' | 'iframe' | 'embedded-deck';
   x: number;
   y: number;
   width: number;
   height: number;
-  rotation?: number;
-  zIndex?: number;
   content?: string;
-  imageUrl?: string;
-  audioUrl?: string;
-  hyperlink?: string;
-  color?: string;
-  backgroundColor?: string;
-  fontSize?: number;
-  fontFamily?: string;
-  fontWeight?: string;
-  fontStyle?: string;
-  textAlign?: 'left' | 'center' | 'right' | 'justify';
-  textDecoration?: string;
-  opacity?: number;
-  border?: string;
-  borderRadius?: number;
-  borderWidth?: number;
-  borderColor?: string;
-  borderStyle?: string;
-  shadow?: string;
+  zIndex: number;
+  constraints?: ElementConstraint[];
   
   // Interactive element properties
   options?: string[];

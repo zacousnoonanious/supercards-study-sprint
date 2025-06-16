@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -192,7 +191,6 @@ export const useCardEditor = () => {
       height: type === 'text' ? 40 : 150,
       content: type === 'text' ? 'Double-click to edit' : '',
       zIndex: 0,
-      constraints: [],
     };
 
     const updatedCard = {
@@ -249,7 +247,7 @@ export const useCardEditor = () => {
   const createNewCard = useCallback(async () => {
     if (!setId || !user) return;
 
-    const newCard: Partial<Flashcard> = {
+    const newCard = {
       set_id: setId,
       question: 'New Card',
       answer: 'Answer',
@@ -283,7 +281,6 @@ export const useCardEditor = () => {
         front_elements: data.front_elements as unknown as CanvasElement[] || [],
         back_elements: data.back_elements as unknown as CanvasElement[] || [],
         metadata: data.metadata || { tags: [], aiTags: [] },
-        constraints: [],
         templateId: undefined,
         allowedElementTypes: ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
         restrictedToolbar: false,
@@ -312,7 +309,7 @@ export const useCardEditor = () => {
   const createNewCardFromTemplate = useCallback(async (template: CardTemplate) => {
     if (!setId || !user) return;
 
-    const newCard: Partial<Flashcard> = {
+    const newCard = {
       set_id: setId,
       question: '',
       answer: '',
@@ -357,7 +354,6 @@ export const useCardEditor = () => {
         front_elements: data.front_elements as unknown as CanvasElement[] || [],
         back_elements: data.back_elements as unknown as CanvasElement[] || [],
         metadata: data.metadata || { tags: [], aiTags: [] },
-        constraints: [],
       } as Flashcard;
 
       setCards(prev => [...prev, fullCard]);
@@ -538,7 +534,7 @@ export const useCardEditor = () => {
     }
   }, [cards, currentCardIndex]);
 
-  // Helper function to update card metadata
+  // Helper function to update card metadata - fix the signature
   const updateCard = useCallback((updates: Partial<Flashcard>) => {
     if (!currentCard) return;
 

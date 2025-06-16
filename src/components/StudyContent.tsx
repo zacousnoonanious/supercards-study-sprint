@@ -5,6 +5,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { StudyCardRenderer } from '@/components/StudyCardRenderer';
 import { StudyNavigationBar } from '@/components/StudyNavigationBar';
 import { EmbeddedDeckPopup } from '@/components/study/EmbeddedDeckPopup';
+import { TimerCountdown } from '@/components/TimerCountdown';
 import { Flashcard } from '@/types/flashcard';
 
 interface StudyContentProps {
@@ -66,10 +67,15 @@ export const StudyContent: React.FC<StudyContentProps> = ({
     setEmbeddedDeckId(deckId);
   };
 
+  // Get the current timer value based on card side
+  const currentTimerValue = showAnswer 
+    ? (currentCard.countdown_timer_back || 0)
+    : (currentCard.countdown_timer_front || 0);
+
   return (
     <div className="flex-1 flex flex-col">
       <div className="flex-1 flex flex-col justify-center">
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-8 relative">
           <div 
             className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-lg"
             style={{ 
@@ -89,6 +95,16 @@ export const StudyContent: React.FC<StudyContentProps> = ({
               onLaunchEmbeddedDeck={handleLaunchEmbeddedDeck}
             />
           </div>
+          
+          {/* Timer display positioned at bottom of card */}
+          {currentTimerValue > 0 && (
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+              <TimerCountdown
+                duration={currentTimerValue}
+                onTimeUp={onTimeUp}
+              />
+            </div>
+          )}
         </div>
 
         {currentCard.hint && !hideHints && (

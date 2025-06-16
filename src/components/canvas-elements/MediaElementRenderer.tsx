@@ -8,6 +8,9 @@ interface MediaElementRendererProps {
   isSelected: boolean;
   zoom: number;
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
+  onElementDragStart?: (e: React.MouseEvent, elementId: string) => void;
+  isDragging?: boolean;
+  onEditingChange?: (id: string) => void;
 }
 
 export const MediaElementRenderer: React.FC<MediaElementRendererProps> = ({
@@ -43,6 +46,7 @@ export const MediaElementRenderer: React.FC<MediaElementRendererProps> = ({
         );
       
       case 'embedded-deck':
+      case 'deck-embed':
         if (!element.content) {
           return (
             <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">
