@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,6 +11,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { StudyActivityHeatmap } from './StudyActivityHeatmap';
 
 interface StudyMetrics {
   totalStudyTime: number;
@@ -360,13 +360,18 @@ export const PerformanceAnalytics: React.FC = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="patterns" className="space-y-4">
+      <Tabs defaultValue="activity" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="activity">Study Activity</TabsTrigger>
           <TabsTrigger value="patterns">Learning Patterns</TabsTrigger>
           <TabsTrigger value="weak-areas">Weak Areas</TabsTrigger>
           <TabsTrigger value="categories">Category Performance</TabsTrigger>
           <TabsTrigger value="detailed">Detailed Insights</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="activity" className="space-y-4">
+          <StudyActivityHeatmap />
+        </TabsContent>
 
         <TabsContent value="patterns" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
