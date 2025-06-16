@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { CardTemplate, Flashcard, CanvasElement } from '@/types/flashcard';
 import { getTemplateById } from '@/data/cardTemplates';
@@ -71,11 +70,11 @@ export const useTemplateConfiguration = () => {
       canvas_height: template.canvas_height,
       front_elements: fittedFrontElements,
       back_elements: fittedBackElements,
+      templateId: template.id,
       allowedElementTypes: template.allowedElementTypes,
       autoAdvanceOnAnswer: template.autoAdvanceOnAnswer,
       showBackSide: template.showBackSide,
       restrictedToolbar: template.restrictedToolbar,
-      templateId: template.id,
       countdown_timer_front: template.countdown_timer_front,
       countdown_timer_back: template.countdown_timer_back,
       countdown_behavior_front: template.countdown_behavior_front,

@@ -19,8 +19,8 @@ export const CountdownBehaviorSelector: React.FC<CountdownBehaviorSelectorProps>
     <div>
       <Label className="text-sm font-medium">When countdown expires</Label>
       <Select
-        value={card.countdown_behavior || (isSingleSided ? 'next' : 'flip')}
-        onValueChange={(value: 'flip' | 'next') => onUpdateCard({ countdown_behavior: value })}
+        value={card.countdown_behavior_front || (isSingleSided ? 'next' : 'flip')}
+        onValueChange={(value: 'flip' | 'next') => onUpdateCard({ countdown_behavior_front: value })}
         disabled={isSingleSided}
       >
         <SelectTrigger className="w-full">

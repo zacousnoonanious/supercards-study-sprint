@@ -84,7 +84,9 @@ export const useCardEditor = () => {
         countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
         flips_before_next: card.flips_before_next || 2,
         password: card.password || null,
-        countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
+        metadata: typeof card.metadata === 'object' && card.metadata !== null 
+          ? card.metadata as { tags?: string[]; aiTags?: string[]; [key: string]: any; }
+          : { tags: [], aiTags: [] }
       }));
       
       setCards(typedCards);
@@ -194,6 +196,7 @@ export const useCardEditor = () => {
       if (updates.back_elements !== undefined) updateData.back_elements = updates.back_elements as any;
       if (updates.canvas_width !== undefined) updateData.canvas_width = updates.canvas_width;
       if (updates.canvas_height !== undefined) updateData.canvas_height = updates.canvas_height;
+      if (updates.metadata !== undefined) updateData.metadata = updates.metadata as any;
       
       updateData.updated_at = new Date().toISOString();
 
@@ -444,7 +447,9 @@ export const useCardEditor = () => {
         countdown_behavior_back: (data.countdown_behavior_back as 'flip' | 'next') || 'next',
         flips_before_next: data.flips_before_next || 2,
         password: data.password || null,
-        countdown_behavior: ((data as any).countdown_behavior as 'flip' | 'next') || 'flip'
+        metadata: typeof data.metadata === 'object' && data.metadata !== null 
+          ? data.metadata as { tags?: string[]; aiTags?: string[]; [key: string]: any; }
+          : { tags: [], aiTags: [] }
       };
 
       const newCardIndex = cards.length;

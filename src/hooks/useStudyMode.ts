@@ -207,10 +207,11 @@ export const useStudyMode = () => {
             flips_before_next: card.flips_before_next || 2,
             password: card.password || null,
             position: index,
-            countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip',
             canvas_width: card.canvas_width || 600,
             canvas_height: card.canvas_height || 400,
-            metadata: card.metadata || {}
+            metadata: typeof card.metadata === 'object' && card.metadata !== null 
+              ? card.metadata as { tags?: string[]; aiTags?: string[]; [key: string]: any; }
+              : { tags: [], aiTags: [] }
           };
         } catch (transformError) {
           console.error('StudyMode: Error transforming card:', card.id, transformError);
@@ -238,10 +239,9 @@ export const useStudyMode = () => {
             flips_before_next: 2,
             password: null,
             position: index,
-            countdown_behavior: 'flip' as const,
             canvas_width: 600,
             canvas_height: 400,
-            metadata: {}
+            metadata: { tags: [], aiTags: [] }
           };
         }
       });

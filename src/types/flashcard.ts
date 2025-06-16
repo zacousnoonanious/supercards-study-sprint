@@ -1,3 +1,4 @@
+
 export interface Flashcard {
   id: string;
   set_id: string;
@@ -20,6 +21,19 @@ export interface Flashcard {
   card_type?: string;
   interactive_type?: string;
   password?: string;
+  
+  // Template-related properties
+  templateId?: string;
+  allowedElementTypes?: string[];
+  restrictedToolbar?: boolean;
+  showBackSide?: boolean;
+  autoAdvanceOnAnswer?: boolean;
+  
+  // Additional properties for compatibility
+  front_content?: string;
+  back_content?: string;
+  position?: number;
+  
   metadata?: {
     tags?: string[];
     aiTags?: string[];
