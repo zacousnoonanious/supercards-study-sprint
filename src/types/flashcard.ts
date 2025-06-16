@@ -1,3 +1,36 @@
+export interface FlashcardSet {
+  id: string;
+  title: string;
+  description?: string;
+  user_id: string;
+  organization_id?: string;
+  is_collaborative: boolean;
+  collaboration_settings: {
+    allowEditors: boolean;
+    allowViewers: boolean;
+    requireApproval: boolean;
+  };
+  permanent_shuffle: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CardTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  front_elements: CanvasElement[];
+  back_elements: CanvasElement[];
+  card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
+  canvas_width: number;
+  canvas_height: number;
+  allowedElementTypes: string[];
+  restrictedToolbar: boolean;
+  showBackSide: boolean;
+  autoAdvanceOnAnswer: boolean;
+  countdown_timer_front?: number;
+  countdown_timer_back?: number;
+}
 
 export interface Flashcard {
   id: string;
@@ -5,217 +38,107 @@ export interface Flashcard {
   question: string;
   answer: string;
   hint?: string;
-  created_at: string;
-  updated_at: string;
-  last_reviewed_at?: string;
   front_elements: CanvasElement[];
   back_elements: CanvasElement[];
-  canvas_width?: number;
-  canvas_height?: number;
-  countdown_timer?: number;
-  countdown_timer_front?: number;
-  countdown_timer_back?: number;
-  countdown_behavior_front?: string;
-  countdown_behavior_back?: string;
-  flips_before_next?: number;
-  card_type?: string;
-  interactive_type?: string;
-  password?: string;
-  
-  // Template-related properties
-  templateId?: string;
-  allowedElementTypes?: string[];
-  restrictedToolbar?: boolean;
-  showBackSide?: boolean;
-  autoAdvanceOnAnswer?: boolean;
-  
-  // Additional properties for compatibility
-  front_content?: string;
-  back_content?: string;
-  position?: number;
-  
-  metadata?: {
+  card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
+  interactive_type: 'multiple-choice' | 'true-false' | 'fill-in-blank' | null;
+  password?: string | null;
+  countdown_timer: number;
+  countdown_timer_front: number;
+  countdown_timer_back: number;
+  countdown_behavior_front: 'flip' | 'next';
+  countdown_behavior_back: 'flip' | 'next';
+  flips_before_next: number;
+  canvas_width: number;
+  canvas_height: number;
+  created_at: string;
+  updated_at: string;
+  last_reviewed_at: string | null;
+  metadata: {
     tags?: string[];
     aiTags?: string[];
     [key: string]: any;
   };
-}
-
-export interface FlashcardSet {
-  id: string;
-  user_id: string;
-  title: string;
-  description?: string;
-  created_at: string;
-  updated_at: string;
-  permanent_shuffle?: boolean;
-  is_collaborative?: boolean;
-  is_public?: boolean;
-  collaboration_settings?: {
-    allowEditors: boolean;
-    allowViewers: boolean;
-    requireApproval: boolean;
-  };
-  organization_id?: string;
-}
-
-export interface ElementLinkData {
-  type: 'card-jump' | 'action';
-  targetCardId?: string;
-  actionType?: 'play-audio' | 'show-hint' | 'reveal-answer' | 'embed-deck';
-  actionData?: string;
+  templateId?: string;
+  allowedElementTypes: string[];
+  restrictedToolbar: boolean;
+  showBackSide: boolean;
+  autoAdvanceOnAnswer: boolean;
+  constraints: any[];
 }
 
 export interface CanvasElement {
   id: string;
-  type: 'text' | 'image' | 'audio' | 'tts' | 'multiple-choice' | 'true-false' | 'fill-in-blank' | 'youtube' | 'deck-embed' | 'drawing' | 'video' | 'iframe' | 'embedded-deck';
+  type: 'text' | 'image' | 'audio' | 'drawing' | 'youtube' | 'video' | 'iframe' | 'embedded-deck' | 'deck-embed' | 'multiple-choice' | 'true-false' | 'fill-in-blank' | 'tts';
   x: number;
   y: number;
   width: number;
   height: number;
-  content?: string;
   zIndex: number;
-  constraints?: ElementConstraint[];
+  rotation?: number;
+  opacity?: number;
+  content?: string;
   
-  // Style properties
+  // Text-specific properties
   fontSize?: number;
+  fontFamily?: string;
+  fontWeight?: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
+  fontStyle?: 'normal' | 'italic' | 'oblique';
+  textDecoration?: 'none' | 'underline' | 'line-through' | 'overline';
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
   color?: string;
   backgroundColor?: string;
-  borderColor?: string;
-  borderWidth?: number;
-  borderStyle?: string;
-  borderRadius?: number;
-  opacity?: number;
-  rotation?: number;
   
-  // Image properties
+  // Image-specific properties
   imageUrl?: string;
+  imageFit?: 'contain' | 'cover' | 'fill' | 'scale-down' | 'none';
   
-  // Audio properties
+  // Audio-specific properties
   audioUrl?: string;
-  autoplay?: boolean;
+  
+  // Video/YouTube-specific properties
+  videoUrl?: string;
+  youtubeVideoId?: string;
+  videoId?: string;
+  youtubeAutoplay?: boolean;
+  
+  // Multiple choice properties
+  multipleChoiceOptions?: string[];
+  correctAnswer?: number | boolean;
+  showImmediateFeedback?: boolean;
+  autoAdvanceOnAnswer?: boolean;
+  
+  // Fill in blank properties
+  fillInBlankText?: string;
+  fillInBlankAnswers?: string[];
+  
+  // Drawing-specific properties
+  drawingData?: string;
+  strokeColor?: string;
+  strokeWidth?: number;
+  
+  // TTS properties
+  hasTTS?: boolean;
+  ttsText?: string;
+  ttsVoice?: string;
+  ttsSpeed?: number;
+  ttsPitch?: number;
+  ttsAutoplay?: boolean;
   
   // Link properties
   hyperlink?: string;
   
-  // Interactive element properties
-  options?: string[];
-  correctAnswer?: number;
-  correctAnswers?: number[];
-  explanation?: string;
-  showImmediateFeedback?: boolean;
-  autoAdvanceOnAnswer?: boolean;
-  
-  // Multiple choice properties
-  multipleChoiceOptions?: string[];
-  
-  // Fill in blank properties
-  fillInBlankText?: string;
-  fillInBlankBlanks?: Array<{
-    word: string;
-    position: number;
-    id: string;
-  }>;
-  showLetterCount?: boolean;
-  ignoreCase?: boolean;
-  
-  // TTS properties
-  text?: string;
-  voice?: string;
-  rate?: number;
-  pitch?: number;
-  hasTTS?: boolean;
-  ttsEnabled?: boolean;
-  ttsVoice?: string;
-  ttsRate?: number;
-  ttsPitch?: number;
-  ttsAutoplay?: boolean;
-  
-  // YouTube properties
-  videoId?: string;
-  youtubeUrl?: string;
-  youtubeVideoId?: string;
-  youtubeAutoplay?: boolean;
-  youtubeMuted?: boolean;
-  youtubeStartTime?: number;
-  startTime?: number;
-  endTime?: number;
+  // Interactive properties
+  isInteractive?: boolean;
+  interactionType?: 'click' | 'hover' | 'drag';
   
   // Deck embed properties
-  deckId?: string;
-  deckTitle?: string;
-  title?: string;
-  cardCount?: number;
+  embeddedDeckId?: string;
+  embeddedDeckTitle?: string;
   
-  // Link functionality
-  linkData?: ElementLinkData;
-  
-  // Drawing properties
-  drawingData?: any;
-  strokeColor?: string;
-  strokeWidth?: number;
-  highlightMode?: boolean;
-  
-  // Layout constraints (extended feature)
-  layoutConstraints?: Array<{
-    type: 'pin-to-edge' | 'scale-with-canvas' | 'fixed-distance' | 'anchor-to-element';
-    edge?: 'top' | 'bottom' | 'left' | 'right' | 'center-x' | 'center-y';
-    targetElementId?: string;
-    distance?: number;
-    scaleX?: boolean;
-    scaleY?: boolean;
-  }>;
-}
-
-export interface CardTemplate {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  category: 'study' | 'quiz' | 'information' | 'interactive' | 'vocab' | 'custom';
-  card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
-  canvas_width: number;
-  canvas_height: number;
-  allowedElementTypes: string[];
-  autoAdvanceOnAnswer: boolean;
-  showBackSide: boolean;
-  restrictedToolbar: boolean;
-  front_elements: CanvasElement[];
-  back_elements: CanvasElement[];
-  countdown_timer_front?: number;
-  countdown_timer_back?: number;
-  countdown_behavior_front?: string;
-  countdown_behavior_back?: string;
-  showGrid?: boolean;
-  snapToGrid?: boolean;
-  showBorder?: boolean;
-}
-
-export interface StudySession {
-  id: string;
-  user_id: string;
-  set_id: string;
-  started_at: string;
-  ended_at?: string;
-  total_time_seconds?: number;
-  cards_reviewed?: number;
-  correct_answers?: number;
-  incorrect_answers?: number;
-  study_mode?: string;
-  srs_enabled?: boolean;
-  organization_id?: string;
-}
-
-export interface UserCardStats {
-  id: string;
-  user_id: string;
-  card_id: string;
-  total_reviews: number;
-  correct_reviews: number;
-  last_reviewed_at?: string;
-  next_review_date?: string;
-  current_interval_days?: number;
-  current_ease_factor?: number;
-  created_at: string;
-  updated_at: string;
+  // Timer properties
+  hasTimer?: boolean;
+  timerDuration?: number;
+  timerAutoStart?: boolean;
+  timerBehavior?: 'flip' | 'next' | 'none';
 }

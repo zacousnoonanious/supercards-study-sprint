@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -123,7 +122,6 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     handleUpdateDeckTitle,
     handleAutoArrange,
     handleCanvasSizeChange,
-    handleCardUpdate,
   } = useCardEditorHandlers({
     updateElement,
     deleteElement,
@@ -141,6 +139,11 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     currentSide,
     selectedElementId,
   });
+
+  // Create a wrapper for updateCard that matches the expected signature
+  const handleCardUpdate = (updates: Partial<Flashcard>) => {
+    updateCard(updates);
+  };
 
   const {
     startPan,
