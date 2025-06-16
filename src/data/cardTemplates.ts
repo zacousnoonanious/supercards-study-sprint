@@ -6,7 +6,6 @@ export const cardTemplates: CardTemplate[] = [
     id: 'normal-card',
     name: 'Normal Card',
     description: 'A standard card with a front and back side.',
-    image: '/lovable-uploads/normal-template.png',
     category: 'study',
     front_elements: [
       {
@@ -78,18 +77,12 @@ export const cardTemplates: CardTemplate[] = [
     showBackSide: true,
     restrictedToolbar: false,
     countdown_timer_front: 0,
-    countdown_timer_back: 0,
-    countdown_behavior_front: 'flip',
-    countdown_behavior_back: 'next',
-    showGrid: false,
-    snapToGrid: false,
-    showBorder: true
+    countdown_timer_back: 0
   },
   {
     id: 'simple-card',
     name: 'Simple Card',
     description: 'A card with only a front side for quick facts.',
-    image: '/lovable-uploads/simple-template.png',
     category: 'information',
     front_elements: [
       {
@@ -131,18 +124,12 @@ export const cardTemplates: CardTemplate[] = [
     showBackSide: false,
     restrictedToolbar: false,
     countdown_timer_front: 0,
-    countdown_timer_back: 0,
-    countdown_behavior_front: 'next',
-    countdown_behavior_back: 'next',
-    showGrid: false,
-    snapToGrid: false,
-    showBorder: true
+    countdown_timer_back: 0
   },
   {
     id: 'quiz-card',
     name: 'Quiz Card',
     description: 'A card designed for quizzes with a question and answer section.',
-    image: '/lovable-uploads/quiz-template.png',
     category: 'quiz',
     front_elements: [
       {
@@ -214,18 +201,12 @@ export const cardTemplates: CardTemplate[] = [
     showBackSide: true,
     restrictedToolbar: false,
     countdown_timer_front: 0,
-    countdown_timer_back: 0,
-    countdown_behavior_front: 'flip',
-    countdown_behavior_back: 'next',
-    showGrid: false,
-    snapToGrid: false,
-    showBorder: true
+    countdown_timer_back: 0
   },
   {
     id: 'vocab-card',
     name: 'Vocabulary Card',
     description: 'A card for learning vocabulary with a word and its definition.',
-    image: '/lovable-uploads/vocab-template.png',
     category: 'vocab',
     front_elements: [
       {
@@ -298,18 +279,12 @@ export const cardTemplates: CardTemplate[] = [
     showBackSide: true,
     restrictedToolbar: false,
     countdown_timer_front: 0,
-    countdown_timer_back: 0,
-    countdown_behavior_front: 'flip',
-    countdown_behavior_back: 'next',
-    showGrid: false,
-    snapToGrid: false,
-    showBorder: true
+    countdown_timer_back: 0
   },
   {
     id: 'custom-card',
     name: 'Custom Card',
     description: 'A blank card template for creating your own unique designs.',
-    image: '/lovable-uploads/custom-template.png',
     category: 'custom',
     front_elements: [],
     back_elements: [],
@@ -321,18 +296,12 @@ export const cardTemplates: CardTemplate[] = [
     showBackSide: true,
     restrictedToolbar: false,
     countdown_timer_front: 0,
-    countdown_timer_back: 0,
-    countdown_behavior_front: 'flip',
-    countdown_behavior_back: 'next',
-    showGrid: false,
-    snapToGrid: false,
-    showBorder: true
+    countdown_timer_back: 0
   },
   {
     id: 'fill-in-blank-study',
     name: 'Fill-in-the-Blank Study',
     description: 'Interactive template for vocabulary and comprehension exercises with customizable blanks',
-    image: '/lovable-uploads/fill-in-blank-template.png',
     category: 'study',
     front_elements: [
       {
@@ -437,12 +406,7 @@ export const cardTemplates: CardTemplate[] = [
     showBackSide: true,
     restrictedToolbar: false,
     countdown_timer_front: 0,
-    countdown_timer_back: 0,
-    countdown_behavior_front: 'flip',
-    countdown_behavior_back: 'next',
-    showGrid: false,
-    snapToGrid: false,
-    showBorder: true
+    countdown_timer_back: 0
   }
 ];
 

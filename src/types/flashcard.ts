@@ -20,6 +20,8 @@ export interface CardTemplate {
   id: string;
   name: string;
   description?: string;
+  image?: string;
+  category?: string;
   front_elements: CanvasElement[];
   back_elements: CanvasElement[];
   card_type: 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected';
@@ -79,12 +81,13 @@ export interface ElementLinkData {
   actionData?: any;
 }
 
-// Updated fill-in-blank blank interface
+// Updated fill-in-blank blank interface with index signature for Json compatibility
 export interface FillInBlankBlank {
   id: string;
   answer: string;
   word?: string;
   position?: number;
+  [key: string]: any; // Index signature for Json compatibility
 }
 
 export interface CanvasElement {

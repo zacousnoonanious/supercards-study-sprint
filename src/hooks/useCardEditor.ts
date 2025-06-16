@@ -39,6 +39,40 @@ export const useCardEditor = () => {
     ? currentCard?.[currentSide === 'front' ? 'front_elements' : 'back_elements']?.find(el => el.id === selectedElementId)
     : null;
 
+  // Helper function to transform database cards to Flashcard type
+  const transformDatabaseCard = (card: any): Flashcard => ({
+    id: card.id,
+    set_id: card.set_id,
+    question: card.question || '',
+    answer: card.answer || '',
+    hint: card.hint,
+    front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
+    back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
+    card_type: (card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') || 'normal',
+    interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null,
+    password: card.password,
+    countdown_timer: card.countdown_timer || 0,
+    countdown_timer_front: card.countdown_timer_front || 0,
+    countdown_timer_back: card.countdown_timer_back || 0,
+    countdown_behavior_front: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
+    countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
+    flips_before_next: card.flips_before_next || 0,
+    canvas_width: card.canvas_width || 600,
+    canvas_height: card.canvas_height || 400,
+    created_at: card.created_at,
+    updated_at: card.updated_at,
+    last_reviewed_at: card.last_reviewed_at,
+    metadata: typeof card.metadata === 'object' && card.metadata !== null 
+      ? card.metadata as { tags?: string[]; aiTags?: string[]; [key: string]: any; }
+      : { tags: [], aiTags: [] },
+    templateId: (card as any).templateId,
+    allowedElementTypes: (card as any).allowedElementTypes || ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
+    restrictedToolbar: (card as any).restrictedToolbar || false,
+    showBackSide: (card as any).showBackSide !== false,
+    autoAdvanceOnAnswer: (card as any).autoAdvanceOnAnswer || false,
+    constraints: [],
+  });
+
   // Initialize editor
   const initializeEditor = useCallback(async (setId: string) => {
     if (!user) return;
@@ -80,39 +114,7 @@ export const useCardEditor = () => {
 
       if (cardsError) throw cardsError;
 
-      const transformedCards: Flashcard[] = (cardsData || []).map(card => ({
-        id: card.id,
-        set_id: card.set_id,
-        question: card.question || '',
-        answer: card.answer || '',
-        hint: card.hint,
-        front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
-        back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
-        card_type: (card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') || 'normal',
-        interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null,
-        password: card.password,
-        countdown_timer: card.countdown_timer,
-        countdown_timer_front: card.countdown_timer_front,
-        countdown_timer_back: card.countdown_timer_back,
-        countdown_behavior_front: card.countdown_behavior_front,
-        countdown_behavior_back: card.countdown_behavior_back,
-        flips_before_next: card.flips_before_next,
-        canvas_width: card.canvas_width || 600,
-        canvas_height: card.canvas_height || 400,
-        created_at: card.created_at,
-        updated_at: card.updated_at,
-        last_reviewed_at: card.last_reviewed_at,
-        metadata: typeof card.metadata === 'object' && card.metadata !== null 
-          ? card.metadata as { tags?: string[]; aiTags?: string[]; [key: string]: any; }
-          : { tags: [], aiTags: [] },
-        templateId: (card as any).templateId,
-        allowedElementTypes: (card as any).allowedElementTypes || ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
-        restrictedToolbar: (card as any).restrictedToolbar || false,
-        showBackSide: (card as any).showBackSide !== false,
-        autoAdvanceOnAnswer: (card as any).autoAdvanceOnAnswer || false,
-        constraints: [],
-      }));
-
+      const transformedCards: Flashcard[] = (cardsData || []).map(transformDatabaseCard);
       setCards(transformedCards);
 
       if (cardId) {
@@ -179,6 +181,7 @@ export const useCardEditor = () => {
     }
   }, [user, saving, toast]);
 
+  // Add element to the current card
   const addElement = useCallback((type: string, x?: number, y?: number) => {
     if (!currentCard) return;
 
@@ -209,6 +212,7 @@ export const useCardEditor = () => {
     setSelectedElementId(newElement.id);
   }, [currentCard, currentSide, saveCard]);
 
+  // Update an element in the current card
   const updateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     if (!currentCard) return;
 
@@ -227,6 +231,7 @@ export const useCardEditor = () => {
     saveCard(updatedCard);
   }, [currentCard, currentSide, saveCard]);
 
+  // Delete an element from the current card
   const deleteElement = useCallback((elementId: string) => {
     if (!currentCard) return;
 
@@ -244,6 +249,7 @@ export const useCardEditor = () => {
     setSelectedElementId(null);
   }, [currentCard, currentSide, saveCard]);
 
+  // Create a new card
   const createNewCard = useCallback(async () => {
     if (!setId || !user) return;
 
@@ -276,18 +282,7 @@ export const useCardEditor = () => {
 
       if (error) throw error;
 
-      const fullCard: Flashcard = {
-        ...data,
-        front_elements: data.front_elements as unknown as CanvasElement[] || [],
-        back_elements: data.back_elements as unknown as CanvasElement[] || [],
-        metadata: data.metadata || { tags: [], aiTags: [] },
-        templateId: undefined,
-        allowedElementTypes: ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
-        restrictedToolbar: false,
-        showBackSide: true,
-        autoAdvanceOnAnswer: false,
-      } as Flashcard;
-
+      const fullCard = transformDatabaseCard(data);
       setCards(prev => [...prev, fullCard]);
       setCurrentCardIndex(cards.length);
       navigate(`/edit/${setId}/${data.id}`);
@@ -306,6 +301,7 @@ export const useCardEditor = () => {
     }
   }, [setId, user, cards.length, navigate, toast]);
 
+  // Create a new card from a template
   const createNewCardFromTemplate = useCallback(async (template: CardTemplate) => {
     if (!setId || !user) return;
 
@@ -317,11 +313,11 @@ export const useCardEditor = () => {
       front_elements: template.front_elements.map(el => ({
         ...el,
         id: `${el.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      })),
+      })) as any,
       back_elements: template.back_elements.map(el => ({
         ...el,
         id: `${el.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      })),
+      })) as any,
       card_type: template.card_type,
       interactive_type: null,
       canvas_width: template.canvas_width,
@@ -329,15 +325,10 @@ export const useCardEditor = () => {
       countdown_timer: 0,
       countdown_timer_front: template.countdown_timer_front || 0,
       countdown_timer_back: template.countdown_timer_back || 0,
-      countdown_behavior_front: template.countdown_behavior_front || 'flip',
-      countdown_behavior_back: template.countdown_behavior_back || 'next',
+      countdown_behavior_front: 'flip',
+      countdown_behavior_back: 'next',
       flips_before_next: 2,
       metadata: { tags: [], aiTags: [] },
-      templateId: template.id,
-      allowedElementTypes: template.allowedElementTypes,
-      restrictedToolbar: template.restrictedToolbar,
-      showBackSide: template.showBackSide,
-      autoAdvanceOnAnswer: template.autoAdvanceOnAnswer,
     };
 
     try {
@@ -349,13 +340,7 @@ export const useCardEditor = () => {
 
       if (error) throw error;
 
-      const fullCard: Flashcard = {
-        ...data,
-        front_elements: data.front_elements as unknown as CanvasElement[] || [],
-        back_elements: data.back_elements as unknown as CanvasElement[] || [],
-        metadata: data.metadata || { tags: [], aiTags: [] },
-      } as Flashcard;
-
+      const fullCard = transformDatabaseCard(data);
       setCards(prev => [...prev, fullCard]);
       setCurrentCardIndex(cards.length);
       navigate(`/edit/${setId}/${data.id}`);
@@ -374,6 +359,7 @@ export const useCardEditor = () => {
     }
   }, [setId, user, cards.length, navigate, toast]);
 
+  // Create a new card with a layout from the current card
   const createNewCardWithLayout = useCallback(async () => {
     if (!setId || cards.length === 0) return;
 
@@ -414,36 +400,10 @@ export const useCardEditor = () => {
 
       if (error) throw error;
 
-      const createdCard: Flashcard = {
-        ...data,
-        front_elements: data.front_elements as unknown as CanvasElement[] || [],
-        back_elements: data.back_elements as unknown as CanvasElement[] || [],
-        hint: data.hint || '',
-        last_reviewed_at: data.last_reviewed_at || null,
-        card_type: (data.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: (data.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') || null,
-        countdown_timer: data.countdown_timer || 0,
-        countdown_timer_front: data.countdown_timer_front || 0,
-        countdown_timer_back: data.countdown_timer_back || 0,
-        countdown_behavior_front: (data.countdown_behavior_front as 'flip' | 'next') || 'flip',
-        countdown_behavior_back: (data.countdown_behavior_back as 'flip' | 'next') || 'next',
-        flips_before_next: data.flips_before_next || 2,
-        password: data.password || null,
-        constraints: [],
-        templateId: undefined,
-        allowedElementTypes: ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
-        restrictedToolbar: false,
-        showBackSide: true,
-        autoAdvanceOnAnswer: false,
-      };
-
-      // Calculate the new index before updating state
+      const createdCard = transformDatabaseCard(data);
       const newCardIndex = cards.length;
 
-      // Add the card to state and navigate to it
       setCards(prevCards => [...prevCards, createdCard]);
-      
-      // Navigate to the new card using the pre-calculated index
       setCurrentCardIndex(newCardIndex);
       setSelectedElementId(null);
       setCurrentSide('front');
@@ -454,6 +414,7 @@ export const useCardEditor = () => {
     }
   }, [setId, cards, currentCardIndex]);
 
+  // Delete a card
   const deleteCard = useCallback(async (cardId: string) => {
     if (cards.length <= 1) {
       console.log('Cannot delete the last card');
@@ -468,11 +429,9 @@ export const useCardEditor = () => {
 
       if (error) throw error;
 
-      // Remove card from local state
       const cardIndex = cards.findIndex(card => card.id === cardId);
       setCards(prevCards => prevCards.filter(card => card.id !== cardId));
 
-      // Adjust current card index if necessary
       if (cardIndex <= currentCardIndex && currentCardIndex > 0) {
         setCurrentCardIndex(currentCardIndex - 1);
       } else if (cardIndex === currentCardIndex && currentCardIndex >= cards.length - 1) {
@@ -488,10 +447,10 @@ export const useCardEditor = () => {
     }
   }, [cards, currentCardIndex]);
 
+  // Reorder cards
   const reorderCards = useCallback(async (reorderedCards: Flashcard[]) => {
     setCards(reorderedCards);
     
-    // Update the order in the database by updating each card with a new position or timestamp
     try {
       const updates = reorderedCards.map((card, index) => 
         supabase
@@ -507,13 +466,12 @@ export const useCardEditor = () => {
     }
   }, []);
 
-  // New function to handle canvas size changes
+  // Update canvas size
   const updateCanvasSize = useCallback(async (width: number, height: number) => {
     const currentCard = cards[currentCardIndex];
     if (!currentCard) return;
 
     try {
-      // Update local state immediately for responsive UI
       setCards(prevCards => 
         prevCards.map(card => 
           card.id === currentCard.id 
@@ -522,7 +480,6 @@ export const useCardEditor = () => {
         )
       );
 
-      // Update database
       await updateCard({ 
         canvas_width: width, 
         canvas_height: height 
@@ -534,7 +491,7 @@ export const useCardEditor = () => {
     }
   }, [cards, currentCardIndex]);
 
-  // Helper function to update card metadata - fix the signature
+  // Helper function to update card metadata - fixed signature
   const updateCard = useCallback((updates: Partial<Flashcard>) => {
     if (!currentCard) return;
 
@@ -546,6 +503,7 @@ export const useCardEditor = () => {
     saveCard(updatedCard);
   }, [currentCard, saveCard]);
 
+  // Navigate to the next or previous card
   const navigateCard = useCallback((direction: 'prev' | 'next') => {
     if (direction === 'prev' && currentCardIndex > 0) {
       const prevCard = cards[currentCardIndex - 1];
