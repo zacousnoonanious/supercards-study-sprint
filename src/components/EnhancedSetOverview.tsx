@@ -119,6 +119,7 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     const actualIndex = startIndex + index;
+    console.log('EnhancedSetOverview: Drag start for card at index', actualIndex);
     setDraggedIndex(actualIndex);
     setIsDragging(true);
     e.dataTransfer.effectAllowed = 'move';
@@ -126,6 +127,7 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
+    console.log('EnhancedSetOverview: Drag end');
     setDraggedIndex(null);
     setIsDragging(false);
     setDragOverIndex(null);
@@ -135,10 +137,20 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     const actualIndex = startIndex + index;
-    setDragOverIndex(actualIndex);
+    if (actualIndex !== draggedIndex) {
+      setDragOverIndex(actualIndex);
+    }
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragEnter = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    const actualIndex = startIndex + index;
+    if (actualIndex !== draggedIndex) {
+      setDragOverIndex(actualIndex);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent, index: number) => {
     // Only clear drag over if we're actually leaving the drop zone
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const x = e.clientX;
@@ -152,6 +164,8 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
     const actualDropIndex = startIndex + dropIndex;
+    
+    console.log('EnhancedSetOverview: Drop at index', actualDropIndex, 'from', draggedIndex);
     
     if (draggedIndex === null || draggedIndex === actualDropIndex) {
       setDragOverIndex(null);
@@ -170,6 +184,8 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
     // Insert the card at the new position
     newCards.splice(insertIndex, 0, draggedCard);
 
+    console.log('EnhancedSetOverview: Reordering cards, moved from', draggedIndex + 1, 'to', insertIndex + 1);
+    
     onReorderCards(newCards);
     setDraggedIndex(null);
     setIsDragging(false);
@@ -287,16 +303,17 @@ export const EnhancedSetOverview: React.FC<EnhancedSetOverviewProps> = ({
           {displayedCards.map((card, displayIndex) => {
             const actualIndex = startIndex + displayIndex;
             const isBeingDragged = draggedIndex === actualIndex;
-            const isDropTarget = dragOverIndex === actualIndex;
+            const isDropTarget = dragOverIndex === actualIndex && !isBeingDragged;
             
             return (
               <div
                 key={card.id}
                 className={`card-container transition-all duration-300 ${
-                  isDropTarget && !isBeingDragged ? 'transform scale-105 ring-2 ring-primary ring-opacity-50' : ''
-                } ${isBeingDragged ? 'opacity-50' : ''}`}
+                  isDropTarget ? 'transform scale-105 ring-2 ring-primary ring-opacity-50 bg-primary/5' : ''
+                } ${isBeingDragged ? 'opacity-50 pointer-events-none' : ''}`}
                 onDragOver={(e) => handleDragOver(e, displayIndex)}
-                onDragLeave={handleDragLeave}
+                onDragEnter={(e) => handleDragEnter(e, displayIndex)}
+                onDragLeave={(e) => handleDragLeave(e, displayIndex)}
                 onDrop={(e) => handleDrop(e, displayIndex)}
               >
                 <div className="h-full">

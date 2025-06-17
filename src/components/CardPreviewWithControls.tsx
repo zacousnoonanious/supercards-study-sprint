@@ -46,16 +46,29 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
   const scale = Math.min(scaleX, scaleY);
 
   const handleDragStart = (e: React.DragEvent) => {
+    console.log('CardPreview: Starting drag for card', cardIndex);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', cardIndex.toString());
-    // Prevent default drag image and set custom drag data
+    e.dataTransfer.setData('application/json', JSON.stringify({ cardIndex, cardId: card.id }));
+    
+    // Create a custom drag image
     const dragElement = e.currentTarget as HTMLElement;
-    e.dataTransfer.setDragImage(dragElement, dragElement.offsetWidth / 2, dragElement.offsetHeight / 2);
+    const rect = dragElement.getBoundingClientRect();
+    e.dataTransfer.setDragImage(dragElement, rect.width / 2, rect.height / 2);
+    
     onDragStart(e);
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
+    console.log('CardPreview: Ending drag for card', cardIndex);
     onDragEnd(e);
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Only handle click if not dragging and not clicking on buttons
+    if (!isDragging && !(e.target as HTMLElement).closest('button')) {
+      onClick();
+    }
   };
 
   return (
@@ -66,7 +79,9 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
       style={{
         transform: isDragging ? 'rotate(3deg) scale(1.05)' : undefined,
         transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        userSelect: isDragging ? 'none' : 'auto',
       }}
+      onClick={handleCardClick}
     >
       <DragHandle
         onDragStart={handleDragStart}
@@ -86,7 +101,10 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
             width: fixedPreviewWidth, 
             height: fixedPreviewHeight 
           }}
-          onClick={() => setShowAnswer(!showAnswer)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowAnswer(!showAnswer);
+          }}
         >
           <div 
             style={{ 
