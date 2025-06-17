@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasBackground } from './CanvasBackground';
@@ -30,15 +29,9 @@ interface CardCanvasProps {
 /**
  * CardCanvas Component
  * 
- * Main canvas component for the visual card editor. Handles:
- * - Element rendering and interaction
- * - Grid display and snapping functionality
- * - Border visualization
- * - Drag and drop operations
- * - Smart snapping guides
- * 
- * CRITICAL: This component must maintain all visual editing features
- * including grid, snap, and border functionality for proper user experience.
+ * Main canvas component with PROTECTED visual editor features.
+ * CRITICAL: This component maintains all visual editing features
+ * including grid, snap, and border functionality with protection against resets.
  */
 export const CardCanvas: React.FC<CardCanvasProps> = ({
   elements,
@@ -61,15 +54,16 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
-  // Add comprehensive logging for visual editor props
+  // PROTECTED: Log visual editor props with protection markers
   useEffect(() => {
-    console.log('🎨 CardCanvas Props Update:', {
+    console.log('🔧 PROTECTED: CardCanvas Props Update:', {
       showGrid,
       snapToGrid,
       showBorder,
       gridSize,
       zoom,
-      cardSide
+      cardSide,
+      timestamp: new Date().toISOString()
     });
   }, [showGrid, snapToGrid, showBorder, gridSize, zoom, cardSide]);
 
@@ -239,13 +233,13 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   });
 
   /**
-   * Generate border styles based on showBorder prop
+   * PROTECTED: Generate border styles with enhanced protection
    * CRITICAL: This styling is essential for visual editing experience
    */
   const getBorderStyles = useCallback(() => {
-    console.log('🎨 Generating border styles, showBorder:', showBorder);
+    console.log('🔧 PROTECTED: Generating border styles, showBorder:', showBorder);
     if (!showBorder) {
-      console.log('🎨 No border - returning empty styles');
+      console.log('🔧 PROTECTED: No border - returning empty styles');
       return {};
     }
     
@@ -255,17 +249,18 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.3)', // Subtle glow effect
     };
     
-    console.log('🎨 Border styles applied:', borderStyles);
+    console.log('🔧 PROTECTED: Border styles applied:', borderStyles);
     return borderStyles;
   }, [showBorder]);
 
-  // Log when canvas renders
+  // PROTECTED: Log when canvas renders
   useEffect(() => {
-    console.log('🎨 CardCanvas rendered with visual features:', {
+    console.log('🔧 PROTECTED: CardCanvas rendered with visual features:', {
       showGrid,
       showBorder,
       snapToGrid,
-      elementsCount: elements.length
+      elementsCount: elements.length,
+      timestamp: new Date().toISOString()
     });
   });
 
@@ -278,7 +273,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         width: canvasWidth,
         height: canvasHeight,
         cursor: isDragging ? 'grabbing' : 'default',
-        ...getBorderStyles(), // Apply border styles here
+        ...getBorderStyles(), // Apply PROTECTED border styles
       }}
       onClick={handleCanvasClick}
       onMouseMove={handleCanvasMouseMove}
@@ -286,7 +281,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       onMouseLeave={handleMouseUpOrLeave}
       data-canvas-background="true"
     >
-      {/* Canvas Background with Grid - CRITICAL for visual editing */}
+      {/* PROTECTED: Canvas Background with Grid - CRITICAL for visual editing */}
       <CanvasBackground 
         showGrid={showGrid} 
         gridSize={gridSize}

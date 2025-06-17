@@ -16,11 +16,17 @@ export const useCardEditorState = (currentCard?: Flashcard) => {
   const [toolbarIsDocked, setToolbarIsDocked] = useState(true);
   const [toolbarShowText, setToolbarShowText] = useState(false);
   
-  // CRITICAL: These visual editor states are LOCAL ONLY - they should NEVER sync with database
-  // They are purely for DOM visualization and user interaction feedback
-  const [showGrid, setShowGrid] = useState(false);
-  const [snapToGrid, setSnapToGrid] = useState(false);
-  const [showBorder, setShowBorder] = useState(false);
+  // CRITICAL: Protected visual editor states with ref tracking to prevent external resets
+  const visualStateRef = useRef({
+    showGrid: false,
+    snapToGrid: false,
+    showBorder: false,
+  });
+
+  // Protected state that cannot be overridden by external effects
+  const [showGrid, setShowGridInternal] = useState(false);
+  const [snapToGrid, setSnapToGridInternal] = useState(false);
+  const [showBorder, setShowBorderInternal] = useState(false);
   
   const [isTextSelecting, setIsTextSelecting] = useState(false);
   
@@ -38,46 +44,75 @@ export const useCardEditorState = (currentCard?: Flashcard) => {
     }
   }, [currentCard?.id, currentCard?.canvas_width, currentCard?.canvas_height]);
 
-  // Enhanced handlers for visual editor features with comprehensive logging
+  // CRITICAL: Protected visual editor handlers that update both state and ref
   const handleShowGridChange = (show: boolean) => {
-    console.log('🔧 Visual Editor: Grid visibility REQUESTED:', show);
-    console.log('🔧 Current grid state before change:', showGrid);
-    setShowGrid(show);
-    console.log('🔧 Grid state change completed, new value should be:', show);
+    console.log('🔧 PROTECTED: Grid visibility change requested:', show);
+    console.log('🔧 PROTECTED: Current grid state before change:', visualStateRef.current.showGrid);
     
-    // Verify state change took effect
-    setTimeout(() => {
-      console.log('🔧 Grid state verification (after timeout):', show);
-    }, 100);
+    // Update both ref and state to prevent external overrides
+    visualStateRef.current.showGrid = show;
+    setShowGridInternal(show);
+    
+    console.log('🔧 PROTECTED: Grid state updated to:', show);
+    console.log('🔧 PROTECTED: Ref state:', visualStateRef.current.showGrid);
   };
 
   const handleSnapToGridChange = (snap: boolean) => {
-    console.log('🔧 Visual Editor: Snap to grid REQUESTED:', snap);
-    console.log('🔧 Current snap state before change:', snapToGrid);
-    setSnapToGrid(snap);
-    console.log('🔧 Snap state change completed, new value should be:', snap);
+    console.log('🔧 PROTECTED: Snap to grid change requested:', snap);
+    console.log('🔧 PROTECTED: Current snap state before change:', visualStateRef.current.snapToGrid);
     
-    // Verify state change took effect
-    setTimeout(() => {
-      console.log('🔧 Snap state verification (after timeout):', snap);
-    }, 100);
+    // Update both ref and state to prevent external overrides
+    visualStateRef.current.snapToGrid = snap;
+    setSnapToGridInternal(snap);
+    
+    console.log('🔧 PROTECTED: Snap state updated to:', snap);
+    console.log('🔧 PROTECTED: Ref state:', visualStateRef.current.snapToGrid);
   };
 
   const handleShowBorderChange = (show: boolean) => {
-    console.log('🔧 Visual Editor: Border visibility REQUESTED:', show);
-    console.log('🔧 Current border state before change:', showBorder);
-    setShowBorder(show);
-    console.log('🔧 Border state change completed, new value should be:', show);
+    console.log('🔧 PROTECTED: Border visibility change requested:', show);
+    console.log('🔧 PROTECTED: Current border state before change:', visualStateRef.current.showBorder);
     
-    // Verify state change took effect
-    setTimeout(() => {
-      console.log('🔧 Border state verification (after timeout):', show);
-    }, 100);
+    // Update both ref and state to prevent external overrides
+    visualStateRef.current.showBorder = show;
+    setShowBorderInternal(show);
+    
+    console.log('🔧 PROTECTED: Border state updated to:', show);
+    console.log('🔧 PROTECTED: Ref state:', visualStateRef.current.showBorder);
   };
 
-  // Add effect to monitor state changes
+  // Monitor for external state resets and restore from ref
   useEffect(() => {
-    console.log('🔧 Visual Editor State Monitor - Grid:', showGrid, 'Snap:', snapToGrid, 'Border:', showBorder);
+    const restoreVisualState = () => {
+      if (showGrid !== visualStateRef.current.showGrid) {
+        console.log('🔧 PROTECTION: Restoring grid state from', showGrid, 'to', visualStateRef.current.showGrid);
+        setShowGridInternal(visualStateRef.current.showGrid);
+      }
+      if (snapToGrid !== visualStateRef.current.snapToGrid) {
+        console.log('🔧 PROTECTION: Restoring snap state from', snapToGrid, 'to', visualStateRef.current.snapToGrid);
+        setSnapToGridInternal(visualStateRef.current.snapToGrid);
+      }
+      if (showBorder !== visualStateRef.current.showBorder) {
+        console.log('🔧 PROTECTION: Restoring border state from', showBorder, 'to', visualStateRef.current.showBorder);
+        setShowBorderInternal(visualStateRef.current.showBorder);
+      }
+    };
+
+    // Check for state divergence after any update
+    const timeoutId = setTimeout(restoreVisualState, 10);
+    return () => clearTimeout(timeoutId);
+  }, [showGrid, snapToGrid, showBorder]);
+
+  // Monitor all state changes
+  useEffect(() => {
+    console.log('🔧 PROTECTED: Visual Editor State Monitor:', {
+      'State Grid': showGrid,
+      'State Snap': snapToGrid, 
+      'State Border': showBorder,
+      'Ref Grid': visualStateRef.current.showGrid,
+      'Ref Snap': visualStateRef.current.snapToGrid,
+      'Ref Border': visualStateRef.current.showBorder
+    });
   }, [showGrid, snapToGrid, showBorder]);
 
   return {
@@ -106,7 +141,7 @@ export const useCardEditorState = (currentCard?: Flashcard) => {
     toolbarShowText,
     setToolbarShowText,
     
-    // Visual editor features - LOCAL ONLY with enhanced handlers
+    // PROTECTED visual editor features - use protected handlers
     showGrid,
     setShowGrid: handleShowGridChange,
     snapToGrid,
