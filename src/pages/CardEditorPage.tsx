@@ -1,4 +1,5 @@
 
+
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CardEditor } from '@/components/CardEditor';
@@ -60,9 +61,10 @@ const CardEditorPage = () => {
   console.log('CardEditorPage: Rendering CardEditor with setId:', setId);
   return (
     <div className="min-h-screen bg-background">
-      <CardEditor setId={setId} />
+      <CardEditor />
     </div>
   );
 };
 
 export default CardEditorPage;
+
