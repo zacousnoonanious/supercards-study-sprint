@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -9,6 +8,8 @@ import { useCardEditorHandlers } from '@/hooks/useCardEditorHandlers';
 import { useCollaborativeEditing } from '@/hooks/useCollaborativeEditing';
 import { CardEditorLayout } from './CardEditorLayout';
 import { transformDatabaseCardToFlashcard } from '@/utils/cardTransforms';
+import { updateFlashcard } from '@/lib/api/flashcards';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * CardEditor Component
@@ -20,6 +21,7 @@ import { transformDatabaseCardToFlashcard } from '@/utils/cardTransforms';
 export const CardEditor: React.FC = () => {
   const { setId, cardId } = useParams<{ setId: string; cardId: string }>();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const [selectedElement, setSelectedElement] = useState<CanvasElement | null>(null);
   const [currentSide, setCurrentSide] = useState<'front' | 'back'>('front');
@@ -82,6 +84,96 @@ export const CardEditor: React.FC = () => {
 
   // PROTECTED: Initialize card editor state with protection
   const cardEditorState = useCardEditorState(currentCard);
+
+  // Create element update handler
+  const updateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
+    if (!currentCard) return;
+
+    console.log('🔧 CardEditor: Updating element', elementId, updates);
+
+    const updateElementsArray = (elements: CanvasElement[]) => 
+      elements.map(el => el.id === elementId ? { ...el, ...updates } : el);
+
+    const frontElements = updateElementsArray(currentCard.front_elements || []);
+    const backElements = updateElementsArray(currentCard.back_elements || []);
+
+    const cardUpdates = {
+      front_elements: frontElements,
+      back_elements: backElements,
+    };
+
+    // Update cache immediately for instant UI response
+    queryClient.setQueryData(['cards', setId], (oldCards: Flashcard[] = []) => 
+      oldCards.map(card => card.id === currentCard.id ? { ...card, ...cardUpdates } : card)
+    );
+
+    // Update database in background
+    updateCard(cardUpdates);
+  }, [currentCard, queryClient, setId]);
+
+  // Create element delete handler
+  const deleteElement = useCallback((elementId: string) => {
+    if (!currentCard) return;
+
+    console.log('🔧 CardEditor: Deleting element', elementId);
+
+    const filterElements = (elements: CanvasElement[]) => 
+      elements.filter(el => el.id !== elementId);
+
+    const frontElements = filterElements(currentCard.front_elements || []);
+    const backElements = filterElements(currentCard.back_elements || []);
+
+    updateCard({
+      front_elements: frontElements,
+      back_elements: backElements,
+    });
+  }, [currentCard]);
+
+  // Create card update handler
+  const updateCard = useCallback(async (updates: Partial<Flashcard>) => {
+    if (!currentCard) return;
+
+    try {
+      console.log('🔧 CardEditor: Updating card', updates);
+      
+      // Update cache immediately for instant response
+      queryClient.setQueryData(['cards', setId], (oldCards: Flashcard[] = []) => 
+        oldCards.map(card => card.id === currentCard.id ? { ...card, ...updates } : card)
+      );
+
+      // Update database in background
+      await updateFlashcard({ ...currentCard, ...updates });
+      console.log('🔧 CardEditor: Card updated successfully');
+    } catch (error) {
+      console.error('🔧 CardEditor: Error updating card:', error);
+      // Revert cache on error
+      queryClient.invalidateQueries({ queryKey: ['cards', setId] });
+      toast({
+        title: 'Error',
+        description: 'Failed to update card',
+        variant: 'destructive',
+      });
+    }
+  }, [currentCard, setId, queryClient, toast]);
+
+  // Create canvas size update handler
+  const updateCanvasSize = useCallback(async (width: number, height: number) => {
+    console.log('🔧 CardEditor: Updating canvas size', width, height);
+    await updateCard({ canvas_width: width, canvas_height: height });
+  }, [updateCard]);
+
+  // Create navigate card handler
+  const navigateCard = useCallback((direction: 'prev' | 'next') => {
+    console.log('🔧 CardEditor: Navigating card', direction);
+    if (direction === 'next' && currentCardIndex < (cards?.length || 0) - 1) {
+      // Navigate to next card - would need router navigation
+    } else if (direction === 'prev' && currentCardIndex > 0) {
+      // Navigate to prev card - would need router navigation
+    }
+  }, [currentCardIndex, cards?.length]);
+
+  // PROTECTED: Initialize card editor state with protection
+  const cardEditorState = useCardEditorState(currentCard);
   
   // CRITICAL: Protect visual editor state from being reset by external effects
   const protectedVisualStateRef = React.useRef({
@@ -131,35 +223,27 @@ export const CardEditor: React.FC = () => {
   }, [currentCard, currentSide]);
 
   const handlers = useCardEditorHandlers({
-    updateElement: (elementId: string, updates: Partial<CanvasElement>) => {
-      // Implementation will be added to the hook
-    },
-    deleteElement: (elementId: string) => {
-      // Implementation will be added to the hook
-    },
-    setSelectedElementId: handleElementSelect, // Use the proper handler
+    updateElement,
+    deleteElement,
+    setSelectedElementId: handleElementSelect,
     setCurrentCardIndex: (index: number) => {
-      // Implementation will be added to the hook
+      // TODO: Implement card index navigation
     },
     cards: cards || [],
     currentCard: currentCard!,
-    navigateCard: (direction: 'prev' | 'next') => {
-      // Implementation will be added to the hook
-    },
+    navigateCard,
     setCurrentSide,
     currentSide,
-    updateCard: (updates: Partial<Flashcard>) => {
-      // Implementation will be added to the hook
-    },
-    updateCanvasSize: async (width: number, height: number) => {
-      // Implementation will be added to the hook
-    },
+    updateCard,
+    updateCanvasSize,
     isTextSelecting: false,
     set: set,
     setDeckName: (name: string) => {
-      // Implementation will be added to the hook
+      // TODO: Implement deck name setting
     },
     selectedElementId: selectedElement?.id || null,
+    setId: setId!,
+    cardId: cardId!,
   });
 
   if (isCardsLoading || isSetLoading) {
@@ -206,25 +290,27 @@ export const CardEditor: React.FC = () => {
       toolbarShowText={cardEditorState.toolbarShowText}
       isPanning={cardEditorState.isPanning}
       showCardOverview={cardEditorState.showCardOverview}
-      onZoomChange={() => {}}
-      onToolbarPositionChange={() => {}}
-      onToolbarDockChange={() => {}}
-      onToolbarShowTextChange={() => {}}
-      onShowCardOverviewChange={() => {}}
-      onDeckTitleChange={async () => {}}
-      onCardSideChange={() => {}}
+      
+      // Connect all handlers properly
+      onZoomChange={cardEditorState.setZoom}
+      onToolbarPositionChange={cardEditorState.setToolbarPosition}
+      onToolbarDockChange={cardEditorState.setToolbarIsDocked}
+      onToolbarShowTextChange={cardEditorState.setToolbarShowText}
+      onShowCardOverviewChange={cardEditorState.setShowCardOverview}
+      onDeckTitleChange={handlers.handleUpdateDeckTitle}
+      onCardSideChange={handlers.handleCardSideChange}
       onElementSelect={handleElementSelect}
-      onUpdateElement={() => {}}
-      onDeleteElement={() => {}}
-      onCanvasSizeChange={() => {}}
-      onUpdateCard={() => {}}
-      onAddElement={() => {}}
-      onAutoArrange={() => {}}
-      onNavigateCard={() => {}}
-      onCreateNewCard={() => {}}
-      onCreateNewCardWithLayout={() => {}}
-      onCreateNewCardFromTemplate={() => {}}
-      onDeleteCard={() => {}}
+      onUpdateElement={handlers.handleUpdateElement}
+      onDeleteElement={handlers.handleDeleteElement}
+      onCanvasSizeChange={handlers.handleCanvasSizeChange}
+      onUpdateCard={handlers.handleCardUpdate}
+      onAddElement={handlers.handleAddElement}
+      onAutoArrange={handlers.handleAutoArrange}
+      onNavigateCard={handlers.handleNavigateCard}
+      onCreateNewCard={handlers.handleCreateNewCard}
+      onCreateNewCardWithLayout={handlers.handleCreateNewCardWithLayout}
+      onCreateNewCardFromTemplate={handlers.handleCreateNewCardFromTemplate}
+      onDeleteCard={handlers.handleDeleteCard}
       onFitToView={() => {}}
       onOpenFullscreen={() => {}}
       isCollaborative={isCollaborative}
