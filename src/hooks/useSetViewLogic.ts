@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -5,8 +6,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useI18n } from '@/contexts/I18nContext';
-import { CardTemplate, Flashcard, CanvasElement } from '@/types/flashcard';
+import { CardTemplate, Flashcard } from '@/types/flashcard';
 import { StudySettings } from '@/components/StudyModePreSettings';
+import { transformDatabaseCardToFlashcard } from '@/utils/cardTransforms';
 
 interface FlashcardSet {
   id: string;
@@ -69,28 +71,13 @@ export const useSetViewLogic = () => {
         throw error;
       }
       
-      console.log('Cards data fetched:', data);
+      console.log('Raw cards data fetched:', data);
       
-      // Type cast the data to match our Flashcard interface
-      const typedCards: Flashcard[] = (cardsData || []).map((card, index) => ({
-        ...card,
-        front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
-        back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
-        hint: card.hint || '',
-        last_reviewed_at: card.last_reviewed_at || null,
-        card_type: (card.card_type as Flashcard['card_type']) || 'normal',
-        interactive_type: (card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') || null,
-        countdown_timer: card.countdown_timer || 0,
-        countdown_timer_front: card.countdown_timer_front || 0,
-        countdown_timer_back: card.countdown_timer_back || 0,
-        countdown_behavior_front: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
-        countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
-        flips_before_next: card.flips_before_next || 2,
-        password: card.password || null,
-        countdown_behavior: ((card as any).countdown_behavior as 'flip' | 'next') || 'flip'
-      }));
+      // Transform database cards to full Flashcard objects using the utility
+      const transformedCards: Flashcard[] = (data || []).map(transformDatabaseCardToFlashcard);
       
-      return typedCards;
+      console.log('Transformed cards:', transformedCards);
+      return transformedCards;
     },
     enabled: !!setId && !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes

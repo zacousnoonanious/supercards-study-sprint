@@ -1,457 +1,282 @@
+
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Flashcard, CanvasElement, FlashcardSet, CardTemplate } from '@/types/flashcard';
-import { useCollaborativeEditing } from '@/hooks/useCollaborativeEditing';
+import { useI18n } from '@/contexts/I18nContext';
+import { Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
+import { getFlashcardsBySetId, createFlashcard, updateFlashcard, deleteFlashcard } from '@/lib/api/flashcards';
+import { transformDatabaseCardToFlashcard } from '@/utils/cardTransforms';
+
+interface FlashcardSet {
+  id: string;
+  title: string;
+  description?: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export const useCardEditor = () => {
-  const { setId, cardId } = useParams<{ setId: string; cardId?: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const [set, setSet] = useState<FlashcardSet | null>(null);
-  const [cards, setCards] = useState<Flashcard[]>([]);
+  // Core state
+  const [setId, setSetId] = useState<string>('');
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [currentSide, setCurrentSide] = useState<'front' | 'back'>('front');
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
-  // Collaborative editing setup
-  const {
-    collaborators,
-    activeUsers,
-    isCollaborative,
-    enableCollaboration,
-    removeCollaborator,
-    updateUserPosition,
-  } = useCollaborativeEditing({
-    setId: setId || '',
-    cardId: cardId || '',
-  });
-
-  // Computed values and helper functions
-  const currentCard = cards[currentCardIndex];
-  const selectedElement = selectedElementId 
-    ? currentCard?.[currentSide === 'front' ? 'front_elements' : 'back_elements']?.find(el => el.id === selectedElementId)
-    : null;
-
-  // Helper function to transform database cards to Flashcard type
-  const transformDatabaseCard = (card: any): Flashcard => ({
-    id: card.id,
-    set_id: card.set_id,
-    question: card.question || '',
-    answer: card.answer || '',
-    hint: card.hint,
-    front_elements: Array.isArray(card.front_elements) ? card.front_elements as unknown as CanvasElement[] : [],
-    back_elements: Array.isArray(card.back_elements) ? card.back_elements as unknown as CanvasElement[] : [],
-    card_type: (card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected') || 'normal',
-    interactive_type: card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank' | null,
-    password: card.password,
-    countdown_timer: card.countdown_timer || 0,
-    countdown_timer_front: card.countdown_timer_front || 0,
-    countdown_timer_back: card.countdown_timer_back || 0,
-    countdown_behavior_front: (card.countdown_behavior_front as 'flip' | 'next') || 'flip',
-    countdown_behavior_back: (card.countdown_behavior_back as 'flip' | 'next') || 'next',
-    flips_before_next: card.flips_before_next || 0,
-    canvas_width: card.canvas_width || 600,
-    canvas_height: card.canvas_height || 400,
-    created_at: card.created_at,
-    updated_at: card.updated_at,
-    last_reviewed_at: card.last_reviewed_at,
-    metadata: typeof card.metadata === 'object' && card.metadata !== null 
-      ? card.metadata as { tags?: string[]; aiTags?: string[]; [key: string]: any; }
-      : { tags: [], aiTags: [] },
-    templateId: (card as any).templateId,
-    allowedElementTypes: (card as any).allowedElementTypes || ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
-    restrictedToolbar: (card as any).restrictedToolbar || false,
-    showBackSide: (card as any).showBackSide !== false,
-    autoAdvanceOnAnswer: (card as any).autoAdvanceOnAnswer || false,
-    constraints: [],
-  });
-
-  // Initialize editor
-  const initializeEditor = useCallback(async (setId: string) => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      
-      const { data: setData, error: setError } = await supabase
+  // Fetch set data
+  const { data: set, isLoading: setLoading } = useQuery({
+    queryKey: ['flashcard_set', setId],
+    queryFn: async () => {
+      if (!setId) return null;
+      const { data, error } = await supabase
         .from('flashcard_sets')
         .select('*')
         .eq('id', setId)
         .single();
-
-      if (setError) throw setError;
       
-      // Transform set data to match FlashcardSet interface
-      const transformedSet: FlashcardSet = {
-        id: setData.id,
-        title: setData.title,
-        description: setData.description,
-        user_id: setData.user_id,
-        organization_id: setData.organization_id,
-        is_collaborative: setData.is_collaborative,
-        collaboration_settings: typeof setData.collaboration_settings === 'object' && setData.collaboration_settings !== null
-          ? setData.collaboration_settings as { allowEditors: boolean; allowViewers: boolean; requireApproval: boolean; }
-          : { allowEditors: true, allowViewers: true, requireApproval: false },
-        permanent_shuffle: setData.permanent_shuffle,
-        created_at: setData.created_at,
-        updated_at: setData.updated_at,
-      };
-      
-      setSet(transformedSet);
-
-      const { data: cardsData, error: cardsError } = await supabase
-        .from('flashcards')
-        .select('*')
-        .eq('set_id', setId)
-        .order('created_at');
-
-      if (cardsError) throw cardsError;
-
-      const transformedCards: Flashcard[] = (cardsData || []).map(transformDatabaseCard);
-      setCards(transformedCards);
-
-      if (cardId) {
-        const cardIndex = transformedCards.findIndex(c => c.id === cardId);
-        if (cardIndex !== -1) {
-          setCurrentCardIndex(cardIndex);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching cards:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load cards",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [user, toast, cardId]);
-
-  // Save functions and other methods
-  const saveCard = useCallback(async (card: Flashcard) => {
-    if (!user || saving) return;
-
-    try {
-      setSaving(true);
-      
-      const { error } = await supabase
-        .from('flashcards')
-        .update({
-          question: card.question,
-          answer: card.answer,
-          hint: card.hint,
-          front_elements: card.front_elements as any,
-          back_elements: card.back_elements as any,
-          card_type: card.card_type,
-          interactive_type: card.interactive_type,
-          password: card.password,
-          countdown_timer: card.countdown_timer,
-          countdown_timer_front: card.countdown_timer_front,
-          countdown_timer_back: card.countdown_timer_back,
-          countdown_behavior_front: card.countdown_behavior_front,
-          countdown_behavior_back: card.countdown_behavior_back,
-          flips_before_next: card.flips_before_next,
-          canvas_width: card.canvas_width,
-          canvas_height: card.canvas_height,
-          metadata: card.metadata,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', card.id);
-
       if (error) throw error;
+      return data as FlashcardSet;
+    },
+    enabled: !!setId && !!user,
+  });
 
-      console.log('Card saved successfully');
-    } catch (error) {
-      console.error('Error saving card:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save card",
-        variant: "destructive"
-      });
-    } finally {
-      setSaving(false);
-    }
-  }, [user, saving, toast]);
+  // Fetch cards data using the API function that already transforms the data
+  const { data: cards = [], isLoading: cardsLoading, refetch: refetchCards } = useQuery({
+    queryKey: ['flashcards', setId],
+    queryFn: () => getFlashcardsBySetId(setId),
+    enabled: !!setId && !!user,
+  });
 
-  // Add element to the current card
-  const addElement = useCallback((type: string, x?: number, y?: number) => {
+  const loading = setLoading || cardsLoading;
+
+  const currentCard = cards[currentCardIndex] || null;
+
+  const initializeEditor = useCallback((newSetId: string) => {
+    console.log('Initializing editor with setId:', newSetId);
+    setSetId(newSetId);
+    setCurrentCardIndex(0);
+    setCurrentSide('front');
+    setSelectedElementId(null);
+  }, []);
+
+  const addElement = useCallback((type: string, side: 'front' | 'back') => {
     if (!currentCard) return;
 
     const newElement: CanvasElement = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: Date.now().toString(),
       type: type as any,
-      x: x || 100,
-      y: y || 100,
+      x: 50,
+      y: 50,
       width: type === 'text' ? 200 : 150,
-      height: type === 'text' ? 40 : 150,
-      content: type === 'text' ? 'Double-click to edit' : '',
-      zIndex: 0,
+      height: type === 'text' ? 50 : 100,
+      content: type === 'text' ? 'New text' : '',
+      fontSize: 16,
+      fontFamily: 'Arial',
+      color: '#000000',
+      backgroundColor: type === 'text' ? 'transparent' : '#ffffff',
     };
 
-    const updatedCard = {
-      ...currentCard,
-      [currentSide === 'front' ? 'front_elements' : 'back_elements']: [
-        ...(currentCard[currentSide === 'front' ? 'front_elements' : 'back_elements'] || []),
-        newElement
-      ]
-    };
+    const elements = side === 'front' ? currentCard.front_elements || [] : currentCard.back_elements || [];
+    const updatedElements = [...elements, newElement];
 
-    setCards(prev => prev.map(card => 
-      card.id === currentCard.id ? updatedCard : card
-    ));
+    const updates = side === 'front' 
+      ? { front_elements: updatedElements }
+      : { back_elements: updatedElements };
 
-    saveCard(updatedCard);
+    updateCard(updates);
     setSelectedElementId(newElement.id);
-  }, [currentCard, currentSide, saveCard]);
+  }, [currentCard]);
 
-  // Update an element in the current card
   const updateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     if (!currentCard) return;
 
-    const updatedCard = {
-      ...currentCard,
-      [currentSide === 'front' ? 'front_elements' : 'back_elements']: 
-        currentCard[currentSide === 'front' ? 'front_elements' : 'back_elements'].map(el =>
-          el.id === elementId ? { ...el, ...updates } : el
-        )
-    };
+    const updateElementsArray = (elements: CanvasElement[]) => 
+      elements.map(el => el.id === elementId ? { ...el, ...updates } : el);
 
-    setCards(prev => prev.map(card => 
-      card.id === currentCard.id ? updatedCard : card
-    ));
+    const frontElements = updateElementsArray(currentCard.front_elements || []);
+    const backElements = updateElementsArray(currentCard.back_elements || []);
 
-    saveCard(updatedCard);
-  }, [currentCard, currentSide, saveCard]);
+    updateCard({
+      front_elements: frontElements,
+      back_elements: backElements,
+    });
+  }, [currentCard]);
 
-  // Delete an element from the current card
+  const updateCard = useCallback(async (updates: Partial<Flashcard>) => {
+    if (!currentCard) return;
+
+    try {
+      const updatedCard = await updateFlashcard({ ...currentCard, ...updates });
+      
+      // Update local cache immediately
+      queryClient.setQueryData(['flashcards', setId], (oldCards: Flashcard[] = []) => 
+        oldCards.map(card => card.id === currentCard.id ? { ...card, ...updates } : card)
+      );
+
+      console.log('Card updated successfully');
+    } catch (error) {
+      console.error('Error updating card:', error);
+      toast({
+        title: t('error'),
+        description: t('cardUpdateFailed'),
+        variant: 'destructive',
+      });
+    }
+  }, [currentCard, setId, queryClient, t, toast]);
+
+  const updateCanvasSize = useCallback((width: number, height: number) => {
+    updateCard({ canvas_width: width, canvas_height: height });
+  }, [updateCard]);
+
   const deleteElement = useCallback((elementId: string) => {
     if (!currentCard) return;
 
-    const updatedCard = {
-      ...currentCard,
-      [currentSide === 'front' ? 'front_elements' : 'back_elements']: 
-        currentCard[currentSide === 'front' ? 'front_elements' : 'back_elements'].filter(el => el.id !== elementId)
-    };
+    const filterElements = (elements: CanvasElement[]) => 
+      elements.filter(el => el.id !== elementId);
 
-    setCards(prev => prev.map(card => 
-      card.id === currentCard.id ? updatedCard : card
-    ));
+    const frontElements = filterElements(currentCard.front_elements || []);
+    const backElements = filterElements(currentCard.back_elements || []);
 
-    saveCard(updatedCard);
+    updateCard({
+      front_elements: frontElements,
+      back_elements: backElements,
+    });
+
+    if (selectedElementId === elementId) {
+      setSelectedElementId(null);
+    }
+  }, [currentCard, selectedElementId, updateCard]);
+
+  const navigateCard = useCallback((direction: 'next' | 'prev') => {
+    if (direction === 'next' && currentCardIndex < cards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1);
+    } else if (direction === 'prev' && currentCardIndex > 0) {
+      setCurrentCardIndex(currentCardIndex - 1);
+    }
     setSelectedElementId(null);
-  }, [currentCard, currentSide, saveCard]);
+  }, [currentCardIndex, cards.length]);
 
-  // Create a new card
   const createNewCard = useCallback(async () => {
-    if (!setId || !user) return;
-
-    const newCard = {
-      set_id: setId,
-      question: 'New Card',
-      answer: 'Answer',
-      hint: '',
-      front_elements: [],
-      back_elements: [],
-      card_type: 'normal',
-      interactive_type: null,
-      canvas_width: 600,
-      canvas_height: 400,
-      countdown_timer: 0,
-      countdown_timer_front: 0,
-      countdown_timer_back: 0,
-      countdown_behavior_front: 'flip',
-      countdown_behavior_back: 'next',
-      flips_before_next: 2,
-      metadata: { tags: [], aiTags: [] },
-    };
+    if (!setId) return;
 
     try {
-      const { data, error } = await supabase
-        .from('flashcards')
-        .insert([newCard])
-        .select()
-        .single();
+      const newCard = await createFlashcard({
+        set_id: setId,
+        question: 'New Card',
+        answer: 'Answer',
+        front_elements: [],
+        back_elements: [],
+        canvas_width: 600,
+        canvas_height: 450,
+      });
 
-      if (error) throw error;
-
-      const fullCard = transformDatabaseCard(data);
-      setCards(prev => [...prev, fullCard]);
+      refetchCards();
       setCurrentCardIndex(cards.length);
-      navigate(`/edit/${setId}/${data.id}`);
+      setSelectedElementId(null);
 
       toast({
-        title: "Success",
-        description: "New card created",
+        title: t('success'),
+        description: t('cardCreated'),
       });
     } catch (error) {
       console.error('Error creating card:', error);
       toast({
-        title: "Error", 
-        description: "Failed to create card",
-        variant: "destructive"
+        title: t('error'),
+        description: t('cardCreationFailed'),
+        variant: 'destructive',
       });
     }
-  }, [setId, user, cards.length, navigate, toast]);
+  }, [setId, cards.length, refetchCards, t, toast]);
 
-  // Create a new card from a template
   const createNewCardFromTemplate = useCallback(async (template: CardTemplate) => {
-    if (!setId || !user) return;
-
-    const newCard = {
-      set_id: setId,
-      question: '',
-      answer: '',
-      hint: '',
-      front_elements: template.front_elements.map(el => ({
-        ...el,
-        id: `${el.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      })) as any,
-      back_elements: template.back_elements.map(el => ({
-        ...el,
-        id: `${el.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      })) as any,
-      card_type: template.card_type,
-      interactive_type: null,
-      canvas_width: template.canvas_width,
-      canvas_height: template.canvas_height,
-      countdown_timer: 0,
-      countdown_timer_front: template.countdown_timer_front || 0,
-      countdown_timer_back: template.countdown_timer_back || 0,
-      countdown_behavior_front: 'flip',
-      countdown_behavior_back: 'next',
-      flips_before_next: 2,
-      metadata: { tags: [], aiTags: [] },
-    };
+    if (!setId) return;
 
     try {
-      const { data, error } = await supabase
-        .from('flashcards')
-        .insert([newCard])
-        .select()
-        .single();
+      const newFrontElements = template.front_elements.map(el => ({
+        ...el,
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      }));
+      
+      const newBackElements = template.back_elements.map(el => ({
+        ...el,
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      }));
 
-      if (error) throw error;
+      const newCard = await createFlashcard({
+        set_id: setId,
+        question: template.front_elements.find(el => el.type === 'text')?.content || 'New Card',
+        answer: template.back_elements.find(el => el.type === 'text')?.content || 'Answer',
+        front_elements: newFrontElements as any,
+        back_elements: newBackElements as any,
+        canvas_width: template.canvas_width || 600,
+        canvas_height: template.canvas_height || 450,
+        card_type: template.card_type || 'normal',
+      });
 
-      const fullCard = transformDatabaseCard(data);
-      setCards(prev => [...prev, fullCard]);
+      refetchCards();
       setCurrentCardIndex(cards.length);
-      navigate(`/edit/${setId}/${data.id}`);
+      setSelectedElementId(null);
 
       toast({
-        title: "Success",
-        description: "New card created from template",
+        title: t('success'),
+        description: t('cardCreatedFromTemplate'),
       });
     } catch (error) {
       console.error('Error creating card from template:', error);
       toast({
-        title: "Error",
-        description: "Failed to create card from template", 
-        variant: "destructive"
+        title: t('error'),
+        description: t('cardCreationFailed'),
+        variant: 'destructive',
       });
     }
-  }, [setId, user, cards.length, navigate, toast]);
+  }, [setId, cards.length, refetchCards, t, toast]);
 
-  // Create a new card with a layout from the current card
-  const createNewCardWithLayout = useCallback(async () => {
-    if (!setId || cards.length === 0) return;
+  const createNewCardWithLayout = useCallback(async (layout: string) => {
+    // Implementation for creating cards with specific layouts
+    await createNewCard();
+  }, [createNewCard]);
 
-    const currentCard = cards[currentCardIndex];
-    
-    // Copy all elements from both front and back sides with new IDs
-    const newFrontElements = currentCard.front_elements.map(el => ({
-      ...el,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      content: el.type === 'text' ? 'Double-click to edit' : el.content,
-    }));
-    
-    const newBackElements = currentCard.back_elements.map(el => ({
-      ...el,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      content: el.type === 'text' ? 'Double-click to edit' : el.content,
-    }));
-    
-    const newCard = {
-      question: 'New Card',
-      answer: 'Answer', 
-      hint: '',
-      front_elements: newFrontElements as any,
-      back_elements: newBackElements as any,
-      set_id: setId,
-      card_type: currentCard.card_type,
-      countdown_timer: currentCard.countdown_timer,
-      canvas_width: currentCard.canvas_width || 600,
-      canvas_height: currentCard.canvas_height || 450,
-    };
-
+  const deleteCard = useCallback(async (cardId: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase
-        .from('flashcards')
-        .insert(newCard)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const createdCard = transformDatabaseCard(data);
-      const newCardIndex = cards.length;
-
-      setCards(prevCards => [...prevCards, createdCard]);
-      setCurrentCardIndex(newCardIndex);
-      setSelectedElementId(null);
-      setCurrentSide('front');
+      await deleteFlashcard(cardId);
       
-      console.log('Set current card index to:', newCardIndex);
-    } catch (error) {
-      console.error('Error creating new card with layout:', error);
-    }
-  }, [setId, cards, currentCardIndex]);
-
-  // Delete a card
-  const deleteCard = useCallback(async (cardId: string) => {
-    if (cards.length <= 1) {
-      console.log('Cannot delete the last card');
-      return false;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('flashcards')
-        .delete()
-        .eq('id', cardId);
-
-      if (error) throw error;
-
-      const cardIndex = cards.findIndex(card => card.id === cardId);
-      setCards(prevCards => prevCards.filter(card => card.id !== cardId));
-
-      if (cardIndex <= currentCardIndex && currentCardIndex > 0) {
-        setCurrentCardIndex(currentCardIndex - 1);
-      } else if (cardIndex === currentCardIndex && currentCardIndex >= cards.length - 1) {
-        setCurrentCardIndex(Math.max(0, cards.length - 2));
+      const deletedIndex = cards.findIndex(card => card.id === cardId);
+      if (deletedIndex !== -1 && currentCardIndex >= deletedIndex && currentCardIndex > 0) {
+        setCurrentCardIndex(Math.max(0, currentCardIndex - 1));
       }
-
+      
+      refetchCards();
       setSelectedElementId(null);
-      console.log('Card deleted successfully');
+
+      toast({
+        title: t('success'),
+        description: t('cardDeleted'),
+      });
+
       return true;
     } catch (error) {
       console.error('Error deleting card:', error);
+      toast({
+        title: t('error'),
+        description: t('cardDeletionFailed'),
+        variant: 'destructive',
+      });
       return false;
     }
-  }, [cards, currentCardIndex]);
+  }, [cards, currentCardIndex, refetchCards, t, toast]);
 
-  // Reorder cards
   const reorderCards = useCallback(async (reorderedCards: Flashcard[]) => {
-    setCards(reorderedCards);
-    
     try {
+      // Update cards order in the database
       const updates = reorderedCards.map((card, index) => 
         supabase
           .from('flashcards')
@@ -460,114 +285,48 @@ export const useCardEditor = () => {
       );
       
       await Promise.all(updates);
-      console.log('Cards reordered successfully');
+      refetchCards();
+      
+      toast({
+        title: t('success'),
+        description: t('cardsReordered'),
+      });
     } catch (error) {
       console.error('Error reordering cards:', error);
-    }
-  }, []);
-
-  // Update canvas size
-  const updateCanvasSize = useCallback(async (width: number, height: number) => {
-    const currentCard = cards[currentCardIndex];
-    if (!currentCard) return;
-
-    try {
-      setCards(prevCards => 
-        prevCards.map(card => 
-          card.id === currentCard.id 
-            ? { ...card, canvas_width: width, canvas_height: height }
-            : card
-        )
-      );
-
-      await updateCard({ 
-        canvas_width: width, 
-        canvas_height: height 
+      toast({
+        title: t('error'),
+        description: t('reorderFailed'),
+        variant: 'destructive',
       });
-
-      console.log('Canvas size updated:', width, height);
-    } catch (error) {
-      console.error('Error updating canvas size:', error);
     }
-  }, [cards, currentCardIndex]);
-
-  // Helper function to update card metadata - fixed signature
-  const updateCard = useCallback((updates: Partial<Flashcard>) => {
-    if (!currentCard) return;
-
-    const updatedCard = { ...currentCard, ...updates };
-    setCards(prev => prev.map(card => 
-      card.id === currentCard.id ? updatedCard : card
-    ));
-
-    saveCard(updatedCard);
-  }, [currentCard, saveCard]);
-
-  // Navigate to the next or previous card
-  const navigateCard = useCallback((direction: 'prev' | 'next') => {
-    if (direction === 'prev' && currentCardIndex > 0) {
-      const prevCard = cards[currentCardIndex - 1];
-      setCurrentCardIndex(currentCardIndex - 1);
-      navigate(`/edit/${setId}/${prevCard.id}`);
-    } else if (direction === 'next' && currentCardIndex < cards.length - 1) {
-      const nextCard = cards[currentCardIndex + 1];
-      setCurrentCardIndex(currentCardIndex + 1);
-      navigate(`/edit/${setId}/${nextCard.id}`);
-    }
-  }, [currentCardIndex, cards, setId, navigate]);
-
-  useEffect(() => {
-    if (setId) {
-      initializeEditor(setId);
-    }
-  }, [setId, initializeEditor]);
-
-  useEffect(() => {
-    if (cardId && cards.length > 0) {
-      const cardIndex = cards.findIndex(c => c.id === cardId);
-      if (cardIndex !== -1 && cardIndex !== currentCardIndex) {
-        setCurrentCardIndex(cardIndex);
-      }
-    }
-  }, [cardId, cards, currentCardIndex]);
+  }, [refetchCards, t, toast]);
 
   return {
-    // State
+    // Data
     set,
     cards,
-    currentCard,
     currentCardIndex,
     currentSide,
-    selectedElement,
     selectedElementId,
     loading,
-    saving,
     
-    // Collaboration
-    collaborators,
-    activeUsers,
-    isCollaborative,
-    
-    // Methods
+    // Setters
     setCurrentSide,
     setSelectedElementId,
     setCurrentCardIndex,
-    initializeEditor,
-    saveCard,
-    updateCard,
+    
+    // Actions
     addElement,
     updateElement,
-    deleteElement,
+    updateCard,
     updateCanvasSize,
+    deleteElement,
+    navigateCard,
     createNewCard,
     createNewCardFromTemplate,
     createNewCardWithLayout,
     deleteCard,
     reorderCards,
-    navigateCard,
-    enableCollaboration,
-    removeCollaborator,
-    broadcastCursorPosition: () => {},
-    broadcastElementSelection: () => {},
+    initializeEditor,
   };
 };
