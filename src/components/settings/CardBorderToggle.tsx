@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Square } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -15,20 +15,21 @@ export const CardBorderToggle: React.FC<CardBorderToggleProps> = ({
 }) => {
   const { t } = useI18n();
 
-  // Memoize the click handler to prevent re-renders
-  const handleToggle = React.useCallback(() => {
-    onShowBorderChange(!showBorder);
-  }, [onShowBorderChange, showBorder]);
+  // Memoize the change handler to prevent re-renders
+  const handleCheckedChange = React.useCallback((checked: boolean) => {
+    onShowBorderChange(checked);
+  }, [onShowBorderChange]);
 
   return (
-    <Button
-      variant={showBorder ? "default" : "outline"}
-      size="sm"
-      onClick={handleToggle}
-      className="flex items-center gap-2"
-    >
+    <div className="flex items-center gap-2">
       <Square className="w-4 h-4" />
-      {showBorder ? t('editor.hideBorder') : t('editor.showBorder')}
-    </Button>
+      <span className="text-sm">
+        {showBorder ? t('editor.hideBorder') : t('editor.showBorder')}
+      </span>
+      <Switch
+        checked={showBorder}
+        onCheckedChange={handleCheckedChange}
+      />
+    </div>
   );
 };

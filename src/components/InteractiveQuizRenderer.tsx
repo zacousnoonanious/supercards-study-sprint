@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { CanvasElement } from '@/types/flashcard';
@@ -31,7 +31,7 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
   const [hasAnswered, setHasAnswered] = useState(userAnswer !== undefined && userAnswer !== null);
   const [showFeedback, setShowFeedback] = useState(false);
 
-  const handleAnswer = (answerIndex: number) => {
+  const handleAnswer = useCallback((answerIndex: number) => {
     // Don't allow changing answer once answered in quiz-only mode
     if (hasAnswered && element.autoAdvanceOnAnswer) {
       return;
@@ -57,16 +57,16 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
         }, 2000); // Wait 2 seconds to show feedback before advancing
       }
     }
-  };
+  }, [hasAnswered, element.autoAdvanceOnAnswer, element.correctAnswer, element.showImmediateFeedback, onAnswer, onAutoAdvance]);
 
-  const handleElementClick = (e: React.MouseEvent) => {
+  const handleElementClick = useCallback((e: React.MouseEvent) => {
     if (isStudyMode && onElementSelect) {
       e.stopPropagation();
       onElementSelect(element.id);
     }
-  };
+  }, [isStudyMode, onElementSelect, element.id]);
 
-  const getButtonVariant = (index: number) => {
+  const getButtonVariant = useCallback((index: number) => {
     const shouldShowResults = showResults || (element.showImmediateFeedback && showFeedback);
     
     if (!hasAnswered || !shouldShowResults) {
@@ -81,9 +81,9 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
       return 'destructive'; // Wrong selected answer
     }
     return 'outline';
-  };
+  }, [showResults, element.showImmediateFeedback, element.correctAnswer, showFeedback, hasAnswered, selectedAnswer]);
 
-  const getButtonIcon = (index: number) => {
+  const getButtonIcon = useCallback((index: number) => {
     const shouldShowResults = showResults || (element.showImmediateFeedback && showFeedback);
     
     if (!shouldShowResults || !hasAnswered) return null;
@@ -95,18 +95,18 @@ export const InteractiveQuizRenderer: React.FC<InteractiveQuizRendererProps> = (
       return <XCircle className="w-4 h-4 ml-2 text-red-600" />;
     }
     return null;
-  };
+  }, [showResults, element.showImmediateFeedback, element.correctAnswer, showFeedback, hasAnswered, selectedAnswer]);
 
-  const shouldShowFeedbackText = () => {
+  const shouldShowFeedbackText = useCallback(() => {
     return (showResults || (element.showImmediateFeedback && showFeedback)) && hasAnswered;
-  };
+  }, [showResults, element.showImmediateFeedback, showFeedback, hasAnswered]);
 
   // In quiz-only mode with auto-advance, disable buttons after answering
-  const areButtonsDisabled = () => {
+  const areButtonsDisabled = useCallback(() => {
     if (isStudyMode) return false;
     if (hasAnswered && element.autoAdvanceOnAnswer) return true;
     return hasAnswered && !showResults && !element.showImmediateFeedback;
-  };
+  }, [isStudyMode, hasAnswered, element.autoAdvanceOnAnswer, showResults, element.showImmediateFeedback]);
 
   if (element.type === 'multiple-choice') {
     return (

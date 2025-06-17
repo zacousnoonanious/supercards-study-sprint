@@ -8,18 +8,6 @@ const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>
 >(({ className, ...props }, ref) => {
-  // Add debugging to catch infinite re-renders
-  const renderCountRef = React.useRef(0);
-  renderCountRef.current += 1;
-  
-  // Log if we're re-rendering too frequently
-  React.useEffect(() => {
-    if (renderCountRef.current > 10) {
-      console.warn('Switch component re-rendering excessively:', renderCountRef.current, 'times');
-      console.trace('Switch re-render trace');
-    }
-  });
-
   return (
     <SwitchPrimitives.Root
       className={cn(

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Flashcard, CanvasElement } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -26,9 +26,20 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
 }) => {
   const { theme } = useTheme();
 
-  const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
+  const isDarkTheme = useMemo(() => 
+    ['dark', 'cobalt', 'darcula', 'console'].includes(theme), 
+    [theme]
+  );
 
-  const formatDate = (dateString: string) => {
+  const handlePrevCard = useCallback(() => {
+    onNavigateCard('prev');
+  }, [onNavigateCard]);
+
+  const handleNextCard = useCallback(() => {
+    onNavigateCard('next');
+  }, [onNavigateCard]);
+
+  const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -36,7 +47,12 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
+  }, []);
+
+  const formattedDate = useMemo(() => 
+    formatDate(currentCard.created_at), 
+    [currentCard.created_at, formatDate]
+  );
 
   return (
     <div 
@@ -53,7 +69,7 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigateCard('prev')}
+            onClick={handlePrevCard}
             disabled={currentCardIndex === 0}
             className="h-8 w-8 p-0"
           >
@@ -69,7 +85,7 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigateCard('next')}
+            onClick={handleNextCard}
             disabled={currentCardIndex === totalCards - 1}
             className="h-8 w-8 p-0"
           >
@@ -93,7 +109,7 @@ export const SimpleEditorFooter: React.FC<SimpleEditorFooterProps> = ({
         <div className={`text-xs ${
           isDarkTheme ? 'text-gray-400' : 'text-muted-foreground'
         }`}>
-          Created: {formatDate(currentCard.created_at)}
+          Created: {formattedDate}
         </div>
       </div>
     </div>
