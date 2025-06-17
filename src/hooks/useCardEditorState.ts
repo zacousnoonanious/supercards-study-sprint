@@ -38,21 +38,47 @@ export const useCardEditorState = (currentCard?: Flashcard) => {
     }
   }, [currentCard?.id, currentCard?.canvas_width, currentCard?.canvas_height]);
 
-  // Enhanced handlers for visual editor features with logging
+  // Enhanced handlers for visual editor features with comprehensive logging
   const handleShowGridChange = (show: boolean) => {
-    console.log('Visual Editor: Grid visibility changed to:', show);
+    console.log('🔧 Visual Editor: Grid visibility REQUESTED:', show);
+    console.log('🔧 Current grid state before change:', showGrid);
     setShowGrid(show);
+    console.log('🔧 Grid state change completed, new value should be:', show);
+    
+    // Verify state change took effect
+    setTimeout(() => {
+      console.log('🔧 Grid state verification (after timeout):', show);
+    }, 100);
   };
 
   const handleSnapToGridChange = (snap: boolean) => {
-    console.log('Visual Editor: Snap to grid changed to:', snap);
+    console.log('🔧 Visual Editor: Snap to grid REQUESTED:', snap);
+    console.log('🔧 Current snap state before change:', snapToGrid);
     setSnapToGrid(snap);
+    console.log('🔧 Snap state change completed, new value should be:', snap);
+    
+    // Verify state change took effect
+    setTimeout(() => {
+      console.log('🔧 Snap state verification (after timeout):', snap);
+    }, 100);
   };
 
   const handleShowBorderChange = (show: boolean) => {
-    console.log('Visual Editor: Border visibility changed to:', show);
+    console.log('🔧 Visual Editor: Border visibility REQUESTED:', show);
+    console.log('🔧 Current border state before change:', showBorder);
     setShowBorder(show);
+    console.log('🔧 Border state change completed, new value should be:', show);
+    
+    // Verify state change took effect
+    setTimeout(() => {
+      console.log('🔧 Border state verification (after timeout):', show);
+    }, 100);
   };
+
+  // Add effect to monitor state changes
+  useEffect(() => {
+    console.log('🔧 Visual Editor State Monitor - Grid:', showGrid, 'Snap:', snapToGrid, 'Border:', showBorder);
+  }, [showGrid, snapToGrid, showBorder]);
 
   return {
     showShortcuts,
@@ -80,7 +106,7 @@ export const useCardEditorState = (currentCard?: Flashcard) => {
     toolbarShowText,
     setToolbarShowText,
     
-    // Visual editor features - LOCAL ONLY
+    // Visual editor features - LOCAL ONLY with enhanced handlers
     showGrid,
     setShowGrid: handleShowGridChange,
     snapToGrid,

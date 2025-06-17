@@ -46,15 +46,29 @@ export const GridControls: React.FC<GridControlsProps> = ({
   className = "",
   disabled = false,
 }) => {
+  // Add comprehensive logging
+  React.useEffect(() => {
+    console.log('🎛️ GridControls props:', {
+      showGrid,
+      snapToGrid,
+      hasGridHandler: !!onShowGridChange,
+      hasSnapHandler: !!onSnapToGridChange,
+      disabled
+    });
+  }, [showGrid, snapToGrid, onShowGridChange, onSnapToGridChange, disabled]);
+
   /**
    * Handle grid visibility toggle
    * Validates the callback exists before calling it
    */
   const handleGridToggle = React.useCallback(() => {
+    console.log('🎛️ Grid toggle clicked, current state:', showGrid);
     if (onShowGridChange && typeof onShowGridChange === 'function') {
-      onShowGridChange(!showGrid);
+      const newState = !showGrid;
+      console.log('🎛️ Calling onShowGridChange with:', newState);
+      onShowGridChange(newState);
     } else {
-      console.warn('GridControls: onShowGridChange callback not provided or invalid');
+      console.error('❌ GridControls: onShowGridChange callback not provided or invalid');
     }
   }, [showGrid, onShowGridChange]);
 
@@ -63,15 +77,17 @@ export const GridControls: React.FC<GridControlsProps> = ({
    * Validates input and callback before proceeding
    */
   const handleSnapToggle = React.useCallback((checked: boolean) => {
+    console.log('🎛️ Snap toggle clicked, new state:', checked);
     if (typeof checked !== 'boolean') {
-      console.warn('GridControls: Invalid boolean value for snap toggle:', checked);
+      console.error('❌ GridControls: Invalid boolean value for snap toggle:', checked);
       return;
     }
     
     if (onSnapToGridChange && typeof onSnapToGridChange === 'function') {
+      console.log('🎛️ Calling onSnapToGridChange with:', checked);
       onSnapToGridChange(checked);
     } else {
-      console.warn('GridControls: onSnapToGridChange callback not provided or invalid');
+      console.error('❌ GridControls: onSnapToGridChange callback not provided or invalid');
     }
   }, [onSnapToGridChange]);
 

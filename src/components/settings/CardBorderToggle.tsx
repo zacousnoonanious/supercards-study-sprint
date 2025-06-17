@@ -35,13 +35,24 @@ export const CardBorderToggle: React.FC<CardBorderToggleProps> = ({
 }) => {
   const { t } = useI18n();
 
+  // Add comprehensive logging
+  React.useEffect(() => {
+    console.log('🎛️ CardBorderToggle props:', {
+      showBorder,
+      hasHandler: !!onShowBorderChange,
+      disabled
+    });
+  }, [showBorder, onShowBorderChange, disabled]);
+
   // Memoize the change handler to prevent unnecessary re-renders
   const handleCheckedChange = React.useCallback((checked: boolean) => {
+    console.log('🎛️ Border toggle clicked, new state:', checked);
     // Validate input before calling the handler
     if (typeof checked === 'boolean') {
+      console.log('🎛️ Calling onShowBorderChange with:', checked);
       onShowBorderChange(checked);
     } else {
-      console.warn('CardBorderToggle: Invalid boolean value received:', checked);
+      console.error('❌ CardBorderToggle: Invalid boolean value received:', checked);
     }
   }, [onShowBorderChange]);
 

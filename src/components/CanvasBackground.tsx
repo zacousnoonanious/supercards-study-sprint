@@ -32,10 +32,20 @@ export const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
   gridSize = 20,
   isDarkTheme = false,
 }) => {
+  // Add comprehensive logging for debugging
+  React.useEffect(() => {
+    console.log('🎨 CanvasBackground render:', {
+      showGrid,
+      gridSize,
+      isDarkTheme,
+      timestamp: new Date().toISOString()
+    });
+  }, [showGrid, gridSize, isDarkTheme]);
+
   // Validate gridSize to prevent rendering issues
   const validatedGridSize = React.useMemo(() => {
     if (typeof gridSize !== 'number' || gridSize <= 0) {
-      console.warn('CanvasBackground: Invalid gridSize, using default 20px');
+      console.warn('⚠️ CanvasBackground: Invalid gridSize, using default 20px');
       return 20;
     }
     return gridSize;
@@ -43,11 +53,14 @@ export const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
 
   // Calculate grid colors based on theme
   const gridColor = React.useMemo(() => {
-    return isDarkTheme ? '#4B5563' : '#D1D5DB'; // gray-600 for dark, gray-300 for light
+    const color = isDarkTheme ? '#4B5563' : '#D1D5DB'; // gray-600 for dark, gray-300 for light
+    console.log('🎨 Grid color calculated:', color, 'for theme:', isDarkTheme ? 'dark' : 'light');
+    return color;
   }, [isDarkTheme]);
 
   // If grid is not shown, render transparent background
   if (!showGrid) {
+    console.log('🎨 Grid disabled - rendering transparent background');
     return (
       <div
         className="absolute inset-0 pointer-events-none"
@@ -56,6 +69,8 @@ export const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
       />
     );
   }
+
+  console.log('🎨 Grid enabled - rendering grid pattern with size:', validatedGridSize);
 
   /**
    * Grid rendering with CSS background patterns

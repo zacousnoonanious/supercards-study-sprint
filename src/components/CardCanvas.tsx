@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasBackground } from './CanvasBackground';
 import { EnhancedCanvasElementWrapper } from './canvas/EnhancedCanvasElementWrapper';
@@ -61,13 +61,25 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
+  // Add comprehensive logging for visual editor props
+  useEffect(() => {
+    console.log('🎨 CardCanvas Props Update:', {
+      showGrid,
+      snapToGrid,
+      showBorder,
+      gridSize,
+      zoom,
+      cardSide
+    });
+  }, [showGrid, snapToGrid, showBorder, gridSize, zoom, cardSide]);
+
   // Get canvas dimensions from style with validation
   const canvasWidth = (style?.width as number) || 600;
   const canvasHeight = (style?.height as number) || 450;
 
   // Validate canvas dimensions
   if (canvasWidth <= 0 || canvasHeight <= 0) {
-    console.error('CardCanvas: Invalid canvas dimensions:', { canvasWidth, canvasHeight });
+    console.error('❌ CardCanvas: Invalid canvas dimensions:', { canvasWidth, canvasHeight });
   }
 
   const {
@@ -109,9 +121,11 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       if (updates.x !== undefined && updates.y !== undefined) {
         const element = elements.find(el => el.id === elementId);
         if (element && snapToGrid) {
+          console.log('🔧 Applying snap-to-grid for element:', elementId, 'Original pos:', updates.x, updates.y);
           const snapped = calculateSnapPosition(element, updates.x, updates.y);
           updates.x = snapped.x;
           updates.y = snapped.y;
+          console.log('🔧 Snapped position:', snapped.x, snapped.y);
         }
       }
       
@@ -229,14 +243,31 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
    * CRITICAL: This styling is essential for visual editing experience
    */
   const getBorderStyles = useCallback(() => {
-    if (!showBorder) return {};
+    console.log('🎨 Generating border styles, showBorder:', showBorder);
+    if (!showBorder) {
+      console.log('🎨 No border - returning empty styles');
+      return {};
+    }
     
-    return {
+    const borderStyles = {
       border: '4px solid #3b82f6', // Blue border for visibility
       borderStyle: 'solid',
       boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.3)', // Subtle glow effect
     };
+    
+    console.log('🎨 Border styles applied:', borderStyles);
+    return borderStyles;
   }, [showBorder]);
+
+  // Log when canvas renders
+  useEffect(() => {
+    console.log('🎨 CardCanvas rendered with visual features:', {
+      showGrid,
+      showBorder,
+      snapToGrid,
+      elementsCount: elements.length
+    });
+  });
 
   return (
     <div
