@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -172,9 +173,6 @@ export const CardEditor: React.FC = () => {
     }
   }, [currentCardIndex, cards?.length]);
 
-  // PROTECTED: Initialize card editor state with protection
-  const cardEditorState = useCardEditorState(currentCard);
-  
   // CRITICAL: Protect visual editor state from being reset by external effects
   const protectedVisualStateRef = React.useRef({
     showGrid: false,
