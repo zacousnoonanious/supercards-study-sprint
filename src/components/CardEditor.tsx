@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -33,7 +34,7 @@ export const CardEditor: React.FC = () => {
     queryKey: ['set', setId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('sets')
+        .from('flashcard_sets')
         .select('*')
         .eq('id', setId)
         .single();
@@ -58,13 +59,25 @@ export const CardEditor: React.FC = () => {
         .from('flashcards')
         .select('*')
         .eq('set_id', setId)
-        .order('order', { ascending: true });
+        .order('created_at', { ascending: true });
 
       if (error) {
         console.error('Error fetching cards:', error);
         throw new Error(error.message);
       }
-      return data;
+      
+      // Transform database rows to match Flashcard interface
+      return data.map(card => ({
+        ...card,
+        front_elements: card.front_elements || [],
+        back_elements: card.back_elements || [],
+        allowedElementTypes: ['text', 'image', 'audio', 'drawing', 'youtube', 'video', 'iframe', 'embedded-deck', 'multiple-choice', 'true-false', 'fill-in-blank', 'tts'],
+        restrictedToolbar: false,
+        showBackSide: true,
+        autoAdvanceOnAnswer: false,
+        constraints: [],
+        order: 0
+      })) as Flashcard[];
     },
     enabled: !!setId,
   });
@@ -83,33 +96,31 @@ export const CardEditor: React.FC = () => {
   const cardEditorState = useCardEditorState(currentCard);
   
   // CRITICAL: Protect visual editor state from being reset by external effects
-  const protectedVisualState = useMemo(() => {
-    console.log('🔧 PROTECTION: Creating protected visual state wrapper');
-    return {
+  const protectedVisualStateRef = React.useRef({
+    showGrid: false,
+    snapToGrid: false,
+    showBorder: false,
+  });
+
+  // Update protected ref when state changes
+  React.useEffect(() => {
+    protectedVisualStateRef.current = {
       showGrid: cardEditorState.showGrid,
       snapToGrid: cardEditorState.snapToGrid,
       showBorder: cardEditorState.showBorder,
-      onShowGridChange: cardEditorState.setShowGrid,
-      onSnapToGridChange: cardEditorState.setSnapToGrid,
-      onShowBorderChange: cardEditorState.setShowBorder,
     };
-  }, [
-    cardEditorState.showGrid,
-    cardEditorState.snapToGrid,
-    cardEditorState.showBorder,
-    cardEditorState.setShowGrid,
-    cardEditorState.setSnapToGrid,
-    cardEditorState.setShowBorder,
-  ]);
+  }, [cardEditorState.showGrid, cardEditorState.snapToGrid, cardEditorState.showBorder]);
 
   // Log card editor state for debugging
   useEffect(() => {
     if (currentCard) {
-      console.log('CardEditor: Current card:', currentCard.id, 'Index:', currentCardIndex, 'Total cards:', cards.length);
-      console.log('CardEditor: Rendering with set:', set?.title || 'Unknown', 'and card:', currentCard.title || 'Untitled');
-      console.log('🔧 PROTECTION: Visual editor state in CardEditor:', protectedVisualState);
+      console.log('🔧 PROTECTION: CardEditor render with protected state:', {
+        showGrid: protectedVisualStateRef.current.showGrid,
+        snapToGrid: protectedVisualStateRef.current.snapToGrid,
+        showBorder: protectedVisualStateRef.current.showBorder,
+      });
     }
-  }, [currentCard, currentCardIndex, cards.length, set?.title, protectedVisualState]);
+  }, [currentCard, currentCardIndex, cards?.length, set?.title]);
 
   const {
     isCollaborative,
@@ -183,12 +194,12 @@ export const CardEditor: React.FC = () => {
       zoom={cardEditorState.zoom}
       
       // PROTECTED: Use protected visual editor state
-      showGrid={protectedVisualState.showGrid}
-      snapToGrid={protectedVisualState.snapToGrid}
-      showBorder={protectedVisualState.showBorder}
-      onShowGridChange={protectedVisualState.onShowGridChange}
-      onSnapToGridChange={protectedVisualState.onSnapToGridChange}
-      onShowBorderChange={protectedVisualState.onShowBorderChange}
+      showGrid={cardEditorState.showGrid}
+      snapToGrid={cardEditorState.snapToGrid}
+      showBorder={cardEditorState.showBorder}
+      onShowGridChange={cardEditorState.setShowGrid}
+      onSnapToGridChange={cardEditorState.setSnapToGrid}
+      onShowBorderChange={cardEditorState.setShowBorder}
       
       toolbarPosition={cardEditorState.toolbarPosition}
       toolbarIsDocked={cardEditorState.toolbarIsDocked}
