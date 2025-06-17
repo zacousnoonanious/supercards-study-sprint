@@ -383,6 +383,7 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
                   showGrid={showGrid}
                   snapToGrid={snapToGrid}
                   showBorder={showBorder}
+                  autoAlign={autoAlign}
                   zoom={zoom}
                 />
               </div>

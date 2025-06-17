@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasBackground } from './CanvasBackground';
@@ -22,6 +23,7 @@ interface CardCanvasProps {
   gridSize?: number;
   snapToGrid?: boolean;
   showBorder?: boolean;
+  autoAlign?: boolean;
   zoom?: number;
   onDuplicateElement?: (element: CanvasElement) => void;
 }
@@ -31,7 +33,7 @@ interface CardCanvasProps {
  * 
  * Main canvas component with PROTECTED visual editor features.
  * CRITICAL: This component maintains all visual editing features
- * including grid, snap, and border functionality with protection against resets.
+ * including grid, snap, border, and auto-align functionality with protection against resets.
  */
 export const CardCanvas: React.FC<CardCanvasProps> = ({
   elements,
@@ -45,11 +47,13 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   gridSize = 20,
   snapToGrid = false,
   showBorder = false,
+  autoAlign = false,
   zoom = 1,
   onDuplicateElement,
 }) => {
   const { theme } = useTheme();
   const [editingElement, setEditingElement] = useState<string | null>(null);
+  const [hoveredElement, setHoveredElement] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
@@ -60,12 +64,13 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       showGrid,
       snapToGrid,
       showBorder,
+      autoAlign,
       gridSize,
       zoom,
       cardSide,
       timestamp: new Date().toISOString()
     });
-  }, [showGrid, snapToGrid, showBorder, gridSize, zoom, cardSide]);
+  }, [showGrid, snapToGrid, showBorder, autoAlign, gridSize, zoom, cardSide]);
 
   // Get canvas dimensions from style with validation
   const canvasWidth = (style?.width as number) || 600;
@@ -84,7 +89,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     elements,
     canvasWidth,
     canvasHeight,
-    snapThreshold: 5,
+    snapThreshold: autoAlign ? 10 : 5, // Larger threshold when auto-align is enabled
   });
 
   const {
@@ -112,15 +117,22 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     elements,
     onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => {
       // Apply smart snapping to final position during database save
-      if (updates.x !== undefined && updates.y !== undefined) {
+      if (updates.x !== undefined && updates.y !== undefined && autoAlign) {
         const element = elements.find(el => el.id === elementId);
-        if (element && snapToGrid) {
-          console.log('🔧 Applying snap-to-grid for element:', elementId, 'Original pos:', updates.x, updates.y);
+        if (element) {
+          console.log('🔧 Applying auto-align snap for element:', elementId, 'Original pos:', updates.x, updates.y);
           const snapped = calculateSnapPosition(element, updates.x, updates.y);
           updates.x = snapped.x;
           updates.y = snapped.y;
-          console.log('🔧 Snapped position:', snapped.x, snapped.y);
+          console.log('🔧 Auto-aligned position:', snapped.x, snapped.y);
         }
+      } else if (updates.x !== undefined && updates.y !== undefined && snapToGrid) {
+        // Apply grid snapping if auto-align is off but grid snap is on
+        const gridX = Math.round(updates.x / gridSize) * gridSize;
+        const gridY = Math.round(updates.y / gridSize) * gridSize;
+        updates.x = gridX;
+        updates.y = gridY;
+        console.log('🔧 Grid snapped position:', gridX, gridY);
       }
       
       // Update database with final position
@@ -129,7 +141,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       // Clear client position immediately after database update to prevent flickering
       setTimeout(() => {
         clearClientPosition(elementId);
-      }, 50); // Small delay to ensure database update is processed
+      }, 50);
       
       // Apply layout constraints after database update
       setTimeout(() => {
@@ -138,10 +150,29 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     },
     canvasWidth,
     canvasHeight,
-    snapToGrid,
+    snapToGrid: snapToGrid && !autoAlign, // Disable grid snap when auto-align is enabled
     gridSize,
     zoom,
   });
+
+  // Handle element hover for auto-align guides
+  const handleElementMouseEnter = useCallback((elementId: string) => {
+    if (autoAlign && !isDragging && !isResizing) {
+      setHoveredElement(elementId);
+      // Show alignment guides for hovered element
+      const element = elements.find(el => el.id === elementId);
+      if (element) {
+        calculateSnapPosition(element, element.x, element.y);
+      }
+    }
+  }, [autoAlign, isDragging, isResizing, elements, calculateSnapPosition]);
+
+  const handleElementMouseLeave = useCallback(() => {
+    if (autoAlign && !isDragging && !isResizing) {
+      setHoveredElement(null);
+      clearSnapGuides();
+    }
+  }, [autoAlign, isDragging, isResizing, clearSnapGuides]);
 
   const handleElementMouseDown = useCallback((e: React.MouseEvent, elementId: string, action: 'drag' | 'resize' = 'drag', handle?: string) => {
     // Don't start dragging if we're editing this element
@@ -171,13 +202,25 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
       handleMouseMove(e, rect);
+      
+      // Show snap guides during drag when auto-align is enabled
+      if (autoAlign && dragElementId) {
+        const draggedElement = elements.find(el => el.id === dragElementId);
+        if (draggedElement) {
+          const canvasX = (e.clientX - rect.left) / zoom;
+          const canvasY = (e.clientY - rect.top) / zoom;
+          calculateSnapPosition(draggedElement, canvasX, canvasY);
+        }
+      }
     }
-  }, [handleMouseMove, isDragging, isResizing]);
+  }, [handleMouseMove, isDragging, isResizing, autoAlign, dragElementId, elements, zoom, calculateSnapPosition]);
 
   const handleMouseUpOrLeave = useCallback(() => {
     endDragOrResize();
-    clearSnapGuides();
-  }, [endDragOrResize, clearSnapGuides]);
+    if (!autoAlign || !hoveredElement) {
+      clearSnapGuides();
+    }
+  }, [endDragOrResize, clearSnapGuides, autoAlign, hoveredElement]);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     // Check if the click target is the canvas itself or the background
@@ -188,8 +231,12 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     if (isCanvasBackground) {
       onSelectElement(null);
       setEditingElement(null);
+      if (autoAlign) {
+        clearSnapGuides();
+        setHoveredElement(null);
+      }
     }
-  }, [onSelectElement]);
+  }, [onSelectElement, autoAlign, clearSnapGuides]);
 
   const handleElementClick = useCallback((e: React.MouseEvent, elementId: string) => {
     e.stopPropagation();
@@ -259,6 +306,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       showGrid,
       showBorder,
       snapToGrid,
+      autoAlign,
       elementsCount: elements.length,
       timestamp: new Date().toISOString()
     });
@@ -288,7 +336,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         isDarkTheme={isDarkTheme}
       />
       
-      {/* Smart Snap Guides - Essential for precise positioning */}
+      {/* Smart Snap Guides - Essential for precise positioning and auto-align */}
       <SmartSnapGuides
         guides={activeSnapGuides}
         canvasWidth={canvasWidth}
@@ -303,24 +351,29 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       
       {/* Render all canvas elements */}
       {enhancedElements.map((element) => (
-        <EnhancedCanvasElementWrapper
+        <div
           key={element.id}
-          element={element}
-          isSelected={selectedElement === element.id}
-          isDragging={isDragging && dragElementId === element.id}
-          editingElement={editingElement}
-          zoom={zoom}
-          availableElements={enhancedElements}
-          canvasWidth={canvasWidth}
-          canvasHeight={canvasHeight}
-          onMouseDown={handleElementMouseDown}
-          onClick={handleElementClick}
-          onUpdateElement={onUpdateElement}
-          onEditingChange={handleEditingChange}
-          onDuplicate={handleDuplicateElement}
-          onDelete={onDeleteElement}
-          onApplyConstraints={handleApplyConstraints}
-        />
+          onMouseEnter={() => handleElementMouseEnter(element.id)}
+          onMouseLeave={handleElementMouseLeave}
+        >
+          <EnhancedCanvasElementWrapper
+            element={element}
+            isSelected={selectedElement === element.id}
+            isDragging={isDragging && dragElementId === element.id}
+            editingElement={editingElement}
+            zoom={zoom}
+            availableElements={enhancedElements}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
+            onMouseDown={handleElementMouseDown}
+            onClick={handleElementClick}
+            onUpdateElement={onUpdateElement}
+            onEditingChange={handleEditingChange}
+            onDuplicate={handleDuplicateElement}
+            onDelete={onDeleteElement}
+            onApplyConstraints={handleApplyConstraints}
+          />
+        </div>
       ))}
       
       {/* Empty State */}
