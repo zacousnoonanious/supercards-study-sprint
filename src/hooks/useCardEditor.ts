@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useI18n } from '@/contexts/I18nContext';
 import { Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
 import { getFlashcardsBySetId, createFlashcard, updateFlashcard, deleteFlashcard } from '@/lib/api/flashcards';
-import { transformDatabaseCardToFlashcard } from '@/utils/cardTransforms';
 
 interface FlashcardSet {
   id: string;
@@ -68,16 +67,17 @@ export const useCardEditor = () => {
     setSelectedElementId(null);
   }, []);
 
-  const addElement = useCallback((type: string, side: 'front' | 'back') => {
+  const addElement = useCallback((type: string, x?: number, y?: number) => {
     if (!currentCard) return;
 
     const newElement: CanvasElement = {
       id: Date.now().toString(),
       type: type as any,
-      x: 50,
-      y: 50,
+      x: x || 50,
+      y: y || 50,
       width: type === 'text' ? 200 : 150,
       height: type === 'text' ? 50 : 100,
+      zIndex: 0,
       content: type === 'text' ? 'New text' : '',
       fontSize: 16,
       fontFamily: 'Arial',
@@ -85,16 +85,16 @@ export const useCardEditor = () => {
       backgroundColor: type === 'text' ? 'transparent' : '#ffffff',
     };
 
-    const elements = side === 'front' ? currentCard.front_elements || [] : currentCard.back_elements || [];
+    const elements = currentSide === 'front' ? currentCard.front_elements || [] : currentCard.back_elements || [];
     const updatedElements = [...elements, newElement];
 
-    const updates = side === 'front' 
+    const updates = currentSide === 'front' 
       ? { front_elements: updatedElements }
       : { back_elements: updatedElements };
 
     updateCard(updates);
     setSelectedElementId(newElement.id);
-  }, [currentCard]);
+  }, [currentCard, currentSide]);
 
   const updateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     if (!currentCard) return;
@@ -133,8 +133,8 @@ export const useCardEditor = () => {
     }
   }, [currentCard, setId, queryClient, t, toast]);
 
-  const updateCanvasSize = useCallback((width: number, height: number) => {
-    updateCard({ canvas_width: width, canvas_height: height });
+  const updateCanvasSize = useCallback(async (width: number, height: number) => {
+    await updateCard({ canvas_width: width, canvas_height: height });
   }, [updateCard]);
 
   const deleteElement = useCallback((elementId: string) => {
@@ -240,7 +240,7 @@ export const useCardEditor = () => {
     }
   }, [setId, cards.length, refetchCards, t, toast]);
 
-  const createNewCardWithLayout = useCallback(async (layout: string) => {
+  const createNewCardWithLayout = useCallback(async () => {
     // Implementation for creating cards with specific layouts
     await createNewCard();
   }, [createNewCard]);

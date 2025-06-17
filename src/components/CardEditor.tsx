@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -168,6 +169,16 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     cardHeight,
   });
 
+  // Wrapper function for addElement that matches the expected signature
+  const handleAddElement = useCallback((type: string) => {
+    addElement(type);
+  }, [addElement]);
+
+  // Wrapper function for createNewCardWithLayout that matches the expected signature
+  const handleCreateNewCardWithLayout = useCallback(() => {
+    createNewCardWithLayout();
+  }, [createNewCardWithLayout]);
+
   // Enhanced keyboard shortcuts with cursor position support
   useEnhancedKeyboardShortcuts({
     onAddElement: addElement,
@@ -292,11 +303,11 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         onDeleteElement={handleDeleteElement}
         onCanvasSizeChange={handleCanvasSizeChange}
         onUpdateCard={handleCardUpdate}
-        onAddElement={addElement}
+        onAddElement={handleAddElement}
         onAutoArrange={handleAutoArrange}
         onNavigateCard={navigateCard}
         onCreateNewCard={createNewCard}
-        onCreateNewCardWithLayout={createNewCardWithLayout}
+        onCreateNewCardWithLayout={handleCreateNewCardWithLayout}
         onCreateNewCardFromTemplate={createNewCardFromTemplate}
         onDeleteCard={handleDeleteCard}
         onShowCardOverview={() => setShowCardOverview(!showCardOverview)}
@@ -352,11 +363,11 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         onDeleteElement={handleDeleteElement}
         onCanvasSizeChange={handleCanvasSizeChange}
         onUpdateCard={handleCardUpdate}
-        onAddElement={addElement}
+        onAddElement={handleAddElement}
         onAutoArrange={handleAutoArrange}
         onNavigateCard={navigateCard}
         onCreateNewCard={createNewCard}
-        onCreateNewCardWithLayout={createNewCardWithLayout}
+        onCreateNewCardWithLayout={handleCreateNewCardWithLayout}
         onCreateNewCardFromTemplate={createNewCardFromTemplate}
         onDeleteCard={handleDeleteCard}
         onShowCardOverview={() => setShowCardOverview(!showCardOverview)}
@@ -383,12 +394,12 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
         onElementSelect={handleElementSelect}
         onUpdateElement={handleUpdateElement}
         onDeleteElement={handleDeleteElement}
-        onAddElement={addElement}
+        onAddElement={handleAddElement}
         onAutoArrange={handleAutoArrange}
         onNavigateCard={navigateCard}
         onSideChange={setCurrentSide}
         onCreateNewCard={createNewCard}
-        onCreateNewCardWithLayout={createNewCardWithLayout}
+        onCreateNewCardWithLayout={handleCreateNewCardWithLayout}
         onCreateNewCardFromTemplate={createNewCardFromTemplate}
         onDeleteCard={handleDeleteCard}
         currentCardIndex={currentCardIndex}
