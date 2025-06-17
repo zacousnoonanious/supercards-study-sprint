@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasBackground } from './CanvasBackground';
@@ -123,21 +124,23 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
-      // Get mouse position relative to canvas
-      const canvasX = e.clientX - rect.left;
-      const canvasY = e.clientY - rect.top;
+      // Get mouse position relative to canvas, accounting for zoom
+      const canvasX = (e.clientX - rect.left) * zoom;
+      const canvasY = (e.clientY - rect.top) * zoom;
       
       updateDragStart(canvasX, canvasY);
       startDragOrResize(e, elementId, action, handle);
     }
-  }, [onSelectElement, editingElement, updateDragStart, startDragOrResize]);
+  }, [onSelectElement, editingElement, updateDragStart, startDragOrResize, zoom]);
 
   const handleCanvasMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging && !isResizing) return;
+    
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
       handleMouseMove(e, rect);
     }
-  }, [handleMouseMove]);
+  }, [handleMouseMove, isDragging, isResizing]);
 
   const handleMouseUpOrLeave = useCallback(() => {
     endDragOrResize();
@@ -196,6 +199,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         ...style,
         width: canvasWidth,
         height: canvasHeight,
+        cursor: isDragging ? 'grabbing' : 'default',
       }}
       onClick={handleCanvasClick}
       onMouseMove={handleCanvasMouseMove}
