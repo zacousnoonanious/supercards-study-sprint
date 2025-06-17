@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useCardEditor } from '@/hooks/useCardEditor';
@@ -19,9 +20,7 @@ interface CardEditorProps {
 export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const { t } = useI18n();
   const [showFullscreen, setShowFullscreen] = useState(false);
-  const [hasAppliedTemplateSettings, setHasAppliedTemplateSettings] = useState(false);
-  const { getCardTemplateSettings } = useTemplateConfiguration();
-
+  
   const {
     set,
     cards,
@@ -46,14 +45,18 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     initializeEditor,
   } = useCardEditor();
 
-  // Initialize the editor when setId is provided
-  useEffect(() => {
+  // Initialize the editor when setId is provided - memoized to prevent infinite loops
+  const memoizedInitializeEditor = useCallback(() => {
     if (setId) {
       initializeEditor(setId);
     }
   }, [setId, initializeEditor]);
 
-  const currentCard = cards[currentCardIndex];
+  useEffect(() => {
+    memoizedInitializeEditor();
+  }, [memoizedInitializeEditor]);
+
+  const currentCard = useMemo(() => cards[currentCardIndex], [cards, currentCardIndex]);
   console.log('CardEditor: Current card:', currentCard?.id, 'Index:', currentCardIndex, 'Total cards:', cards.length);
 
   // Initialize collaborative editing
@@ -107,12 +110,17 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     canvasViewportRef,
   } = useCardEditorState(currentCard);
 
-  const selectedElement = currentCard ? 
-    [...(currentCard.front_elements || []), ...(currentCard.back_elements || [])]
-      .find(el => el.id === selectedElementId) || null : null;
+  const selectedElement = useMemo(() => {
+    if (!currentCard) return null;
+    return [...(currentCard.front_elements || []), ...(currentCard.back_elements || [])]
+      .find(el => el.id === selectedElementId) || null;
+  }, [currentCard, selectedElementId]);
 
-  // Get template settings for current card
-  const templateSettings = currentCard ? getCardTemplateSettings(currentCard) : null;
+  // Get template settings for current card - memoized to prevent recalculation
+  const { getCardTemplateSettings } = useTemplateConfiguration();
+  const templateSettings = useMemo(() => {
+    return currentCard ? getCardTemplateSettings(currentCard) : null;
+  }, [currentCard, getCardTemplateSettings]);
 
   const {
     handleUpdateElement,
@@ -203,32 +211,43 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     currentSide,
   });
 
-  // Update user position when card changes
-  useEffect(() => {
+  // Update user position when card changes - memoized to prevent excessive calls
+  const handleUserPositionUpdate = useCallback(() => {
     if (currentCard && updateUserPosition) {
       updateUserPosition(currentCard.id);
     }
   }, [currentCard?.id, updateUserPosition]);
 
-  const handleDeleteCard = async () => {
+  useEffect(() => {
+    handleUserPositionUpdate();
+  }, [handleUserPositionUpdate]);
+
+  const handleDeleteCard = useCallback(async () => {
     if (currentCard) {
       return await deleteCard(currentCard.id);
     }
     return false;
-  };
+  }, [currentCard, deleteCard]);
 
-  const handleOpenFullscreen = () => {
+  const handleOpenFullscreen = useCallback(() => {
     setShowFullscreen(true);
-  };
+  }, []);
 
-  useEffect(() => {
+  // Set deck name when set is available - memoized to prevent infinite updates
+  const handleSetDeckName = useCallback(() => {
     if (set) {
       setDeckName(set.title);
     }
-  }, [set]);
+  }, [set, setDeckName]);
 
-  // Only apply template settings once when the card changes, not on every render
   useEffect(() => {
+    handleSetDeckName();
+  }, [handleSetDeckName]);
+
+  // Apply template settings with proper dependency management
+  const [hasAppliedTemplateSettings, setHasAppliedTemplateSettings] = useState(false);
+  
+  const applyTemplateSettings = useCallback(() => {
     if (currentCard && templateSettings && !hasAppliedTemplateSettings) {
       if (templateSettings.showGrid !== undefined) {
         setShowGrid(templateSettings.showGrid);
@@ -242,6 +261,10 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
       setHasAppliedTemplateSettings(true);
     }
   }, [currentCard, templateSettings, hasAppliedTemplateSettings, setShowGrid, setSnapToGrid, setShowBorder]);
+
+  useEffect(() => {
+    applyTemplateSettings();
+  }, [applyTemplateSettings]);
 
   // Reset the flag when card changes
   useEffect(() => {
