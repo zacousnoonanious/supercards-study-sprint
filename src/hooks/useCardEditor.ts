@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -31,7 +30,7 @@ export const useCardEditor = () => {
   const [currentSide, setCurrentSide] = useState<'front' | 'back'>('front');
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 
-  // Fetch set data
+  // Fetch set data - only once when setId changes
   const { data: set, isLoading: setLoading } = useQuery({
     queryKey: ['flashcard_set', setId],
     queryFn: async () => {
@@ -46,13 +45,19 @@ export const useCardEditor = () => {
       return data as FlashcardSet;
     },
     enabled: !!setId && !!user,
+    staleTime: Infinity, // Don't refetch unless explicitly invalidated
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on component mount if data exists
   });
 
-  // Fetch cards data using the API function that already transforms the data
+  // Fetch cards data - only once when setId changes or when explicitly refetched
   const { data: cards = [], isLoading: cardsLoading, refetch: refetchCards } = useQuery({
     queryKey: ['flashcards', setId],
     queryFn: () => getFlashcardsBySetId(setId),
     enabled: !!setId && !!user,
+    staleTime: Infinity, // Don't refetch unless explicitly invalidated
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on component mount if data exists
   });
 
   const loading = setLoading || cardsLoading;
@@ -65,7 +70,10 @@ export const useCardEditor = () => {
     setCurrentCardIndex(0);
     setCurrentSide('front');
     setSelectedElementId(null);
-  }, []);
+    // Invalidate and refetch data when switching sets
+    queryClient.invalidateQueries({ queryKey: ['flashcard_set', newSetId] });
+    queryClient.invalidateQueries({ queryKey: ['flashcards', newSetId] });
+  }, [queryClient]);
 
   const addElement = useCallback((type: string, x?: number, y?: number) => {
     if (!currentCard) return;
@@ -117,7 +125,7 @@ export const useCardEditor = () => {
     try {
       const updatedCard = await updateFlashcard({ ...currentCard, ...updates });
       
-      // Update local cache immediately
+      // Update local cache immediately to prevent refetching
       queryClient.setQueryData(['flashcards', setId], (oldCards: Flashcard[] = []) => 
         oldCards.map(card => card.id === currentCard.id ? { ...card, ...updates } : card)
       );
@@ -179,6 +187,7 @@ export const useCardEditor = () => {
         canvas_height: 450,
       });
 
+      // Manually refetch cards to get the new card
       refetchCards();
       setCurrentCardIndex(cards.length);
       setSelectedElementId(null);

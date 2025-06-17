@@ -28,7 +28,7 @@ export const useCanvasDragResize = ({
   const [dragElementStart, setDragElementStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [resizeHandle, setResizeHandle] = useState<string>('');
   
-  // Client-side position tracking for smooth dragging - this is the source of truth during drag
+  // Client-side position tracking during drag/resize operations
   const [clientPositions, setClientPositions] = useState<Map<string, { x: number; y: number; width: number; height: number }>>(new Map());
   
   // Use refs for immediate state access in event handlers
@@ -60,12 +60,12 @@ export const useCanvasDragResize = ({
       const currentX = (e.clientX - canvasRect.left) / zoom;
       const currentY = (e.clientY - canvasRect.top) / zoom;
       
-      // Calculate the delta from drag start (already adjusted for zoom)
+      // Calculate the delta from drag start
       const deltaX = currentX - dragStart.x / zoom;
       const deltaY = currentY - dragStart.y / zoom;
       
       if (isDraggingRef.current) {
-        // Simple dragging - just move the element
+        // Calculate new position
         let newX = dragElementStart.x + deltaX;
         let newY = dragElementStart.y + deltaY;
         
@@ -73,22 +73,20 @@ export const useCanvasDragResize = ({
         newX = Math.max(0, Math.min(newX, canvasWidth - element.width));
         newY = Math.max(0, Math.min(newY, canvasHeight - element.height));
         
-        // Apply grid snapping
-        if (snapToGrid) {
-          newX = snapToGridIfEnabled(newX);
-          newY = snapToGridIfEnabled(newY);
-        }
+        // Apply grid snapping during drag for visual feedback
+        const snappedX = snapToGrid ? snapToGridIfEnabled(newX) : newX;
+        const snappedY = snapToGrid ? snapToGridIfEnabled(newY) : newY;
         
-        // Update client-side position immediately for smooth visual feedback
+        // Update client-side position for immediate visual feedback
         setClientPositions(prev => new Map(prev.set(dragElementId, {
-          x: newX,
-          y: newY,
+          x: snappedX,
+          y: snappedY,
           width: element.width,
           height: element.height
         })));
         
       } else if (isResizingRef.current) {
-        // Handle resizing based on the handle
+        // Handle resizing
         let newWidth = dragElementStart.width;
         let newHeight = dragElementStart.height;
         let newX = dragElementStart.x;
@@ -140,19 +138,17 @@ export const useCanvasDragResize = ({
         newHeight = Math.max(minSize, Math.min(newHeight, canvasHeight - newY));
         
         // Apply grid snapping if enabled
-        if (snapToGrid) {
-          newWidth = snapToGridIfEnabled(newWidth);
-          newHeight = snapToGridIfEnabled(newHeight);
-          newX = snapToGridIfEnabled(newX);
-          newY = snapToGridIfEnabled(newY);
-        }
+        const snappedWidth = snapToGrid ? snapToGridIfEnabled(newWidth) : newWidth;
+        const snappedHeight = snapToGrid ? snapToGridIfEnabled(newHeight) : newHeight;
+        const snappedX = snapToGrid ? snapToGridIfEnabled(newX) : newX;
+        const snappedY = snapToGrid ? snapToGridIfEnabled(newY) : newY;
         
-        // Update client-side position immediately for smooth visual feedback
+        // Update client-side position for immediate visual feedback
         setClientPositions(prev => new Map(prev.set(dragElementId, {
-          x: newX,
-          y: newY,
-          width: newWidth,
-          height: newHeight
+          x: snappedX,
+          y: snappedY,
+          width: snappedWidth,
+          height: snappedHeight
         })));
       }
     });
@@ -181,7 +177,7 @@ export const useCanvasDragResize = ({
     
     setDragElementId(elementId);
     
-    // Store the initial element state from the actual element data
+    // Store the initial element state
     setDragElementStart({
       x: element.x,
       y: element.y,
@@ -203,7 +199,7 @@ export const useCanvasDragResize = ({
     if (dragElementId) {
       const finalPosition = clientPositions.get(dragElementId);
       if (finalPosition) {
-        // Send final position to database
+        // Send final position to database - this is the ONLY database update during drag
         onUpdateElement(dragElementId, finalPosition);
       }
       
@@ -236,7 +232,7 @@ export const useCanvasDragResize = ({
     setDragStart({ x, y });
   }, []);
 
-  // Get the current position of an element (client-side override or original position)
+  // Get the current position of an element (client-side override during drag, or original position)
   const getElementPosition = useCallback((elementId: string) => {
     return clientPositions.get(elementId);
   }, [clientPositions]);

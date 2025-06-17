@@ -99,7 +99,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         }
       }
       
-      // Update database with final position
+      // Update database with final position - this only happens on mouse release
       onUpdateElement(elementId, updates);
       
       // Apply layout constraints after database update
@@ -194,7 +194,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
   // Create enhanced elements with client-side positions during drag, original positions otherwise
   const enhancedElements = elements.map(element => {
-    // Only override position if this element is currently being dragged
+    // Only override position if this element is currently being dragged/resized
     const clientPosition = getElementPosition(element.id);
     if (clientPosition && dragElementId === element.id && (isDragging || isResizing)) {
       return { ...element, ...clientPosition };
