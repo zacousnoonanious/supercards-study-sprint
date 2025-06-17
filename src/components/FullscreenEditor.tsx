@@ -6,7 +6,6 @@ import { CardCanvas } from './CardCanvas';
 import { ConsolidatedToolbar } from './ConsolidatedToolbar';
 import { CanvasElement, Flashcard, CardTemplate } from '@/types/flashcard';
 import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
-import { useCardEditorState } from '@/hooks/useCardEditorState';
 import { X, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -58,22 +57,15 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
-  const {
-    zoom,
-    setZoom,
-    panOffset,
-    setPanOffset,
-    isPanning,
-    setIsPanning,
-    panStart,
-    setPanStart,
-    showGrid,
-    setShowGrid,
-    snapToGrid,
-    setSnapToGrid,
-    canvasContainerRef,
-    canvasViewportRef,
-  } = useCardEditorState();
+  // Use local state for fullscreen editor canvas interaction
+  const [zoom, setZoom] = React.useState(1);
+  const [panOffset, setPanOffset] = React.useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = React.useState(false);
+  const [panStart, setPanStart] = React.useState({ x: 0, y: 0 });
+  const [showGrid, setShowGrid] = React.useState(false);
+  const [snapToGrid, setSnapToGrid] = React.useState(false);
+  const canvasContainerRef = React.useRef<HTMLDivElement>(null);
+  const canvasViewportRef = React.useRef<HTMLDivElement>(null);
 
   const { fitToView } = useCanvasInteraction({
     canvasContainerRef,

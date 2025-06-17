@@ -172,7 +172,54 @@ export const CardEditor: React.FC = () => {
     }
   }, [currentCardIndex, cards?.length]);
 
-  // CRITICAL: Protect visual editor state from being reset by external effects
+  // Create a proper handler for element selection
+  const handleElementSelect = useCallback((elementId: string | null) => {
+    if (elementId && currentCard) {
+      const element = currentSide === 'front' 
+        ? currentCard.front_elements.find(el => el.id === elementId)
+        : currentCard.back_elements.find(el => el.id === elementId);
+      setSelectedElement(element || null);
+    } else {
+      setSelectedElement(null);
+    }
+  }, [currentCard, currentSide]);
+
+  const handlers = useCardEditorHandlers({
+    updateElement,
+    deleteElement,
+    setSelectedElementId: handleElementSelect,
+    setCurrentCardIndex: (index: number) => {
+      // TODO: Implement card index navigation
+    },
+    cards: cards || [],
+    currentCard: currentCard!,
+    navigateCard,
+    setCurrentSide,
+    currentSide,
+    updateCard,
+    updateCanvasSize,
+    isTextSelecting: false,
+    set: set,
+    setDeckName: (name: string) => {
+      // TODO: Implement deck name setting
+    },
+    selectedElementId: selectedElement?.id || null,
+    setId: setId!,
+    cardId: cardId!,
+  });
+
+  // Enhanced auto arrange handler that respects the toggle
+  const handleAutoArrangeWithToggle = useCallback((type: 'grid' | 'center' | 'stack' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit' | 'align-elements-center' | 'justify' | 'align-left' | 'align-center' | 'align-right') => {
+    if (!cardEditorState.autoAlign) {
+      console.log('🔧 Auto-align is disabled, skipping arrangement');
+      return;
+    }
+    
+    // Call the original handler if auto-align is enabled
+    handlers.handleAutoArrange(type);
+  }, [cardEditorState.autoAlign, handlers]);
+
+  // PROTECTION: Use ref to track initialization and prevent resets
   const protectedVisualStateRef = React.useRef({
     showGrid: false,
     snapToGrid: false,
@@ -206,53 +253,6 @@ export const CardEditor: React.FC = () => {
     enableCollaboration,
     removeCollaborator,
   } = useCollaborativeEditing({ setId, cardId });
-
-  // Create a proper handler for element selection
-  const handleElementSelect = useCallback((elementId: string | null) => {
-    if (elementId && currentCard) {
-      const element = currentSide === 'front' 
-        ? currentCard.front_elements.find(el => el.id === elementId)
-        : currentCard.back_elements.find(el => el.id === elementId);
-      setSelectedElement(element || null);
-    } else {
-      setSelectedElement(null);
-    }
-  }, [currentCard, currentSide]);
-
-  // Enhanced auto arrange handler that respects the toggle
-  const handleAutoArrangeWithToggle = useCallback((type: 'grid' | 'center' | 'stack' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit' | 'align-elements-center' | 'justify' | 'align-left' | 'align-center' | 'align-right') => {
-    if (!cardEditorState.autoAlign) {
-      console.log('🔧 Auto-align is disabled, skipping arrangement');
-      return;
-    }
-    
-    // Call the original handler if auto-align is enabled
-    handlers.handleAutoArrange(type);
-  }, [cardEditorState.autoAlign, handlers]);
-
-  const handlers = useCardEditorHandlers({
-    updateElement,
-    deleteElement,
-    setSelectedElementId: handleElementSelect,
-    setCurrentCardIndex: (index: number) => {
-      // TODO: Implement card index navigation
-    },
-    cards: cards || [],
-    currentCard: currentCard!,
-    navigateCard,
-    setCurrentSide,
-    currentSide,
-    updateCard,
-    updateCanvasSize,
-    isTextSelecting: false,
-    set: set,
-    setDeckName: (name: string) => {
-      // TODO: Implement deck name setting
-    },
-    selectedElementId: selectedElement?.id || null,
-    setId: setId!,
-    cardId: cardId!,
-  });
 
   if (isCardsLoading || isSetLoading) {
     return (

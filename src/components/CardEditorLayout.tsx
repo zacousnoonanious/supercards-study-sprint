@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { TopToolbar } from './TopToolbar';
 import { BottomToolbar } from './BottomToolbar';
@@ -30,6 +29,7 @@ interface CardEditorLayoutProps {
   showGrid: boolean;
   snapToGrid: boolean;
   showBorder: boolean;
+  autoAlign: boolean;
   
   toolbarPosition: 'left' | 'very-top' | 'canvas-left' | 'floating';
   toolbarIsDocked: boolean;
@@ -42,6 +42,7 @@ interface CardEditorLayoutProps {
   onShowGridChange: (show: boolean) => void;
   onSnapToGridChange: (snap: boolean) => void;
   onShowBorderChange: (show: boolean) => void;
+  onAutoAlignChange: (align: boolean) => void;
   
   onToolbarPositionChange: (position: 'left' | 'very-top' | 'canvas-left' | 'floating') => void;
   onToolbarDockChange: (docked: boolean) => void;
@@ -94,16 +95,18 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   zoom,
   showGrid,
   snapToGrid,
+  showBorder,
+  autoAlign,
   toolbarPosition,
   toolbarIsDocked,
   toolbarShowText,
   isPanning,
   showCardOverview,
-  showBorder,
   onZoomChange,
   onShowGridChange,
   onSnapToGridChange,
   onShowBorderChange,
+  onAutoAlignChange,
   onToolbarPositionChange,
   onToolbarDockChange,
   onToolbarShowTextChange,
@@ -406,14 +409,16 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
             zoom={zoom}
             showGrid={showGrid}
             snapToGrid={snapToGrid}
+            showBorder={showBorder}
+            autoAlign={autoAlign}
             toolbarPosition={toolbarPosition}
             toolbarIsDocked={toolbarIsDocked}
             toolbarShowText={toolbarShowText}
-            showBorder={showBorder}
             onZoomChange={onZoomChange}
             onShowGridChange={onShowGridChange}
             onSnapToGridChange={onSnapToGridChange}
             onShowBorderChange={onShowBorderChange}
+            onAutoAlignChange={onAutoAlignChange}
             onToolbarPositionChange={onToolbarPositionChange}
             onToolbarDockChange={onToolbarDockChange}
             onToolbarShowTextChange={onToolbarShowTextChange}
