@@ -65,9 +65,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
   const {
     applyConstraints,
-    applyConstraintsToAll,
-    addConstraintToElement,
-    removeConstraintFromElement,
   } = useLayoutConstraints({
     elements,
     canvasWidth,
@@ -86,10 +83,11 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     endDragOrResize,
     updateDragStart,
     getElementPosition,
+    clearClientPosition,
   } = useCanvasDragResize({
     elements,
     onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => {
-      // Apply smart snapping to final position only during database save
+      // Apply smart snapping to final position during database save
       if (updates.x !== undefined && updates.y !== undefined) {
         const element = elements.find(el => el.id === elementId);
         if (element) {
@@ -99,13 +97,18 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         }
       }
       
-      // Update database with final position - this only happens on mouse release
+      // Update database with final position
       onUpdateElement(elementId, updates);
+      
+      // Clear client position immediately after database update to prevent flickering
+      setTimeout(() => {
+        clearClientPosition(elementId);
+      }, 50); // Small delay to ensure database update is processed
       
       // Apply layout constraints after database update
       setTimeout(() => {
         applyConstraints(elementId);
-      }, 0);
+      }, 100);
     },
     canvasWidth,
     canvasHeight,
@@ -221,27 +224,23 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       onMouseLeave={handleMouseUpOrLeave}
       data-canvas-background="true"
     >
-      {/* Grid background - should be rendered first */}
       <CanvasBackground 
         showGrid={showGrid} 
         gridSize={gridSize}
         isDarkTheme={isDarkTheme}
       />
       
-      {/* Smart snap guides */}
       <SmartSnapGuides
         guides={activeSnapGuides}
         canvasWidth={canvasWidth}
         canvasHeight={canvasHeight}
       />
       
-      {/* Card side indicator */}
       <CanvasCardSideIndicator
         cardSide={cardSide}
         isDarkTheme={isDarkTheme}
       />
       
-      {/* Canvas elements - should render above everything else */}
       {enhancedElements.map((element) => (
         <EnhancedCanvasElementWrapper
           key={element.id}
@@ -263,7 +262,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         />
       ))}
       
-      {/* Empty state - should render above everything */}
       {elements.length === 0 && <CanvasEmptyState />}
     </div>
   );

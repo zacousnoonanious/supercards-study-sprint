@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 
@@ -28,7 +27,7 @@ export const useCanvasDragResize = ({
   const [dragElementStart, setDragElementStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [resizeHandle, setResizeHandle] = useState<string>('');
   
-  // Client-side position tracking during drag/resize operations
+  // Client-side position tracking - this is the source of truth during drag operations
   const [clientPositions, setClientPositions] = useState<Map<string, { x: number; y: number; width: number; height: number }>>(new Map());
   
   // Use refs for immediate state access in event handlers
@@ -95,37 +94,37 @@ export const useCanvasDragResize = ({
         const minSize = 20;
         
         switch (resizeHandle) {
-          case 'se': // Southeast - bottom right
+          case 'se':
             newWidth = Math.max(minSize, dragElementStart.width + deltaX);
             newHeight = Math.max(minSize, dragElementStart.height + deltaY);
             break;
-          case 'sw': // Southwest - bottom left
+          case 'sw':
             newWidth = Math.max(minSize, dragElementStart.width - deltaX);
             newHeight = Math.max(minSize, dragElementStart.height + deltaY);
             newX = dragElementStart.x + (dragElementStart.width - newWidth);
             break;
-          case 'ne': // Northeast - top right
+          case 'ne':
             newWidth = Math.max(minSize, dragElementStart.width + deltaX);
             newHeight = Math.max(minSize, dragElementStart.height - deltaY);
             newY = dragElementStart.y + (dragElementStart.height - newHeight);
             break;
-          case 'nw': // Northwest - top left
+          case 'nw':
             newWidth = Math.max(minSize, dragElementStart.width - deltaX);
             newHeight = Math.max(minSize, dragElementStart.height - deltaY);
             newX = dragElementStart.x + (dragElementStart.width - newWidth);
             newY = dragElementStart.y + (dragElementStart.height - newHeight);
             break;
-          case 'n': // North - top
+          case 'n':
             newHeight = Math.max(minSize, dragElementStart.height - deltaY);
             newY = dragElementStart.y + (dragElementStart.height - newHeight);
             break;
-          case 's': // South - bottom
+          case 's':
             newHeight = Math.max(minSize, dragElementStart.height + deltaY);
             break;
-          case 'e': // East - right
+          case 'e':
             newWidth = Math.max(minSize, dragElementStart.width + deltaX);
             break;
-          case 'w': // West - left
+          case 'w':
             newWidth = Math.max(minSize, dragElementStart.width - deltaX);
             newX = dragElementStart.x + (dragElementStart.width - newWidth);
             break;
@@ -195,24 +194,18 @@ export const useCanvasDragResize = ({
   }, [elements]);
 
   const endDragOrResize = useCallback(() => {
-    // Only update the database when drag/resize ends
     if (dragElementId) {
       const finalPosition = clientPositions.get(dragElementId);
       if (finalPosition) {
-        // Send final position to database - this is the ONLY database update during drag
+        // Send final position to database - this is the ONLY database update during the entire drag operation
         onUpdateElement(dragElementId, finalPosition);
       }
       
-      // Clear client-side position tracking for this element
-      // The element will now use its updated position from the database
-      setClientPositions(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(dragElementId);
-        return newMap;
-      });
+      // Keep the client position temporarily to prevent flickering while database updates
+      // The position will be cleared by the parent component once it confirms the update
     }
     
-    // Reset all drag state
+    // Reset drag state immediately
     setIsDragging(false);
     setIsResizing(false);
     isDraggingRef.current = false;
@@ -237,6 +230,15 @@ export const useCanvasDragResize = ({
     return clientPositions.get(elementId);
   }, [clientPositions]);
 
+  // Clear client position for an element (called by parent after successful database update)
+  const clearClientPosition = useCallback((elementId: string) => {
+    setClientPositions(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(elementId);
+      return newMap;
+    });
+  }, []);
+
   return {
     isDragging,
     isResizing,
@@ -246,5 +248,6 @@ export const useCanvasDragResize = ({
     endDragOrResize,
     updateDragStart,
     getElementPosition,
+    clearClientPosition,
   };
 };

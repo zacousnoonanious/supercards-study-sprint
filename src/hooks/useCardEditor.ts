@@ -30,7 +30,7 @@ export const useCardEditor = () => {
   const [currentSide, setCurrentSide] = useState<'front' | 'back'>('front');
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 
-  // Fetch set data - only once when setId changes
+  // Fetch set data - optimized to only fetch once
   const { data: set, isLoading: setLoading } = useQuery({
     queryKey: ['flashcard_set', setId],
     queryFn: async () => {
@@ -45,19 +45,17 @@ export const useCardEditor = () => {
       return data as FlashcardSet;
     },
     enabled: !!setId && !!user,
-    staleTime: Infinity, // Don't refetch unless explicitly invalidated
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnMount: false, // Don't refetch on component mount if data exists
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchOnWindowFocus: false,
   });
 
-  // Fetch cards data - only once when setId changes or when explicitly refetched
+  // Fetch cards data - optimized to only fetch once with immediate cache updates
   const { data: cards = [], isLoading: cardsLoading, refetch: refetchCards } = useQuery({
     queryKey: ['flashcards', setId],
     queryFn: () => getFlashcardsBySetId(setId),
     enabled: !!setId && !!user,
-    staleTime: Infinity, // Don't refetch unless explicitly invalidated
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnMount: false, // Don't refetch on component mount if data exists
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchOnWindowFocus: false,
   });
 
   const loading = setLoading || cardsLoading;
@@ -70,10 +68,12 @@ export const useCardEditor = () => {
     setCurrentCardIndex(0);
     setCurrentSide('front');
     setSelectedElementId(null);
-    // Invalidate and refetch data when switching sets
-    queryClient.invalidateQueries({ queryKey: ['flashcard_set', newSetId] });
-    queryClient.invalidateQueries({ queryKey: ['flashcards', newSetId] });
-  }, [queryClient]);
+    // Only invalidate if we're switching to a different set
+    if (newSetId !== setId) {
+      queryClient.invalidateQueries({ queryKey: ['flashcard_set', newSetId] });
+      queryClient.invalidateQueries({ queryKey: ['flashcards', newSetId] });
+    }
+  }, [queryClient, setId]);
 
   const addElement = useCallback((type: string, x?: number, y?: number) => {
     if (!currentCard) return;
@@ -113,26 +113,36 @@ export const useCardEditor = () => {
     const frontElements = updateElementsArray(currentCard.front_elements || []);
     const backElements = updateElementsArray(currentCard.back_elements || []);
 
-    updateCard({
+    const cardUpdates = {
       front_elements: frontElements,
       back_elements: backElements,
-    });
-  }, [currentCard]);
+    };
+
+    // Update cache immediately for instant UI response
+    queryClient.setQueryData(['flashcards', setId], (oldCards: Flashcard[] = []) => 
+      oldCards.map(card => card.id === currentCard.id ? { ...card, ...cardUpdates } : card)
+    );
+
+    // Update database in background
+    updateCard(cardUpdates);
+  }, [currentCard, queryClient, setId]);
 
   const updateCard = useCallback(async (updates: Partial<Flashcard>) => {
     if (!currentCard) return;
 
     try {
-      const updatedCard = await updateFlashcard({ ...currentCard, ...updates });
-      
-      // Update local cache immediately to prevent refetching
+      // Update cache immediately for instant response
       queryClient.setQueryData(['flashcards', setId], (oldCards: Flashcard[] = []) => 
         oldCards.map(card => card.id === currentCard.id ? { ...card, ...updates } : card)
       );
 
+      // Update database in background
+      await updateFlashcard({ ...currentCard, ...updates });
       console.log('Card updated successfully');
     } catch (error) {
       console.error('Error updating card:', error);
+      // Revert cache on error
+      queryClient.invalidateQueries({ queryKey: ['flashcards', setId] });
       toast({
         title: t('error'),
         description: t('cardUpdateFailed'),
@@ -187,8 +197,9 @@ export const useCardEditor = () => {
         canvas_height: 450,
       });
 
-      // Manually refetch cards to get the new card
-      refetchCards();
+      // Add new card to cache immediately
+      queryClient.setQueryData(['flashcards', setId], (oldCards: Flashcard[] = []) => [...oldCards, newCard]);
+      
       setCurrentCardIndex(cards.length);
       setSelectedElementId(null);
 
@@ -204,7 +215,7 @@ export const useCardEditor = () => {
         variant: 'destructive',
       });
     }
-  }, [setId, cards.length, refetchCards, t, toast]);
+  }, [setId, cards.length, queryClient, t, toast]);
 
   const createNewCardFromTemplate = useCallback(async (template: CardTemplate) => {
     if (!setId) return;
@@ -231,7 +242,9 @@ export const useCardEditor = () => {
         card_type: template.card_type || 'normal',
       });
 
-      refetchCards();
+      // Add new card to cache immediately
+      queryClient.setQueryData(['flashcards', setId], (oldCards: Flashcard[] = []) => [...oldCards, newCard]);
+      
       setCurrentCardIndex(cards.length);
       setSelectedElementId(null);
 
@@ -247,10 +260,9 @@ export const useCardEditor = () => {
         variant: 'destructive',
       });
     }
-  }, [setId, cards.length, refetchCards, t, toast]);
+  }, [setId, cards.length, queryClient, t, toast]);
 
   const createNewCardWithLayout = useCallback(async () => {
-    // Implementation for creating cards with specific layouts
     await createNewCard();
   }, [createNewCard]);
 
@@ -258,12 +270,16 @@ export const useCardEditor = () => {
     try {
       await deleteFlashcard(cardId);
       
+      // Remove card from cache immediately
+      queryClient.setQueryData(['flashcards', setId], (oldCards: Flashcard[] = []) =>
+        oldCards.filter(card => card.id !== cardId)
+      );
+      
       const deletedIndex = cards.findIndex(card => card.id === cardId);
       if (deletedIndex !== -1 && currentCardIndex >= deletedIndex && currentCardIndex > 0) {
         setCurrentCardIndex(Math.max(0, currentCardIndex - 1));
       }
       
-      refetchCards();
       setSelectedElementId(null);
 
       toast({
@@ -274,6 +290,8 @@ export const useCardEditor = () => {
       return true;
     } catch (error) {
       console.error('Error deleting card:', error);
+      // Revert cache on error
+      queryClient.invalidateQueries({ queryKey: ['flashcards', setId] });
       toast({
         title: t('error'),
         description: t('cardDeletionFailed'),
@@ -281,11 +299,14 @@ export const useCardEditor = () => {
       });
       return false;
     }
-  }, [cards, currentCardIndex, refetchCards, t, toast]);
+  }, [cards, currentCardIndex, queryClient, setId, t, toast]);
 
   const reorderCards = useCallback(async (reorderedCards: Flashcard[]) => {
     try {
-      // Update cards order in the database
+      // Update cache immediately
+      queryClient.setQueryData(['flashcards', setId], reorderedCards);
+      
+      // Update database in background
       const updates = reorderedCards.map((card, index) => 
         supabase
           .from('flashcards')
@@ -294,7 +315,6 @@ export const useCardEditor = () => {
       );
       
       await Promise.all(updates);
-      refetchCards();
       
       toast({
         title: t('success'),
@@ -302,13 +322,15 @@ export const useCardEditor = () => {
       });
     } catch (error) {
       console.error('Error reordering cards:', error);
+      // Revert cache on error
+      queryClient.invalidateQueries({ queryKey: ['flashcards', setId] });
       toast({
         title: t('error'),
         description: t('reorderFailed'),
         variant: 'destructive',
       });
     }
-  }, [refetchCards, t, toast]);
+  }, [queryClient, setId, t, toast]);
 
   return {
     // Data
