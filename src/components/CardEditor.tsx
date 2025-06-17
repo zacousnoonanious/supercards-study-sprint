@@ -20,6 +20,7 @@ interface CardEditorProps {
 export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
   const { t } = useI18n();
   const [showFullscreen, setShowFullscreen] = useState(false);
+  const initializationRef = useRef<string | null>(null);
   
   const {
     set,
@@ -45,16 +46,14 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     initializeEditor,
   } = useCardEditor();
 
-  // Initialize the editor when setId is provided - memoized to prevent infinite loops
-  const memoizedInitializeEditor = useCallback(() => {
-    if (setId) {
+  // Initialize the editor only once per setId
+  useEffect(() => {
+    if (setId && setId !== initializationRef.current) {
+      console.log('Initializing editor with setId:', setId);
+      initializationRef.current = setId;
       initializeEditor(setId);
     }
   }, [setId, initializeEditor]);
-
-  useEffect(() => {
-    memoizedInitializeEditor();
-  }, [memoizedInitializeEditor]);
 
   const currentCard = useMemo(() => cards[currentCardIndex], [cards, currentCardIndex]);
   console.log('CardEditor: Current card:', currentCard?.id, 'Index:', currentCardIndex, 'Total cards:', cards.length);
@@ -116,7 +115,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
       .find(el => el.id === selectedElementId) || null;
   }, [currentCard, selectedElementId]);
 
-  // Get template settings for current card - memoized to prevent recalculation
+  // Get template settings for current card
   const { getCardTemplateSettings } = useTemplateConfiguration();
   const templateSettings = useMemo(() => {
     return currentCard ? getCardTemplateSettings(currentCard) : null;
@@ -139,12 +138,12 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     currentCard,
     navigateCard,
     setCurrentSide,
+    currentSide,
     updateCard,
     updateCanvasSize,
     isTextSelecting,
     set,
     setDeckName,
-    currentSide,
     selectedElementId,
   });
 
@@ -211,16 +210,12 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     currentSide,
   });
 
-  // Update user position when card changes - memoized to prevent excessive calls
-  const handleUserPositionUpdate = useCallback(() => {
-    if (currentCard && updateUserPosition) {
+  // Update user position when card changes - only when actually needed
+  useEffect(() => {
+    if (currentCard?.id && updateUserPosition) {
       updateUserPosition(currentCard.id);
     }
   }, [currentCard?.id, updateUserPosition]);
-
-  useEffect(() => {
-    handleUserPositionUpdate();
-  }, [handleUserPositionUpdate]);
 
   const handleDeleteCard = useCallback(async () => {
     if (currentCard) {
@@ -233,43 +228,27 @@ export const CardEditor: React.FC<CardEditorProps> = ({ setId }) => {
     setShowFullscreen(true);
   }, []);
 
-  // Set deck name when set is available - memoized to prevent infinite updates
-  const handleSetDeckName = useCallback(() => {
-    if (set) {
+  // Set deck name when set is available - only when set changes
+  useEffect(() => {
+    if (set?.title && set.title !== deckName) {
       setDeckName(set.title);
     }
-  }, [set, setDeckName]);
+  }, [set?.title, deckName, setDeckName]);
 
+  // Apply template settings - only when template settings actually change
   useEffect(() => {
-    handleSetDeckName();
-  }, [handleSetDeckName]);
-
-  // Apply template settings with proper dependency management
-  const [hasAppliedTemplateSettings, setHasAppliedTemplateSettings] = useState(false);
-  
-  const applyTemplateSettings = useCallback(() => {
-    if (currentCard && templateSettings && !hasAppliedTemplateSettings) {
-      if (templateSettings.showGrid !== undefined) {
+    if (templateSettings) {
+      if (templateSettings.showGrid !== undefined && templateSettings.showGrid !== showGrid) {
         setShowGrid(templateSettings.showGrid);
       }
-      if (templateSettings.snapToGrid !== undefined) {
+      if (templateSettings.snapToGrid !== undefined && templateSettings.snapToGrid !== snapToGrid) {
         setSnapToGrid(templateSettings.snapToGrid);
       }
-      if (templateSettings.showBorder !== undefined) {
+      if (templateSettings.showBorder !== undefined && templateSettings.showBorder !== showBorder) {
         setShowBorder(templateSettings.showBorder);
       }
-      setHasAppliedTemplateSettings(true);
     }
-  }, [currentCard, templateSettings, hasAppliedTemplateSettings, setShowGrid, setSnapToGrid, setShowBorder]);
-
-  useEffect(() => {
-    applyTemplateSettings();
-  }, [applyTemplateSettings]);
-
-  // Reset the flag when card changes
-  useEffect(() => {
-    setHasAppliedTemplateSettings(false);
-  }, [currentCard?.id]);
+  }, [templateSettings?.showGrid, templateSettings?.snapToGrid, templateSettings?.showBorder, showGrid, snapToGrid, showBorder, setShowGrid, setSnapToGrid, setShowBorder]);
 
   if (loading) {
     console.log('CardEditor: Still loading...');
