@@ -15,9 +15,13 @@ export const useCardEditorState = (currentCard?: Flashcard) => {
   const [toolbarPosition, setToolbarPosition] = useState<'left' | 'very-top' | 'canvas-left' | 'floating'>('left');
   const [toolbarIsDocked, setToolbarIsDocked] = useState(true);
   const [toolbarShowText, setToolbarShowText] = useState(false);
+  
+  // CRITICAL: These visual editor states are LOCAL ONLY - they should NEVER sync with database
+  // They are purely for DOM visualization and user interaction feedback
   const [showGrid, setShowGrid] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [showBorder, setShowBorder] = useState(false);
+  
   const [isTextSelecting, setIsTextSelecting] = useState(false);
   
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -33,6 +37,22 @@ export const useCardEditorState = (currentCard?: Flashcard) => {
       setCardHeight(height);
     }
   }, [currentCard?.id, currentCard?.canvas_width, currentCard?.canvas_height]);
+
+  // Enhanced handlers for visual editor features with logging
+  const handleShowGridChange = (show: boolean) => {
+    console.log('Visual Editor: Grid visibility changed to:', show);
+    setShowGrid(show);
+  };
+
+  const handleSnapToGridChange = (snap: boolean) => {
+    console.log('Visual Editor: Snap to grid changed to:', snap);
+    setSnapToGrid(snap);
+  };
+
+  const handleShowBorderChange = (show: boolean) => {
+    console.log('Visual Editor: Border visibility changed to:', show);
+    setShowBorder(show);
+  };
 
   return {
     showShortcuts,
@@ -59,12 +79,15 @@ export const useCardEditorState = (currentCard?: Flashcard) => {
     setToolbarIsDocked,
     toolbarShowText,
     setToolbarShowText,
+    
+    // Visual editor features - LOCAL ONLY
     showGrid,
-    setShowGrid,
+    setShowGrid: handleShowGridChange,
     snapToGrid,
-    setSnapToGrid,
+    setSnapToGrid: handleSnapToGridChange,
     showBorder,
-    setShowBorder,
+    setShowBorder: handleShowBorderChange,
+    
     isTextSelecting,
     setIsTextSelecting,
     canvasContainerRef,

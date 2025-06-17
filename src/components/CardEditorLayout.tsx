@@ -25,18 +25,24 @@ interface CardEditorLayoutProps {
   cardWidth: number;
   cardHeight: number;
   zoom: number;
+  
+  // CRITICAL: Visual editor props - these are LOCAL ONLY and should NOT sync with database
   showGrid: boolean;
   snapToGrid: boolean;
   showBorder: boolean;
+  
   toolbarPosition: 'left' | 'very-top' | 'canvas-left' | 'floating';
   toolbarIsDocked: boolean;
   toolbarShowText: boolean;
   isPanning: boolean;
   showCardOverview: boolean;
   onZoomChange: (zoom: number) => void;
+  
+  // CRITICAL: These handlers manage LOCAL ONLY visual editor state
   onShowGridChange: (show: boolean) => void;
   onSnapToGridChange: (snap: boolean) => void;
   onShowBorderChange: (show: boolean) => void;
+  
   onToolbarPositionChange: (position: 'left' | 'very-top' | 'canvas-left' | 'floating') => void;
   onToolbarDockChange: (docked: boolean) => void;
   onToolbarShowTextChange: (showText: boolean) => void;
@@ -68,6 +74,14 @@ interface CardEditorLayoutProps {
   showEmptyState?: boolean;
 }
 
+/**
+ * CardEditorLayout Component
+ * 
+ * Main layout for the card editor with proper separation of concerns:
+ * - Visual editor features (grid, snap, border) are LOCAL ONLY
+ * - Canvas operations and element management sync with database
+ * - Proper state isolation prevents unwanted side effects
+ */
 export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   cards,
   currentCard,
@@ -300,6 +314,8 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
             onShowGridChange={onShowGridChange}
             snapToGrid={snapToGrid}
             onSnapToGridChange={onSnapToGridChange}
+            showBorder={showBorder}
+            onShowBorderChange={onShowBorderChange}
             currentSide={currentSide}
           />
         )}

@@ -22,12 +22,15 @@ interface TopSettingsBarProps {
   onCanvasSizeChange: (width: number, height: number) => void;
   currentCard: Flashcard;
   onUpdateCard: (updates: Partial<Flashcard>) => void;
+  
+  // CRITICAL: Visual editor props - these are LOCAL ONLY and should NOT sync with database
   showGrid?: boolean;
   onShowGridChange?: (show: boolean) => void;
   snapToGrid?: boolean;
   onSnapToGridChange?: (snap: boolean) => void;
   showBorder?: boolean;
   onShowBorderChange?: (show: boolean) => void;
+  
   currentSide?: 'front' | 'back';
   deckName?: string;
   onUpdateDeckTitle?: (title: string) => Promise<void>;
@@ -36,17 +39,10 @@ interface TopSettingsBarProps {
 /**
  * TopSettingsBar Component
  * 
- * Main settings bar for the card editor containing all essential controls:
- * - Deck title editing
- * - Tag management
- * - Canvas size controls
- * - Grid and snap controls
- * - Border visibility toggle
- * - Timer controls
- * - Element-specific controls
+ * Main settings bar for the card editor containing all essential controls.
  * 
- * This component is critical for the editor's functionality and must maintain
- * all existing features while ensuring proper integration of visual aids.
+ * CRITICAL: Visual editor features (grid, snap, border) are LOCAL ONLY
+ * and should never sync with the database. They are purely for DOM visualization.
  */
 export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
   selectedElement,
@@ -89,6 +85,31 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
     console.log('Canvas size change requested:', width, height);
     onCanvasSizeChange(width, height);
   }, [onCanvasSizeChange]);
+
+  /**
+   * CRITICAL: Visual editor handlers - these manage LOCAL ONLY state
+   * They should NEVER trigger database updates or cause state conflicts
+   */
+  const handleShowGridChange = React.useCallback((show: boolean) => {
+    console.log('TopSettingsBar: Grid visibility change (LOCAL ONLY):', show);
+    if (onShowGridChange && typeof onShowGridChange === 'function') {
+      onShowGridChange(show);
+    }
+  }, [onShowGridChange]);
+
+  const handleSnapToGridChange = React.useCallback((snap: boolean) => {
+    console.log('TopSettingsBar: Snap to grid change (LOCAL ONLY):', snap);
+    if (onSnapToGridChange && typeof onSnapToGridChange === 'function') {
+      onSnapToGridChange(snap);
+    }
+  }, [onSnapToGridChange]);
+
+  const handleShowBorderChange = React.useCallback((show: boolean) => {
+    console.log('TopSettingsBar: Border visibility change (LOCAL ONLY):', show);
+    if (onShowBorderChange && typeof onShowBorderChange === 'function') {
+      onShowBorderChange(show);
+    }
+  }, [onShowBorderChange]);
 
   // Get tag counts for display
   const manualTagsCount = currentCard?.metadata?.tags?.length || 0;
@@ -141,20 +162,20 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
 
           <Separator orientation="vertical" className="h-8" />
 
-          {/* Grid Controls - Essential for visual editing */}
+          {/* Grid Controls - Essential for visual editing - LOCAL ONLY */}
           <GridControls
             showGrid={showGrid}
-            onShowGridChange={onShowGridChange}
+            onShowGridChange={handleShowGridChange}
             snapToGrid={snapToGrid}
-            onSnapToGridChange={onSnapToGridChange}
+            onSnapToGridChange={handleSnapToGridChange}
           />
 
           <Separator orientation="vertical" className="h-8" />
 
-          {/* Border Toggle - Critical for visual editing */}
+          {/* Border Toggle - Critical for visual editing - LOCAL ONLY */}
           <CardBorderToggle
             showBorder={showBorder}
-            onShowBorderChange={onShowBorderChange}
+            onShowBorderChange={handleShowBorderChange}
           />
 
           <Separator orientation="vertical" className="h-8" />
