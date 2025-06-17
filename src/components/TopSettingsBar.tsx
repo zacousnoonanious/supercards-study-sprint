@@ -7,6 +7,7 @@ import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CanvasSizeControls } from './settings/CanvasSizeControls';
 import { GridControls } from './settings/GridControls';
+import { CardBorderToggle } from './settings/CardBorderToggle';
 import { TimerControls } from './settings/TimerControls';
 import { ElementControls } from './settings/ElementControls';
 import { EditableDeckTitle } from './EditableDeckTitle';
@@ -25,11 +26,28 @@ interface TopSettingsBarProps {
   onShowGridChange?: (show: boolean) => void;
   snapToGrid?: boolean;
   onSnapToGridChange?: (snap: boolean) => void;
+  showBorder?: boolean;
+  onShowBorderChange?: (show: boolean) => void;
   currentSide?: 'front' | 'back';
   deckName?: string;
   onUpdateDeckTitle?: (title: string) => Promise<void>;
 }
 
+/**
+ * TopSettingsBar Component
+ * 
+ * Main settings bar for the card editor containing all essential controls:
+ * - Deck title editing
+ * - Tag management
+ * - Canvas size controls
+ * - Grid and snap controls
+ * - Border visibility toggle
+ * - Timer controls
+ * - Element-specific controls
+ * 
+ * This component is critical for the editor's functionality and must maintain
+ * all existing features while ensuring proper integration of visual aids.
+ */
 export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
   selectedElement,
   onUpdateElement,
@@ -43,6 +61,8 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
   onShowGridChange,
   snapToGrid = false,
   onSnapToGridChange,
+  showBorder = false,
+  onShowBorderChange,
   currentSide = 'front',
   deckName,
   onUpdateDeckTitle,
@@ -51,10 +71,24 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
   const [showTagsManager, setShowTagsManager] = useState(false);
 
-  const handleCanvasSizeChange = (width: number, height: number) => {
+  /**
+   * Handle canvas size changes with validation
+   */
+  const handleCanvasSizeChange = React.useCallback((width: number, height: number) => {
+    // Validate input parameters
+    if (typeof width !== 'number' || typeof height !== 'number') {
+      console.error('TopSettingsBar: Invalid canvas size values:', { width, height });
+      return;
+    }
+    
+    if (width <= 0 || height <= 0) {
+      console.error('TopSettingsBar: Canvas dimensions must be positive:', { width, height });
+      return;
+    }
+    
     console.log('Canvas size change requested:', width, height);
     onCanvasSizeChange(width, height);
-  };
+  }, [onCanvasSizeChange]);
 
   // Get tag counts for display
   const manualTagsCount = currentCard?.metadata?.tags?.length || 0;
@@ -107,12 +141,20 @@ export const TopSettingsBar: React.FC<TopSettingsBarProps> = ({
 
           <Separator orientation="vertical" className="h-8" />
 
-          {/* Grid Controls */}
+          {/* Grid Controls - Essential for visual editing */}
           <GridControls
             showGrid={showGrid}
             onShowGridChange={onShowGridChange}
             snapToGrid={snapToGrid}
             onSnapToGridChange={onSnapToGridChange}
+          />
+
+          <Separator orientation="vertical" className="h-8" />
+
+          {/* Border Toggle - Critical for visual editing */}
+          <CardBorderToggle
+            showBorder={showBorder}
+            onShowBorderChange={onShowBorderChange}
           />
 
           <Separator orientation="vertical" className="h-8" />

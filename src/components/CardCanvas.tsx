@@ -27,6 +27,19 @@ interface CardCanvasProps {
   onDuplicateElement?: (element: CanvasElement) => void;
 }
 
+/**
+ * CardCanvas Component
+ * 
+ * Main canvas component for the visual card editor. Handles:
+ * - Element rendering and interaction
+ * - Grid display and snapping functionality
+ * - Border visualization
+ * - Drag and drop operations
+ * - Smart snapping guides
+ * 
+ * CRITICAL: This component must maintain all visual editing features
+ * including grid, snap, and border functionality for proper user experience.
+ */
 export const CardCanvas: React.FC<CardCanvasProps> = ({
   elements,
   selectedElement,
@@ -48,9 +61,14 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
-  // Get canvas dimensions from style
+  // Get canvas dimensions from style with validation
   const canvasWidth = (style?.width as number) || 600;
   const canvasHeight = (style?.height as number) || 450;
+
+  // Validate canvas dimensions
+  if (canvasWidth <= 0 || canvasHeight <= 0) {
+    console.error('CardCanvas: Invalid canvas dimensions:', { canvasWidth, canvasHeight });
+  }
 
   const {
     calculateSnapPosition,
@@ -90,7 +108,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       // Apply smart snapping to final position during database save
       if (updates.x !== undefined && updates.y !== undefined) {
         const element = elements.find(el => el.id === elementId);
-        if (element) {
+        if (element && snapToGrid) {
           const snapped = calculateSnapPosition(element, updates.x, updates.y);
           updates.x = snapped.x;
           updates.y = snapped.y;
@@ -206,17 +224,30 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     return element;
   });
 
+  /**
+   * Generate border styles based on showBorder prop
+   * CRITICAL: This styling is essential for visual editing experience
+   */
+  const getBorderStyles = useCallback(() => {
+    if (!showBorder) return {};
+    
+    return {
+      border: '4px solid #3b82f6', // Blue border for visibility
+      borderStyle: 'solid',
+      boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.3)', // Subtle glow effect
+    };
+  }, [showBorder]);
+
   return (
     <div
       ref={canvasRef}
-      className={`relative overflow-hidden ${isDarkTheme ? 'bg-gray-900' : 'bg-white'} ${
-        showBorder ? 'border-4 border-blue-500 border-solid' : ''
-      }`}
+      className={`relative overflow-hidden ${isDarkTheme ? 'bg-gray-900' : 'bg-white'}`}
       style={{
         ...style,
         width: canvasWidth,
         height: canvasHeight,
         cursor: isDragging ? 'grabbing' : 'default',
+        ...getBorderStyles(), // Apply border styles here
       }}
       onClick={handleCanvasClick}
       onMouseMove={handleCanvasMouseMove}
@@ -224,23 +255,27 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       onMouseLeave={handleMouseUpOrLeave}
       data-canvas-background="true"
     >
+      {/* Canvas Background with Grid - CRITICAL for visual editing */}
       <CanvasBackground 
         showGrid={showGrid} 
         gridSize={gridSize}
         isDarkTheme={isDarkTheme}
       />
       
+      {/* Smart Snap Guides - Essential for precise positioning */}
       <SmartSnapGuides
         guides={activeSnapGuides}
         canvasWidth={canvasWidth}
         canvasHeight={canvasHeight}
       />
       
+      {/* Card Side Indicator */}
       <CanvasCardSideIndicator
         cardSide={cardSide}
         isDarkTheme={isDarkTheme}
       />
       
+      {/* Render all canvas elements */}
       {enhancedElements.map((element) => (
         <EnhancedCanvasElementWrapper
           key={element.id}
@@ -262,6 +297,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         />
       ))}
       
+      {/* Empty State */}
       {elements.length === 0 && <CanvasEmptyState />}
     </div>
   );
