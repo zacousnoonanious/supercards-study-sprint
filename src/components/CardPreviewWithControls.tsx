@@ -45,6 +45,16 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
   const scaleY = fixedPreviewHeight / cardHeight;
   const scale = Math.min(scaleX, scaleY);
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', cardIndex.toString());
+    onDragStart(e);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    onDragEnd(e);
+  };
+
   return (
     <Card 
       className={`group relative hover:shadow-lg transition-all duration-300 h-full flex flex-col ${
@@ -56,8 +66,8 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
       }}
     >
       <DragHandle
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
         isDragging={isDragging}
       />
       
