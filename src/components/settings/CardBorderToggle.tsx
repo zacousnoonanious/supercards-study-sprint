@@ -15,11 +15,16 @@ export const CardBorderToggle: React.FC<CardBorderToggleProps> = ({
 }) => {
   const { t } = useI18n();
 
+  // Memoize the click handler to prevent re-renders
+  const handleToggle = React.useCallback(() => {
+    onShowBorderChange(!showBorder);
+  }, [onShowBorderChange, showBorder]);
+
   return (
     <Button
       variant={showBorder ? "default" : "outline"}
       size="sm"
-      onClick={() => onShowBorderChange(!showBorder)}
+      onClick={handleToggle}
       className="flex items-center gap-2"
     >
       <Square className="w-4 h-4" />
