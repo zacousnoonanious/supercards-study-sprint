@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -220,6 +219,17 @@ export const CardEditor: React.FC = () => {
     }
   }, [currentCard, currentSide]);
 
+  // Enhanced auto arrange handler that respects the toggle
+  const handleAutoArrangeWithToggle = useCallback((type: 'grid' | 'center' | 'stack' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit' | 'align-elements-center' | 'justify' | 'align-left' | 'align-center' | 'align-right') => {
+    if (!cardEditorState.autoAlign) {
+      console.log('🔧 Auto-align is disabled, skipping arrangement');
+      return;
+    }
+    
+    // Call the original handler if auto-align is enabled
+    handlers.handleAutoArrange(type);
+  }, [cardEditorState.autoAlign, handlers]);
+
   const handlers = useCardEditorHandlers({
     updateElement,
     deleteElement,
@@ -275,13 +285,15 @@ export const CardEditor: React.FC = () => {
       cardHeight={currentCard.canvas_height}
       zoom={cardEditorState.zoom}
       
-      // PROTECTED: Use protected visual editor state
+      // PROTECTED: Use protected visual editor state including auto-align
       showGrid={cardEditorState.showGrid}
       snapToGrid={cardEditorState.snapToGrid}
       showBorder={cardEditorState.showBorder}
+      autoAlign={cardEditorState.autoAlign}
       onShowGridChange={cardEditorState.setShowGrid}
       onSnapToGridChange={cardEditorState.setSnapToGrid}
       onShowBorderChange={cardEditorState.setShowBorder}
+      onAutoAlignChange={cardEditorState.setAutoAlign}
       
       toolbarPosition={cardEditorState.toolbarPosition}
       toolbarIsDocked={cardEditorState.toolbarIsDocked}
@@ -303,7 +315,7 @@ export const CardEditor: React.FC = () => {
       onCanvasSizeChange={handlers.handleCanvasSizeChange}
       onUpdateCard={handlers.handleCardUpdate}
       onAddElement={handlers.handleAddElement}
-      onAutoArrange={handlers.handleAutoArrange}
+      onAutoArrange={handleAutoArrangeWithToggle}
       onNavigateCard={handlers.handleNavigateCard}
       onCreateNewCard={handlers.handleCreateNewCard}
       onCreateNewCardWithLayout={handlers.handleCreateNewCardWithLayout}

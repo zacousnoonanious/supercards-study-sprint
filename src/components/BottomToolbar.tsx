@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CardBorderToggle } from './settings/CardBorderToggle';
 import { GridControls } from './settings/GridControls';
+import { AutoAlignToggle } from './settings/AutoAlignToggle';
 import { ZoomIn, ZoomOut, Maximize2, Maximize } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -12,6 +12,7 @@ interface BottomToolbarProps {
   showGrid: boolean;
   snapToGrid: boolean;
   showBorder: boolean;
+  autoAlign: boolean;
   toolbarPosition: 'left' | 'very-top' | 'canvas-left' | 'floating';
   toolbarIsDocked: boolean;
   toolbarShowText: boolean;
@@ -19,6 +20,7 @@ interface BottomToolbarProps {
   onShowGridChange: (show: boolean) => void;
   onSnapToGridChange: (snap: boolean) => void;
   onShowBorderChange: (show: boolean) => void;
+  onAutoAlignChange: (align: boolean) => void;
   onToolbarPositionChange: (position: 'left' | 'very-top' | 'canvas-left' | 'floating') => void;
   onToolbarDockChange: (docked: boolean) => void;
   onToolbarShowTextChange: (showText: boolean) => void;
@@ -38,10 +40,12 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
   showGrid,
   snapToGrid,
   showBorder,
+  autoAlign,
   onZoomChange,
   onShowGridChange,
   onSnapToGridChange,
   onShowBorderChange,
+  onAutoAlignChange,
   currentSide,
   onCardSideChange,
   onFitToView,
@@ -66,6 +70,14 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
                 onShowGridChange={onShowGridChange}
                 snapToGrid={snapToGrid}
                 onSnapToGridChange={onSnapToGridChange}
+              />
+
+              <Separator orientation="vertical" className="h-6" />
+
+              {/* Auto Align Toggle */}
+              <AutoAlignToggle
+                autoAlign={autoAlign}
+                onAutoAlignChange={onAutoAlignChange}
               />
 
               <Separator orientation="vertical" className="h-6" />
