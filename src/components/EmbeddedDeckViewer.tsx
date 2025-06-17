@@ -6,7 +6,8 @@ import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/integrations/supabase/client';
 import { StudyCardRenderer } from './StudyCardRenderer';
 import { StudyNavigationBar } from './StudyNavigationBar';
-import { Flashcard, CanvasElement } from '@/types/flashcard';
+import { Flashcard } from '@/types/flashcard';
+import { transformDatabaseCardToFlashcard } from '@/utils/cardTransforms';
 
 interface EmbeddedDeckViewerProps {
   deckId: string;
@@ -41,39 +42,8 @@ export const EmbeddedDeckViewer: React.FC<EmbeddedDeckViewerProps> = ({
 
         if (error) throw error;
 
-        // Transform the cards data to match Flashcard interface
-        const transformedCards: Flashcard[] = (cardsData || []).map(card => ({
-          id: card.id,
-          set_id: card.set_id,
-          question: card.question,
-          answer: card.answer,
-          hint: card.hint,
-          front_elements: (card.front_elements as unknown as CanvasElement[]) || [],
-          back_elements: (card.back_elements as unknown as CanvasElement[]) || [],
-          card_type: card.card_type as 'normal' | 'simple' | 'informational' | 'single-sided' | 'quiz-only' | 'password-protected',
-          interactive_type: (card.interactive_type as 'multiple-choice' | 'true-false' | 'fill-in-blank') || null,
-          password: card.password,
-          countdown_timer: card.countdown_timer,
-          countdown_timer_front: card.countdown_timer_front,
-          countdown_timer_back: card.countdown_timer_back,
-          countdown_behavior_front: card.countdown_behavior_front as 'flip' | 'next' || 'flip',
-          countdown_behavior_back: card.countdown_behavior_back as 'flip' | 'next' || 'flip',
-          flips_before_next: card.flips_before_next,
-          canvas_width: card.canvas_width,
-          canvas_height: card.canvas_height,
-          metadata: typeof card.metadata === 'object' && card.metadata !== null 
-            ? card.metadata as { tags?: string[]; aiTags?: string[]; [key: string]: any; }
-            : { tags: [], aiTags: [] },
-          created_at: card.created_at,
-          updated_at: card.updated_at,
-          last_reviewed_at: card.last_reviewed_at,
-          // Add required properties
-          allowedElementTypes: ['text', 'image', 'audio', 'drawing', 'youtube', 'tts'],
-          restrictedToolbar: false,
-          showBackSide: true,
-          autoAdvanceOnAnswer: false,
-          constraints: [],
-        }));
+        // Transform the cards data using the utility function
+        const transformedCards: Flashcard[] = (cardsData || []).map(transformDatabaseCardToFlashcard);
         
         setCards(transformedCards);
       } catch (error) {
