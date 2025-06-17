@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -119,6 +118,18 @@ export const CardEditor: React.FC = () => {
     removeCollaborator,
   } = useCollaborativeEditing({ setId, cardId });
 
+  // Create a proper handler for element selection
+  const handleElementSelect = useCallback((elementId: string | null) => {
+    if (elementId && currentCard) {
+      const element = currentSide === 'front' 
+        ? currentCard.front_elements.find(el => el.id === elementId)
+        : currentCard.back_elements.find(el => el.id === elementId);
+      setSelectedElement(element || null);
+    } else {
+      setSelectedElement(null);
+    }
+  }, [currentCard, currentSide]);
+
   const handlers = useCardEditorHandlers({
     updateElement: (elementId: string, updates: Partial<CanvasElement>) => {
       // Implementation will be added to the hook
@@ -126,7 +137,7 @@ export const CardEditor: React.FC = () => {
     deleteElement: (elementId: string) => {
       // Implementation will be added to the hook
     },
-    setSelectedElementId: setSelectedElement,
+    setSelectedElementId: handleElementSelect, // Use the proper handler
     setCurrentCardIndex: (index: number) => {
       // Implementation will be added to the hook
     },
@@ -202,7 +213,7 @@ export const CardEditor: React.FC = () => {
       onShowCardOverviewChange={() => {}}
       onDeckTitleChange={async () => {}}
       onCardSideChange={() => {}}
-      onElementSelect={() => {}}
+      onElementSelect={handleElementSelect}
       onUpdateElement={() => {}}
       onDeleteElement={() => {}}
       onCanvasSizeChange={() => {}}
@@ -225,4 +236,3 @@ export const CardEditor: React.FC = () => {
     />
   );
 };
-
