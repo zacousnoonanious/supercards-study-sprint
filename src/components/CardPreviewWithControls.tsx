@@ -48,6 +48,9 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', cardIndex.toString());
+    // Prevent default drag image and set custom drag data
+    const dragElement = e.currentTarget as HTMLElement;
+    e.dataTransfer.setDragImage(dragElement, dragElement.offsetWidth / 2, dragElement.offsetHeight / 2);
     onDragStart(e);
   };
 
@@ -58,7 +61,7 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
   return (
     <Card 
       className={`group relative hover:shadow-lg transition-all duration-300 h-full flex flex-col ${
-        isDragging ? 'shadow-2xl scale-105 rotate-2 z-50' : 'hover:scale-[1.02]'
+        isDragging ? 'shadow-2xl scale-105 rotate-2 z-50 opacity-80' : 'hover:scale-[1.02]'
       }`}
       style={{
         transform: isDragging ? 'rotate(3deg) scale(1.05)' : undefined,
@@ -161,8 +164,10 @@ export const CardPreviewWithControls: React.FC<CardPreviewWithControlsProps> = (
       
       {/* Dragging overlay */}
       {isDragging && (
-        <div className="absolute inset-0 bg-primary/10 rounded-lg flex items-center justify-center">
-          <div className="text-primary font-medium">Moving...</div>
+        <div className="absolute inset-0 bg-primary/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+          <div className="text-primary font-medium bg-white/90 px-3 py-1 rounded-md shadow-lg">
+            Moving Card {cardIndex + 1}...
+          </div>
         </div>
       )}
     </Card>
