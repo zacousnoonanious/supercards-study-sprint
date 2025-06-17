@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 
@@ -27,8 +28,9 @@ export const useCanvasDragResize = ({
   const [dragElementStart, setDragElementStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [resizeHandle, setResizeHandle] = useState<string>('');
   
-  // Client-side position tracking - this is the source of truth during drag operations
-  const [clientPositions, setClientPositions] = useState<Map<string, { x: number; y: number; width: number; height: number }>>(new Map());
+  // Use refs to store client positions to avoid triggering re-renders during drag
+  const clientPositionsRef = useRef<Map<string, { x: number; y: number; width: number; height: number }>>(new Map());
+  const [clientPositionsVersion, setClientPositionsVersion] = useState(0);
   
   // Use refs for immediate state access in event handlers
   const isDraggingRef = useRef(false);
@@ -76,13 +78,18 @@ export const useCanvasDragResize = ({
         const snappedX = snapToGrid ? snapToGridIfEnabled(newX) : newX;
         const snappedY = snapToGrid ? snapToGridIfEnabled(newY) : newY;
         
-        // Update client-side position for immediate visual feedback
-        setClientPositions(prev => new Map(prev.set(dragElementId, {
+        // Update client-side position using ref to avoid re-renders
+        clientPositionsRef.current.set(dragElementId, {
           x: snappedX,
           y: snappedY,
           width: element.width,
           height: element.height
-        })));
+        });
+        
+        // Only trigger a re-render every few frames to reduce update frequency
+        if (!animationFrameRef.current || Date.now() % 3 === 0) {
+          setClientPositionsVersion(prev => prev + 1);
+        }
         
       } else if (isResizingRef.current) {
         // Handle resizing
@@ -142,13 +149,18 @@ export const useCanvasDragResize = ({
         const snappedX = snapToGrid ? snapToGridIfEnabled(newX) : newX;
         const snappedY = snapToGrid ? snapToGridIfEnabled(newY) : newY;
         
-        // Update client-side position for immediate visual feedback
-        setClientPositions(prev => new Map(prev.set(dragElementId, {
+        // Update client-side position using ref to avoid re-renders
+        clientPositionsRef.current.set(dragElementId, {
           x: snappedX,
           y: snappedY,
           width: snappedWidth,
           height: snappedHeight
-        })));
+        });
+        
+        // Only trigger a re-render every few frames to reduce update frequency
+        if (!animationFrameRef.current || Date.now() % 3 === 0) {
+          setClientPositionsVersion(prev => prev + 1);
+        }
       }
     });
   }, [dragElementId, dragStart, dragElementStart, elements, canvasWidth, canvasHeight, snapToGridIfEnabled, resizeHandle, zoom, snapToGrid]);
@@ -185,24 +197,27 @@ export const useCanvasDragResize = ({
     });
     
     // Initialize client-side position with current element position
-    setClientPositions(prev => new Map(prev.set(elementId, {
+    clientPositionsRef.current.set(elementId, {
       x: element.x,
       y: element.y,
       width: element.width,
       height: element.height
-    })));
+    });
   }, [elements]);
 
   const endDragOrResize = useCallback(() => {
     if (dragElementId) {
-      const finalPosition = clientPositions.get(dragElementId);
+      const finalPosition = clientPositionsRef.current.get(dragElementId);
       if (finalPosition) {
         // Send final position to database - this is the ONLY database update during the entire drag operation
         onUpdateElement(dragElementId, finalPosition);
+        
+        // Clear client position immediately after database update
+        setTimeout(() => {
+          clientPositionsRef.current.delete(dragElementId);
+          setClientPositionsVersion(prev => prev + 1);
+        }, 50);
       }
-      
-      // Keep the client position temporarily to prevent flickering while database updates
-      // The position will be cleared by the parent component once it confirms the update
     }
     
     // Reset drag state immediately
@@ -219,7 +234,7 @@ export const useCanvasDragResize = ({
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
-  }, [dragElementId, clientPositions, onUpdateElement]);
+  }, [dragElementId, onUpdateElement]);
 
   const updateDragStart = useCallback((x: number, y: number) => {
     setDragStart({ x, y });
@@ -227,16 +242,13 @@ export const useCanvasDragResize = ({
 
   // Get the current position of an element (client-side override during drag, or original position)
   const getElementPosition = useCallback((elementId: string) => {
-    return clientPositions.get(elementId);
-  }, [clientPositions]);
+    return clientPositionsRef.current.get(elementId);
+  }, [clientPositionsVersion]); // Include version to trigger updates
 
   // Clear client position for an element (called by parent after successful database update)
   const clearClientPosition = useCallback((elementId: string) => {
-    setClientPositions(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(elementId);
-      return newMap;
-    });
+    clientPositionsRef.current.delete(elementId);
+    setClientPositionsVersion(prev => prev + 1);
   }, []);
 
   return {
