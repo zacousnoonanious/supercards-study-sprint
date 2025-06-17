@@ -28,6 +28,9 @@ export const useCanvasDragResize = ({
   const [dragElementStart, setDragElementStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [resizeHandle, setResizeHandle] = useState<string>('');
   
+  // Client-side position tracking for smooth dragging
+  const [clientPositions, setClientPositions] = useState<Map<string, { x: number; y: number; width: number; height: number }>>(new Map());
+  
   // Use refs for smooth updates
   const isDraggingRef = useRef(false);
   const isResizingRef = useRef(false);
@@ -76,7 +79,14 @@ export const useCanvasDragResize = ({
           newY = snapToGridIfEnabled(newY);
         }
         
-        onUpdateElement(dragElementId, { x: newX, y: newY });
+        // Update client-side position only
+        setClientPositions(prev => new Map(prev.set(dragElementId, {
+          x: newX,
+          y: newY,
+          width: element.width,
+          height: element.height
+        })));
+        
       } else if (isResizingRef.current) {
         // Handle resizing based on the handle
         let newWidth = dragElementStart.width;
@@ -137,15 +147,16 @@ export const useCanvasDragResize = ({
           newY = snapToGridIfEnabled(newY);
         }
         
-        onUpdateElement(dragElementId, { 
-          x: newX, 
-          y: newY, 
-          width: newWidth, 
-          height: newHeight 
-        });
+        // Update client-side position only
+        setClientPositions(prev => new Map(prev.set(dragElementId, {
+          x: newX,
+          y: newY,
+          width: newWidth,
+          height: newHeight
+        })));
       }
     });
-  }, [dragElementId, dragStart, dragElementStart, elements, canvasWidth, canvasHeight, snapToGridIfEnabled, onUpdateElement, resizeHandle, zoom, snapToGrid]);
+  }, [dragElementId, dragStart, dragElementStart, elements, canvasWidth, canvasHeight, snapToGridIfEnabled, resizeHandle, zoom, snapToGrid]);
 
   const startDragOrResize = useCallback((
     e: React.MouseEvent,
@@ -177,9 +188,32 @@ export const useCanvasDragResize = ({
       width: element.width,
       height: element.height,
     });
+    
+    // Initialize client-side position
+    setClientPositions(prev => new Map(prev.set(elementId, {
+      x: element.x,
+      y: element.y,
+      width: element.width,
+      height: element.height
+    })));
   }, [elements]);
 
   const endDragOrResize = useCallback(() => {
+    // Update the database with final position when drag ends
+    if (dragElementId) {
+      const finalPosition = clientPositions.get(dragElementId);
+      if (finalPosition) {
+        onUpdateElement(dragElementId, finalPosition);
+      }
+      
+      // Clear client-side position for this element
+      setClientPositions(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(dragElementId);
+        return newMap;
+      });
+    }
+    
     setIsDragging(false);
     setIsResizing(false);
     isDraggingRef.current = false;
@@ -193,11 +227,16 @@ export const useCanvasDragResize = ({
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
-  }, []);
+  }, [dragElementId, clientPositions, onUpdateElement]);
 
   const updateDragStart = useCallback((x: number, y: number) => {
     setDragStart({ x, y });
   }, []);
+
+  // Get the current position of an element (either from client-side tracking or original position)
+  const getElementPosition = useCallback((elementId: string) => {
+    return clientPositions.get(elementId);
+  }, [clientPositions]);
 
   return {
     isDragging,
@@ -207,5 +246,6 @@ export const useCanvasDragResize = ({
     startDragOrResize,
     endDragOrResize,
     updateDragStart,
+    getElementPosition,
   };
 };

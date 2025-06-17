@@ -85,11 +85,12 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     startDragOrResize,
     endDragOrResize,
     updateDragStart,
+    getElementPosition,
   } = useCanvasDragResize({
     elements,
     onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => {
-      // Apply smart snapping during drag
-      if (isDragging && updates.x !== undefined && updates.y !== undefined) {
+      // Apply smart snapping to final position only
+      if (updates.x !== undefined && updates.y !== undefined) {
         const element = elements.find(el => el.id === elementId);
         if (element) {
           const snapped = calculateSnapPosition(element, updates.x, updates.y);
@@ -189,6 +190,15 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     applyConstraints(elementId);
   }, [applyConstraints]);
 
+  // Create enhanced elements with client-side positions if available
+  const enhancedElements = elements.map(element => {
+    const clientPosition = getElementPosition(element.id);
+    if (clientPosition && dragElementId === element.id) {
+      return { ...element, ...clientPosition };
+    }
+    return element;
+  });
+
   return (
     <div
       ref={canvasRef}
@@ -228,7 +238,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       />
       
       {/* Canvas elements - should render above everything else */}
-      {elements.map((element) => (
+      {enhancedElements.map((element) => (
         <EnhancedCanvasElementWrapper
           key={element.id}
           element={element}
@@ -236,7 +246,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           isDragging={isDragging && dragElementId === element.id}
           editingElement={editingElement}
           zoom={zoom}
-          availableElements={elements}
+          availableElements={enhancedElements}
           canvasWidth={canvasWidth}
           canvasHeight={canvasHeight}
           onMouseDown={handleElementMouseDown}
