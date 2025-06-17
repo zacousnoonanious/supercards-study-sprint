@@ -89,7 +89,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   } = useCanvasDragResize({
     elements,
     onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => {
-      // Apply smart snapping to final position only
+      // Apply smart snapping to final position only during database save
       if (updates.x !== undefined && updates.y !== undefined) {
         const element = elements.find(el => el.id === elementId);
         if (element) {
@@ -98,9 +98,11 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
           updates.y = snapped.y;
         }
       }
+      
+      // Update database with final position
       onUpdateElement(elementId, updates);
       
-      // Apply layout constraints after update
+      // Apply layout constraints after database update
       setTimeout(() => {
         applyConstraints(elementId);
       }, 0);
@@ -190,12 +192,14 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     applyConstraints(elementId);
   }, [applyConstraints]);
 
-  // Create enhanced elements with client-side positions if available
+  // Create enhanced elements with client-side positions during drag, original positions otherwise
   const enhancedElements = elements.map(element => {
+    // Only override position if this element is currently being dragged
     const clientPosition = getElementPosition(element.id);
-    if (clientPosition && dragElementId === element.id) {
+    if (clientPosition && dragElementId === element.id && (isDragging || isResizing)) {
       return { ...element, ...clientPosition };
     }
+    // Use original element position from database/props
     return element;
   });
 
