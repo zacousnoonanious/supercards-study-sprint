@@ -44,70 +44,77 @@ export const useCardEditorState = (currentCard: Flashcard | null): CardEditorSta
   const [isPanning, setIsPanning] = useState(false);
   const [showCardOverview, setShowCardOverview] = useState(false);
 
-  // CRITICAL: Use refs to create completely stable handlers that never change
-  const handlersRef = useRef({
-    setZoom: (zoom: number) => {
-      console.log('🔧 PROTECTED: Setting zoom to', zoom);
-      setZoom(zoom);
-    },
-    setShowGrid: (show: boolean) => {
-      console.log('🔧 PROTECTED: Setting showGrid to', show);
-      setShowGrid(show);
-    },
-    setSnapToGrid: (snap: boolean) => {
-      console.log('🔧 PROTECTED: Setting snapToGrid to', snap);
-      setSnapToGrid(snap);
-    },
-    setShowBorder: (show: boolean) => {
-      console.log('🔧 PROTECTED: Setting showBorder to', show);
-      setShowBorder(show);
-    },
-    setAutoAlign: (align: boolean) => {
-      console.log('🔧 PROTECTED: Setting autoAlign to', align);
-      setAutoAlign(align);
-    },
-    setToolbarPosition: (position: 'left' | 'very-top' | 'canvas-left' | 'floating') => {
-      console.log('🔧 PROTECTED: Setting toolbarPosition to', position);
-      setToolbarPosition(position);
-    },
-    setToolbarIsDocked: (docked: boolean) => {
-      console.log('🔧 PROTECTED: Setting toolbarIsDocked to', docked);
-      setToolbarIsDocked(docked);
-    },
-    setToolbarShowText: (showText: boolean) => {
-      console.log('🔧 PROTECTED: Setting toolbarShowText to', showText);
-      setToolbarShowText(showText);
-    },
-    setIsPanning: (panning: boolean) => {
-      console.log('🔧 PROTECTED: Setting isPanning to', panning);
-      setIsPanning(panning);
-    },
-    setShowCardOverview: (show: boolean) => {
-      console.log('🔧 PROTECTED: Setting showCardOverview to', show);
-      setShowCardOverview(show);
-    },
-  });
+  // CRITICAL: Create truly stable handlers using useCallback with empty dependencies
+  const stableSetZoom = useCallback((zoom: number) => {
+    console.log('🔧 PROTECTED: Setting zoom to', zoom);
+    setZoom(zoom);
+  }, []);
+
+  const stableSetShowGrid = useCallback((show: boolean) => {
+    console.log('🔧 PROTECTED: Setting showGrid to', show);
+    setShowGrid(show);
+  }, []);
+
+  const stableSetSnapToGrid = useCallback((snap: boolean) => {
+    console.log('🔧 PROTECTED: Setting snapToGrid to', snap);
+    setSnapToGrid(snap);
+  }, []);
+
+  const stableSetShowBorder = useCallback((show: boolean) => {
+    console.log('🔧 PROTECTED: Setting showBorder to', show);
+    setShowBorder(show);
+  }, []);
+
+  const stableSetAutoAlign = useCallback((align: boolean) => {
+    console.log('🔧 PROTECTED: Setting autoAlign to', align);
+    setAutoAlign(align);
+  }, []);
+
+  const stableSetToolbarPosition = useCallback((position: 'left' | 'very-top' | 'canvas-left' | 'floating') => {
+    console.log('🔧 PROTECTED: Setting toolbarPosition to', position);
+    setToolbarPosition(position);
+  }, []);
+
+  const stableSetToolbarIsDocked = useCallback((docked: boolean) => {
+    console.log('🔧 PROTECTED: Setting toolbarIsDocked to', docked);
+    setToolbarIsDocked(docked);
+  }, []);
+
+  const stableSetToolbarShowText = useCallback((showText: boolean) => {
+    console.log('🔧 PROTECTED: Setting toolbarShowText to', showText);
+    setToolbarShowText(showText);
+  }, []);
+
+  const stableSetIsPanning = useCallback((panning: boolean) => {
+    console.log('🔧 PROTECTED: Setting isPanning to', panning);
+    setIsPanning(panning);
+  }, []);
+
+  const stableSetShowCardOverview = useCallback((show: boolean) => {
+    console.log('🔧 PROTECTED: Setting showCardOverview to', show);
+    setShowCardOverview(show);
+  }, []);
 
   return {
     zoom,
-    setZoom: handlersRef.current.setZoom,
+    setZoom: stableSetZoom,
     showGrid,
-    setShowGrid: handlersRef.current.setShowGrid,
+    setShowGrid: stableSetShowGrid,
     snapToGrid,
-    setSnapToGrid: handlersRef.current.setSnapToGrid,
+    setSnapToGrid: stableSetSnapToGrid,
     showBorder,
-    setShowBorder: handlersRef.current.setShowBorder,
+    setShowBorder: stableSetShowBorder,
     autoAlign,
-    setAutoAlign: handlersRef.current.setAutoAlign,
+    setAutoAlign: stableSetAutoAlign,
     toolbarPosition,
-    setToolbarPosition: handlersRef.current.setToolbarPosition,
+    setToolbarPosition: stableSetToolbarPosition,
     toolbarIsDocked,
-    setToolbarIsDocked: handlersRef.current.setToolbarIsDocked,
+    setToolbarIsDocked: stableSetToolbarIsDocked,
     toolbarShowText,
-    setToolbarShowText: handlersRef.current.setToolbarShowText,
+    setToolbarShowText: stableSetToolbarShowText,
     isPanning,
-    setIsPanning: handlersRef.current.setIsPanning,
+    setIsPanning: stableSetIsPanning,
     showCardOverview,
-    setShowCardOverview: handlersRef.current.setShowCardOverview,
+    setShowCardOverview: stableSetShowCardOverview,
   };
 };

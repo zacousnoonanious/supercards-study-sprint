@@ -16,20 +16,21 @@ export const AutoAlignToggle: React.FC<AutoAlignToggleProps> = ({
 }) => {
   const { t } = useI18n();
 
-  // Use a ref to store the latest handler to avoid dependency issues
-  const handlerRef = React.useRef(onAutoAlignChange);
-  
-  // Update the ref when the handler changes
-  React.useEffect(() => {
-    handlerRef.current = onAutoAlignChange;
-  }, [onAutoAlignChange]);
+  console.log('🎛️ AutoAlignToggle render:', {
+    autoAlign,
+    hasHandler: !!onAutoAlignChange
+  });
 
-  // Create a stable handler that doesn't change on every render
+  // Create a truly stable handler that won't cause re-renders
   const handleCheckedChange = useCallback((checked: boolean) => {
-    if (typeof handlerRef.current === 'function') {
-      handlerRef.current(checked);
+    console.log('🎛️ Auto-align toggle clicked, new state:', checked);
+    if (typeof checked === 'boolean' && typeof onAutoAlignChange === 'function') {
+      console.log('🎛️ Calling onAutoAlignChange with:', checked);
+      onAutoAlignChange(checked);
+    } else {
+      console.error('❌ AutoAlignToggle: Invalid parameters:', { checked, onAutoAlignChange });
     }
-  }, []); // Empty dependency array makes this truly stable
+  }, [onAutoAlignChange]); // Include onAutoAlignChange in dependencies since it should be stable from parent
 
   return (
     <div className="flex items-center space-x-2">
