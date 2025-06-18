@@ -1,137 +1,157 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Play } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { useI18n } from '@/contexts/I18nContext';
-import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
+import { 
+  MoreVertical, 
+  Edit, 
+  Play, 
+  Trash2, 
+  Share2, 
+  Download,
+  Users,
+  Calendar,
+  BookOpen
+} from 'lucide-react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-
-interface FlashcardSet {
-  id: string;
-  title: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useNavigate } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
 
 interface DeckCardProps {
-  set: FlashcardSet;
-  onDelete: (id: string) => void;
+  set: {
+    id: string;
+    title: string;
+    description?: string;
+    created_at: string;
+    updated_at: string;
+    is_collaborative?: boolean;
+  };
+  onDelete: (deckId: string) => void;
 }
 
 export const DeckCard: React.FC<DeckCardProps> = ({ set, onDelete }) => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { t } = useI18n();
-  const [deleting, setDeleting] = useState(false);
 
-  const handleDelete = async () => {
-    setDeleting(true);
-    try {
-      console.log('Deleting set:', set.id);
-      
-      // Delete all flashcards in the set first
-      const { error: cardsError } = await supabase
-        .from('flashcards')
-        .delete()
-        .eq('set_id', set.id);
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('DeckCard: Navigating to editor for set:', set.id);
+    navigate(`/edit/${set.id}`);
+  };
 
-      if (cardsError) {
-        console.error('Error deleting cards:', cardsError);
-        throw cardsError;
-      }
+  const handleStudy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/study/${set.id}`);
+  };
 
-      // Delete the set (AI generation records will be automatically deleted via CASCADE)
-      const { error: setError } = await supabase
-        .from('flashcard_sets')
-        .delete()
-        .eq('id', set.id);
+  const handleView = () => {
+    console.log('DeckCard: Navigating to set view for:', set.id);
+    navigate(`/set/${set.id}`);
+  };
 
-      if (setError) {
-        console.error('Error deleting set:', setError);
-        throw setError;
-      }
-
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this deck?')) {
       onDelete(set.id);
-      toast({
-        title: t('success.deleted'),
-        description: t('decks.deleteSuccess').replace('{title}', set.title)
-      });
-    } catch (error) {
-      console.error('Error deleting set:', error);
-      toast({
-        title: t('error.general'),
-        description: t('decks.deleteError'),
-        variant: "destructive"
-      });
-    } finally {
-      setDeleting(false);
     }
   };
 
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // TODO: Implement share functionality
+    console.log('Share deck:', set.id);
+  };
+
+  const handleExport = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // TODO: Implement export functionality
+    console.log('Export deck:', set.id);
+  };
+
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="truncate">{set.title}</span>
-          <div className="flex space-x-1">
-            <Button variant="ghost" size="sm" onClick={() => navigate(`/edit/${set.id}`)}>
-              <Edit className="w-4 h-4" />
+    <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer" onClick={handleView}>
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+        <div className="flex-1">
+          <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
+            {set.title}
+          </CardTitle>
+          {set.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+              {set.description}
+            </p>
+          )}
+        </div>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <MoreVertical className="h-4 w-4" />
             </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  disabled={deleting}
-                  className="hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('decks.deleteConfirm')}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('decks.deleteMessage').replace('{title}', set.title)}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    {t('delete')}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </CardTitle>
-        <CardDescription>{set.description}</CardDescription>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleEdit}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleStudy}>
+              <Play className="mr-2 h-4 w-4" />
+              Study
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleShare}>
+              <Share2 className="mr-2 h-4 w-4" />
+              Share
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </CardHeader>
+      
       <CardContent>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={() => navigate(`/set/${set.id}`)} className="flex-1">
-            {t('decks.viewCards')}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <BookOpen className="h-3 w-3" />
+              <span>Cards</span>
+            </div>
+            {set.is_collaborative && (
+              <Badge variant="secondary" className="text-xs">
+                <Users className="h-3 w-3 mr-1" />
+                Collaborative
+              </Badge>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            <span>
+              {formatDistanceToNow(new Date(set.updated_at), { addSuffix: true })}
+            </span>
+          </div>
+        </div>
+        
+        <div className="flex gap-2 mt-4">
+          <Button size="sm" onClick={handleStudy} className="flex-1">
+            <Play className="h-3 w-3 mr-1" />
+            Study
           </Button>
-          <Button onClick={() => navigate(`/set/${set.id}/study`)} className="flex-1">
-            <Play className="w-4 h-4 mr-2" />
-            {t('decks.study')}
+          <Button size="sm" variant="outline" onClick={handleEdit}>
+            <Edit className="h-3 w-3 mr-1" />
+            Edit
           </Button>
         </div>
       </CardContent>

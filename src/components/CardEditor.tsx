@@ -19,33 +19,40 @@ import { useToast } from '@/hooks/use-toast';
  * and protected from external state resets.
  */
 export const CardEditor: React.FC = () => {
-  const { setId, cardId } = useParams<{ setId: string; cardId: string }>();
+  const { setId, cardId, id } = useParams<{ setId?: string; cardId?: string; id?: string }>();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
+  // Handle both route patterns: /edit/:setId/:cardId and /set/:id/edit/:cardId
+  const actualSetId = setId || id;
+  
   const [selectedElement, setSelectedElement] = useState<CanvasElement | null>(null);
   const [currentSide, setCurrentSide] = useState<'front' | 'back'>('front');
+
+  console.log('CardEditor: Initialized with params:', { setId, cardId, id, actualSetId });
 
   const {
     data: set,
     isLoading: isSetLoading,
     error: setQueryError,
   } = useQuery({
-    queryKey: ['set', setId],
+    queryKey: ['set', actualSetId],
     queryFn: async () => {
+      console.log('CardEditor: Fetching set data for:', actualSetId);
       const { data, error } = await supabase
         .from('flashcard_sets')
         .select('*')
-        .eq('id', setId)
+        .eq('id', actualSetId)
         .single();
 
       if (error) {
         console.error('Error fetching set:', error);
-        throw new Error(error.message);
+        throw new Error(`Failed to fetch set: ${error.message}`);
       }
+      console.log('CardEditor: Set data fetched successfully:', data);
       return data;
     },
-    enabled: !!setId,
+    enabled: !!actualSetId,
   });
 
   const {
@@ -53,33 +60,39 @@ export const CardEditor: React.FC = () => {
     isLoading: isCardsLoading,
     error: cardsQueryError,
   } = useQuery({
-    queryKey: ['cards', setId],
+    queryKey: ['cards', actualSetId],
     queryFn: async () => {
+      console.log('CardEditor: Fetching cards for set:', actualSetId);
       const { data, error } = await supabase
         .from('flashcards')
         .select('*')
-        .eq('set_id', setId)
+        .eq('set_id', actualSetId)
         .order('created_at', { ascending: true });
 
       if (error) {
         console.error('Error fetching cards:', error);
-        throw new Error(error.message);
+        throw new Error(`Failed to fetch cards: ${error.message}`);
       }
       
+      console.log('CardEditor: Cards fetched successfully:', data?.length, 'cards');
       // Transform database rows to match Flashcard interface
       return data.map(card => transformDatabaseCardToFlashcard(card));
     },
-    enabled: !!setId,
+    enabled: !!actualSetId,
   });
 
   const currentCardIndex = useMemo(() => {
     if (!cardId || !cards) return 0;
-    return cards.findIndex((card) => card.id === cardId);
+    const index = cards.findIndex((card) => card.id === cardId);
+    console.log('CardEditor: Current card index:', index, 'for cardId:', cardId);
+    return index >= 0 ? index : 0;
   }, [cardId, cards]);
 
   const currentCard = useMemo(() => {
     if (!cards || cards.length === 0) return null;
-    return cards[currentCardIndex] || null;
+    const card = cards[currentCardIndex] || null;
+    console.log('CardEditor: Current card:', card?.id);
+    return card;
   }, [cards, currentCardIndex]);
 
   // PROTECTED: Initialize card editor state with protection
@@ -103,13 +116,13 @@ export const CardEditor: React.FC = () => {
     };
 
     // Update cache immediately for instant UI response
-    queryClient.setQueryData(['cards', setId], (oldCards: Flashcard[] = []) => 
+    queryClient.setQueryData(['cards', actualSetId], (oldCards: Flashcard[] = []) => 
       oldCards.map(card => card.id === currentCard.id ? { ...card, ...cardUpdates } : card)
     );
 
     // Update database in background
     updateCard(cardUpdates);
-  }, [currentCard, queryClient, setId]);
+  }, [currentCard, queryClient, actualSetId]);
 
   // Create element delete handler
   const deleteElement = useCallback((elementId: string) => {
@@ -137,7 +150,7 @@ export const CardEditor: React.FC = () => {
       console.log('🔧 CardEditor: Updating card', updates);
       
       // Update cache immediately for instant response
-      queryClient.setQueryData(['cards', setId], (oldCards: Flashcard[] = []) => 
+      queryClient.setQueryData(['cards', actualSetId], (oldCards: Flashcard[] = []) => 
         oldCards.map(card => card.id === currentCard.id ? { ...card, ...updates } : card)
       );
 
@@ -147,14 +160,14 @@ export const CardEditor: React.FC = () => {
     } catch (error) {
       console.error('🔧 CardEditor: Error updating card:', error);
       // Revert cache on error
-      queryClient.invalidateQueries({ queryKey: ['cards', setId] });
+      queryClient.invalidateQueries({ queryKey: ['cards', actualSetId] });
       toast({
         title: 'Error',
         description: 'Failed to update card',
         variant: 'destructive',
       });
     }
-  }, [currentCard, setId, queryClient, toast]);
+  }, [currentCard, actualSetId, queryClient, toast]);
 
   // Create canvas size update handler
   const updateCanvasSize = useCallback(async (width: number, height: number) => {
@@ -204,7 +217,7 @@ export const CardEditor: React.FC = () => {
       // TODO: Implement deck name setting
     },
     selectedElementId: selectedElement?.id || null,
-    setId: setId!,
+    setId: actualSetId!,
     cardId: cardId!,
   });
 
@@ -252,7 +265,7 @@ export const CardEditor: React.FC = () => {
     activeUsers,
     enableCollaboration,
     removeCollaborator,
-  } = useCollaborativeEditing({ setId, cardId });
+  } = useCollaborativeEditing({ setId: actualSetId, cardId });
 
   if (isCardsLoading || isSetLoading) {
     return (
@@ -262,12 +275,100 @@ export const CardEditor: React.FC = () => {
     );
   }
 
-  if (!set || !currentCard) {
+  if (setQueryError || cardsQueryError) {
+    console.error('CardEditor: Query errors:', { setQueryError, cardsQueryError });
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">Error Loading Editor</h2>
+          <p className="text-muted-foreground">
+            {setQueryError?.message || cardsQueryError?.message || 'Failed to load the card editor'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!set) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">Set not found</h2>
+          <p className="text-muted-foreground">The set you're looking for doesn't exist.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no cards exist
+  if (!cards || cards.length === 0) {
+    return (
+      <CardEditorLayout
+        cards={[]}
+        currentCard={null}
+        currentCardIndex={0}
+        currentSide={currentSide}
+        selectedElement={selectedElement}
+        deckName={set.title}
+        cardWidth={600}
+        cardHeight={400}
+        zoom={cardEditorState.zoom}
+        
+        // PROTECTED: Use protected visual editor state including auto-align
+        showGrid={cardEditorState.showGrid}
+        snapToGrid={cardEditorState.snapToGrid}
+        showBorder={cardEditorState.showBorder}
+        autoAlign={cardEditorState.autoAlign}
+        onShowGridChange={cardEditorState.setShowGrid}
+        onSnapToGridChange={cardEditorState.setSnapToGrid}
+        onShowBorderChange={cardEditorState.setShowBorder}
+        onAutoAlignChange={cardEditorState.setAutoAlign}
+        
+        toolbarPosition={cardEditorState.toolbarPosition}
+        toolbarIsDocked={cardEditorState.toolbarIsDocked}
+        toolbarShowText={cardEditorState.toolbarShowText}
+        isPanning={cardEditorState.isPanning}
+        showCardOverview={cardEditorState.showCardOverview}
+        
+        // Connect all handlers properly
+        onZoomChange={cardEditorState.setZoom}
+        onToolbarPositionChange={cardEditorState.setToolbarPosition}
+        onToolbarDockChange={cardEditorState.setToolbarIsDocked}
+        onToolbarShowTextChange={cardEditorState.setToolbarShowText}
+        onShowCardOverviewChange={cardEditorState.setShowCardOverview}
+        onDeckTitleChange={handlers.handleUpdateDeckTitle}
+        onCardSideChange={handlers.handleCardSideChange}
+        onElementSelect={handleElementSelect}
+        onUpdateElement={handlers.handleUpdateElement}
+        onDeleteElement={handlers.handleDeleteElement}
+        onCanvasSizeChange={handlers.handleCanvasSizeChange}
+        onUpdateCard={handlers.handleCardUpdate}
+        onAddElement={handlers.handleAddElement}
+        onAutoArrange={handleAutoArrangeWithToggle}
+        onNavigateCard={handlers.handleNavigateCard}
+        onCreateNewCard={handlers.handleCreateNewCard}
+        onCreateNewCardWithLayout={handlers.handleCreateNewCardWithLayout}
+        onCreateNewCardFromTemplate={handlers.handleCreateNewCardFromTemplate}
+        onDeleteCard={handlers.handleDeleteCard}
+        onFitToView={() => {}} // Will be handled by CardEditorLayout
+        onOpenFullscreen={() => {}} // Will be handled by CardEditorLayout
+        isCollaborative={isCollaborative}
+        collaborators={collaborators}
+        activeUsers={activeUsers}
+        currentCardId={currentCard?.id}
+        onEnableCollaboration={enableCollaboration}
+        onRemoveCollaborator={removeCollaborator}
+        showEmptyState={true}
+      />
+    );
+  }
+
+  if (!currentCard) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <h2 className="text-xl font-semibold">Card not found</h2>
-          <p className="text-muted-foreground">The card you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground">The card you're looking for doesn't exist in this set.</p>
         </div>
       </div>
     );

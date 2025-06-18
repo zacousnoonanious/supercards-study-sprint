@@ -46,8 +46,11 @@ function App() {
                   <Route path="/set/:id/study" element={<ProtectedRoute><StudyMode /></ProtectedRoute>} />
                   <Route path="/set/:id/edit" element={<ProtectedRoute><CardEditorPage /></ProtectedRoute>} />
                   <Route path="/set/:id/edit/:cardId" element={<ProtectedRoute><CardEditorPage /></ProtectedRoute>} />
+                  
+                  {/* Primary editor routes */}
                   <Route path="/edit/:setId" element={<ProtectedRoute><CardEditorPage /></ProtectedRoute>} />
                   <Route path="/edit/:setId/:cardId" element={<ProtectedRoute><CardEditorPage /></ProtectedRoute>} />
+                  
                   <Route path="/study/:id" element={<ProtectedRoute><StudyMode /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
