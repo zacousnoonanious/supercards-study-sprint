@@ -1,5 +1,5 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Square } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
@@ -29,6 +29,14 @@ export const CardBorderToggle: React.FC<CardBorderToggleProps> = ({
   disabled = false,
 }) => {
   const { t } = useI18n();
+  
+  // Store the callback in a ref to avoid re-renders
+  const callbackRef = useRef(onShowBorderChange);
+  
+  // Update the ref when the callback changes
+  React.useEffect(() => {
+    callbackRef.current = onShowBorderChange;
+  }, [onShowBorderChange]);
 
   console.log('🎛️ CardBorderToggle render:', {
     showBorder,
@@ -36,17 +44,16 @@ export const CardBorderToggle: React.FC<CardBorderToggleProps> = ({
     disabled
   });
 
-  // Create a truly stable handler that won't cause re-renders
-  // CRITICAL: Empty dependency array to prevent infinite loops
+  // Create a completely stable handler that uses the ref
   const handleCheckedChange = useCallback((checked: boolean) => {
     console.log('🎛️ Border toggle clicked, new state:', checked);
-    if (typeof checked === 'boolean' && typeof onShowBorderChange === 'function') {
+    if (typeof checked === 'boolean' && typeof callbackRef.current === 'function') {
       console.log('🎛️ Calling onShowBorderChange with:', checked);
-      onShowBorderChange(checked);
+      callbackRef.current(checked);
     } else {
-      console.error('❌ CardBorderToggle: Invalid parameters:', { checked, onShowBorderChange });
+      console.error('❌ CardBorderToggle: Invalid parameters:', { checked, callback: callbackRef.current });
     }
-  }, []); // FIXED: Empty dependencies to prevent infinite loops
+  }, []); // Completely empty dependencies - using ref instead
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>

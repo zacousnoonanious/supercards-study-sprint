@@ -1,5 +1,5 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { AlignCenter } from 'lucide-react';
@@ -15,23 +15,30 @@ export const AutoAlignToggle: React.FC<AutoAlignToggleProps> = ({
   onAutoAlignChange,
 }) => {
   const { t } = useI18n();
+  
+  // Store the callback in a ref to avoid re-renders
+  const callbackRef = useRef(onAutoAlignChange);
+  
+  // Update the ref when the callback changes
+  React.useEffect(() => {
+    callbackRef.current = onAutoAlignChange;
+  }, [onAutoAlignChange]);
 
   console.log('🎛️ AutoAlignToggle render:', {
     autoAlign,
     hasHandler: !!onAutoAlignChange
   });
 
-  // Create a truly stable handler that won't cause re-renders
-  // CRITICAL: Empty dependency array to prevent infinite loops
+  // Create a completely stable handler that uses the ref
   const handleCheckedChange = useCallback((checked: boolean) => {
     console.log('🎛️ Auto-align toggle clicked, new state:', checked);
-    if (typeof checked === 'boolean' && typeof onAutoAlignChange === 'function') {
+    if (typeof checked === 'boolean' && typeof callbackRef.current === 'function') {
       console.log('🎛️ Calling onAutoAlignChange with:', checked);
-      onAutoAlignChange(checked);
+      callbackRef.current(checked);
     } else {
-      console.error('❌ AutoAlignToggle: Invalid parameters:', { checked, onAutoAlignChange });
+      console.error('❌ AutoAlignToggle: Invalid parameters:', { checked, callback: callbackRef.current });
     }
-  }, []); // FIXED: Empty dependencies to prevent infinite loops
+  }, []); // Completely empty dependencies - using ref instead
 
   return (
     <div className="flex items-center space-x-2">
