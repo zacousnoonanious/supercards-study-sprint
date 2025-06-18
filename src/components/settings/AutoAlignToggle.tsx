@@ -22,6 +22,7 @@ export const AutoAlignToggle: React.FC<AutoAlignToggleProps> = ({
   });
 
   // Create a truly stable handler that won't cause re-renders
+  // CRITICAL: Empty dependency array to prevent infinite loops
   const handleCheckedChange = useCallback((checked: boolean) => {
     console.log('🎛️ Auto-align toggle clicked, new state:', checked);
     if (typeof checked === 'boolean' && typeof onAutoAlignChange === 'function') {
@@ -30,7 +31,7 @@ export const AutoAlignToggle: React.FC<AutoAlignToggleProps> = ({
     } else {
       console.error('❌ AutoAlignToggle: Invalid parameters:', { checked, onAutoAlignChange });
     }
-  }, [onAutoAlignChange]); // Include onAutoAlignChange in dependencies since it should be stable from parent
+  }, []); // FIXED: Empty dependencies to prevent infinite loops
 
   return (
     <div className="flex items-center space-x-2">

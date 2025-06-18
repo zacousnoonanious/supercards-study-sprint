@@ -37,6 +37,7 @@ export const CardBorderToggle: React.FC<CardBorderToggleProps> = ({
   });
 
   // Create a truly stable handler that won't cause re-renders
+  // CRITICAL: Empty dependency array to prevent infinite loops
   const handleCheckedChange = useCallback((checked: boolean) => {
     console.log('🎛️ Border toggle clicked, new state:', checked);
     if (typeof checked === 'boolean' && typeof onShowBorderChange === 'function') {
@@ -45,7 +46,7 @@ export const CardBorderToggle: React.FC<CardBorderToggleProps> = ({
     } else {
       console.error('❌ CardBorderToggle: Invalid parameters:', { checked, onShowBorderChange });
     }
-  }, [onShowBorderChange]); // Include onShowBorderChange in dependencies since it should be stable from parent
+  }, []); // FIXED: Empty dependencies to prevent infinite loops
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
