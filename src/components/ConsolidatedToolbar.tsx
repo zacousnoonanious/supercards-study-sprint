@@ -157,7 +157,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={onUndo}
-                      disabled={!canUndo}
+                      disabled={!canUndo || !onUndo}
                       className={`${showText ? 'justify-start h-6' : 'aspect-square p-0 h-6 w-6'} transition-colors`}
                     >
                       <Undo2 className="w-2.5 h-2.5" />
@@ -185,7 +185,7 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={onRedo}
-                      disabled={!canRedo}
+                      disabled={!canRedo || !onRedo}
                       className={`${showText ? 'justify-start h-6' : 'aspect-square p-0 h-6 w-6'} transition-colors`}
                     >
                       <Redo2 className="w-2.5 h-2.5" />

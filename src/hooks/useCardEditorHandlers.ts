@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
@@ -6,6 +5,7 @@ import { updateFlashcardSet } from '@/lib/api/sets';
 import { updateFlashcard, deleteFlashcard } from '@/lib/api/flashcards';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseCardEditorHandlersProps {
   updateElement: (elementId: string, updates: Partial<CanvasElement>) => void;

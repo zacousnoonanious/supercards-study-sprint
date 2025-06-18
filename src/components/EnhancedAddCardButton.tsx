@@ -1,159 +1,113 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, Plus, LayoutTemplate } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Plus, ChevronDown, LayoutTemplate } from 'lucide-react';
 import { CardTemplate } from '@/types/flashcard';
-import { cardTemplates } from '@/data/cardTemplates';
-import { useI18n } from '@/contexts/I18nContext';
+import { NewCardTemplateSelector } from './NewCardTemplateSelector';
+import { TemplateSelector } from './TemplateSelector';
 
 interface EnhancedAddCardButtonProps {
   onCreateCard: () => void;
   onCreateFromTemplate: (template: CardTemplate) => void;
   showText?: boolean;
-  onBrowseTemplates?: () => void;
 }
 
 export const EnhancedAddCardButton: React.FC<EnhancedAddCardButtonProps> = ({
   onCreateCard,
   onCreateFromTemplate,
-  showText = false,
-  onBrowseTemplates,
+  showText = true,
 }) => {
-  const [selectedTemplate, setSelectedTemplate] = useState<CardTemplate | null>(null);
-  const [isLongPress, setIsLongPress] = useState(false);
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { t } = useI18n();
-
-  // Load saved template preference
-  useEffect(() => {
-    const savedTemplateId = localStorage.getItem('lastSelectedTemplate');
-    if (savedTemplateId) {
-      const template = cardTemplates.find(t => t.id === savedTemplateId);
-      if (template) {
-        setSelectedTemplate(template);
-      }
-    }
-  }, []);
-
-  const handleMouseDown = () => {
-    longPressTimer.current = setTimeout(() => {
-      setIsLongPress(true);
-      setDropdownOpen(true);
-    }, 500); // 500ms long press
-  };
-
-  const handleMouseUp = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-    }
-    
-    if (!isLongPress) {
-      // Short press - use selected template or create blank card
-      if (selectedTemplate) {
-        onCreateFromTemplate(selectedTemplate);
-      } else {
-        onCreateCard();
-      }
-    }
-    
-    setIsLongPress(false);
-  };
-
-  const handleMouseLeave = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-    }
-    setIsLongPress(false);
-  };
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const handleTemplateSelect = (template: CardTemplate) => {
-    setSelectedTemplate(template);
-    localStorage.setItem('lastSelectedTemplate', template.id);
     onCreateFromTemplate(template);
-    setDropdownOpen(false);
+    setShowTemplateSelector(false);
   };
 
-  const handleBlankCard = () => {
-    setSelectedTemplate(null);
-    localStorage.removeItem('lastSelectedTemplate');
-    onCreateCard();
-    setDropdownOpen(false);
-  };
-
-  return (
-    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className={`relative ${showText ? 'justify-start' : 'aspect-square p-0'} transition-colors`}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          onTouchStart={handleMouseDown}
-          onTouchEnd={handleMouseUp}
-        >
-          <Plus className="w-4 h-4" />
-          {showText && (
-            <span className="ml-2">
-              {selectedTemplate ? selectedTemplate.name : t('editor.newCard')}
-            </span>
-          )}
-          <ChevronDown className="w-3 h-3 ml-1 opacity-60" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64">
-        <DropdownMenuItem onClick={handleBlankCard}>
-          <Plus className="w-4 h-4 mr-2" />
-          {t('editor.blankCard')}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {cardTemplates.map((template) => (
-          <DropdownMenuItem 
-            key={template.id}
-            onClick={() => handleTemplateSelect(template)}
-            className="flex flex-col items-start gap-1"
-          >
-            <div className="flex items-center gap-2 w-full">
-              <span className="font-medium">{template.name}</span>
-              {selectedTemplate?.id === template.id && (
-                <span className="text-xs bg-primary text-primary-foreground px-1 rounded ml-auto">
-                  {t('common.current')}
-                </span>
-              )}
-            </div>
-            {template.description && (
-              <span className="text-xs text-muted-foreground">{template.description}</span>
-            )}
-          </DropdownMenuItem>
-        ))}
-        {onBrowseTemplates && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => {
-                onBrowseTemplates();
-                setDropdownOpen(false);
-              }}
+  if (showText) {
+    return (
+      <>
+        <DropdownMenu open={showDropdown} onOpenChange={setShowDropdown}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="justify-between h-6 w-full"
             >
-              <LayoutTemplate className="w-4 h-4 mr-2" />
-              {t('common.browseLibrary')}
+              <div className="flex items-center">
+                <Plus className="w-2.5 h-2.5 mr-1" />
+                <span className="text-xs">Add Card</span>
+              </div>
+              <ChevronDown className="w-2.5 h-2.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuItem onClick={() => {
+              onCreateCard();
+              setShowDropdown(false);
+            }}>
+              <Plus className="w-4 h-4 mr-2" />
+              Blank Card
             </DropdownMenuItem>
-          </>
+            <DropdownMenuItem onClick={() => {
+              setShowTemplateSelector(true);
+              setShowDropdown(false);
+            }}>
+              <LayoutTemplate className="w-4 h-4 mr-2" />
+              From Template
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {showTemplateSelector && (
+          <TemplateSelector
+            onSelectTemplate={handleTemplateSelect}
+            onClose={() => setShowTemplateSelector(false)}
+          />
         )}
-        <DropdownMenuSeparator />
-        <div className="px-2 py-1 text-xs text-muted-foreground">
-          {t('editor.longPressToChoose')}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </>
+    );
+  }
+
+  // Compact icon-only version
+  return (
+    <>
+      <DropdownMenu open={showDropdown} onOpenChange={setShowDropdown}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="aspect-square p-0 h-6 w-6"
+          >
+            <Plus className="w-2.5 h-2.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuItem onClick={() => {
+            onCreateCard();
+            setShowDropdown(false);
+          }}>
+            <Plus className="w-4 h-4 mr-2" />
+            Blank Card
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => {
+            setShowTemplateSelector(true);
+            setShowDropdown(false);
+          }}>
+            <LayoutTemplate className="w-4 h-4 mr-2" />
+            From Template
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {showTemplateSelector && (
+        <TemplateSelector
+          onSelectTemplate={handleTemplateSelect}
+          onClose={() => setShowTemplateSelector(false)}
+        />
+      )}
+    </>
   );
 };
