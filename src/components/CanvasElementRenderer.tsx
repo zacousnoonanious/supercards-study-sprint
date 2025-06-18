@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { TextElementRenderer } from './canvas-elements/TextElementRenderer';
 import { ImageElementRenderer } from './canvas-elements/ImageElementRenderer';
 import { AudioElementRenderer } from './canvas-elements/AudioElementRenderer';
@@ -28,7 +28,8 @@ export interface CanvasElementRendererProps {
   onLaunchEmbeddedDeck?: (deckId: string) => void;
 }
 
-export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
+// Memoize the component to prevent unnecessary re-renders
+export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = memo(({
   element,
   isSelected = false,
   zoom = 1,
@@ -44,112 +45,143 @@ export const CanvasElementRenderer: React.FC<CanvasElementRendererProps> = ({
   onElementLink,
   onLaunchEmbeddedDeck,
 }) => {
-  switch (element.type) {
-    case 'text':
-      return (
-        <TextElementRenderer
-          element={element}
-          isSelected={isSelected}
-          zoom={zoom}
-          onUpdateElement={onUpdateElement}
-          onElementDragStart={onElementDragStart}
-          isDragging={isDragging}
-          onEditingChange={onEditingChange}
-          editingElement={editingElement}
-          textScale={textScale}
-          isStudyMode={isStudyMode}
-          onElementSelect={onElementSelect}
-          isDarkTheme={isDarkTheme}
-        />
-      );
-    case 'image':
-      return (
-        <ImageElementRenderer
-          element={element}
-          isSelected={isSelected}
-          zoom={zoom}
-          onUpdateElement={onUpdateElement}
-          onElementDragStart={onElementDragStart}
-          isDragging={isDragging}
-        />
-      );
-    case 'audio':
-      return (
-        <AudioElementRenderer
-          element={element}
-          isSelected={isSelected}
-          zoom={zoom}
-          onUpdateElement={onUpdateElement}
-          textScale={textScale}
-          isStudyMode={isStudyMode}
-          onElementSelect={onElementSelect}
-          isDarkTheme={isDarkTheme}
-        />
-      );
-    case 'multiple-choice':
-      return (
-        <MultipleChoiceRenderer
-          element={element}
-          isSelected={isSelected}
-          zoom={zoom}
-          onUpdateElement={onUpdateElement}
-        />
-      );
-    case 'true-false':
-      return (
-        <TrueFalseRenderer
-          element={element}
-          isSelected={isSelected}
-          zoom={zoom}
-          onUpdateElement={onUpdateElement}
-        />
-      );
-    case 'fill-in-blank':
-      return (
-        <FillInBlankRenderer
-          element={element}
-          isSelected={isSelected}
-          zoom={zoom}
-          onUpdateElement={onUpdateElement}
-        />
-      );
-    case 'youtube':
-      return (
-        <YouTubeElementRenderer
-          element={element}
-          isSelected={isSelected}
-          zoom={zoom}
-          onUpdateElement={onUpdateElement}
-        />
-      );
-    case 'drawing':
-      return (
-        <DrawingElementRenderer
-          element={element}
-          isSelected={isSelected}
-          zoom={zoom}
-          onUpdateElement={onUpdateElement}
-        />
-      );
-    case 'video':
-    case 'iframe':
-    case 'embedded-deck':
-    case 'deck-embed':
-      return (
-        <MediaElementRenderer
-          element={element}
-          isSelected={isSelected}
-          zoom={zoom}
-          onUpdateElement={onUpdateElement}
-        />
-      );
-    case 'tts':
-      return null;
-    default:
-      return (
-        <div className="border-2 border-red-500">
-          Unknown element type: {element.type}
-        </div>
-      );
+  console.log('🔧 CanvasElementRenderer render for element:', element.id, element.type);
+
+  // Add error boundary logic
+  try {
+    switch (element.type) {
+      case 'text':
+        return (
+          <TextElementRenderer
+            element={element}
+            isSelected={isSelected}
+            zoom={zoom}
+            onUpdateElement={onUpdateElement}
+            onElementDragStart={onElementDragStart}
+            isDragging={isDragging}
+            onEditingChange={onEditingChange}
+            editingElement={editingElement}
+            textScale={textScale}
+            isStudyMode={isStudyMode}
+            onElementSelect={onElementSelect}
+            isDarkTheme={isDarkTheme}
+          />
+        );
+      case 'image':
+        return (
+          <ImageElementRenderer
+            element={element}
+            isSelected={isSelected}
+            zoom={zoom}
+            onUpdateElement={onUpdateElement}
+            onElementDragStart={onElementDragStart}
+            isDragging={isDragging}
+            textScale={textScale}
+            isStudyMode={isStudyMode}
+            onElementSelect={onElementSelect}
+            isDarkTheme={isDarkTheme}
+          />
+        );
+      case 'audio':
+        return (
+          <AudioElementRenderer
+            element={element}
+            isSelected={isSelected}
+            zoom={zoom}
+            onUpdateElement={onUpdateElement}
+            textScale={textScale}
+            isStudyMode={isStudyMode}
+            onElementSelect={onElementSelect}
+            isDarkTheme={isDarkTheme}
+          />
+        );
+      case 'multiple-choice':
+        return (
+          <MultipleChoiceRenderer
+            element={element}
+            isSelected={isSelected}
+            zoom={zoom}
+            onUpdateElement={onUpdateElement}
+          />
+        );
+      case 'true-false':
+        return (
+          <TrueFalseRenderer
+            element={element}
+            isSelected={isSelected}
+            zoom={zoom}
+            onUpdateElement={onUpdateElement}
+          />
+        );
+      case 'fill-in-blank':
+        return (
+          <FillInBlankRenderer
+            element={element}
+            isSelected={isSelected}
+            zoom={zoom}
+            onUpdateElement={onUpdateElement}
+          />
+        );
+      case 'youtube':
+        return (
+          <YouTubeElementRenderer
+            element={element}
+            isSelected={isSelected}
+            zoom={zoom}
+            onUpdateElement={onUpdateElement}
+          />
+        );
+      case 'drawing':
+        return (
+          <DrawingElementRenderer
+            element={element}
+            isSelected={isSelected}
+            zoom={zoom}
+            onUpdateElement={onUpdateElement}
+            onElementDragStart={onElementDragStart}
+            isDragging={isDragging}
+          />
+        );
+      case 'video':
+      case 'iframe':
+      case 'embedded-deck':
+      case 'deck-embed':
+        return (
+          <MediaElementRenderer
+            element={element}
+            isSelected={isSelected}
+            zoom={zoom}
+            onUpdateElement={onUpdateElement}
+          />
+        );
+      case 'tts':
+        return null;
+      default:
+        console.warn('🔧 Unknown element type:', element.type);
+        return (
+          <div className="border-2 border-red-500 p-2 text-red-600">
+            Unknown element type: {element.type}
+          </div>
+        );
+    }
+  } catch (error) {
+    console.error('🔧 Error rendering element:', element.id, error);
+    return (
+      <div className="border-2 border-red-500 p-2 text-red-600">
+        Error rendering {element.type} element
+      </div>
+    );
   }
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison to prevent unnecessary re-renders
+  return (
+    prevProps.element.id === nextProps.element.id &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isDragging === nextProps.isDragging &&
+    prevProps.editingElement === nextProps.editingElement &&
+    prevProps.zoom === nextProps.zoom &&
+    JSON.stringify(prevProps.element) === JSON.stringify(nextProps.element)
+  );
+});
+
+CanvasElementRenderer.displayName = 'CanvasElementRenderer';
