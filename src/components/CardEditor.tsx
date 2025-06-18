@@ -133,8 +133,8 @@ export const CardEditor: React.FC = () => {
         oldCards.map(card => card.id === currentCard.id ? { ...card, ...updates } : card)
       );
 
-      // Update database in background
-      await updateFlashcard(currentCard.id, updates);
+      // Update database in background - fix the function call
+      await updateFlashcard({ id: currentCard.id, ...updates });
       
       console.log('🔧 CardEditor: Card updated successfully');
     } catch (error) {
