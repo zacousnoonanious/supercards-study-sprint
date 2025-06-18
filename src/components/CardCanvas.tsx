@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasBackground } from './CanvasBackground';
 import { EnhancedCanvasElementWrapper } from './canvas/EnhancedCanvasElementWrapper';
@@ -55,20 +55,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
-
-  // PROTECTED: Log visual editor props with protection markers
-  useEffect(() => {
-    console.log('🔧 PROTECTED: CardCanvas Props Update:', {
-      showGrid,
-      snapToGrid,
-      showBorder,
-      autoAlign,
-      gridSize,
-      zoom,
-      cardSide,
-      timestamp: new Date().toISOString()
-    });
-  }, [showGrid, snapToGrid, showBorder, autoAlign, gridSize, zoom, cardSide]);
 
   // Get canvas dimensions from style with validation
   const canvasWidth = (style?.width as number) || 600;
@@ -275,18 +261,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     console.log('🔧 PROTECTED: Border styles applied:', borderStyles);
     return borderStyles;
   }, [showBorder]);
-
-  // PROTECTED: Log when canvas renders
-  useEffect(() => {
-    console.log('🔧 PROTECTED: CardCanvas rendered with visual features:', {
-      showGrid,
-      showBorder,
-      snapToGrid,
-      autoAlign,
-      elementsCount: elements.length,
-      timestamp: new Date().toISOString()
-    });
-  });
 
   return (
     <div

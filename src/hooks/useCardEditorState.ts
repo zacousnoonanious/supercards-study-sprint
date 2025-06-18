@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+
+import { useState, useCallback, useRef } from 'react';
 import { Flashcard } from '@/types/flashcard';
 
 interface CardEditorState {
@@ -31,7 +32,7 @@ interface CardEditorState {
  * CRITICAL: This hook maintains protected state that should not be reset by external effects.
  */
 export const useCardEditorState = (currentCard: Flashcard | null): CardEditorState => {
-  // PROTECTED: Visual editor state with protection against resets
+  // PROTECTED: Visual editor state - simplified without problematic effects
   const [zoom, setZoom] = useState(1);
   const [showGrid, setShowGrid] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(false);
@@ -43,40 +44,14 @@ export const useCardEditorState = (currentCard: Flashcard | null): CardEditorSta
   const [isPanning, setIsPanning] = useState(false);
   const [showCardOverview, setShowCardOverview] = useState(false);
 
-  // PROTECTION: Use ref to track initialization and prevent resets
-  const protectedStateRef = useRef({
-    initialized: false,
-    showGrid,
-    snapToGrid,
-    showBorder,
-    autoAlign,
-  });
+  // PROTECTION: Simple ref for tracking without triggering effects
+  const initRef = useRef(false);
+  if (!initRef.current) {
+    initRef.current = true;
+    console.log('🔧 PROTECTED: CardEditorState initialized');
+  }
 
-  // PROTECTED: Update ref when state changes (but don't reset state)
-  useEffect(() => {
-    protectedStateRef.current = {
-      ...protectedStateRef.current,
-      showGrid,
-      snapToGrid,
-      showBorder,
-      autoAlign,
-    };
-  }, [showGrid, snapToGrid, showBorder, autoAlign]);
-
-  // PROTECTION: Log state changes with protection markers
-  useEffect(() => {
-    console.log('🔧 PROTECTED: CardEditorState updated:', {
-      showGrid,
-      snapToGrid,
-      showBorder,
-      autoAlign,
-      zoom,
-      toolbarPosition,
-      timestamp: new Date().toISOString()
-    });
-  }, [showGrid, snapToGrid, showBorder, autoAlign, zoom, toolbarPosition]);
-
-  // PROTECTED: Safe setters that maintain protection
+  // PROTECTED: Stable setters to prevent re-render loops
   const handleSetShowGrid = useCallback((show: boolean) => {
     console.log('🔧 PROTECTED: Setting showGrid to', show);
     setShowGrid(show);
