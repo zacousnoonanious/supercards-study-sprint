@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 
@@ -10,6 +9,7 @@ interface UseCanvasDragResizeProps {
   snapToGrid: boolean;
   gridSize: number;
   zoom?: number;
+  calculateSnapPosition?: (element: CanvasElement, x: number, y: number) => { x: number; y: number };
 }
 
 export const useCanvasDragResize = ({
@@ -20,6 +20,7 @@ export const useCanvasDragResize = ({
   snapToGrid,
   gridSize,
   zoom = 1,
+  calculateSnapPosition,
 }: UseCanvasDragResizeProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -74,14 +75,21 @@ export const useCanvasDragResize = ({
         newX = Math.max(0, Math.min(newX, canvasWidth - element.width));
         newY = Math.max(0, Math.min(newY, canvasHeight - element.height));
         
-        // Apply grid snapping during drag for visual feedback
-        const snappedX = snapToGrid ? snapToGridIfEnabled(newX) : newX;
-        const snappedY = snapToGrid ? snapToGridIfEnabled(newY) : newY;
+        // Apply smart snapping if available (for magnetic behavior during drag)
+        if (calculateSnapPosition) {
+          const snapped = calculateSnapPosition(element, newX, newY);
+          newX = snapped.x;
+          newY = snapped.y;
+        } else if (snapToGrid) {
+          // Apply grid snapping during drag for visual feedback
+          newX = snapToGridIfEnabled(newX);
+          newY = snapToGridIfEnabled(newY);
+        }
         
         // Update client-side position using ref to avoid re-renders
         clientPositionsRef.current.set(dragElementId, {
-          x: snappedX,
-          y: snappedY,
+          x: newX,
+          y: newY,
           width: element.width,
           height: element.height
         });
@@ -163,7 +171,7 @@ export const useCanvasDragResize = ({
         }
       }
     });
-  }, [dragElementId, dragStart, dragElementStart, elements, canvasWidth, canvasHeight, snapToGridIfEnabled, resizeHandle, zoom, snapToGrid]);
+  }, [dragElementId, dragStart, dragElementStart, elements, canvasWidth, canvasHeight, snapToGridIfEnabled, resizeHandle, zoom, snapToGrid, calculateSnapPosition]);
 
   const startDragOrResize = useCallback((
     e: React.MouseEvent,

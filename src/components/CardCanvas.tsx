@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasBackground } from './CanvasBackground';
@@ -53,7 +52,6 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 }) => {
   const { theme } = useTheme();
   const [editingElement, setEditingElement] = useState<string | null>(null);
-  const [hoveredElement, setHoveredElement] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
@@ -89,7 +87,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     elements,
     canvasWidth,
     canvasHeight,
-    snapThreshold: autoAlign ? 10 : 5, // Larger threshold when auto-align is enabled
+    snapThreshold: autoAlign ? 15 : 5, // Larger magnetic threshold when auto-align is enabled
   });
 
   const {
@@ -153,26 +151,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     snapToGrid: snapToGrid && !autoAlign, // Disable grid snap when auto-align is enabled
     gridSize,
     zoom,
+    calculateSnapPosition: autoAlign ? calculateSnapPosition : undefined, // Pass snap calculator for magnetic behavior
   });
-
-  // Handle element hover for auto-align guides
-  const handleElementMouseEnter = useCallback((elementId: string) => {
-    if (autoAlign && !isDragging && !isResizing) {
-      setHoveredElement(elementId);
-      // Show alignment guides for hovered element
-      const element = elements.find(el => el.id === elementId);
-      if (element) {
-        calculateSnapPosition(element, element.x, element.y);
-      }
-    }
-  }, [autoAlign, isDragging, isResizing, elements, calculateSnapPosition]);
-
-  const handleElementMouseLeave = useCallback(() => {
-    if (autoAlign && !isDragging && !isResizing) {
-      setHoveredElement(null);
-      clearSnapGuides();
-    }
-  }, [autoAlign, isDragging, isResizing, clearSnapGuides]);
 
   const handleElementMouseDown = useCallback((e: React.MouseEvent, elementId: string, action: 'drag' | 'resize' = 'drag', handle?: string) => {
     // Don't start dragging if we're editing this element
@@ -203,8 +183,8 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     if (rect) {
       handleMouseMove(e, rect);
       
-      // Show snap guides during drag when auto-align is enabled
-      if (autoAlign && dragElementId) {
+      // Show snap guides during drag when auto-align is enabled and actively dragging
+      if (autoAlign && isDragging && dragElementId) {
         const draggedElement = elements.find(el => el.id === dragElementId);
         if (draggedElement) {
           const canvasX = (e.clientX - rect.left) / zoom;
@@ -217,10 +197,9 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
 
   const handleMouseUpOrLeave = useCallback(() => {
     endDragOrResize();
-    if (!autoAlign || !hoveredElement) {
-      clearSnapGuides();
-    }
-  }, [endDragOrResize, clearSnapGuides, autoAlign, hoveredElement]);
+    // Always clear snap guides when drag/resize ends
+    clearSnapGuides();
+  }, [endDragOrResize, clearSnapGuides]);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     // Check if the click target is the canvas itself or the background
@@ -231,12 +210,9 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     if (isCanvasBackground) {
       onSelectElement(null);
       setEditingElement(null);
-      if (autoAlign) {
-        clearSnapGuides();
-        setHoveredElement(null);
-      }
+      clearSnapGuides();
     }
-  }, [onSelectElement, autoAlign, clearSnapGuides]);
+  }, [onSelectElement, clearSnapGuides]);
 
   const handleElementClick = useCallback((e: React.MouseEvent, elementId: string) => {
     e.stopPropagation();
@@ -336,12 +312,14 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         isDarkTheme={isDarkTheme}
       />
       
-      {/* Smart Snap Guides - Essential for precise positioning and auto-align */}
-      <SmartSnapGuides
-        guides={activeSnapGuides}
-        canvasWidth={canvasWidth}
-        canvasHeight={canvasHeight}
-      />
+      {/* Smart Snap Guides - Only show during active dragging when auto-align is enabled */}
+      {autoAlign && isDragging && (
+        <SmartSnapGuides
+          guides={activeSnapGuides}
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
+        />
+      )}
       
       {/* Card Side Indicator */}
       <CanvasCardSideIndicator
@@ -351,11 +329,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
       
       {/* Render all canvas elements */}
       {enhancedElements.map((element) => (
-        <div
-          key={element.id}
-          onMouseEnter={() => handleElementMouseEnter(element.id)}
-          onMouseLeave={handleElementMouseLeave}
-        >
+        <div key={element.id}>
           <EnhancedCanvasElementWrapper
             element={element}
             isSelected={selectedElement === element.id}
