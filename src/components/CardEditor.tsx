@@ -121,6 +121,38 @@ export const CardEditor: React.FC = () => {
   // PROTECTED: Initialize card editor state with protection
   const cardEditorState = useCardEditorState(currentCard);
 
+  // Create updateCard function to handle card updates
+  const updateCard = useCallback(async (updates: Partial<Flashcard>) => {
+    if (!currentCard) return;
+
+    console.log('🔧 CardEditor: Updating card with:', updates);
+
+    try {
+      // Update cache immediately for instant UI response
+      queryClient.setQueryData(['cards', actualSetId], (oldCards: Flashcard[] = []) => 
+        oldCards.map(card => card.id === currentCard.id ? { ...card, ...updates } : card)
+      );
+
+      // Update database in background
+      await updateFlashcard(currentCard.id, updates);
+      
+      console.log('🔧 CardEditor: Card updated successfully');
+    } catch (error) {
+      console.error('🔧 CardEditor: Error updating card:', error);
+      
+      // Revert cache on error
+      queryClient.setQueryData(['cards', actualSetId], (oldCards: Flashcard[] = []) => 
+        oldCards.map(card => card.id === currentCard.id ? currentCard : card)
+      );
+      
+      toast({
+        title: "Error",
+        description: "Failed to update card",
+        variant: "destructive"
+      });
+    }
+  }, [currentCard, queryClient, actualSetId, toast]);
+
   // Create element update handler with undo support
   const updateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     if (!currentCard) return;
@@ -148,7 +180,7 @@ export const CardEditor: React.FC = () => {
 
     // Update database in background
     updateCard(cardUpdates);
-  }, [currentCard, queryClient, actualSetId, saveElementsState]);
+  }, [currentCard, queryClient, actualSetId, saveElementsState, updateCard]);
 
   // Create element delete handler with undo support
   const deleteElement = useCallback((elementId: string) => {
@@ -169,7 +201,7 @@ export const CardEditor: React.FC = () => {
       front_elements: frontElements,
       back_elements: backElements,
     });
-  }, [currentCard, saveElementsState]);
+  }, [currentCard, saveElementsState, updateCard]);
 
   // Undo handler
   const handleUndo = useCallback(() => {
@@ -189,7 +221,7 @@ export const CardEditor: React.FC = () => {
       // Update database
       updateCard(cardUpdates);
     }
-  }, [undo, currentCard, currentSide, queryClient, actualSetId]);
+  }, [undo, currentCard, currentSide, queryClient, actualSetId, updateCard]);
 
   // Redo handler
   const handleRedo = useCallback(() => {
@@ -209,7 +241,7 @@ export const CardEditor: React.FC = () => {
       // Update database
       updateCard(cardUpdates);
     }
-  }, [redo, currentCard, currentSide, queryClient, actualSetId]);
+  }, [redo, currentCard, currentSide, queryClient, actualSetId, updateCard]);
 
   // Create canvas size update handler
   const updateCanvasSize = useCallback(async (width: number, height: number) => {
@@ -375,7 +407,6 @@ export const CardEditor: React.FC = () => {
         isPanning={cardEditorState.isPanning}
         showCardOverview={cardEditorState.showCardOverview}
         
-        // Connect all handlers properly
         onZoomChange={cardEditorState.setZoom}
         onToolbarPositionChange={cardEditorState.setToolbarPosition}
         onToolbarDockChange={cardEditorState.setToolbarIsDocked}
@@ -395,8 +426,8 @@ export const CardEditor: React.FC = () => {
         onCreateNewCardWithLayout={handlers.handleCreateNewCardWithLayout}
         onCreateNewCardFromTemplate={handlers.handleCreateNewCardFromTemplate}
         onDeleteCard={handlers.handleDeleteCard}
-        onFitToView={() => {}} // Will be handled by CardEditorLayout
-        onOpenFullscreen={() => {}} // Will be handled by CardEditorLayout
+        onFitToView={() => {}}
+        onOpenFullscreen={() => {}}
         isCollaborative={isCollaborative}
         collaborators={collaborators}
         activeUsers={activeUsers}
@@ -447,7 +478,6 @@ export const CardEditor: React.FC = () => {
       isPanning={cardEditorState.isPanning}
       showCardOverview={cardEditorState.showCardOverview}
       
-      // Connect all handlers properly
       onZoomChange={cardEditorState.setZoom}
       onToolbarPositionChange={cardEditorState.setToolbarPosition}
       onToolbarDockChange={cardEditorState.setToolbarIsDocked}
@@ -467,8 +497,8 @@ export const CardEditor: React.FC = () => {
       onCreateNewCardWithLayout={handlers.handleCreateNewCardWithLayout}
       onCreateNewCardFromTemplate={handlers.handleCreateNewCardFromTemplate}
       onDeleteCard={handlers.handleDeleteCard}
-      onFitToView={() => {}} // Will be handled by CardEditorLayout
-      onOpenFullscreen={() => {}} // Will be handled by CardEditorLayout
+      onFitToView={() => {}}
+      onOpenFullscreen={() => {}}
       onUndo={canUndo ? handleUndo : undefined}
       onRedo={canRedo ? handleRedo : undefined}
       canUndo={canUndo}
