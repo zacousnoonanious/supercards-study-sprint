@@ -44,11 +44,11 @@ export const CardBorderToggle: React.FC<CardBorderToggleProps> = ({
     });
   }, [showBorder, onShowBorderChange, disabled]);
 
-  // Memoize the change handler to prevent unnecessary re-renders
+  // Memoize the change handler to prevent unnecessary re-renders and infinite loops
   const handleCheckedChange = React.useCallback((checked: boolean) => {
     console.log('🎛️ Border toggle clicked, new state:', checked);
     // Validate input before calling the handler
-    if (typeof checked === 'boolean') {
+    if (typeof checked === 'boolean' && typeof onShowBorderChange === 'function') {
       console.log('🎛️ Calling onShowBorderChange with:', checked);
       onShowBorderChange(checked);
     } else {

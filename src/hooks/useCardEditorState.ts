@@ -45,6 +45,7 @@ export const useCardEditorState = (currentCard: Flashcard | null): CardEditorSta
   const [showCardOverview, setShowCardOverview] = useState(false);
 
   // PROTECTION: Memoized stable setters to prevent infinite re-renders
+  // These handlers MUST be stable to prevent Switch components from re-rendering infinitely
   const handleSetShowGrid = useCallback((show: boolean) => {
     console.log('🔧 PROTECTED: Setting showGrid to', show);
     setShowGrid(show);
@@ -65,9 +66,40 @@ export const useCardEditorState = (currentCard: Flashcard | null): CardEditorSta
     setAutoAlign(align);
   }, []);
 
+  // Memoize all other setters for consistency and performance
+  const handleSetZoom = useCallback((zoom: number) => {
+    console.log('🔧 PROTECTED: Setting zoom to', zoom);
+    setZoom(zoom);
+  }, []);
+
+  const handleSetToolbarPosition = useCallback((position: 'left' | 'very-top' | 'canvas-left' | 'floating') => {
+    console.log('🔧 PROTECTED: Setting toolbarPosition to', position);
+    setToolbarPosition(position);
+  }, []);
+
+  const handleSetToolbarIsDocked = useCallback((docked: boolean) => {
+    console.log('🔧 PROTECTED: Setting toolbarIsDocked to', docked);
+    setToolbarIsDocked(docked);
+  }, []);
+
+  const handleSetToolbarShowText = useCallback((showText: boolean) => {
+    console.log('🔧 PROTECTED: Setting toolbarShowText to', showText);
+    setToolbarShowText(showText);
+  }, []);
+
+  const handleSetIsPanning = useCallback((panning: boolean) => {
+    console.log('🔧 PROTECTED: Setting isPanning to', panning);
+    setIsPanning(panning);
+  }, []);
+
+  const handleSetShowCardOverview = useCallback((show: boolean) => {
+    console.log('🔧 PROTECTED: Setting showCardOverview to', show);
+    setShowCardOverview(show);
+  }, []);
+
   return {
     zoom,
-    setZoom,
+    setZoom: handleSetZoom,
     showGrid,
     setShowGrid: handleSetShowGrid,
     snapToGrid,
@@ -77,14 +109,14 @@ export const useCardEditorState = (currentCard: Flashcard | null): CardEditorSta
     autoAlign,
     setAutoAlign: handleSetAutoAlign,
     toolbarPosition,
-    setToolbarPosition,
+    setToolbarPosition: handleSetToolbarPosition,
     toolbarIsDocked,
-    setToolbarIsDocked,
+    setToolbarIsDocked: handleSetToolbarIsDocked,
     toolbarShowText,
-    setToolbarShowText,
+    setToolbarShowText: handleSetToolbarShowText,
     isPanning,
-    setIsPanning,
+    setIsPanning: handleSetIsPanning,
     showCardOverview,
-    setShowCardOverview,
+    setShowCardOverview: handleSetShowCardOverview,
   };
 };
