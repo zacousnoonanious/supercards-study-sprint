@@ -44,17 +44,25 @@ export const CardBorderToggle: React.FC<CardBorderToggleProps> = ({
     });
   }, [showBorder, onShowBorderChange, disabled]);
 
-  // Memoize the change handler to prevent unnecessary re-renders and infinite loops
+  // Use a ref to store the latest handler to avoid dependency issues
+  const handlerRef = React.useRef(onShowBorderChange);
+  
+  // Update the ref when the handler changes
+  React.useEffect(() => {
+    handlerRef.current = onShowBorderChange;
+  }, [onShowBorderChange]);
+
+  // Create a stable handler that doesn't change on every render
   const handleCheckedChange = React.useCallback((checked: boolean) => {
     console.log('🎛️ Border toggle clicked, new state:', checked);
     // Validate input before calling the handler
-    if (typeof checked === 'boolean' && typeof onShowBorderChange === 'function') {
+    if (typeof checked === 'boolean' && typeof handlerRef.current === 'function') {
       console.log('🎛️ Calling onShowBorderChange with:', checked);
-      onShowBorderChange(checked);
+      handlerRef.current(checked);
     } else {
       console.error('❌ CardBorderToggle: Invalid boolean value received:', checked);
     }
-  }, [onShowBorderChange]);
+  }, []); // Empty dependency array makes this truly stable
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
