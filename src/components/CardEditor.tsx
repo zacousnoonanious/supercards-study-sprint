@@ -6,6 +6,7 @@ import { Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
 import { useCardEditorState } from '@/hooks/useCardEditorState';
 import { useCardEditorHandlers } from '@/hooks/useCardEditorHandlers';
 import { useCollaborativeEditing } from '@/hooks/useCollaborativeEditing';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
 import { CardEditorLayout } from './CardEditorLayout';
 import { transformDatabaseCardToFlashcard } from '@/utils/cardTransforms';
 import { updateFlashcard } from '@/lib/api/flashcards';
@@ -14,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 /**
  * CardEditor Component
  * 
- * Main card editor with PROTECTED visual editor state management.
+ * Main card editor with PROTECTED visual editor state management and undo/redo functionality.
  * CRITICAL: Visual editor features (grid, snap, border) are locally managed
  * and protected from external state resets.
  */
@@ -95,14 +96,39 @@ export const CardEditor: React.FC = () => {
     return card;
   }, [cards, currentCardIndex]);
 
+  // Initialize undo/redo system with current card elements
+  const currentElements = useMemo(() => {
+    if (!currentCard) return [];
+    return currentSide === 'front' ? currentCard.front_elements || [] : currentCard.back_elements || [];
+  }, [currentCard, currentSide]);
+
+  const {
+    saveState,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    currentState
+  } = useUndoRedo(currentElements);
+
+  // Save state when elements change (debounced to avoid too many saves)
+  const saveElementsState = useCallback(() => {
+    if (currentElements.length > 0) {
+      saveState(currentElements);
+    }
+  }, [currentElements, saveState]);
+
   // PROTECTED: Initialize card editor state with protection
   const cardEditorState = useCardEditorState(currentCard);
 
-  // Create element update handler
+  // Create element update handler with undo support
   const updateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     if (!currentCard) return;
 
     console.log('🔧 CardEditor: Updating element', elementId, updates);
+
+    // Save current state before making changes
+    saveElementsState();
 
     const updateElementsArray = (elements: CanvasElement[]) => 
       elements.map(el => el.id === elementId ? { ...el, ...updates } : el);
@@ -122,13 +148,16 @@ export const CardEditor: React.FC = () => {
 
     // Update database in background
     updateCard(cardUpdates);
-  }, [currentCard, queryClient, actualSetId]);
+  }, [currentCard, queryClient, actualSetId, saveElementsState]);
 
-  // Create element delete handler
+  // Create element delete handler with undo support
   const deleteElement = useCallback((elementId: string) => {
     if (!currentCard) return;
 
     console.log('🔧 CardEditor: Deleting element', elementId);
+
+    // Save current state before making changes
+    saveElementsState();
 
     const filterElements = (elements: CanvasElement[]) => 
       elements.filter(el => el.id !== elementId);
@@ -140,34 +169,47 @@ export const CardEditor: React.FC = () => {
       front_elements: frontElements,
       back_elements: backElements,
     });
-  }, [currentCard]);
+  }, [currentCard, saveElementsState]);
 
-  // Create card update handler
-  const updateCard = useCallback(async (updates: Partial<Flashcard>) => {
-    if (!currentCard) return;
-
-    try {
-      console.log('🔧 CardEditor: Updating card', updates);
+  // Undo handler
+  const handleUndo = useCallback(() => {
+    const previousState = undo();
+    if (previousState && currentCard) {
+      console.log('🔧 CardEditor: Undoing to previous state', previousState);
       
-      // Update cache immediately for instant response
+      const cardUpdates = currentSide === 'front' 
+        ? { front_elements: previousState }
+        : { back_elements: previousState };
+
+      // Update cache immediately
       queryClient.setQueryData(['cards', actualSetId], (oldCards: Flashcard[] = []) => 
-        oldCards.map(card => card.id === currentCard.id ? { ...card, ...updates } : card)
+        oldCards.map(card => card.id === currentCard.id ? { ...card, ...cardUpdates } : card)
       );
 
-      // Update database in background
-      await updateFlashcard({ ...currentCard, ...updates });
-      console.log('🔧 CardEditor: Card updated successfully');
-    } catch (error) {
-      console.error('🔧 CardEditor: Error updating card:', error);
-      // Revert cache on error
-      queryClient.invalidateQueries({ queryKey: ['cards', actualSetId] });
-      toast({
-        title: 'Error',
-        description: 'Failed to update card',
-        variant: 'destructive',
-      });
+      // Update database
+      updateCard(cardUpdates);
     }
-  }, [currentCard, actualSetId, queryClient, toast]);
+  }, [undo, currentCard, currentSide, queryClient, actualSetId]);
+
+  // Redo handler
+  const handleRedo = useCallback(() => {
+    const nextState = redo();
+    if (nextState && currentCard) {
+      console.log('🔧 CardEditor: Redoing to next state', nextState);
+      
+      const cardUpdates = currentSide === 'front' 
+        ? { front_elements: nextState }
+        : { back_elements: nextState };
+
+      // Update cache immediately
+      queryClient.setQueryData(['cards', actualSetId], (oldCards: Flashcard[] = []) => 
+        oldCards.map(card => card.id === currentCard.id ? { ...card, ...cardUpdates } : card)
+      );
+
+      // Update database
+      updateCard(cardUpdates);
+    }
+  }, [redo, currentCard, currentSide, queryClient, actualSetId]);
 
   // Create canvas size update handler
   const updateCanvasSize = useCallback(async (width: number, height: number) => {
@@ -206,7 +248,7 @@ export const CardEditor: React.FC = () => {
     },
     cards: cards || [],
     currentCard: currentCard!,
-    navigateCard,
+    navigateCard: () => {}, // Will be handled by the handlers
     setCurrentSide,
     currentSide,
     updateCard,
@@ -228,9 +270,12 @@ export const CardEditor: React.FC = () => {
       return;
     }
     
+    // Save state before auto-arranging
+    saveElementsState();
+    
     // Call the original handler if auto-align is enabled
     handlers.handleAutoArrange(type);
-  }, [cardEditorState.autoAlign, handlers]);
+  }, [cardEditorState.autoAlign, handlers, saveElementsState]);
 
   // PROTECTION: Use ref to track initialization and prevent resets
   const protectedVisualStateRef = React.useRef({
@@ -424,6 +469,10 @@ export const CardEditor: React.FC = () => {
       onDeleteCard={handlers.handleDeleteCard}
       onFitToView={() => {}} // Will be handled by CardEditorLayout
       onOpenFullscreen={() => {}} // Will be handled by CardEditorLayout
+      onUndo={canUndo ? handleUndo : undefined}
+      onRedo={canRedo ? handleRedo : undefined}
+      canUndo={canUndo}
+      canRedo={canRedo}
       isCollaborative={isCollaborative}
       collaborators={collaborators}
       activeUsers={activeUsers}

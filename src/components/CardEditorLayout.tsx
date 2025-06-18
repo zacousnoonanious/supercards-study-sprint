@@ -74,6 +74,10 @@ interface CardEditorLayoutProps {
   onEnableCollaboration?: () => Promise<boolean>;
   onRemoveCollaborator?: (collaboratorId: string) => Promise<boolean>;
   showEmptyState?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 /**
@@ -137,6 +141,10 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
   onEnableCollaboration,
   onRemoveCollaborator,
   showEmptyState = false,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
@@ -244,6 +252,26 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [currentCardIndex, cards.length, currentSide, onNavigateCard, onCardSideChange]);
+
+  // Add keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        if (canUndo && onUndo) {
+          onUndo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        if (canRedo && onRedo) {
+          onRedo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canUndo, canRedo, onUndo, onRedo]);
 
   const canvasStyle = {
     width: cardWidth,

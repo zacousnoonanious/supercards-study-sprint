@@ -1,8 +1,9 @@
 
 import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CanvasElement, Flashcard } from '@/types/flashcard';
 import { updateFlashcardSet } from '@/lib/api/sets';
-import { updateFlashcard } from '@/lib/api/flashcards';
+import { updateFlashcard, deleteFlashcard } from '@/lib/api/flashcards';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -47,6 +48,7 @@ export const useCardEditorHandlers = ({
 }: UseCardEditorHandlersProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const handleUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
     console.log('🔧 Updating element:', elementId, updates);
@@ -220,10 +222,17 @@ export const useCardEditorHandlers = ({
 
   const handleNavigateCard = useCallback((direction: 'prev' | 'next') => {
     console.log('🔧 Navigating card:', direction);
-    navigateCard(direction);
-  }, [navigateCard]);
+    const currentIndex = cards.findIndex(card => card.id === cardId);
+    
+    if (direction === 'next' && currentIndex < cards.length - 1) {
+      const nextCard = cards[currentIndex + 1];
+      navigate(`/edit/${setId}/${nextCard.id}`, { replace: true });
+    } else if (direction === 'prev' && currentIndex > 0) {
+      const prevCard = cards[currentIndex - 1];
+      navigate(`/edit/${setId}/${prevCard.id}`, { replace: true });
+    }
+  }, [cards, cardId, setId, navigate]);
 
-  // Placeholder handlers for missing functionality
   const handleCreateNewCard = useCallback(async () => {
     console.log('🔧 Create new card - not implemented');
     // TODO: Implement card creation
@@ -240,9 +249,54 @@ export const useCardEditorHandlers = ({
   }, []);
 
   const handleDeleteCard = useCallback(async () => {
-    console.log('🔧 Delete card - not implemented');
-    // TODO: Implement card deletion
-  }, []);
+    if (!currentCard || cards.length <= 1) {
+      toast({
+        title: "Cannot Delete",
+        description: "Cannot delete the last card in the set",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this card?')) {
+      return;
+    }
+
+    try {
+      console.log('🔧 Deleting card:', currentCard.id);
+      
+      // Delete from database
+      await deleteFlashcard(currentCard.id);
+      
+      // Update cache immediately
+      queryClient.setQueryData(['cards', setId], (oldCards: Flashcard[] = []) =>
+        oldCards.filter(card => card.id !== currentCard.id)
+      );
+      
+      // Navigate to adjacent card
+      const currentIndex = cards.findIndex(card => card.id === cardId);
+      const nextIndex = currentIndex > 0 ? currentIndex - 1 : currentIndex + 1;
+      const targetCard = cards.filter(card => card.id !== currentCard.id)[nextIndex] || cards.filter(card => card.id !== currentCard.id)[0];
+      
+      if (targetCard) {
+        navigate(`/edit/${setId}/${targetCard.id}`, { replace: true });
+      } else {
+        navigate(`/edit/${setId}`, { replace: true });
+      }
+
+      toast({
+        title: "Success",
+        description: "Card deleted successfully"
+      });
+    } catch (error) {
+      console.error('🔧 Error deleting card:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete card",
+        variant: "destructive"
+      });
+    }
+  }, [currentCard, cards, cardId, setId, navigate, queryClient, toast]);
 
   return {
     handleUpdateElement,

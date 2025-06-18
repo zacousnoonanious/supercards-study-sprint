@@ -24,6 +24,8 @@ import {
   LayoutGrid,
   PanelLeftClose,
   PanelLeftOpen,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -45,6 +47,10 @@ interface ConsolidatedToolbarProps {
   onCreateNewCardFromTemplate: (template: CardTemplate) => void;
   onDeleteCard: () => void;
   onShowCardOverview?: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
   position: 'left' | 'very-top' | 'canvas-left' | 'floating';
   isDocked: boolean;
   showText: boolean;
@@ -66,6 +72,10 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
   onCreateNewCardFromTemplate,
   onDeleteCard,
   onShowCardOverview,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
   position,
   isDocked,
   showText,
@@ -130,6 +140,73 @@ export const ConsolidatedToolbar: React.FC<ConsolidatedToolbarProps> = ({
 
       <ScrollArea className="flex-1">
         <div className="p-1 space-y-3">
+          {/* Undo/Redo - Top Priority */}
+          <div className="space-y-1">
+            {showText && (
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
+                History
+              </h3>
+            )}
+            
+            <div className="grid grid-cols-2 gap-1">
+              {/* Undo */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onUndo}
+                      disabled={!canUndo}
+                      className={`${showText ? 'justify-start h-6' : 'aspect-square p-0 h-6 w-6'} transition-colors`}
+                    >
+                      <Undo2 className="w-2.5 h-2.5" />
+                      {showText && <span className="ml-1 text-xs">Undo</span>}
+                    </Button>
+                  </TooltipTrigger>
+                  {!showText && (
+                    <TooltipContent side="right">
+                      <div className="flex items-center gap-2">
+                        <span>Undo</span>
+                        <kbd className="px-1 py-0.5 text-xs bg-muted rounded">
+                          Ctrl+Z
+                        </kbd>
+                      </div>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+
+              {/* Redo */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onRedo}
+                      disabled={!canRedo}
+                      className={`${showText ? 'justify-start h-6' : 'aspect-square p-0 h-6 w-6'} transition-colors`}
+                    >
+                      <Redo2 className="w-2.5 h-2.5" />
+                      {showText && <span className="ml-1 text-xs">Redo</span>}
+                    </Button>
+                  </TooltipTrigger>
+                  {!showText && (
+                    <TooltipContent side="right">
+                      <div className="flex items-center gap-2">
+                        <span>Redo</span>
+                        <kbd className="px-1 py-0.5 text-xs bg-muted rounded">
+                          Ctrl+Y
+                        </kbd>
+                      </div>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+
           {/* Add Card - Top Priority */}
           <div className="space-y-1">
             {showText && (
