@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 
@@ -37,6 +38,10 @@ export const useCanvasDragResize = ({
   const isDraggingRef = useRef(false);
   const isResizingRef = useRef(false);
   const animationFrameRef = useRef<number | null>(null);
+  
+  // CRITICAL: Prevent multiple database updates by tracking if update is pending
+  const updatePendingRef = useRef(false);
+  const lastUpdateTimeRef = useRef(0);
 
   const snapToGridIfEnabled = useCallback((value: number) => {
     if (snapToGrid && gridSize > 0) {
@@ -53,7 +58,7 @@ export const useCanvasDragResize = ({
       cancelAnimationFrame(animationFrameRef.current);
     }
     
-    // Use requestAnimationFrame for smooth updates
+    // Use requestAnimationFrame for smooth updates - but limit frequency
     animationFrameRef.current = requestAnimationFrame(() => {
       const element = elements.find(el => el.id === dragElementId);
       if (!element) return;
@@ -94,13 +99,15 @@ export const useCanvasDragResize = ({
           height: element.height
         });
         
-        // Only trigger a re-render every few frames to reduce update frequency
-        if (!animationFrameRef.current || Date.now() % 3 === 0) {
+        // CRITICAL: Only trigger re-render every 16ms (60fps) to prevent excessive updates
+        const now = Date.now();
+        if (now - lastUpdateTimeRef.current > 16) {
           setClientPositionsVersion(prev => prev + 1);
+          lastUpdateTimeRef.current = now;
         }
         
       } else if (isResizingRef.current) {
-        // Handle resizing
+        // Handle resizing with the same throttling approach
         let newWidth = dragElementStart.width;
         let newHeight = dragElementStart.height;
         let newX = dragElementStart.x;
@@ -165,9 +172,11 @@ export const useCanvasDragResize = ({
           height: snappedHeight
         });
         
-        // Only trigger a re-render every few frames to reduce update frequency
-        if (!animationFrameRef.current || Date.now() % 3 === 0) {
+        // CRITICAL: Only trigger re-render every 16ms (60fps) to prevent excessive updates
+        const now = Date.now();
+        if (now - lastUpdateTimeRef.current > 16) {
           setClientPositionsVersion(prev => prev + 1);
+          lastUpdateTimeRef.current = now;
         }
       }
     });
@@ -211,20 +220,30 @@ export const useCanvasDragResize = ({
       width: element.width,
       height: element.height
     });
+    
+    // Reset update tracking
+    updatePendingRef.current = false;
+    lastUpdateTimeRef.current = Date.now();
   }, [elements]);
 
   const endDragOrResize = useCallback(() => {
-    if (dragElementId) {
+    if (dragElementId && !updatePendingRef.current) {
       const finalPosition = clientPositionsRef.current.get(dragElementId);
       if (finalPosition) {
+        console.log('🔧 DRAG END: Single database update for element:', dragElementId, finalPosition);
+        
+        // Mark update as pending to prevent duplicate calls
+        updatePendingRef.current = true;
+        
         // Send final position to database - this is the ONLY database update during the entire drag operation
         onUpdateElement(dragElementId, finalPosition);
         
-        // Clear client position immediately after database update
+        // Clear client position after a delay to prevent flickering
         setTimeout(() => {
           clientPositionsRef.current.delete(dragElementId);
           setClientPositionsVersion(prev => prev + 1);
-        }, 50);
+          updatePendingRef.current = false;
+        }, 100);
       }
     }
     

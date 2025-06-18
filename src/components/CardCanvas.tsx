@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { CanvasElement } from '@/types/flashcard';
 import { CanvasBackground } from './CanvasBackground';
@@ -87,6 +88,38 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     onUpdateElement,
   });
 
+  // CRITICAL: Stable callback to prevent re-renders during drag
+  const stableOnUpdateElement = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
+    console.log('🔧 CANVAS: Stable element update called for:', elementId, updates);
+    
+    // Apply smart snapping to final position during database save
+    if (updates.x !== undefined && updates.y !== undefined && autoAlign) {
+      const element = elements.find(el => el.id === elementId);
+      if (element) {
+        console.log('🔧 Applying auto-align snap for element:', elementId);
+        const snapped = calculateSnapPosition(element, updates.x, updates.y);
+        updates.x = snapped.x;
+        updates.y = snapped.y;
+        console.log('🔧 Auto-aligned position:', snapped.x, snapped.y);
+      }
+    } else if (updates.x !== undefined && updates.y !== undefined && snapToGrid) {
+      // Apply grid snapping if auto-align is off but grid snap is on
+      const gridX = Math.round(updates.x / gridSize) * gridSize;
+      const gridY = Math.round(updates.y / gridSize) * gridSize;
+      updates.x = gridX;
+      updates.y = gridY;
+      console.log('🔧 Grid snapped position:', gridX, gridY);
+    }
+    
+    // Update database with final position
+    onUpdateElement(elementId, updates);
+    
+    // Apply layout constraints after database update
+    setTimeout(() => {
+      applyConstraints(elementId);
+    }, 100);
+  }, [onUpdateElement, autoAlign, snapToGrid, gridSize, calculateSnapPosition, applyConstraints, elements]);
+
   const {
     isDragging,
     isResizing,
@@ -99,39 +132,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
     clearClientPosition,
   } = useCanvasDragResize({
     elements,
-    onUpdateElement: (elementId: string, updates: Partial<CanvasElement>) => {
-      // Apply smart snapping to final position during database save
-      if (updates.x !== undefined && updates.y !== undefined && autoAlign) {
-        const element = elements.find(el => el.id === elementId);
-        if (element) {
-          console.log('🔧 Applying auto-align snap for element:', elementId, 'Original pos:', updates.x, updates.y);
-          const snapped = calculateSnapPosition(element, updates.x, updates.y);
-          updates.x = snapped.x;
-          updates.y = snapped.y;
-          console.log('🔧 Auto-aligned position:', snapped.x, snapped.y);
-        }
-      } else if (updates.x !== undefined && updates.y !== undefined && snapToGrid) {
-        // Apply grid snapping if auto-align is off but grid snap is on
-        const gridX = Math.round(updates.x / gridSize) * gridSize;
-        const gridY = Math.round(updates.y / gridSize) * gridSize;
-        updates.x = gridX;
-        updates.y = gridY;
-        console.log('🔧 Grid snapped position:', gridX, gridY);
-      }
-      
-      // Update database with final position
-      onUpdateElement(elementId, updates);
-      
-      // Clear client position immediately after database update to prevent flickering
-      setTimeout(() => {
-        clearClientPosition(elementId);
-      }, 50);
-      
-      // Apply layout constraints after database update
-      setTimeout(() => {
-        applyConstraints(elementId);
-      }, 100);
-    },
+    onUpdateElement: stableOnUpdateElement, // Use stable callback
     canvasWidth,
     canvasHeight,
     snapToGrid: snapToGrid && !autoAlign, // Disable grid snap when auto-align is enabled
@@ -221,10 +222,10 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
         y: element.y + 20,
         zIndex: (element.zIndex || 0) + 1,
       };
-      onUpdateElement(newElement.id, newElement);
+      stableOnUpdateElement(newElement.id, newElement);
       onSelectElement(newElement.id);
     }
-  }, [onDuplicateElement, onUpdateElement, onSelectElement]);
+  }, [onDuplicateElement, stableOnUpdateElement, onSelectElement]);
 
   const handleApplyConstraints = useCallback((elementId: string) => {
     applyConstraints(elementId);
@@ -315,7 +316,7 @@ export const CardCanvas: React.FC<CardCanvasProps> = ({
             canvasHeight={canvasHeight}
             onMouseDown={handleElementMouseDown}
             onClick={handleElementClick}
-            onUpdateElement={onUpdateElement}
+            onUpdateElement={stableOnUpdateElement}
             onEditingChange={handleEditingChange}
             onDuplicate={handleDuplicateElement}
             onDelete={onDeleteElement}
