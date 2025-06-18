@@ -44,26 +44,26 @@ export const useCardEditorState = (currentCard: Flashcard | null): CardEditorSta
   const [isPanning, setIsPanning] = useState(false);
   const [showCardOverview, setShowCardOverview] = useState(false);
 
-  // PROTECTION: Simple stable setters without memoization to avoid circular deps
-  const handleSetShowGrid = (show: boolean) => {
+  // PROTECTION: Memoized stable setters to prevent infinite re-renders
+  const handleSetShowGrid = useCallback((show: boolean) => {
     console.log('🔧 PROTECTED: Setting showGrid to', show);
     setShowGrid(show);
-  };
+  }, []);
 
-  const handleSetSnapToGrid = (snap: boolean) => {
+  const handleSetSnapToGrid = useCallback((snap: boolean) => {
     console.log('🔧 PROTECTED: Setting snapToGrid to', snap);
     setSnapToGrid(snap);
-  };
+  }, []);
 
-  const handleSetShowBorder = (show: boolean) => {
+  const handleSetShowBorder = useCallback((show: boolean) => {
     console.log('🔧 PROTECTED: Setting showBorder to', show);
     setShowBorder(show);
-  };
+  }, []);
 
-  const handleSetAutoAlign = (align: boolean) => {
+  const handleSetAutoAlign = useCallback((align: boolean) => {
     console.log('🔧 PROTECTED: Setting autoAlign to', align);
     setAutoAlign(align);
-  };
+  }, []);
 
   return {
     zoom,

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { AlignCenter } from 'lucide-react';
@@ -16,6 +16,11 @@ export const AutoAlignToggle: React.FC<AutoAlignToggleProps> = ({
 }) => {
   const { t } = useI18n();
 
+  // Memoize the handler to prevent infinite re-renders
+  const handleCheckedChange = useCallback((checked: boolean) => {
+    onAutoAlignChange(checked);
+  }, [onAutoAlignChange]);
+
   return (
     <div className="flex items-center space-x-2">
       <AlignCenter className="w-4 h-4 text-muted-foreground" />
@@ -25,7 +30,7 @@ export const AutoAlignToggle: React.FC<AutoAlignToggleProps> = ({
       <Switch
         id="auto-align"
         checked={autoAlign}
-        onCheckedChange={onAutoAlignChange}
+        onCheckedChange={handleCheckedChange}
       />
     </div>
   );
