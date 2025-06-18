@@ -32,6 +32,8 @@ export const CardEditor: React.FC = () => {
 
   console.log('CardEditor: Initialized with params:', { setId, cardId, id, actualSetId });
 
+  // ... keep existing code (data fetching queries)
+
   const {
     data: set,
     isLoading: isSetLoading,
@@ -304,19 +306,31 @@ export const CardEditor: React.FC = () => {
     cardId: cardId!,
   });
 
-  // Enhanced auto arrange handler that respects the toggle
+  // FIXED: Use refs to create stable references for the auto arrange handler
+  const autoAlignRef = React.useRef(cardEditorState.autoAlign);
+  const handleAutoArrangeRef = React.useRef(handlers.handleAutoArrange);
+  const saveElementsStateRef = React.useRef(saveElementsState);
+
+  // Update refs when values change
+  React.useEffect(() => {
+    autoAlignRef.current = cardEditorState.autoAlign;
+    handleAutoArrangeRef.current = handlers.handleAutoArrange;
+    saveElementsStateRef.current = saveElementsState;
+  }, [cardEditorState.autoAlign, handlers.handleAutoArrange, saveElementsState]);
+
+  // Enhanced auto arrange handler that respects the toggle - now with stable refs
   const handleAutoArrangeWithToggle = useCallback((type: 'grid' | 'center' | 'stack' | 'center-horizontal' | 'center-vertical' | 'align-elements-left' | 'align-elements-right' | 'distribute-horizontal' | 'distribute-vertical' | 'scale-to-fit' | 'align-elements-center' | 'justify' | 'align-left' | 'align-center' | 'align-right') => {
-    if (!cardEditorState.autoAlign) {
+    if (!autoAlignRef.current) {
       console.log('🔧 Auto-align is disabled, skipping arrangement');
       return;
     }
     
     // Save state before auto-arranging
-    saveElementsState();
+    saveElementsStateRef.current();
     
     // Call the original handler if auto-align is enabled
-    handlers.handleAutoArrange(type);
-  }, [cardEditorState.autoAlign, handlers, saveElementsState]);
+    handleAutoArrangeRef.current(type);
+  }, []); // Empty dependency array makes this completely stable
 
   // PROTECTION: Use ref to track initialization and prevent resets
   const protectedVisualStateRef = React.useRef({
