@@ -134,7 +134,7 @@ export const CardEditor: React.FC = () => {
       );
 
       // Update database in background - fix the function call
-      await updateFlashcard({ id: currentCard.id, ...updates });
+      await updateFlashcard(currentCard.id, updates);
       
       console.log('🔧 CardEditor: Card updated successfully');
     } catch (error) {
@@ -259,14 +259,23 @@ export const CardEditor: React.FC = () => {
     }
   }, [currentCardIndex, cards?.length]);
 
-  // Create a proper handler for element selection
+  // FIXED: Create a proper handler for element selection with null safety
   const handleElementSelect = useCallback((elementId: string | null) => {
+    console.log('🔧 CardEditor: Selecting element:', elementId);
+    
     if (elementId && currentCard) {
+      // Safely get elements arrays with fallback to empty arrays
+      const frontElements = currentCard.front_elements || [];
+      const backElements = currentCard.back_elements || [];
+      
       const element = currentSide === 'front' 
-        ? currentCard.front_elements.find(el => el.id === elementId)
-        : currentCard.back_elements.find(el => el.id === elementId);
+        ? frontElements.find(el => el.id === elementId)
+        : backElements.find(el => el.id === elementId);
+      
+      console.log('🔧 CardEditor: Found element:', element?.id, element?.type);
       setSelectedElement(element || null);
     } else {
+      console.log('🔧 CardEditor: Deselecting element');
       setSelectedElement(null);
     }
   }, [currentCard, currentSide]);
