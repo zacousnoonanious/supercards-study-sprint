@@ -5,7 +5,6 @@ import { Button } from './ui/button';
 import { CardCanvas } from './CardCanvas';
 import { ConsolidatedToolbar } from './ConsolidatedToolbar';
 import { CanvasElement, Flashcard, CardTemplate } from '@/types/flashcard';
-import { useCanvasInteraction } from '@/hooks/useCanvasInteraction';
 import { X, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -57,64 +56,56 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
 
-  // Use local state for fullscreen editor canvas interaction
+  // Local state for fullscreen editor
   const [zoom, setZoom] = React.useState(1);
   const [panOffset, setPanOffset] = React.useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = React.useState(false);
-  const [panStart, setPanStart] = React.useState({ x: 0, y: 0 });
   const [showGrid, setShowGrid] = React.useState(false);
   const [snapToGrid, setSnapToGrid] = React.useState(false);
-  const canvasContainerRef = React.useRef<HTMLDivElement>(null);
+  const [autoAlign, setAutoAlign] = React.useState(false);
   const canvasViewportRef = React.useRef<HTMLDivElement>(null);
 
-  const { fitToView } = useCanvasInteraction({
-    canvasContainerRef,
-    canvasViewportRef,
-    isPanning,
-    setIsPanning,
-    panStart,
-    setPanStart,
-    panOffset,
-    setPanOffset,
-    zoom,
-    setZoom,
-    cardWidth,
-    cardHeight,
-  });
-
-  // Custom fit to view for fullscreen that calculates based on the fullscreen viewport
+  // Enhanced fit to view for fullscreen that calculates optimal zoom
   const handleFullscreenFitToView = () => {
     const viewport = canvasViewportRef.current;
     if (!viewport) return;
     
     const viewportRect = viewport.getBoundingClientRect();
-    const padding = 80; // Extra padding for fullscreen
+    const padding = 60; // Comfortable padding for fullscreen
     const availableWidth = viewportRect.width - padding;
     const availableHeight = viewportRect.height - padding;
     
+    // Calculate optimal zoom to fit canvas in available space
     const zoomX = availableWidth / cardWidth;
     const zoomY = availableHeight / cardHeight;
-    const newZoom = Math.min(zoomX, zoomY, 2); // Allow up to 200% zoom in fullscreen
+    const optimalZoom = Math.min(zoomX, zoomY, 3); // Allow up to 300% zoom in fullscreen
     
-    setZoom(newZoom);
+    setZoom(optimalZoom);
     
     // Center the canvas in the viewport
-    const scaledWidth = cardWidth * newZoom;
-    const scaledHeight = cardHeight * newZoom;
+    const scaledWidth = cardWidth * optimalZoom;
+    const scaledHeight = cardHeight * optimalZoom;
     const centerX = (viewportRect.width - scaledWidth) / 2;
     const centerY = (viewportRect.height - scaledHeight) / 2;
     
     setPanOffset({ x: centerX, y: centerY });
   };
 
+  // Auto-fit when opening fullscreen
+  React.useEffect(() => {
+    if (isOpen) {
+      // Delay to ensure viewport is fully rendered
+      setTimeout(handleFullscreenFitToView, 100);
+    }
+  }, [isOpen, cardWidth, cardHeight]);
+
   if (!isOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0">
+      <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 m-0">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <DialogHeader className="px-6 py-4 border-b">
+          <DialogHeader className="px-6 py-4 border-b bg-background/95 backdrop-blur">
             <div className="flex items-center justify-between">
               <DialogTitle>Fullscreen Editor</DialogTitle>
               <div className="flex items-center gap-2">
@@ -131,7 +122,7 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setZoom(Math.min(3, zoom + 0.1))}
+                  onClick={() => setZoom(Math.min(5, zoom + 0.1))}
                 >
                   <ZoomIn className="w-4 h-4" />
                 </Button>
@@ -176,32 +167,35 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
             {/* Canvas Area */}
             <div 
               ref={canvasViewportRef}
-              className="flex-1 relative overflow-hidden bg-gray-100 dark:bg-gray-800"
-              style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
+              className="flex-1 relative overflow-hidden bg-gray-50 dark:bg-gray-900"
               data-canvas-background
             >
               <div
-                ref={canvasContainerRef}
-                className="absolute"
+                className="absolute flex items-center justify-center w-full h-full"
                 style={{
-                  transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
-                  transformOrigin: '0 0',
-                  left: 0,
-                  top: 0,
+                  transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
                 }}
               >
-                <CardCanvas
-                  elements={currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements}
-                  selectedElement={selectedElement?.id || null}
-                  onSelectElement={onElementSelect}
-                  onUpdateElement={onUpdateElement}
-                  onDeleteElement={onDeleteElement}
-                  cardSide={currentSide}
-                  style={{ width: cardWidth, height: cardHeight }}
-                  showGrid={showGrid}
-                  snapToGrid={snapToGrid}
-                  zoom={zoom}
-                />
+                <div
+                  style={{
+                    transform: `scale(${zoom})`,
+                    transformOrigin: 'center center',
+                  }}
+                >
+                  <CardCanvas
+                    elements={currentSide === 'front' ? currentCard.front_elements : currentCard.back_elements}
+                    selectedElement={selectedElement?.id || null}
+                    onSelectElement={onElementSelect}
+                    onUpdateElement={onUpdateElement}
+                    onDeleteElement={onDeleteElement}
+                    cardSide={currentSide}
+                    style={{ width: cardWidth, height: cardHeight }}
+                    showGrid={showGrid}
+                    snapToGrid={snapToGrid}
+                    autoAlign={autoAlign}
+                    zoom={zoom}
+                  />
+                </div>
               </div>
             </div>
           </div>

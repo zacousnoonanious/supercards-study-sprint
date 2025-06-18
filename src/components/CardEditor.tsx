@@ -321,8 +321,8 @@ export const CardEditor: React.FC = () => {
       onCreateNewCardWithLayout={handlers.handleCreateNewCardWithLayout}
       onCreateNewCardFromTemplate={handlers.handleCreateNewCardFromTemplate}
       onDeleteCard={handlers.handleDeleteCard}
-      onFitToView={() => {}}
-      onOpenFullscreen={() => {}}
+      onFitToView={() => {}} // Will be handled by CardEditorLayout
+      onOpenFullscreen={() => {}} // Will be handled by CardEditorLayout
       isCollaborative={isCollaborative}
       collaborators={collaborators}
       activeUsers={activeUsers}

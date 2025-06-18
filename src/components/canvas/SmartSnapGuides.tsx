@@ -101,7 +101,11 @@ export const SmartSnapGuides: React.FC<SmartSnapGuidesProps> = ({
                     }),
               }}
             >
-              Canvas edge
+              {/* Show "Canvas center" for center guides, "Canvas edge" for edge guides */}
+              {(guide.type === 'vertical' && guide.position === canvasWidth / 2) || 
+               (guide.type === 'horizontal' && guide.position === canvasHeight / 2) 
+                ? 'Canvas center' 
+                : 'Canvas edge'}
             </div>
           )}
         </div>

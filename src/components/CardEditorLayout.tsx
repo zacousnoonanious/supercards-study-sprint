@@ -8,6 +8,7 @@ import { ConsolidatedToolbar } from './ConsolidatedToolbar';
 import { EnhancedSetOverview } from './EnhancedSetOverview';
 import { Navigation } from './Navigation';
 import { CollaborationDialog } from './collaboration/CollaborationDialog';
+import { FullscreenEditor } from './FullscreenEditor';
 import { Flashcard, CanvasElement, CardTemplate } from '@/types/flashcard';
 import { CollaboratorInfo, CollaborativeUser } from '@/hooks/useCollaborativeEditing';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -139,6 +140,51 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
 }) => {
   const { theme } = useTheme();
   const isDarkTheme = ['dark', 'cobalt', 'darcula', 'console'].includes(theme);
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
+  // Handle fullscreen mode
+  const handleOpenFullscreen = () => {
+    setIsFullscreen(true);
+  };
+
+  const handleCloseFullscreen = () => {
+    setIsFullscreen(false);
+  };
+
+  // Handle escape key to exit fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        handleCloseFullscreen();
+      }
+    };
+
+    if (isFullscreen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isFullscreen]);
+
+  // Enhanced fit to view that calculates better zoom
+  const handleFitToView = () => {
+    if (!onFitToView) return;
+    
+    // Get the canvas area
+    const canvasArea = document.querySelector('.flex-1.flex.items-center.justify-center');
+    if (!canvasArea) return;
+    
+    const canvasRect = canvasArea.getBoundingClientRect();
+    const padding = 40;
+    const availableWidth = canvasRect.width - padding;
+    const availableHeight = canvasRect.height - padding;
+    
+    // Calculate zoom to fit canvas in available space
+    const zoomX = availableWidth / cardWidth;
+    const zoomY = availableHeight / cardHeight;
+    const optimalZoom = Math.min(zoomX, zoomY, 2); // Cap at 200%
+    
+    onZoomChange(optimalZoom);
+  };
 
   // Add keyboard navigation for card switching
   useEffect(() => {
@@ -241,6 +287,34 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
       onUpdateCard(updates);
     }
   };
+
+  // Show fullscreen editor if active
+  if (isFullscreen && currentCard) {
+    return (
+      <FullscreenEditor
+        isOpen={isFullscreen}
+        onClose={handleCloseFullscreen}
+        currentCard={currentCard}
+        currentSide={currentSide}
+        selectedElement={selectedElement}
+        cardWidth={cardWidth}
+        cardHeight={cardHeight}
+        onElementSelect={onElementSelect}
+        onUpdateElement={onUpdateElement}
+        onDeleteElement={onDeleteElement}
+        onAddElement={onAddElement}
+        onAutoArrange={onAutoArrange}
+        onNavigateCard={onNavigateCard}
+        onSideChange={onCardSideChange}
+        onCreateNewCard={onCreateNewCard}
+        onCreateNewCardWithLayout={onCreateNewCardWithLayout}
+        onCreateNewCardFromTemplate={onCreateNewCardFromTemplate}
+        onDeleteCard={onDeleteCard}
+        currentCardIndex={currentCardIndex}
+        totalCards={cards.length}
+      />
+    );
+  }
 
   // Show enhanced overview if requested
   if (showCardOverview) {
@@ -425,8 +499,8 @@ export const CardEditorLayout: React.FC<CardEditorLayoutProps> = ({
             onToolbarShowTextChange={onToolbarShowTextChange}
             currentSide={currentSide}
             onCardSideChange={onCardSideChange}
-            onFitToView={onFitToView}
-            onOpenFullscreen={onOpenFullscreen}
+            onFitToView={handleFitToView}
+            onOpenFullscreen={handleOpenFullscreen}
           />
         )}
       </div>
